@@ -476,25 +476,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 
 <!-- ══ PROFILE SCREEN ══ -->
 <div class="screen" id="screen-profile">
-  <div class="prof-cover">
+  <div class="prof-cover" id="prof-cover-bg">
     <button class="prof-cover-btn">📷 แก้ไขรูปหน้าปก</button>
   </div>
   <div class="prof-body">
     <div class="prof-av-row">
       <div class="prof-av" id="prof-avatar">ฉ</div>
       <div class="prof-btns">
-        <button class="prof-btn-p">✏️ แก้ไขโปรไฟล์</button>
+        <button class="prof-btn-p" onclick="openEditProfile()">✏️ แก้ไขโปรไฟล์</button>
         <button class="prof-btn-s">••• เพิ่มเติม</button>
       </div>
     </div>
-    <div class="prof-name" id="prof-name">ลุงสมชาย วงษ์เกษตร</div>
-    <div class="prof-sub" id="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
-    <div class="prof-bio">เกษตรกรสวนมะม่วง 20 ปี 🥭 รักการแบ่งปันความรู้ให้เพื่อนชาวสวน</div>
-    <div class="prof-badges">
-      <span class="pb pb-gold">⭐ ปราชญ์มะม่วง</span>
-      <span class="pb pb-blue">🥇 Gold Member</span>
-      <span class="pb pb-green">🤝 เพื่อนบ้านที่ดี</span>
-    </div>
+    <div class="prof-name" id="prof-name">—</div>
+    <div class="prof-sub" id="prof-sub"></div>
+    <div class="prof-bio" id="prof-bio"></div>
+    <div class="prof-badges" id="prof-badges"></div>
     <div class="prof-stats">
       <div class="ps"><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
       <div class="ps"><div class="ps-n" id="stat-followers">0</div><div class="ps-l">ผู้ติดตาม</div></div>
@@ -548,6 +544,82 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         <button class="cc-join">เข้าร่วม</button>
       </div>
       <div class="cc-stats"><span>👥 2,100 คน</span><span>💬 32 โพสวันนี้</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT PROFILE MODAL ══ -->
+<div class="overlay" id="editProfileModal" onclick="closeEditProfileOverlay(event)">
+  <div class="modal" style="max-height:92vh">
+    <div class="modal-top">
+      <button class="modal-close" onclick="closeEditProfile()">✕</button>
+      <div class="modal-title">แก้ไขโปรไฟล์</div>
+      <button class="modal-submit" onclick="saveProfile()">บันทึก</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Avatar (read-only จาก LINE) -->
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;padding:12px;background:var(--bg);border-radius:12px">
+        <div id="ep-avatar" style="width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center"></div>
+        <div>
+          <div style="font-size:15px;font-weight:700" id="ep-name-display">—</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">รูปโปรไฟล์ดึงจาก LINE อัตโนมัติ</div>
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div class="fg" style="margin-bottom:14px">
+        <label>✍️ แนะนำตัว / Bio</label>
+        <textarea id="ep-bio" placeholder="เช่น เกษตรกรสวนมะม่วง 20 ปี รักการแบ่งปันความรู้..." style="height:80px;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;width:100%;outline:none;resize:none"></textarea>
+      </div>
+
+      <!-- จังหวัด -->
+      <div class="fg" style="margin-bottom:14px">
+        <label>📍 จังหวัด</label>
+        <select id="ep-province" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;outline:none;background:#fff">
+          <option value="">— เลือกจังหวัด —</option>
+          <option>กระบี่</option><option>กรุงเทพมหานคร</option><option>กาญจนบุรี</option>
+          <option>กาฬสินธุ์</option><option>กำแพงเพชร</option><option>ขอนแก่น</option>
+          <option>จันทบุรี</option><option>ฉะเชิงเทรา</option><option>ชลบุรี</option>
+          <option>ชัยนาท</option><option>ชัยภูมิ</option><option>ชุมพร</option>
+          <option>เชียงราย</option><option>เชียงใหม่</option><option>ตรัง</option>
+          <option>ตราด</option><option>ตาก</option><option>นครนายก</option>
+          <option>นครปฐม</option><option>นครพนม</option><option>นครราชสีมา</option>
+          <option>นครศรีธรรมราช</option><option>นครสวรรค์</option><option>นนทบุรี</option>
+          <option>นราธิวาส</option><option>น่าน</option><option>บึงกาฬ</option>
+          <option>บุรีรัมย์</option><option>ปทุมธานี</option><option>ประจวบคีรีขันธ์</option>
+          <option>ปราจีนบุรี</option><option>ปัตตานี</option><option>พระนครศรีอยุธยา</option>
+          <option>พะเยา</option><option>พังงา</option><option>พัทลุง</option>
+          <option>พิจิตร</option><option>พิษณุโลก</option><option>เพชรบุรี</option>
+          <option>เพชรบูรณ์</option><option>แพร่</option><option>ภูเก็ต</option>
+          <option>มหาสารคาม</option><option>มุกดาหาร</option><option>แม่ฮ่องสอน</option>
+          <option>ยโสธร</option><option>ยะลา</option><option>ร้อยเอ็ด</option>
+          <option>ระนอง</option><option>ระยอง</option><option>ราชบุรี</option>
+          <option>ลพบุรี</option><option>ลำปาง</option><option>ลำพูน</option>
+          <option>เลย</option><option>ศรีสะเกษ</option><option>สกลนคร</option>
+          <option>สงขลา</option><option>สตูล</option><option>สมุทรปราการ</option>
+          <option>สมุทรสงคราม</option><option>สมุทรสาคร</option><option>สระแก้ว</option>
+          <option>สระบุรี</option><option>สิงห์บุรี</option><option>สุโขทัย</option>
+          <option>สุพรรณบุรี</option><option>สุราษฎร์ธานี</option><option>สุรินทร์</option>
+          <option>หนองคาย</option><option>หนองบัวลำภู</option><option>อ่างทอง</option>
+          <option>อำนาจเจริญ</option><option>อุดรธานี</option><option>อุตรดิตถ์</option>
+          <option>อุทัยธานี</option><option>อุบลราชธานี</option>
+        </select>
+      </div>
+
+      <!-- อำเภอ -->
+      <div class="fg" style="margin-bottom:14px">
+        <label>🏘️ อำเภอ / เขต</label>
+        <input id="ep-district" placeholder="เช่น เมือง, บ้านโป่ง, ลาดกระบัง..." style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;outline:none">
+      </div>
+
+      <!-- พืชที่ปลูก -->
+      <div class="fg" style="margin-bottom:8px">
+        <label>🌱 พืชที่ปลูก (เลือกได้หลายอย่าง)</label>
+        <div class="ob-crops-grid" id="ep-crops-grid" style="margin-top:10px"></div>
+      </div>
+
+      <div id="ep-saving" style="display:none;text-align:center;padding:8px;font-size:14px;color:var(--muted)">⏳ กำลังบันทึก...</div>
     </div>
   </div>
 </div>
@@ -793,9 +865,34 @@ function updateUIWithUser(user) {
   if (el('stat-points'))  el('stat-points').textContent  = points.toLocaleString();
   if (el('stat-followers')) el('stat-followers').textContent = user.followers || 0;
 
-  // ── Points & Tier ─────────────────────────────────────
-  if (el('pts-val-display')) el('pts-val-display').textContent = points.toLocaleString() + ' แต้ม';
+  // ── Location & Bio ────────────────────────────────────
+  const profSub = document.getElementById('prof-sub');
+  if (profSub) {
+    const loc = user.locationLabel || (user.district ? user.district + ' ' + (user.province||'') : user.province || '');
+    profSub.textContent = loc ? '📍 ' + loc : '';
+  }
+  const profBio = document.getElementById('prof-bio');
+  if (profBio) profBio.textContent = user.bio || '';
+
+  // ── Badges (tier only — real) ─────────────────────────
+  const profBadges = document.getElementById('prof-badges');
+  if (profBadges) {
+    const tierInfo = APP_CONFIG.tiers[getTier(user.points||0)];
+    profBadges.innerHTML = `<span class="pb pb-blue">${tierInfo.emoji} ${tierInfo.label} Member</span>`;
+  }
+
+  // ── Crops grid (profile) ──────────────────────────────
+  const cropsList = document.getElementById('crops-list');
+  if (cropsList) {
+    const userCrops = user.crops && user.crops.length > 0
+      ? APP_CONFIG.crops.filter(c => user.crops.includes(c.id))
+      : APP_CONFIG.crops.filter(c => c.id !== 'other').slice(0, 6);
+    cropsList.innerHTML = userCrops.map(c =>
+      `<div class="crop-item"><div class="crop-emoji">${c.emoji}</div><div class="crop-name">${c.name}</div><div class="crop-posts">— โพส</div></div>`
+    ).join('');
+  }
   if (el('stat-points'))     el('stat-points').textContent     = points.toLocaleString();
+  if (el('pts-val-display')) el('pts-val-display').textContent = points.toLocaleString() + ' แต้ม';
 
   const T = APP_CONFIG.tiers;
   let tierKey = 'bronze', nextTier = null, nextMin = 0;
@@ -1166,6 +1263,109 @@ function formatTimeAgo(ts) {
   if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว';
   if (diff < 86400)return Math.floor(diff/3600) + ' ชม. ที่แล้ว';
   return Math.floor(diff/86400) + ' วันที่แล้ว';
+}
+
+// ══════════════════════════════════════════════════════════
+//  EDIT PROFILE
+// ══════════════════════════════════════════════════════════
+let epSelectedCrops = [];
+
+function openEditProfile() {
+  if (!currentUser) return;
+
+  // Set avatar
+  const av = document.getElementById('ep-avatar');
+  if (av) {
+    if (currentUser.photoUrl) {
+      av.style.backgroundImage = `url(${currentUser.photoUrl})`;
+      av.textContent = '';
+    } else {
+      av.textContent = currentUser.displayName?.charAt(0) || 'ฉ';
+    }
+  }
+  const nameEl = document.getElementById('ep-name-display');
+  if (nameEl) nameEl.textContent = currentUser.displayName || '—';
+
+  // Set bio
+  const bioEl = document.getElementById('ep-bio');
+  if (bioEl) bioEl.value = currentUser.bio || '';
+
+  // Set province
+  const provEl = document.getElementById('ep-province');
+  if (provEl) provEl.value = currentUser.province || currentUser.locationLabel || '';
+
+  // Set district
+  const distEl = document.getElementById('ep-district');
+  if (distEl) distEl.value = currentUser.district || '';
+
+  // Build crops grid
+  epSelectedCrops = [...(currentUser.crops || [])];
+  buildEpCropsGrid();
+
+  document.getElementById('editProfileModal').classList.add('open');
+}
+
+function buildEpCropsGrid() {
+  const grid = document.getElementById('ep-crops-grid');
+  if (!grid) return;
+  const crops = APP_CONFIG.crops.filter(c => c.id !== 'other');
+  grid.innerHTML = crops.map(c => `
+    <div class="ob-crop ${epSelectedCrops.includes(c.id) ? 'selected' : ''}" id="ep-crop-${c.id}" onclick="toggleEpCrop('${c.id}')">
+      <div class="ob-crop-check">✓</div>
+      <div class="ob-crop-emoji">${c.emoji}</div>
+      <div class="ob-crop-name">${c.name}</div>
+    </div>
+  `).join('');
+}
+
+function toggleEpCrop(id) {
+  const el = document.getElementById('ep-crop-' + id);
+  if (!el) return;
+  const idx = epSelectedCrops.indexOf(id);
+  if (idx >= 0) { epSelectedCrops.splice(idx, 1); el.classList.remove('selected'); }
+  else { epSelectedCrops.push(id); el.classList.add('selected'); }
+}
+
+function closeEditProfile() {
+  document.getElementById('editProfileModal').classList.remove('open');
+}
+
+function closeEditProfileOverlay(e) {
+  if (e.target === document.getElementById('editProfileModal')) closeEditProfile();
+}
+
+async function saveProfile() {
+  if (!currentUser || !db) return;
+  const btn = document.querySelector('#editProfileModal .modal-submit');
+  const saving = document.getElementById('ep-saving');
+  if (btn) btn.disabled = true;
+  if (saving) saving.style.display = 'block';
+
+  try {
+    const bio      = document.getElementById('ep-bio')?.value?.trim() || '';
+    const province = document.getElementById('ep-province')?.value || '';
+    const district = document.getElementById('ep-district')?.value?.trim() || '';
+    const locLabel = [district, province].filter(Boolean).join(' ');
+
+    const updateData = {
+      bio,
+      province,
+      district,
+      locationLabel: locLabel,
+      crops: epSelectedCrops,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    await db.collection('users').doc(currentUser.uid).update(updateData);
+    currentUser = { ...currentUser, ...updateData };
+    updateUIWithUser(currentUser);
+    closeEditProfile();
+  } catch(e) {
+    alert('บันทึกไม่ได้: ' + e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (saving) saving.style.display = 'none';
+  }
 }
 
 // ══════════════════════════════════════════════════════════
