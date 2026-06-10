@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>เพื่อนสวน</title>
 <script src="config.js"></script>
+<script src="firebase-config.js"></script>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<!-- LIFF SDK -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1c1e21;max-width:480px;margin:0 auto;min-height:100vh}
@@ -215,9 +222,56 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 /* screens */
 .screen{display:none;padding-bottom:64px}
 .screen.active{display:block}
+
+/* ── LOADING SCREEN ── */
+#loading-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px}
+.ls-logo{font-size:64px}
+.ls-name{font-size:28px;font-weight:800;color:var(--primary)}
+.ls-sub{font-size:14px;color:var(--muted)}
+.ls-spinner{width:36px;height:36px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin-top:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{position:fixed;inset:0;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9998;padding:32px;text-align:center}
+#login-screen.show{display:flex}
+.login-logo{font-size:72px;margin-bottom:8px}
+.login-appname{font-size:32px;font-weight:800;color:var(--primary);margin-bottom:4px}
+.login-tagline{font-size:16px;color:var(--muted);margin-bottom:40px;line-height:1.5}
+.login-features{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin-bottom:40px}
+.lf-item{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 16px;text-align:left}
+.lf-icon{font-size:24px;flex-shrink:0}
+.lf-text{font-size:14px;color:var(--text);font-weight:600}
+.btn-line-login{width:100%;max-width:300px;background:#06C755;color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(6,199,85,0.35)}
+.btn-line-login:active{opacity:0.85}
+.login-terms{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6}
 </style>
 </head>
 <body>
+
+<!-- ══ LOADING SCREEN ══ -->
+<div id="loading-screen">
+  <div class="ls-logo">🌿</div>
+  <div class="ls-name">เพื่อนสวน</div>
+  <div class="ls-sub">DemeterRich Community</div>
+  <div class="ls-spinner"></div>
+</div>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-logo">🌿</div>
+  <div class="login-appname">เพื่อนสวน</div>
+  <div class="login-tagline">ชุมชนชาวสวนออนไลน์<br>แชร์ปัญหา รับคำแนะนำ สะสมแต้ม</div>
+  <div class="login-features">
+    <div class="lf-item"><div class="lf-icon">🦠</div><div class="lf-text">AI วิเคราะห์โรคพืชจากภาพถ่าย</div></div>
+    <div class="lf-item"><div class="lf-icon">📍</div><div class="lf-text">ดูปัญหาสวนในพื้นที่ใกล้บ้าน</div></div>
+    <div class="lf-item"><div class="lf-icon">🏅</div><div class="lf-text">สะสมแต้ม รับส่วนลดร้าน DemeterRich</div></div>
+  </div>
+  <button class="btn-line-login" onclick="loginWithLine()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+    เข้าสู่ระบบด้วย LINE
+  </button>
+  <div class="login-terms">การเข้าสู่ระบบถือว่าคุณยอมรับ<br>เงื่อนไขการใช้งานของเพื่อนสวน</div>
+</div>
 
 <!-- TOPBAR -->
 <div class="topbar">
@@ -523,17 +577,221 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 
 <script src="config.js"></script>
 <script>
+// ══════════════════════════════════════════════════════════
+//  PHUANSUAN — Main App Script
+//  Firebase + LIFF + LINE Login
+// ══════════════════════════════════════════════════════════
+
+// ── State ─────────────────────────────────────────────────
+let currentUser = null;  // { uid, displayName, photoUrl, lineUserId }
+let db = null;
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  applyConfig();
+
+  // ถ้าไม่มี firebase-config.js (dev mode) ข้าม auth
+  if (typeof FIREBASE_CONFIG === 'undefined' || typeof LIFF_ID === 'undefined') {
+    console.warn('firebase-config.js ไม่พบ — ข้าม auth (dev mode)');
+    hideLoading();
+    return;
+  }
+
+  try {
+    // Init Firebase
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+
+    // Init LIFF
+    await liff.init({ liffId: LIFF_ID });
+
+    if (!liff.isLoggedIn()) {
+      // ยังไม่ login → แสดงหน้า login
+      hideLoading();
+      showLoginScreen();
+    } else {
+      // login แล้ว → ดึงข้อมูล profile
+      await loadUserProfile();
+      hideLoading();
+    }
+  } catch (err) {
+    console.error('Init error:', err);
+    hideLoading();
+    // fallback — เปิดแอปได้แม้ error
+  }
+});
+
+// ── LINE Login ────────────────────────────────────────────
+function loginWithLine() {
+  if (typeof liff === 'undefined') {
+    alert('ไม่พบ LIFF SDK');
+    return;
+  }
+  liff.login();
+}
+
+async function loadUserProfile() {
+  try {
+    const profile = await liff.getProfile();
+
+    currentUser = {
+      uid:         profile.userId,
+      displayName: profile.displayName,
+      photoUrl:    profile.pictureUrl || '',
+      lineUserId:  profile.userId,
+    };
+
+    // บันทึก/อัพเดต user ใน Firestore
+    await saveUserToFirestore(currentUser);
+
+    // อัพเดต UI
+    updateUIWithUser(currentUser);
+
+  } catch (err) {
+    console.error('loadUserProfile error:', err);
+  }
+}
+
+async function saveUserToFirestore(user) {
+  if (!db) return;
+  try {
+    const userRef = db.collection('users').doc(user.uid);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      // User ใหม่ — สร้าง record
+      await userRef.set({
+        displayName:  user.displayName,
+        photoUrl:     user.photoUrl,
+        lineUserId:   user.lineUserId,
+        points:       APP_CONFIG.points.dailyLoginBonus,
+        tier:         'bronze',
+        crops:        [],
+        postCount:    0,
+        helpCount:    0,
+        createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+        lastLoginAt:  firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log('✅ สร้าง user ใหม่:', user.displayName);
+    } else {
+      // User เก่า — อัพเดต lastLogin + daily bonus
+      const data = doc.data();
+      const lastLogin = data.lastLoginAt?.toDate();
+      const today = new Date();
+      const isNewDay = !lastLogin ||
+        lastLogin.toDateString() !== today.toDateString();
+
+      const updates = { lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if (isNewDay) {
+        updates.points = firebase.firestore.FieldValue.increment(
+          APP_CONFIG.points.dailyLoginBonus
+        );
+      }
+      await userRef.update(updates);
+    }
+
+    // ดึงข้อมูลล่าสุด
+    const fresh = await userRef.get();
+    currentUser = { ...currentUser, ...fresh.data() };
+
+  } catch (err) {
+    console.error('saveUserToFirestore error:', err);
+  }
+}
+
+function updateUIWithUser(user) {
+  if (!user) return;
+
+  // Avatar initials
+  const initials = user.displayName ? user.displayName.charAt(0) : 'ฉ';
+
+  // Topbar avatar (ถ้ามี)
+  const cpAvatar = document.getElementById('cp-me-avatar');
+  if (cpAvatar) {
+    if (user.photoUrl) {
+      cpAvatar.style.backgroundImage = `url(${user.photoUrl})`;
+      cpAvatar.style.backgroundSize = 'cover';
+      cpAvatar.style.backgroundPosition = 'center';
+      cpAvatar.textContent = '';
+    } else {
+      cpAvatar.textContent = initials;
+    }
+  }
+
+  // Profile screen
+  const profName = document.querySelector('.prof-name');
+  if (profName) profName.textContent = user.displayName || 'ชื่อของคุณ';
+
+  const profAv = document.querySelector('.prof-av');
+  if (profAv) {
+    if (user.photoUrl) {
+      profAv.style.backgroundImage = `url(${user.photoUrl})`;
+      profAv.style.backgroundSize = 'cover';
+      profAv.style.backgroundPosition = 'center';
+      profAv.textContent = '';
+    } else {
+      profAv.textContent = initials;
+    }
+  }
+
+  // Points
+  const points = user.points || 0;
+  const tier = getTier(points);
+  const ptsVal = document.querySelector('.pts-val');
+  if (ptsVal) ptsVal.textContent = points.toLocaleString() + ' แต้ม';
+
+  // Modal username
+  const modalUname = document.querySelector('.modal-uname');
+  if (modalUname) modalUname.textContent = user.displayName || 'ชื่อของคุณ';
+
+  // Modal avatar
+  const modalAv = document.querySelector('.modal-av');
+  if (modalAv) {
+    if (user.photoUrl) {
+      modalAv.style.backgroundImage = `url(${user.photoUrl})`;
+      modalAv.style.backgroundSize = 'cover';
+      modalAv.style.backgroundPosition = 'center';
+      modalAv.textContent = '';
+    } else {
+      modalAv.textContent = initials;
+    }
+  }
+}
+
+function getTier(points) {
+  const tiers = APP_CONFIG.tiers;
+  if (points >= tiers.platinum.min) return 'platinum';
+  if (points >= tiers.gold.min) return 'gold';
+  if (points >= tiers.silver.min) return 'silver';
+  return 'bronze';
+}
+
+// ── Loading / Login Screen ─────────────────────────────────
+function hideLoading() {
+  const el = document.getElementById('loading-screen');
+  if (el) el.style.display = 'none';
+}
+
+function showLoginScreen() {
+  const el = document.getElementById('login-screen');
+  if (el) el.classList.add('show');
+}
+
+function hideLoginScreen() {
+  const el = document.getElementById('login-screen');
+  if (el) el.classList.remove('show');
+}
+
 // ── Apply Config ──────────────────────────────────────────
-(function applyConfig(){
-  if(typeof APP_CONFIG === 'undefined') return;
+function applyConfig() {
+  if (typeof APP_CONFIG === 'undefined') return;
   const C = APP_CONFIG;
 
-  // App name & color
   document.title = C.app.name;
   document.getElementById('app-logo').textContent = C.app.logoEmoji + ' ' + C.app.name;
   document.documentElement.style.setProperty('--primary', C.app.primaryColor);
 
-  // Populate crops dropdown
+  // Crops dropdown
   const sel = document.getElementById('modal-crop');
   C.crops.forEach(c => {
     const o = document.createElement('option');
@@ -542,7 +800,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     sel.appendChild(o);
   });
 
-  // Populate crops on profile
+  // Crops grid (profile)
   const grid = document.getElementById('crops-list');
   const shown = C.crops.filter(c => c.id !== 'other').slice(0, 6);
   shown.forEach(c => {
@@ -552,7 +810,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   // Points hint
   document.getElementById('pts-hint').textContent =
     `✨ คุณจะได้รับ +${C.points.perPost} แต้มสะสมจากการโพสนี้`;
-})();
+}
 
 // ── UI Functions ─────────────────────────────────────────
 function switchScreen(name){
@@ -571,12 +829,8 @@ function toggleFollow(btn){
   btn.classList.toggle('following',!f);
   btn.textContent = f ? '+ ติดตาม' : 'กำลังติดตาม ▾';
 }
-function toggleLike(btn){
-  btn.classList.toggle('liked');
-}
-function toggleHelp(btn){
-  btn.classList.toggle('helped');
-}
+function toggleLike(btn){ btn.classList.toggle('liked'); }
+function toggleHelp(btn){ btn.classList.toggle('helped'); }
 function toggleComments(id){
   const el=document.getElementById(id);
   el.style.display=el.style.display==='none'?'block':'none';
