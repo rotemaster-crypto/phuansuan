@@ -364,17 +364,46 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <!-- ── Slide 3: Location ── -->
     <div class="ob-slide">
       <div class="ob-loc-icon">📍</div>
-      <div class="ob-slide-title">บอกตำแหน่งของคุณ</div>
-      <div class="ob-slide-sub" style="margin-bottom:20px">ใช้เพื่อแสดงปัญหาสวนใกล้บ้าน<br>และแจ้งเตือนโรคระบาดในพื้นที่</div>
+      <div class="ob-slide-title">คุณอยู่ที่ไหน?</div>
+      <div class="ob-slide-sub" style="margin-bottom:20px">ใช้แสดงโพสใกล้บ้านและ<br>แจ้งเตือนโรคระบาดในพื้นที่</div>
       <div style="width:100%">
-        <button class="ob-loc-btn" id="ob-gps-btn" onclick="getGPSLocation()">
-          <span>📡</span> ระบุตำแหน่งอัตโนมัติ
-        </button>
-        <div class="ob-loc-status" id="ob-loc-status"></div>
         <div class="ob-loc-manual">
-          <label>หรือพิมพ์ชื่ออำเภอ / จังหวัด</label>
-          <input class="ob-loc-input" id="ob-loc-text" placeholder="เช่น บ้านโป่ง ราชบุรี" oninput="onLocTextInput()">
+          <label>จังหวัด</label>
+          <select class="ob-loc-input" id="ob-province" onchange="onProvinceChange()">
+            <option value="">— เลือกจังหวัด —</option>
+            <option>กระบี่</option><option>กรุงเทพมหานคร</option><option>กาญจนบุรี</option>
+            <option>กาฬสินธุ์</option><option>กำแพงเพชร</option><option>ขอนแก่น</option>
+            <option>จันทบุรี</option><option>ฉะเชิงเทรา</option><option>ชลบุรี</option>
+            <option>ชัยนาท</option><option>ชัยภูมิ</option><option>ชุมพร</option>
+            <option>เชียงราย</option><option>เชียงใหม่</option><option>ตรัง</option>
+            <option>ตราด</option><option>ตาก</option><option>นครนายก</option>
+            <option>นครปฐม</option><option>นครพนม</option><option>นครราชสีมา</option>
+            <option>นครศรีธรรมราช</option><option>นครสวรรค์</option><option>นนทบุรี</option>
+            <option>นราธิวาส</option><option>น่าน</option><option>บึงกาฬ</option>
+            <option>บุรีรัมย์</option><option>ปทุมธานี</option><option>ประจวบคีรีขันธ์</option>
+            <option>ปราจีนบุรี</option><option>ปัตตานี</option><option>พระนครศรีอยุธยา</option>
+            <option>พะเยา</option><option>พังงา</option><option>พัทลุง</option>
+            <option>พิจิตร</option><option>พิษณุโลก</option><option>เพชรบุรี</option>
+            <option>เพชรบูรณ์</option><option>แพร่</option><option>ภูเก็ต</option>
+            <option>มหาสารคาม</option><option>มุกดาหาร</option><option>แม่ฮ่องสอน</option>
+            <option>ยโสธร</option><option>ยะลา</option><option>ร้อยเอ็ด</option>
+            <option>ระนอง</option><option>ระยอง</option><option>ราชบุรี</option>
+            <option>ลพบุรี</option><option>ลำปาง</option><option>ลำพูน</option>
+            <option>เลย</option><option>ศรีสะเกษ</option><option>สกลนคร</option>
+            <option>สงขลา</option><option>สตูล</option><option>สมุทรปราการ</option>
+            <option>สมุทรสงคราม</option><option>สมุทรสาคร</option><option>สระแก้ว</option>
+            <option>สระบุรี</option><option>สิงห์บุรี</option><option>สุโขทัย</option>
+            <option>สุพรรณบุรี</option><option>สุราษฎร์ธานี</option><option>สุรินทร์</option>
+            <option>หนองคาย</option><option>หนองบัวลำภู</option><option>อ่างทอง</option>
+            <option>อำนาจเจริญ</option><option>อุดรธานี</option><option>อุตรดิตถ์</option>
+            <option>อุทัยธานี</option><option>อุบลราชธานี</option>
+          </select>
         </div>
+        <div class="ob-loc-manual" style="margin-top:12px">
+          <label>อำเภอ / เขต (ไม่บังคับ)</label>
+          <input class="ob-loc-input" id="ob-district" placeholder="เช่น บ้านโป่ง, เมือง..." oninput="onLocTextInput()">
+        </div>
+        <div class="ob-loc-status" id="ob-loc-status"></div>
         <div class="ob-loc-skip" onclick="skipLocation()">ข้ามสำหรับตอนนี้</div>
       </div>
     </div>
@@ -1232,7 +1261,7 @@ function updateObNextBtn() {
       : 'ข้ามสำหรับตอนนี้ →';
     btn.disabled = false;
   } else if (obStep === 2) {
-    const hasLoc = obLocation || document.getElementById('ob-loc-text')?.value?.trim();
+    const hasLoc = obLocation || document.getElementById('ob-province')?.value;
     btn.textContent = '🎉 เข้าใช้งานเลย!';
     btn.disabled = false;
   }
@@ -1254,16 +1283,30 @@ function obPrev() {
   }
 }
 
-function onLocTextInput() {
-  const val = document.getElementById('ob-loc-text')?.value?.trim();
-  if (val) {
-    obLocation = { lat: null, lng: null, label: val };
+function onProvinceChange() {
+  const province = document.getElementById('ob-province')?.value;
+  const district = document.getElementById('ob-district')?.value?.trim();
+  const label = [district, province].filter(Boolean).join(' ');
+  if (province) {
+    obLocation = { lat: null, lng: null, label };
     const status = document.getElementById('ob-loc-status');
-    if (status) { status.textContent = '📍 ' + val; status.className = 'ob-loc-status ok'; }
+    if (status) { status.textContent = '📍 ' + label; status.className = 'ob-loc-status ok'; }
   } else {
     obLocation = null;
     const status = document.getElementById('ob-loc-status');
     if (status) { status.textContent = ''; status.className = 'ob-loc-status'; }
+  }
+  updateObNextBtn();
+}
+
+function onLocTextInput() {
+  const province = document.getElementById('ob-province')?.value;
+  const district = document.getElementById('ob-district')?.value?.trim();
+  const label = [district, province].filter(Boolean).join(' ');
+  if (label) {
+    obLocation = { lat: null, lng: null, label };
+    const status = document.getElementById('ob-loc-status');
+    if (status) { status.textContent = '📍 ' + label; status.className = 'ob-loc-status ok'; }
   }
   updateObNextBtn();
 }
@@ -1273,55 +1316,15 @@ function skipLocation() {
   finishOnboarding();
 }
 
-function getGPSLocation() {
-  if (!navigator.geolocation) {
-    const s = document.getElementById('ob-loc-status');
-    if (s) { s.textContent = '❌ อุปกรณ์ไม่รองรับ GPS'; s.className = 'ob-loc-status err'; }
-    return;
-  }
-  const btn = document.getElementById('ob-gps-btn');
-  const status = document.getElementById('ob-loc-status');
-  if (btn) { btn.classList.add('loading'); btn.innerHTML = '<span>⏳</span> กำลังระบุตำแหน่ง...'; }
-  if (status) { status.textContent = 'กำลังขอสิทธิ์ GPS...'; status.className = 'ob-loc-status'; }
-
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      let label = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-      // Reverse geocode ด้วย nominatim
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=th`);
-        if (res.ok) {
-          const data = await res.json();
-          const addr = data.address;
-          label = [addr.suburb||addr.village||addr.town, addr.city||addr.county, addr.state].filter(Boolean).join(', ');
-        }
-      } catch(e) {}
-
-      obLocation = { lat, lng, label };
-      if (btn) { btn.classList.remove('loading'); btn.classList.add('success'); btn.innerHTML = `<span>✅</span> ${label}`; }
-      if (status) { status.textContent = '📍 พบตำแหน่งแล้ว!'; status.className = 'ob-loc-status ok'; }
-      updateObNextBtn();
-    },
-    (err) => {
-      if (btn) { btn.classList.remove('loading'); btn.innerHTML = '<span>📡</span> ระบุตำแหน่งอัตโนมัติ'; }
-      if (status) {
-        const msgs = { 1: 'ไม่ได้รับอนุญาต GPS', 2: 'ไม่พบตำแหน่ง', 3: 'หมดเวลา GPS' };
-        status.textContent = '❌ ' + (msgs[err.code] || 'เกิดข้อผิดพลาด');
-        status.className = 'ob-loc-status err';
-      }
-    },
-    { timeout: 10000, maximumAge: 60000 }
-  );
-}
-
 async function finishOnboarding() {
   const btn = document.getElementById('ob-next-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...'; }
 
   try {
-    const locText = document.getElementById('ob-loc-text')?.value?.trim();
-    const finalLocation = obLocation || (locText ? { lat: null, lng: null, label: locText } : null);
+    const province = document.getElementById('ob-province')?.value;
+    const district = document.getElementById('ob-district')?.value?.trim();
+    const label = [district, province].filter(Boolean).join(' ');
+    const finalLocation = obLocation || (label ? { lat: null, lng: null, label } : null);
 
     if (db && currentUser) {
       const updateData = {
@@ -1329,14 +1332,8 @@ async function finishOnboarding() {
         crops: obSelectedCrops,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       };
-      if (finalLocation) {
+      if (finalLocation?.label) {
         updateData.locationLabel = finalLocation.label;
-        if (finalLocation.lat) {
-          updateData.locationLat = finalLocation.lat;
-          updateData.locationLng = finalLocation.lng;
-          // Firestore GeoPoint
-          updateData.geopoint = new firebase.firestore.GeoPoint(finalLocation.lat, finalLocation.lng);
-        }
       }
       await db.collection('users').doc(currentUser.uid).update(updateData);
       currentUser = { ...currentUser, ...updateData };
