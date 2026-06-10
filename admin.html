@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — เพื่อนสวน</title>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1c1e21}
+:root{--primary:#1877f2;--bg:#f0f2f5;--card:#fff;--border:#e4e6eb;--text:#1c1e21;--muted:#65676b;--danger:#e41e3f;--success:#2e7d32}
+
+/* ── LOADING / ACCESS DENIED ── */
+#loading-screen,#deny-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;text-align:center;padding:24px}
+#deny-screen{display:none}
+.spinner{width:40px;height:40px;border:4px solid #e4e6eb;border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.deny-icon{font-size:64px}
+.deny-title{font-size:24px;font-weight:800;color:var(--danger)}
+.deny-sub{font-size:15px;color:var(--muted)}
+
+/* ── LAYOUT ── */
+#app{display:none}
+.sidebar{width:240px;background:#fff;border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
+.main{margin-left:240px;min-height:100vh;padding:24px}
+.sb-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sb-logo-icon{font-size:28px}
+.sb-logo-text{font-size:17px;font-weight:800;color:var(--primary)}
+.sb-logo-sub{font-size:11px;color:var(--muted)}
+.sb-admin{padding:12px 16px;background:#e7f3ff;margin:8px;border-radius:10px;display:flex;align-items:center;gap:8px}
+.sb-admin-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.sb-admin-name{font-size:13px;font-weight:700;color:var(--primary)}
+.sb-admin-role{font-size:11px;color:var(--muted)}
+.sb-menu{padding:8px 0}
+.sb-section{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;padding:12px 16px 4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);border-radius:0;transition:background 0.1s}
+.sb-item:hover{background:var(--bg)}
+.sb-item.active{background:#e7f3ff;color:var(--primary);font-weight:700}
+.sb-item .si{font-size:18px;width:24px;text-align:center}
+.sb-badge{background:var(--danger);color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 6px;margin-left:auto}
+
+/* ── PAGE HEADER ── */
+.page-header{margin-bottom:24px}
+.page-title{font-size:24px;font-weight:800;color:var(--text)}
+.page-sub{font-size:14px;color:var(--muted);margin-top:4px}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px 20px}
+.stat-icon{font-size:28px;margin-bottom:8px}
+.stat-val{font-size:28px;font-weight:800;color:var(--text)}
+.stat-label{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fg{margin-bottom:0}
+.fg label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.fg input,.fg select,.fg textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;background:#fff;outline:none;color:var(--text)}
+.fg input:focus,.fg select:focus{border-color:var(--primary)}
+.color-preview{width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);display:inline-block;vertical-align:middle;margin-left:8px}
+.btn{padding:9px 18px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:var(--bg);color:var(--text)}
+.btn:active{opacity:0.85}
+.save-row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:10px 12px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;border-bottom:2px solid var(--border)}
+td{padding:12px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.user-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.tier-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
+.tc-bronze{background:#fce4ec;color:#880e4f}
+.tc-silver{background:#f5f5f5;color:#616161}
+.tc-gold{background:#fff8e1;color:#e65100}
+.tc-platinum{background:#e8eaf6;color:#3949ab}
+.post-thumb{width:48px;height:48px;background:#e7f3ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.tag-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#e7f3ff;color:var(--primary)}
+.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#1c1e21;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;transform:translateY(100px);opacity:0;transition:all 0.3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+
+/* ── SCREEN ── */
+.screen{display:none}
+.screen.active{display:block}
+
+@media(max-width:768px){
+  .sidebar{width:100%;height:auto;position:relative;border-right:none;border-bottom:1px solid var(--border)}
+  .main{margin-left:0}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div style="font-size:15px;color:var(--muted)">กำลังตรวจสอบสิทธิ์...</div>
+</div>
+
+<!-- ACCESS DENIED -->
+<div id="deny-screen">
+  <div class="deny-icon">🚫</div>
+  <div class="deny-title">ไม่มีสิทธิ์เข้าถึง</div>
+  <div class="deny-sub">หน้านี้สำหรับ Admin เท่านั้น</div>
+  <a href="/" style="margin-top:16px;color:var(--primary);font-weight:700;text-decoration:none">← กลับหน้าหลัก</a>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">🌿</div>
+      <div>
+        <div class="sb-logo-text">เพื่อนสวน</div>
+        <div class="sb-logo-sub">Admin Dashboard</div>
+      </div>
+    </div>
+    <div class="sb-admin">
+      <div class="sb-admin-av" id="admin-av">A</div>
+      <div>
+        <div class="sb-admin-name" id="admin-name">Admin</div>
+        <div class="sb-admin-role">🔑 Super Admin</div>
+      </div>
+    </div>
+    <div class="sb-menu">
+      <div class="sb-section">ภาพรวม</div>
+      <div class="sb-item active" onclick="showScreen('dashboard')"><span class="si">📊</span> Dashboard</div>
+      <div class="sb-section">จัดการ</div>
+      <div class="sb-item" onclick="showScreen('users')"><span class="si">👥</span> Users <span class="sb-badge" id="badge-users">0</span></div>
+      <div class="sb-item" onclick="showScreen('posts')"><span class="si">📝</span> โพส <span class="sb-badge" id="badge-posts">0</span></div>
+      <div class="sb-section">ตั้งค่า</div>
+      <div class="sb-item" onclick="showScreen('appearance')"><span class="si">🎨</span> หน้าตาแอป</div>
+      <div class="sb-item" onclick="showScreen('products')"><span class="si">📦</span> สินค้า</div>
+      <div class="sb-section">ระบบ</div>
+      <div class="sb-item" onclick="window.open('https://phuansuan.web.app','_blank')"><span class="si">🌐</span> เปิดแอป</div>
+      <div class="sb-item" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><span class="si">🔥</span> Firebase Console</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="screen active" id="screen-dashboard">
+      <div class="page-header">
+        <div class="page-title">📊 Dashboard</div>
+        <div class="page-sub">ภาพรวมระบบเพื่อนสวน</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="ds-users">—</div><div class="stat-label">Users ทั้งหมด</div></div>
+        <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-val" id="ds-posts">—</div><div class="stat-label">โพสทั้งหมด</div></div>
+        <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-val" id="ds-points">—</div><div class="stat-label">แต้มรวมทั้งระบบ</div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="ds-today">—</div><div class="stat-label">Login วันนี้</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Users ล่าสุด</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User</th><th>แต้ม</th><th>Tier</th><th>เข้าล่าสุด</th></tr></thead>
+            <tbody id="recent-users-table"><tr><td colspan="4" class="empty-state">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ USERS ══ -->
+    <div class="screen" id="screen-users">
+      <div class="page-header">
+        <div class="page-title">👥 จัดการ Users</div>
+        <div class="page-sub">ดู แก้ไข และจัดการ users ทั้งหมด</div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User</th><th>LINE ID</th><th>แต้ม</th><th>Tier</th><th>โพส</th><th>เข้าล่าสุด</th><th>Action</th></tr></thead>
+            <tbody id="users-table"><tr><td colspan="7" class="empty-state">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ POSTS ══ -->
+    <div class="screen" id="screen-posts">
+      <div class="page-header">
+        <div class="page-title">📝 จัดการโพส</div>
+        <div class="page-sub">ดูและลบโพสในระบบ</div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>โพส</th><th>ผู้โพส</th><th>ประเภท</th><th>พืช</th><th>เวลา</th><th>Action</th></tr></thead>
+            <tbody id="posts-table"><tr><td colspan="6" class="empty-state">ยังไม่มีโพส</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ APPEARANCE ══ -->
+    <div class="screen" id="screen-appearance">
+      <div class="page-header">
+        <div class="page-title">🎨 หน้าตาแอป</div>
+        <div class="page-sub">ปรับแต่ง UI โดยไม่ต้อง deploy ใหม่</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🌿 App Identity</div>
+        <div class="form-grid">
+          <div class="fg"><label>ชื่อแอป</label><input id="cfg-appname" value="เพื่อนสวน"></div>
+          <div class="fg"><label>Subtitle</label><input id="cfg-subtitle" value="DemeterRich Community"></div>
+          <div class="fg"><label>Logo Emoji</label><input id="cfg-logo" value="🌿" style="font-size:24px"></div>
+          <div class="fg"><label>ชื่อร้านค้า</label><input id="cfg-shopname" value="DemeterRich"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎨 สีหลัก</div>
+        <div class="form-grid">
+          <div class="fg">
+            <label>Primary Color</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="color" id="cfg-primary" value="#1877f2" style="width:60px;height:38px;padding:2px;cursor:pointer">
+              <input id="cfg-primary-hex" value="#1877f2" style="flex:1">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Accent Color</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="color" id="cfg-accent" value="#42b883" style="width:60px;height:38px;padding:2px;cursor:pointer">
+              <input id="cfg-accent-hex" value="#42b883" style="flex:1">
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Preview</div>
+          <div id="color-preview-bar" style="height:40px;border-radius:8px;background:#1877f2;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px">เพื่อนสวน</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📞 ร้านค้า DemeterRich</div>
+        <div class="form-grid">
+          <div class="fg"><label>LINE OA ID</label><input id="cfg-lineoa" value="@demeterrich"></div>
+          <div class="fg"><label>LINE Shop URL</label><input id="cfg-lineshop" value="https://line.me/R/ti/p/@demeterrich"></div>
+          <div class="fg"><label>เบอร์โทร</label><input id="cfg-phone" value="099-999-9999"></div>
+        </div>
+      </div>
+      <div class="save-row">
+        <button class="btn btn-ghost" onclick="loadAppearanceConfig()">รีเซ็ต</button>
+        <button class="btn btn-primary" onclick="saveAppearanceConfig()">💾 บันทึกการตั้งค่า</button>
+      </div>
+    </div>
+
+    <!-- ══ PRODUCTS ══ -->
+    <div class="screen" id="screen-products">
+      <div class="page-header">
+        <div class="page-title">📦 จัดการสินค้า</div>
+        <div class="page-sub">เพิ่ม ลบ แก้ไขสินค้าที่แนะนำในแอป</div>
+      </div>
+      <div class="card">
+        <div class="card-title">➕ เพิ่มสินค้าใหม่</div>
+        <div class="form-grid">
+          <div class="fg"><label>ชื่อสินค้า</label><input id="new-prod-name" placeholder="เช่น Mancozeb 80% WP"></div>
+          <div class="fg"><label>ราคา</label><input id="new-prod-price" placeholder="เช่น 180 บาท"></div>
+          <div class="fg"><label>หมวดหมู่</label>
+            <select id="new-prod-cat">
+              <option value="pesticide">🧴 ยาฆ่าแมลง</option>
+              <option value="fertilizer">💊 ปุ๋ย</option>
+              <option value="hormone">💧 ฮอร์โมน</option>
+              <option value="organic">🌱 อินทรีย์</option>
+              <option value="equipment">🔧 อุปกรณ์</option>
+            </select>
+          </div>
+          <div class="fg"><label>LINE Shop URL</label><input id="new-prod-url" value="https://line.me/R/ti/p/@demeterrich"></div>
+        </div>
+        <div class="save-row">
+          <button class="btn btn-primary" onclick="addProduct()">➕ เพิ่มสินค้า</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 สินค้าทั้งหมด</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ชื่อสินค้า</th><th>หมวด</th><th>ราคา</th><th>Action</th></tr></thead>
+            <tbody id="products-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  ADMIN DASHBOARD — เพื่อนสวน
+//  เข้าได้เฉพาะ LINE User ID ของ Roger เท่านั้น
+// ══════════════════════════════════════════════════════════
+
+const ADMIN_LINE_ID = 'U03582167674331d9005dfb42728c7151';
+
+let db = null;
+let adminUser = null;
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  if (typeof FIREBASE_CONFIG === 'undefined') {
+    showDeny(); return;
+  }
+
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    await liff.init({ liffId: LIFF_ID });
+
+    if (!liff.isLoggedIn()) {
+      liff.login(); return;
+    }
+
+    const profile = await liff.getProfile();
+
+    if (profile.userId !== ADMIN_LINE_ID) {
+      showDeny(); return;
+    }
+
+    adminUser = profile;
+    showApp();
+    await loadDashboard();
+
+  } catch (err) {
+    console.error('Admin init error:', err);
+    showDeny();
+  }
+});
+
+function showApp() {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  const av = document.getElementById('admin-av');
+  if (adminUser.pictureUrl) {
+    av.style.backgroundImage = `url(${adminUser.pictureUrl})`;
+    av.textContent = '';
+  } else {
+    av.textContent = adminUser.displayName?.charAt(0) || 'A';
+  }
+  document.getElementById('admin-name').textContent = adminUser.displayName || 'Admin';
+}
+
+function showDeny() {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('deny-screen').style.display = 'flex';
+}
+
+// ── Screen Navigation ─────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  // Load data on demand
+  if (name === 'users')      loadUsers();
+  if (name === 'posts')      loadPosts();
+  if (name === 'appearance') loadAppearanceConfig();
+  if (name === 'products')   loadProducts();
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+// ── Dashboard ─────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const usersSnap = await db.collection('users').get();
+    const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const today = new Date().toDateString();
+    const todayLogins = users.filter(u => {
+      const last = u.lastLoginAt?.toDate();
+      return last && last.toDateString() === today;
+    }).length;
+
+    const totalPoints = users.reduce((sum, u) => sum + (u.points || 0), 0);
+
+    document.getElementById('ds-users').textContent = users.length;
+    document.getElementById('ds-points').textContent = totalPoints.toLocaleString();
+    document.getElementById('ds-today').textContent = todayLogins;
+    document.getElementById('badge-users').textContent = users.length;
+
+    // Posts count
+    try {
+      const postsSnap = await db.collection('posts').get();
+      document.getElementById('ds-posts').textContent = postsSnap.size;
+      document.getElementById('badge-posts').textContent = postsSnap.size;
+    } catch { document.getElementById('ds-posts').textContent = '0'; }
+
+    // Recent users table
+    const sorted = users.sort((a, b) => (b.lastLoginAt?.seconds || 0) - (a.lastLoginAt?.seconds || 0)).slice(0, 5);
+    const tbody = document.getElementById('recent-users-table');
+    tbody.innerHTML = sorted.map(u => `
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:10px">
+          <div class="user-av" style="${u.photoUrl ? `background-image:url(${u.photoUrl})` : ''}">
+            ${u.photoUrl ? '' : (u.displayName?.charAt(0) || '?')}
+          </div>
+          <div style="font-weight:700">${u.displayName || 'ไม่ระบุ'}</div>
+        </div></td>
+        <td><b>${(u.points || 0).toLocaleString()}</b></td>
+        <td><span class="tier-chip tc-${u.tier || 'bronze'}">${tierEmoji(u.tier)} ${u.tier || 'bronze'}</span></td>
+        <td style="color:var(--muted);font-size:13px">${formatDate(u.lastLoginAt)}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="empty-state">ไม่มีข้อมูล</td></tr>';
+
+  } catch (err) {
+    console.error('loadDashboard error:', err);
+  }
+}
+
+// ── Users ─────────────────────────────────────────────────
+async function loadUsers() {
+  const tbody = document.getElementById('users-table');
+  tbody.innerHTML = '<tr><td colspan="7" class="empty-state">กำลังโหลด...</td></tr>';
+  try {
+    const snap = await db.collection('users').orderBy('lastLoginAt', 'desc').get();
+    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('badge-users').textContent = users.length;
+
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:10px">
+          <div class="user-av" style="${u.photoUrl ? `background-image:url(${u.photoUrl})` : ''}">
+            ${u.photoUrl ? '' : (u.displayName?.charAt(0) || '?')}
+          </div>
+          <div style="font-weight:700">${u.displayName || 'ไม่ระบุ'}</div>
+        </div></td>
+        <td style="font-size:12px;color:var(--muted);font-family:monospace">${u.lineUserId?.slice(0,16)}...</td>
+        <td>
+          <input type="number" value="${u.points || 0}" style="width:80px;border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px"
+            onchange="updateUserPoints('${u.id}', this.value)">
+        </td>
+        <td>
+          <select onchange="updateUserTier('${u.id}', this.value)" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px">
+            ${['bronze','silver','gold','platinum'].map(t =>
+              `<option value="${t}" ${(u.tier||'bronze')===t?'selected':''}>${tierEmoji(t)} ${t}</option>`
+            ).join('')}
+          </select>
+        </td>
+        <td>${u.postCount || 0}</td>
+        <td style="color:var(--muted);font-size:13px">${formatDate(u.lastLoginAt)}</td>
+        <td><button class="btn btn-danger" style="padding:5px 12px;font-size:12px" onclick="banUser('${u.id}','${u.displayName}')">🚫 Ban</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="7" class="empty-state">ไม่มี users</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error: ${err.message}</td></tr>`;
+  }
+}
+
+async function updateUserPoints(uid, points) {
+  try {
+    await db.collection('users').doc(uid).update({ points: parseInt(points) });
+    toast('✅ อัพเดทแต้มแล้ว', 'success');
+  } catch (err) { toast('❌ Error: ' + err.message, 'error'); }
+}
+
+async function updateUserTier(uid, tier) {
+  try {
+    await db.collection('users').doc(uid).update({ tier });
+    toast('✅ อัพเดท Tier แล้ว', 'success');
+  } catch (err) { toast('❌ Error: ' + err.message, 'error'); }
+}
+
+async function banUser(uid, name) {
+  if (!confirm(`Ban "${name}" ออกจากระบบ?`)) return;
+  try {
+    await db.collection('users').doc(uid).update({ banned: true });
+    toast('🚫 Ban แล้ว', 'success');
+    loadUsers();
+  } catch (err) { toast('❌ Error: ' + err.message, 'error'); }
+}
+
+// ── Posts ─────────────────────────────────────────────────
+async function loadPosts() {
+  const tbody = document.getElementById('posts-table');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty-state">กำลังโหลด...</td></tr>';
+  try {
+    const snap = await db.collection('posts').orderBy('createdAt', 'desc').limit(50).get();
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">ยังไม่มีโพส</td></tr>';
+      return;
+    }
+    tbody.innerHTML = snap.docs.map(doc => {
+      const p = doc.data();
+      return `
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px">
+            <div class="post-thumb">${p.imageUrl ? '📸' : '📝'}</div>
+            <div style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              ${p.text || '(ไม่มีข้อความ)'}
+            </div>
+          </div></td>
+          <td style="font-size:13px">${p.authorName || 'ไม่ระบุ'}</td>
+          <td><span class="tag-chip">${p.type || 'โพส'}</span></td>
+          <td style="font-size:13px">${p.crop || '—'}</td>
+          <td style="color:var(--muted);font-size:13px">${formatDate(p.createdAt)}</td>
+          <td><button class="btn btn-danger" style="padding:5px 12px;font-size:12px" onclick="deletePost('${doc.id}')">🗑️ ลบ</button></td>
+        </tr>
+      `;
+    }).join('');
+    document.getElementById('badge-posts').textContent = snap.size;
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${err.message}</td></tr>`;
+  }
+}
+
+async function deletePost(id) {
+  if (!confirm('ลบโพสนี้?')) return;
+  try {
+    await db.collection('posts').doc(id).delete();
+    toast('🗑️ ลบโพสแล้ว', 'success');
+    loadPosts();
+  } catch (err) { toast('❌ Error: ' + err.message, 'error'); }
+}
+
+// ── Appearance ────────────────────────────────────────────
+async function loadAppearanceConfig() {
+  try {
+    const doc = await db.collection('settings').doc('app').get();
+    if (doc.exists) {
+      const d = doc.data();
+      if (d.appName)    document.getElementById('cfg-appname').value  = d.appName;
+      if (d.subtitle)   document.getElementById('cfg-subtitle').value = d.subtitle;
+      if (d.logoEmoji)  document.getElementById('cfg-logo').value     = d.logoEmoji;
+      if (d.shopName)   document.getElementById('cfg-shopname').value = d.shopName;
+      if (d.primary)  { document.getElementById('cfg-primary').value  = d.primary; document.getElementById('cfg-primary-hex').value = d.primary; }
+      if (d.accent)   { document.getElementById('cfg-accent').value   = d.accent;  document.getElementById('cfg-accent-hex').value  = d.accent; }
+      if (d.lineOaId)   document.getElementById('cfg-lineoa').value   = d.lineOaId;
+      if (d.lineShopUrl)document.getElementById('cfg-lineshop').value = d.lineShopUrl;
+      if (d.phone)      document.getElementById('cfg-phone').value    = d.phone;
+      updateColorPreview();
+    }
+  } catch (err) { console.log('No settings yet'); }
+}
+
+async function saveAppearanceConfig() {
+  try {
+    const cfg = {
+      appName:     document.getElementById('cfg-appname').value,
+      subtitle:    document.getElementById('cfg-subtitle').value,
+      logoEmoji:   document.getElementById('cfg-logo').value,
+      shopName:    document.getElementById('cfg-shopname').value,
+      primary:     document.getElementById('cfg-primary').value,
+      accent:      document.getElementById('cfg-accent').value,
+      lineOaId:    document.getElementById('cfg-lineoa').value,
+      lineShopUrl: document.getElementById('cfg-lineshop').value,
+      phone:       document.getElementById('cfg-phone').value,
+      updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    await db.collection('settings').doc('app').set(cfg);
+    toast('✅ บันทึกการตั้งค่าแล้ว', 'success');
+  } catch (err) { toast('❌ Error: ' + err.message, 'error'); }
+}
+
+function updateColorPreview() {
+  const color = document.getElementById('cfg-primary').value;
+  document.getElementById('cfg-primary-hex').value = color;
+  document.getElementById('color-preview-bar').style.background = color;
+  document.getElementById('color-preview-bar').textContent =
+    document.getElementById('cfg-appname').value || 'เพื่อนสวน';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const picker = document.getElementById('cfg-primary');
+  if (picker) picker.addEventListener('input', updateColorPreview);
+  const hex = document.getElementById('cfg-primary-hex');
+  if (hex) hex.addEventListener('input', () => {
+    document.getElementById('cfg-primary').value = hex.value;
+    updateColorPreview();
+  });
+});
+
+// ── Products ──────────────────────────────────────────────
+async function loadProducts() {
+  const tbody = document.getElementById('products-table');
+  try {
+    const snap = await db.collection('products').get();
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">ยังไม่มีสินค้า — เพิ่มได้เลย</td></tr>';
+      return;
+    }
+    tbody.innerHTML = snap.docs.map(doc => {
+      const p = doc.data();
+      return `
+        <tr>
+          <td style="font-weight:700">${p.name}</td>
+          <td><span class="tag-chip">${p.category || '—'}</span></td>
+          <td>${p.price || '—'}</td>
+          <td><button class="btn btn-danger" style="padding:5px 12px;font-size:12px" onclick="deleteProduct('${doc.id}')">🗑️ ลบ</button></td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Error: ${err.message}</td></tr>`;
+  }
+}
+
+async function addProduct() {
+  const name  = document.getElementById('new-prod-name').value.trim();
+  const price = document.getElementById('new-prod-price').value.trim();
+  const cat   = document.getElementById('new-prod-cat').value;
+  const url   = document.getElementById('new-prod-url').value.trim();
+  if (!name) { toast('❌ กรอกชื่อสินค้าก่อน', 'error'); return; }
+  try {
+    await db.collection('products').add({ name, price, category: cat, url, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast('✅ เพิ่มสินค้าแล้ว', 'success');
+    document.getElementById('new-prod-name').value = '';
+    document.getElementById('new-prod-price').value = '';
+    loadProducts();
+  } catch (err) { toast('❌ Error: ' + err.message, 'error'); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('ลบสินค้านี้?')) return;
+  try {
+    await db.collection('products').doc(id).delete();
+    toast('🗑️ ลบสินค้าแล้ว', 'success');
+    loadProducts();
+  } catch (err) { toast('❌ Error: ' + err.message, 'error'); }
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function tierEmoji(tier) {
+  return { bronze:'🥉', silver:'🥈', gold:'🥇', platinum:'💎' }[tier] || '🥉';
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('th-TH', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+</script>
+</body>
+</html>

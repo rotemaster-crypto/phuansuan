@@ -439,14 +439,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
   <div class="prof-body">
     <div class="prof-av-row">
-      <div class="prof-av">สช</div>
+      <div class="prof-av" id="prof-avatar">ฉ</div>
       <div class="prof-btns">
         <button class="prof-btn-p">✏️ แก้ไขโปรไฟล์</button>
         <button class="prof-btn-s">••• เพิ่มเติม</button>
       </div>
     </div>
-    <div class="prof-name">ลุงสมชาย วงษ์เกษตร</div>
-    <div class="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
+    <div class="prof-name" id="prof-name">ลุงสมชาย วงษ์เกษตร</div>
+    <div class="prof-sub" id="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
     <div class="prof-bio">เกษตรกรสวนมะม่วง 20 ปี 🥭 รักการแบ่งปันความรู้ให้เพื่อนชาวสวน</div>
     <div class="prof-badges">
       <span class="pb pb-gold">⭐ ปราชญ์มะม่วง</span>
@@ -454,10 +454,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <span class="pb pb-green">🤝 เพื่อนบ้านที่ดี</span>
     </div>
     <div class="prof-stats">
-      <div class="ps"><div class="ps-n">84</div><div class="ps-l">โพส</div></div>
-      <div class="ps"><div class="ps-n">312</div><div class="ps-l">ผู้ติดตาม</div></div>
-      <div class="ps"><div class="ps-n">47</div><div class="ps-l">ช่วยคน</div></div>
-      <div class="ps"><div class="ps-n">3,240</div><div class="ps-l">แต้ม</div></div>
+      <div class="ps"><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
+      <div class="ps"><div class="ps-n" id="stat-followers">0</div><div class="ps-l">ผู้ติดตาม</div></div>
+      <div class="ps"><div class="ps-n" id="stat-helped">0</div><div class="ps-l">ช่วยคน</div></div>
+      <div class="ps"><div class="ps-n" id="stat-points">0</div><div class="ps-l">แต้ม</div></div>
     </div>
   </div>
   <div class="prof-nav">
@@ -467,10 +467,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="pnav">สินค้าที่ใช้</div>
   </div>
   <div class="points-card">
-    <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val">3,240 แต้ม</div></div>
-    <div class="bar-bg"><div class="bar-fg" style="width:68%"></div></div>
-    <div class="tier-lbs"><span>Bronze</span><span>Silver</span><span class="tier-act">Gold ✓</span><span>Platinum</span></div>
-    <div style="font-size:13px;color:var(--muted);margin-top:6px">เหลืออีก 760 แต้ม → Platinum · ได้ส่วนลด 15%</div>
+    <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
+    <div class="bar-bg"><div class="bar-fg" id="pts-bar" style="width:0%"></div></div>
+    <div class="tier-lbs"><span>Bronze</span><span>Silver</span><span id="tier-label" class="tier-act">Bronze</span><span>Platinum</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
   </div>
   <div class="crops-card">
     <div class="sec-title">พืชที่ปลูก</div>
@@ -704,60 +704,68 @@ async function saveUserToFirestore(user) {
 function updateUIWithUser(user) {
   if (!user) return;
 
-  // Avatar initials
   const initials = user.displayName ? user.displayName.charAt(0) : 'ฉ';
 
-  // Topbar avatar (ถ้ามี)
-  const cpAvatar = document.getElementById('cp-me-avatar');
-  if (cpAvatar) {
-    if (user.photoUrl) {
-      cpAvatar.style.backgroundImage = `url(${user.photoUrl})`;
-      cpAvatar.style.backgroundSize = 'cover';
-      cpAvatar.style.backgroundPosition = 'center';
-      cpAvatar.textContent = '';
+  // ── Avatar helper ─────────────────────────────────────
+  function setAvatar(el, photoUrl, fallback) {
+    if (!el) return;
+    if (photoUrl) {
+      el.style.backgroundImage = `url(${photoUrl})`;
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
+      el.textContent = '';
     } else {
-      cpAvatar.textContent = initials;
+      el.textContent = fallback;
     }
   }
 
-  // Profile screen
-  const profName = document.querySelector('.prof-name');
-  if (profName) profName.textContent = user.displayName || 'ชื่อของคุณ';
+  // ── Avatars ───────────────────────────────────────────
+  setAvatar(document.getElementById('cp-me-avatar'),   user.photoUrl, initials);
+  setAvatar(document.getElementById('prof-avatar'),    user.photoUrl, initials);
+  setAvatar(document.querySelector('.modal-av'),       user.photoUrl, initials);
+  setAvatar(document.querySelector('.cmt-me'),         user.photoUrl, initials);
 
-  const profAv = document.querySelector('.prof-av');
-  if (profAv) {
-    if (user.photoUrl) {
-      profAv.style.backgroundImage = `url(${user.photoUrl})`;
-      profAv.style.backgroundSize = 'cover';
-      profAv.style.backgroundPosition = 'center';
-      profAv.textContent = '';
-    } else {
-      profAv.textContent = initials;
-    }
-  }
-
-  // Points
-  const points = user.points || 0;
-  const tier = getTier(points);
-  const ptsVal = document.querySelector('.pts-val');
-  if (ptsVal) ptsVal.textContent = points.toLocaleString() + ' แต้ม';
-
-  // Modal username
+  // ── Names ─────────────────────────────────────────────
+  const name = user.displayName || 'ชื่อของคุณ';
+  const profName = document.getElementById('prof-name');
+  if (profName) profName.textContent = name;
   const modalUname = document.querySelector('.modal-uname');
-  if (modalUname) modalUname.textContent = user.displayName || 'ชื่อของคุณ';
+  if (modalUname) modalUname.textContent = name;
 
-  // Modal avatar
-  const modalAv = document.querySelector('.modal-av');
-  if (modalAv) {
-    if (user.photoUrl) {
-      modalAv.style.backgroundImage = `url(${user.photoUrl})`;
-      modalAv.style.backgroundSize = 'cover';
-      modalAv.style.backgroundPosition = 'center';
-      modalAv.textContent = '';
-    } else {
-      modalAv.textContent = initials;
-    }
-  }
+  // ── Stats ─────────────────────────────────────────────
+  const points    = user.points    || 0;
+  const postCount = user.postCount || 0;
+  const helpCount = user.helpCount || 0;
+
+  const el = (id) => document.getElementById(id);
+  if (el('stat-posts'))   el('stat-posts').textContent   = postCount;
+  if (el('stat-helped'))  el('stat-helped').textContent  = helpCount;
+  if (el('stat-points'))  el('stat-points').textContent  = points.toLocaleString();
+  if (el('stat-followers')) el('stat-followers').textContent = user.followers || 0;
+
+  // ── Points & Tier ─────────────────────────────────────
+  if (el('pts-val-display')) el('pts-val-display').textContent = points.toLocaleString() + ' แต้ม';
+  if (el('stat-points'))     el('stat-points').textContent     = points.toLocaleString();
+
+  const T = APP_CONFIG.tiers;
+  let tierKey = 'bronze', nextTier = null, nextMin = 0;
+  if      (points >= T.platinum.min) { tierKey = 'platinum'; }
+  else if (points >= T.gold.min)     { tierKey = 'gold';     nextTier = 'Platinum'; nextMin = T.platinum.min; }
+  else if (points >= T.silver.min)   { tierKey = 'silver';   nextTier = 'Gold';     nextMin = T.gold.min; }
+  else                               { tierKey = 'bronze';   nextTier = 'Silver';   nextMin = T.silver.min; }
+
+  const tierInfo = T[tierKey];
+  const tierMax  = tierInfo.max === 99999 ? tierInfo.min : tierInfo.max;
+  const barPct   = tierKey === 'platinum' ? 100
+    : Math.min(100, Math.round(((points - tierInfo.min) / (nextMin - tierInfo.min)) * 100));
+
+  if (el('pts-bar'))    el('pts-bar').style.width = barPct + '%';
+  if (el('tier-label')) el('tier-label').textContent = tierInfo.emoji + ' ' + tierInfo.label + ' ✓';
+
+  const nextMsg = tierKey === 'platinum'
+    ? '🎉 คุณอยู่ระดับสูงสุดแล้ว! ได้ส่วนลด 15%'
+    : `เหลืออีก ${(nextMin - points).toLocaleString()} แต้ม → ${nextTier} · ได้ส่วนลด ${T[tierKey === 'bronze' ? 'silver' : tierKey === 'silver' ? 'gold' : 'platinum'].discount}%`;
+  if (el('pts-next-tier')) el('pts-next-tier').textContent = nextMsg;
 }
 
 function getTier(points) {
