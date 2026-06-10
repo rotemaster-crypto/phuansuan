@@ -610,7 +610,9 @@ window.addEventListener('load', async () => {
       hideLoading();
       showLoginScreen();
     } else {
-      // login แล้ว → ดึงข้อมูล profile
+      // login แล้ว → sign in Firebase anonymously ก่อน
+      await firebase.auth().signInAnonymously();
+      // จากนั้นดึงข้อมูล profile จาก LINE
       await loadUserProfile();
       hideLoading();
     }
