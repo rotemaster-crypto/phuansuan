@@ -339,18 +339,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="prof-av-row">
       <div class="prof-av" id="prof-avatar">ฉ</div>
       <div class="prof-btns">
-        <button class="prof-btn-p">✏️ แก้ไขโปรไฟล์</button>
+        <button class="prof-btn-p" onclick="openEditProfile()">✏️ แก้ไขโปรไฟล์</button>
         <button class="prof-btn-s">••• เพิ่มเติม</button>
       </div>
     </div>
-    <div class="prof-name" id="prof-name">ลุงสมชาย วงษ์เกษตร</div>
-    <div class="prof-sub" id="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
-    <div class="prof-bio">เกษตรกรสวนมะม่วง 20 ปี 🥭 รักการแบ่งปันความรู้ให้เพื่อนชาวสวน</div>
-    <div class="prof-badges">
-      <span class="pb pb-gold">⭐ ปราชญ์มะม่วง</span>
-      <span class="pb pb-blue">🥇 Gold Member</span>
-      <span class="pb pb-green">🤝 เพื่อนบ้านที่ดี</span>
-    </div>
+    <div class="prof-name" id="prof-name">—</div>
+    <div class="prof-sub" id="prof-sub"></div>
+    <div class="prof-bio" id="prof-bio"></div>
+    <div class="prof-badges" id="prof-badges"></div>
     <div class="prof-stats">
       <div class="ps"><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
       <div class="ps"><div class="ps-n" id="stat-followers">0</div><div class="ps-l">ผู้ติดตาม</div></div>
@@ -476,7 +472,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
 </div>
 
-<script src="config.js"></script>
 <script>
 // ══════════════════════════════════════════════════════════
 //  PHUANSUAN — Main App Script
@@ -550,6 +545,7 @@ async function loadUserProfile() {
 
     // อัพเดต UI
     updateUIWithUser(currentUser);
+    updateProfileUI();
 
   } catch (err) {
     console.error('loadUserProfile error:', err);
@@ -1018,6 +1014,111 @@ function formatTimeAgo(ts) {
   if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว';
   if (diff < 86400)return Math.floor(diff/3600) + ' ชม. ที่แล้ว';
   return Math.floor(diff/86400) + ' วันที่แล้ว';
+}
+</script>
+<!-- ══ EDIT PROFILE MODAL ══ -->
+<div class="overlay" id="editProfileModal" onclick="if(event.target===this)closeEditProfile()">
+  <div class="modal">
+    <div class="modal-top">
+      <button class="modal-close" onclick="closeEditProfile()">✕</button>
+      <div class="modal-title">แก้ไขโปรไฟล์</div>
+      <button class="modal-submit" id="ep-save-btn" onclick="saveProfile()">บันทึก</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px;background:var(--bg);border-radius:12px">
+        <div id="ep-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center"></div>
+        <div><div style="font-size:15px;font-weight:700" id="ep-name-show">—</div><div style="font-size:12px;color:var(--muted);margin-top:2px">รูปโปรไฟล์ดึงจาก LINE อัตโนมัติ</div></div>
+      </div>
+      <div class="fg"><label>✍️ แนะนำตัว / Bio</label><textarea id="ep-bio" placeholder="เช่น เกษตรกรชาวสวน รักการแบ่งปันความรู้..." style="height:80px"></textarea></div>
+      <div class="fg"><label>📍 จังหวัด</label>
+        <select id="ep-province">
+          <option value="">— เลือกจังหวัด —</option>
+          <option>กรุงเทพมหานคร</option><option>กระบี่</option><option>กาญจนบุรี</option><option>กาฬสินธุ์</option><option>กำแพงเพชร</option><option>ขอนแก่น</option><option>จันทบุรี</option><option>ฉะเชิงเทรา</option><option>ชลบุรี</option><option>ชัยนาท</option><option>ชัยภูมิ</option><option>ชุมพร</option><option>เชียงราย</option><option>เชียงใหม่</option><option>ตรัง</option><option>ตราด</option><option>ตาก</option><option>นครนายก</option><option>นครปฐม</option><option>นครพนม</option><option>นครราชสีมา</option><option>นครศรีธรรมราช</option><option>นครสวรรค์</option><option>นนทบุรี</option><option>นราธิวาส</option><option>น่าน</option><option>บึงกาฬ</option><option>บุรีรัมย์</option><option>ปทุมธานี</option><option>ประจวบคีรีขันธ์</option><option>ปราจีนบุรี</option><option>ปัตตานี</option><option>พระนครศรีอยุธยา</option><option>พะเยา</option><option>พังงา</option><option>พัทลุง</option><option>พิจิตร</option><option>พิษณุโลก</option><option>เพชรบุรี</option><option>เพชรบูรณ์</option><option>แพร่</option><option>ภูเก็ต</option><option>มหาสารคาม</option><option>มุกดาหาร</option><option>แม่ฮ่องสอน</option><option>ยโสธร</option><option>ยะลา</option><option>ร้อยเอ็ด</option><option>ระนอง</option><option>ระยอง</option><option>ราชบุรี</option><option>ลพบุรี</option><option>ลำปาง</option><option>ลำพูน</option><option>เลย</option><option>ศรีสะเกษ</option><option>สกลนคร</option><option>สงขลา</option><option>สตูล</option><option>สมุทรปราการ</option><option>สมุทรสงคราม</option><option>สมุทรสาคร</option><option>สระแก้ว</option><option>สระบุรี</option><option>สิงห์บุรี</option><option>สุโขทัย</option><option>สุพรรณบุรี</option><option>สุราษฎร์ธานี</option><option>สุรินทร์</option><option>หนองคาย</option><option>หนองบัวลำภู</option><option>อ่างทอง</option><option>อำนาจเจริญ</option><option>อุดรธานี</option><option>อุตรดิตถ์</option><option>อุทัยธานี</option><option>อุบลราชธานี</option>
+        </select>
+      </div>
+      <div class="fg"><label>🏘️ อำเภอ / เขต</label><input id="ep-district" placeholder="เช่น เมือง, ลาดกระบัง, บ้านโป่ง..."></div>
+      <div class="fg"><label>🌱 พืชที่ปลูก</label>
+        <div id="ep-crops-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ EDIT PROFILE ══
+var epSelectedCrops = [];
+
+function openEditProfile() {
+  if (!currentUser) return;
+  var av = document.getElementById('ep-avatar');
+  if (av) {
+    if (currentUser.photoUrl) { av.style.backgroundImage='url('+currentUser.photoUrl+')'; av.style.backgroundSize='cover'; av.style.backgroundPosition='center'; av.textContent=''; }
+    else { av.style.backgroundImage=''; av.textContent=currentUser.displayName?currentUser.displayName.charAt(0):'ฉ'; }
+  }
+  var ns = document.getElementById('ep-name-show'); if (ns) ns.textContent = currentUser.displayName||'—';
+  var bio = document.getElementById('ep-bio'); if (bio) bio.value = currentUser.bio||'';
+  var prov = document.getElementById('ep-province'); if (prov) prov.value = currentUser.province||'';
+  var dist = document.getElementById('ep-district'); if (dist) dist.value = currentUser.district||'';
+  epSelectedCrops = [].concat(currentUser.crops||[]);
+  buildEpCrops();
+  document.getElementById('editProfileModal').classList.add('open');
+}
+
+function buildEpCrops() {
+  var grid = document.getElementById('ep-crops-grid'); if (!grid) return;
+  var crops = APP_CONFIG.crops.filter(function(c){return c.id!=='other';});
+  grid.innerHTML = crops.map(function(c){
+    var sel = epSelectedCrops.includes(c.id);
+    return '<div onclick="toggleEpCrop(\''+c.id+'\')" id="epc-'+c.id+'" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:'+(sel?'#e7f3ff':'var(--bg)')+';border-radius:12px;padding:10px 6px;cursor:pointer;border:2px solid '+(sel?'var(--primary)':'transparent')+'">'+
+      '<div style="font-size:26px">'+c.emoji+'</div>'+
+      '<div style="font-size:11px;font-weight:700;text-align:center">'+c.name+'</div>'+
+      (sel?'<div style="font-size:10px;color:var(--primary);font-weight:800">✓</div>':'<div style="font-size:10px"> </div>')+
+      '</div>';
+  }).join('');
+}
+
+function toggleEpCrop(id) {
+  var idx = epSelectedCrops.indexOf(id);
+  if (idx>=0) epSelectedCrops.splice(idx,1); else epSelectedCrops.push(id);
+  buildEpCrops();
+}
+
+function closeEditProfile() { document.getElementById('editProfileModal').classList.remove('open'); }
+
+async function saveProfile() {
+  if (!currentUser||!db) return;
+  var btn = document.getElementById('ep-save-btn');
+  if (btn) { btn.disabled=true; btn.textContent='⏳ บันทึก...'; }
+  try {
+    var bio = document.getElementById('ep-bio').value.trim();
+    var prov = document.getElementById('ep-province').value;
+    var dist = document.getElementById('ep-district').value.trim();
+    var label = [dist,prov].filter(Boolean).join(' ');
+    var upd = { bio:bio, province:prov, district:dist, locationLabel:label, crops:epSelectedCrops, updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
+    await db.collection('users').doc(currentUser.uid).update(upd);
+    currentUser = Object.assign({}, currentUser, upd);
+    updateProfileUI();
+    closeEditProfile();
+  } catch(e) { alert('บันทึกไม่ได้: '+e.message); }
+  finally { if (btn) { btn.disabled=false; btn.textContent='บันทึก'; } }
+}
+
+function updateProfileUI() {
+  if (!currentUser) return;
+  var loc = currentUser.locationLabel || [currentUser.district, currentUser.province].filter(Boolean).join(' ');
+  var sub = document.getElementById('prof-sub'); if (sub) sub.textContent = loc ? '📍 '+loc : '';
+  var bio = document.getElementById('prof-bio'); if (bio) bio.textContent = currentUser.bio||'';
+  var badges = document.getElementById('prof-badges');
+  if (badges) {
+    var t = APP_CONFIG.tiers[getTier(currentUser.points||0)];
+    badges.innerHTML = '<span class="pb pb-blue">'+t.emoji+' '+t.label+' Member</span>';
+  }
+  var crops = document.getElementById('crops-list');
+  if (crops && currentUser.crops && currentUser.crops.length>0) {
+    crops.innerHTML = APP_CONFIG.crops.filter(function(c){return currentUser.crops.includes(c.id);}).map(function(c){
+      return '<div class="crop-item"><div class="crop-emoji">'+c.emoji+'</div><div class="crop-name">'+c.name+'</div><div class="crop-posts">— โพส</div></div>';
+    }).join('');
+  }
 }
 </script>
 </body>
