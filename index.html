@@ -4,25 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>เพื่อนสวน</title>
-<!-- config.js โหลดครั้งเดียว -->
 <script src="config.js"></script>
 <script src="firebase-config.js"></script>
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<!-- LIFF SDK -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1c1e21;max-width:480px;margin:0 auto;min-height:100vh}
 :root{--primary:#1877f2;--bg:#f0f2f5;--card:#fff;--border:#e4e6eb;--text:#1c1e21;--muted:#65676b}
+
+/* ── TOPBAR ── */
 .topbar{background:#fff;border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 12px;gap:8px;position:sticky;top:0;z-index:200}
-.tb-logo{font-size:22px;font-weight:800;color:var(--primary);flex:1;display:flex;align-items:center;gap:6px}
+.tb-logo{font-size:26px;font-weight:800;color:var(--primary);font-family:Georgia,serif;flex:1}
 .tb-btn{width:38px;height:38px;border-radius:50%;background:#e4e6eb;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;position:relative;flex-shrink:0}
 .tb-badge{position:absolute;top:1px;right:1px;background:#e41e3f;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 4px;border:1.5px solid #fff;min-width:16px;text-align:center;line-height:14px}
+
+/* ── FEED TABS ── */
 .feed-tabs{background:#fff;display:flex;border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:199}
 .ftab{flex:1;padding:13px 0;text-align:center;font-size:15px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
 .ftab.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* ── STORIES ── */
 .stories-bar{background:#fff;padding:10px 12px;display:flex;gap:10px;overflow-x:auto;border-bottom:8px solid var(--bg);scrollbar-width:none}
 .stories-bar::-webkit-scrollbar{display:none}
 .story{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0}
@@ -30,71 +37,124 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .s-ring.mine{background:var(--border)}
 .s-inner{width:100%;height:100%;border-radius:50%;background:#e7f3ff;display:flex;align-items:center;justify-content:center;font-size:26px;border:2px solid #fff}
 .s-name{font-size:11px;color:var(--muted);max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+
+/* ── CREATE POST ── */
 .create-post{background:#fff;padding:12px 16px;border-bottom:8px solid var(--bg)}
 .cp-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.cp-me{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.cp-me{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .cp-box{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:9px 16px;font-size:15px;color:var(--muted);cursor:pointer;text-align:left;font-family:inherit}
 .cp-divider{height:1px;background:var(--border);margin-bottom:8px}
 .cp-btns{display:flex}
 .cp-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 4px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted)}
 .cp-btn:active{background:var(--bg)}
+
+/* ── ALERT ── */
+.alert-wrap{padding:0}
 .alert-banner{background:#fff8e1;border-bottom:1px solid #f9a825;padding:10px 16px;display:flex;gap:8px;font-size:13px;color:#5d4037;line-height:1.4}
+
+/* ── POST CARD ── */
 .post-card{background:#fff;margin-bottom:8px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .pc-head{padding:12px 16px 0;display:flex;align-items:flex-start;gap:10px}
-.pc-av{width:42px;height:42px;border-radius:50%;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.pc-av{width:42px;height:42px;border-radius:50%;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .av-blue{background:#1877f2}.av-orange{background:#e65100}.av-teal{background:#00695c}.av-purple{background:#6a1b9a}
 .pc-info{flex:1}
-.pc-name{font-size:15px;font-weight:700;color:var(--text)}
-.pc-meta{font-size:13px;color:var(--muted);margin-top:2px}
-.pc-more{width:34px;height:34px;border-radius:50%;border:none;background:none;font-size:20px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pc-name{font-size:15px;font-weight:700;color:var(--text);display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.expert-badge{background:#e7f3ff;color:#1877f2;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+.pc-meta{font-size:13px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pc-dot{width:3px;height:3px;background:var(--muted);border-radius:50%;display:inline-block;flex-shrink:0}
+.follow-link{color:var(--primary);font-weight:700;cursor:pointer;font-size:13px;background:none;border:none;font-family:inherit;padding:0}
+.follow-link.following{color:var(--muted)}
+.pc-more{width:34px;height:34px;border-radius:50%;border:none;background:none;font-size:20px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-2px}
+.pc-more:hover{background:var(--bg)}
+
+/* tags */
 .pc-tags{padding:6px 16px 4px;display:flex;flex-wrap:wrap;gap:5px}
 .ptag{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
-.pt-red{background:#fce4ec;color:#880e4f}.pt-green{background:#e8f5e9;color:#1b5e20}
-.pt-amber{background:#fff8e1;color:#e65100}.pt-blue{background:#e7f3ff;color:#1877f2}
+.pt-red{background:#fce4ec;color:#880e4f}
+.pt-green{background:#e8f5e9;color:#1b5e20}
+.pt-amber{background:#fff8e1;color:#e65100}
+.pt-blue{background:#e7f3ff;color:#1877f2}
+
+/* text */
 .pc-text{padding:6px 16px 10px;font-size:15px;line-height:1.5;color:var(--text)}
+.pc-text .more{color:var(--muted);cursor:pointer}
+
+/* image */
+.pc-img{width:100%;background:#e7f3ff;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:4/3;gap:8px;font-size:44px}
+.pc-img span{font-size:13px;color:var(--muted)}
+
+/* ai */
+.ai-box{margin:0 16px 10px;background:#e7f3ff;border:1px solid #b3d4fb;border-radius:12px;padding:10px 12px}
+.ai-title{font-size:12px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:5px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em}
+.ai-body{font-size:14px;color:#0d47a1;line-height:1.5}
+.ai-body strong{color:#b71c1c;font-weight:800}
+
+/* product */
+.prod-link{margin:0 16px 10px;display:flex;align-items:center;gap:8px;background:#f0fff0;border:1px solid #c8e6c9;border-radius:20px;padding:8px 14px;cursor:pointer}
+.prod-link-text{flex:1;font-size:13px;font-weight:700;color:#1b5e20}
+.prod-arrow{font-size:16px;color:var(--muted)}
+
+/* reaction row */
 .pc-reactions{padding:6px 16px;display:flex;justify-content:space-between;align-items:center}
-.r-counts{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted)}
+.r-counts{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);cursor:pointer}
 .r-icons{display:flex}
 .ri{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-right:-3px;border:1.5px solid #fff}
 .ri-b{background:var(--primary)}.ri-r{background:#e41e3f}.ri-g{background:#2e7d32}
 .c-count{font-size:13px;color:var(--muted);cursor:pointer}
+.c-count:hover{text-decoration:underline}
+
+/* action bar */
 .pc-actions{border-top:1px solid var(--border);display:flex}
 .pa{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 2px;background:none;border:none;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
-.pa:hover{background:var(--bg)}.pa.liked{color:#e41e3f}.pa.helped{color:#2e7d32}
+.pa:hover{background:var(--bg);border-radius:6px}
+.pa .pi{font-size:18px}
+.pa.liked{color:#e41e3f}
+.pa.helped{color:#2e7d32}
+.pa.liked .pi{filter:drop-shadow(0 0 2px #e41e3f)}
+
+/* comments */
 .comments-wrap{padding:6px 16px 12px}
 .cmt{display:flex;gap:8px;margin-bottom:8px}
-.cmt-av{width:32px;height:32px;border-radius:50%;background:#e4e6eb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--muted);flex-shrink:0;background-size:cover;background-position:center}
+.cmt-av{width:32px;height:32px;border-radius:50%;background:#e4e6eb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--muted);flex-shrink:0}
 .cmt-bubble{background:var(--bg);border-radius:18px;padding:8px 12px;flex:1}
 .cmt-name{font-size:13px;font-weight:800;color:var(--text)}
 .cmt-text{font-size:14px;color:var(--text);line-height:1.4;margin-top:2px}
+.cmt-acts{display:flex;gap:12px;margin-top:3px;padding-left:2px}
+.cmt-act{font-size:12px;color:var(--muted);cursor:pointer;font-weight:700;background:none;border:none;font-family:inherit;padding:0}
+.cmt-act:hover{text-decoration:underline}
 .cmt-input-row{display:flex;gap:8px;align-items:center;margin-top:6px}
-.cmt-me{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.cmt-me{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .cmt-input{flex:1;background:var(--bg);border:none;border-radius:20px;padding:8px 14px;font-size:14px;font-family:inherit;outline:none;color:var(--text)}
 .cmt-send{background:var(--primary);color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-/* Profile */
-.prof-cover{height:160px;background:linear-gradient(160deg,#1877f2 0%,#42b883 100%);position:relative}
+
+/* ── PROFILE ── */
+.prof-cover{height:200px;background:linear-gradient(160deg,#1877f2 0%,#42b883 100%);position:relative}
 .prof-cover-btn{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.4);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .prof-body{background:#fff;border-bottom:8px solid var(--bg);padding:0 16px 16px}
 .prof-av-row{display:flex;align-items:flex-end;justify-content:space-between;margin-top:-32px;margin-bottom:10px}
-.prof-av{width:80px;height:80px;border-radius:50%;background:#e7f3ff;border:4px solid #fff;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:var(--primary);background-size:cover;background-position:center}
+.prof-av{width:90px;height:90px;border-radius:50%;background:#e7f3ff;border:4px solid #fff;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:800;color:var(--primary)}
 .prof-btns{display:flex;gap:8px;padding-bottom:6px}
-.prof-btn-p{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
-.prof-btn-s{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:8px 12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
-.prof-name{font-size:20px;font-weight:800;color:var(--text)}
+.prof-btn-p{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.prof-btn-s{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.prof-name{font-size:22px;font-weight:800;color:var(--text)}
 .prof-sub{font-size:14px;color:var(--muted);margin-top:2px}
 .prof-bio{font-size:15px;color:var(--text);margin-top:6px;line-height:1.4}
 .prof-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .pb{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:12px}
-.pb-blue{background:#e7f3ff;color:#1877f2}.pb-gold{background:#fff8e1;color:#e65100}.pb-green{background:#e8f5e9;color:#1b5e20}
+.pb-blue{background:#e7f3ff;color:#1877f2}
+.pb-gold{background:#fff8e1;color:#e65100}
+.pb-green{background:#e8f5e9;color:#1b5e20}
 .prof-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
 .ps{background:var(--bg);border-radius:10px;padding:10px 4px;text-align:center}
-.ps-n{font-size:18px;font-weight:800;color:var(--text)}.ps-l{font-size:11px;color:var(--muted);margin-top:2px}
-.prof-nav{display:flex;border-bottom:1px solid var(--border);background:#fff}
+.ps-n{font-size:18px;font-weight:800;color:var(--text)}
+.ps-l{font-size:11px;color:var(--muted);margin-top:2px}
+.prof-nav{display:flex;border-bottom:1px solid var(--border);background:#fff;margin-top:0}
 .pnav{flex:1;padding:13px 0;text-align:center;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
 .pnav.active{color:var(--primary);border-bottom-color:var(--primary)}
 .points-card{background:#fff;padding:14px 16px;border-bottom:8px solid var(--bg)}
 .pts-head{display:flex;justify-content:space-between;margin-bottom:8px}
-.pts-title{font-size:15px;font-weight:800;color:var(--text)}.pts-val{font-size:18px;font-weight:800;color:var(--primary)}
+.pts-title{font-size:15px;font-weight:800;color:var(--text)}
+.pts-val{font-size:18px;font-weight:800;color:var(--primary)}
 .bar-bg{background:var(--bg);border-radius:20px;height:8px;overflow:hidden;margin-bottom:5px}
 .bar-fg{background:var(--primary);height:100%;border-radius:20px}
 .tier-lbs{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
@@ -103,110 +163,93 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .sec-title{font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
 .crops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .crop-item{background:var(--bg);border-radius:10px;padding:10px 6px;text-align:center}
-.crop-emoji{font-size:26px}.crop-name{font-size:12px;font-weight:700;color:var(--text);margin-top:4px}
+.crop-emoji{font-size:26px}
+.crop-name{font-size:12px;font-weight:700;color:var(--text);margin-top:4px}
 .crop-posts{font-size:11px;color:var(--muted)}
-/* Community */
+
+/* ── COMMUNITY ── */
 .comm-screen{padding:8px 0 72px}
 .comm-head-label{padding:10px 16px 4px;font-size:15px;font-weight:800;color:var(--text)}
+.comm-alert{background:#fff8e1;border-left:4px solid #f9a825;padding:10px 14px;margin:0 12px 8px;border-radius:0 8px 8px 0;font-size:13px;color:#5d4037;display:flex;gap:8px;line-height:1.4}
 .comm-card{background:#fff;border-radius:12px;margin:0 12px 8px;padding:14px;border:1px solid var(--border)}
 .cc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .cc-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
 .cci-g{background:#e8f5e9}.cci-a{background:#fff8e1}.cci-b{background:#e7f3ff}
-.cc-name{font-size:15px;font-weight:700;color:var(--text)}.cc-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.cc-name{font-size:15px;font-weight:700;color:var(--text)}
+.cc-sub{font-size:12px;color:var(--muted);margin-top:2px}
 .cc-stats{display:flex;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
 .cc-join{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .cc-joined{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-/* Overlay & Modal */
+
+/* ── POST MODAL ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:flex-end;justify-content:center}
 .overlay.open{display:flex}
 .modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
-.modal-top{display:flex;align-items:center;padding:14px 16px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:10}
+.modal-top{display:flex;align-items:center;padding:14px 16px 12px;border-bottom:1px solid var(--border)}
 .modal-close{width:34px;height:34px;background:var(--bg);border:none;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:10px;font-weight:800}
 .modal-title{flex:1;font-size:17px;font-weight:800;text-align:center;color:var(--text)}
 .modal-submit{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
 .modal-submit:disabled{opacity:0.5}
 .modal-body{padding:16px}
 .modal-user{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.modal-av{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center}
+.modal-av{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .modal-uname{font-size:15px;font-weight:700;color:var(--text)}
-.privacy-chip{display:inline-flex;align-items:center;gap:3px;background:var(--bg);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:700;color:var(--text);margin-top:2px}
+.privacy-chip{display:inline-flex;align-items:center;gap:3px;background:var(--bg);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:700;color:var(--text);margin-top:2px;cursor:pointer}
 .type-chips{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .type-chips::-webkit-scrollbar{display:none}
 .type-chip{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;border:2px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:inherit}
 .type-chip.sel{border-color:var(--primary);background:#e7f3ff;color:var(--primary)}
-.photo-area{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:14px;background:#fafafa}
+.photo-area{border:2px dashed var(--border);border-radius:12px;padding:22px;text-align:center;cursor:pointer;margin-bottom:14px;background:#fafafa}
+.photo-area .ph-ico{font-size:34px;opacity:0.5}
+.photo-area span{display:block;font-size:14px;color:var(--muted);margin-top:6px}
 .fg{margin-bottom:12px}
 .fg label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px}
-.fg select,.fg textarea,.fg input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;background:#fff;outline:none;color:var(--text)}
-.fg select:focus,.fg textarea:focus,.fg input:focus{border-color:var(--primary)}
+.fg select,.fg textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;background:#fff;outline:none;color:var(--text)}
+.fg select:focus,.fg textarea:focus{border-color:var(--primary)}
 .fg textarea{resize:none;height:90px}
 .submit-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
 .pts-hint{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
-/* Crops grid (shared: onboarding + edit profile) */
-.ob-crops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
-.ob-crop{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--bg);border-radius:14px;padding:12px 8px;cursor:pointer;border:2.5px solid transparent;transition:all 0.2s;position:relative}
-.ob-crop.selected{background:#e7f3ff;border-color:var(--primary)}
-.ob-crop-emoji{font-size:28px}
-.ob-crop-name{font-size:12px;font-weight:700;color:var(--text);text-align:center}
-.ob-crop-check{position:absolute;top:5px;right:5px;width:18px;height:18px;background:var(--primary);border-radius:50%;display:none;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800}
-.ob-crop.selected .ob-crop-check{display:flex}
-/* Bottom nav */
+
+/* ── BOTTOM NAV ── */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;height:56px;z-index:300}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-top:3px solid transparent;position:relative;gap:2px}
 .bn.active{border-top-color:var(--primary)}
-.bn-ico{font-size:22px;color:var(--muted)}.bn.active .bn-ico{color:var(--primary)}
-.bn-lbl{font-size:10px;color:var(--muted)}.bn.active .bn-lbl{color:var(--primary);font-weight:700}
+.bn-ico{font-size:22px;color:var(--muted)}
+.bn.active .bn-ico{color:var(--primary)}
+.bn-lbl{font-size:10px;color:var(--muted)}
+.bn.active .bn-lbl{color:var(--primary);font-weight:700}
 .bn-badge{position:absolute;top:5px;right:calc(50% - 18px);background:#e41e3f;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 4px;min-width:16px;text-align:center}
-.screen{display:none;padding-bottom:64px}.screen.active{display:block}
-/* Loading */
+
+/* screens */
+.screen{display:none;padding-bottom:64px}
+.screen.active{display:block}
+
+/* ── LOADING SCREEN ── */
 #loading-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px}
-.ls-logo{font-size:64px}.ls-name{font-size:28px;font-weight:800;color:var(--primary)}.ls-sub{font-size:14px;color:var(--muted)}
+.ls-logo{font-size:64px}
+.ls-name{font-size:28px;font-weight:800;color:var(--primary)}
+.ls-sub{font-size:14px;color:var(--muted)}
 .ls-spinner{width:36px;height:36px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin-top:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* Login */
+
+/* ── LOGIN SCREEN ── */
 #login-screen{position:fixed;inset:0;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9998;padding:32px;text-align:center}
 #login-screen.show{display:flex}
-.login-logo{font-size:64px;margin-bottom:8px}.login-appname{font-size:28px;font-weight:800;color:var(--primary);margin-bottom:4px}
-.login-tagline{font-size:15px;color:var(--muted);margin-bottom:32px;line-height:1.5}
-.login-features{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin-bottom:32px}
+.login-logo{font-size:72px;margin-bottom:8px}
+.login-appname{font-size:32px;font-weight:800;color:var(--primary);margin-bottom:4px}
+.login-tagline{font-size:16px;color:var(--muted);margin-bottom:40px;line-height:1.5}
+.login-features{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin-bottom:40px}
 .lf-item{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 16px;text-align:left}
-.lf-icon{font-size:24px;flex-shrink:0}.lf-text{font-size:14px;color:var(--text);font-weight:600}
+.lf-icon{font-size:24px;flex-shrink:0}
+.lf-text{font-size:14px;color:var(--text);font-weight:600}
 .btn-line-login{width:100%;max-width:300px;background:#06C755;color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(6,199,85,0.35)}
+.btn-line-login:active{opacity:0.85}
 .login-terms{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6}
-/* Onboarding */
-#onboarding-screen{position:fixed;inset:0;background:#fff;display:none;flex-direction:column;z-index:9997;max-width:480px;margin:0 auto;overflow:hidden}
-#onboarding-screen.show{display:flex}
-.ob-progress{display:flex;gap:6px;padding:16px 20px 0}
-.ob-dot{flex:1;height:4px;border-radius:4px;background:var(--border);transition:background 0.3s}
-.ob-dot.done{background:var(--primary)}
-.ob-slides{display:flex;width:300%;transition:transform 0.35s cubic-bezier(.4,0,.2,1);flex:1}
-.ob-slide{width:33.333%;display:flex;flex-direction:column;align-items:center;padding:24px 24px 0;overflow-y:auto}
-.ob-welcome-av{width:90px;height:90px;border-radius:50%;background:var(--primary);color:#fff;font-size:32px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:20px 0 14px;border:4px solid #e7f3ff;background-size:cover;background-position:center}
-.ob-welcome-name{font-size:22px;font-weight:800;color:var(--text);text-align:center}
-.ob-welcome-sub{font-size:14px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.5}
-.ob-welcome-badge{display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;color:#1b5e20;font-size:13px;font-weight:700;padding:6px 14px;border-radius:20px;margin-top:12px}
-.ob-features{width:100%;margin-top:16px;display:flex;flex-direction:column;gap:10px}
-.ob-feat{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px}
-.ob-feat-ico{font-size:24px;flex-shrink:0}
-.ob-feat-text{font-size:14px;font-weight:600;color:var(--text)}.ob-feat-sub{font-size:12px;color:var(--muted);margin-top:2px}
-.ob-slide-title{font-size:20px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px;width:100%}
-.ob-slide-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.5;width:100%}
-.ob-loc-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:15px;font-family:inherit;outline:none;color:var(--text);background:#fff;margin-bottom:12px}
-.ob-loc-input:focus{border-color:var(--primary)}
-.ob-loc-skip{font-size:13px;color:var(--muted);text-align:center;cursor:pointer;margin-top:8px;text-decoration:underline;width:100%}
-.ob-loc-status{font-size:13px;text-align:center;min-height:18px;margin-bottom:6px;width:100%}
-.ob-loc-status.ok{color:#2e7d32;font-weight:700}
-.ob-bottom{padding:16px 20px;border-top:1px solid var(--border);background:#fff;display:flex;align-items:center;gap:12px;flex-shrink:0}
-.ob-back{width:44px;height:44px;border-radius:50%;background:var(--bg);border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ob-next{flex:1;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
-.ob-next:disabled{opacity:0.5}
-/* Province select label */
-.loc-label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;width:100%}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
+<!-- ══ LOADING SCREEN ══ -->
 <div id="loading-screen">
   <div class="ls-logo">🌿</div>
   <div class="ls-name">เพื่อนสวน</div>
@@ -214,7 +257,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div class="ls-spinner"></div>
 </div>
 
-<!-- LOGIN -->
+<!-- ══ LOGIN SCREEN ══ -->
 <div id="login-screen">
   <div class="login-logo">🌿</div>
   <div class="login-appname">เพื่อนสวน</div>
@@ -231,84 +274,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div class="login-terms">การเข้าสู่ระบบถือว่าคุณยอมรับ<br>เงื่อนไขการใช้งานของเพื่อนสวน</div>
 </div>
 
-<!-- ONBOARDING -->
-<div id="onboarding-screen">
-  <div class="ob-progress">
-    <div class="ob-dot done" id="ob-dot-0"></div>
-    <div class="ob-dot" id="ob-dot-1"></div>
-    <div class="ob-dot" id="ob-dot-2"></div>
-  </div>
-  <div class="ob-slides" id="ob-slides">
-    <!-- Slide 1: Welcome -->
-    <div class="ob-slide">
-      <div class="ob-welcome-av" id="ob-av">ฉ</div>
-      <div class="ob-welcome-name" id="ob-name">ยินดีต้อนรับ!</div>
-      <div class="ob-welcome-sub">คุณเข้าร่วมชุมชนเพื่อนสวนแล้ว 🌿</div>
-      <div class="ob-welcome-badge">🏅 Bronze Member · เริ่มต้น 0 แต้ม</div>
-      <div class="ob-features">
-        <div class="ob-feat"><div class="ob-feat-ico">🤖</div><div><div class="ob-feat-text">AI วิเคราะห์โรคพืช</div><div class="ob-feat-sub">ถ่ายรูปต้นไม้ รู้โรคทันที</div></div></div>
-        <div class="ob-feat"><div class="ob-feat-ico">📍</div><div><div class="ob-feat-text">Feed ใกล้บ้าน</div><div class="ob-feat-sub">ดูปัญหาสวนในพื้นที่ของคุณ</div></div></div>
-        <div class="ob-feat"><div class="ob-feat-ico">🏅</div><div><div class="ob-feat-text">สะสมแต้ม รับส่วนลด</div><div class="ob-feat-sub">โพส ช่วยเหลือ → ได้แต้ม DemeterRich</div></div></div>
-      </div>
-    </div>
-    <!-- Slide 2: เลือกพืช -->
-    <div class="ob-slide">
-      <div class="ob-slide-title">🌱 คุณปลูกพืชอะไรบ้าง?</div>
-      <div class="ob-slide-sub">เลือกได้หลายอย่าง — Feed จะแสดงโพสที่เกี่ยวข้อง</div>
-      <div class="ob-crops-grid" id="ob-crops-grid"></div>
-    </div>
-    <!-- Slide 3: Location -->
-    <div class="ob-slide">
-      <div style="font-size:48px;margin:16px 0 12px">📍</div>
-      <div class="ob-slide-title">คุณอยู่ที่ไหน?</div>
-      <div class="ob-slide-sub">ใช้แสดงโพสใกล้บ้านและแจ้งเตือนโรคระบาด</div>
-      <div style="width:100%">
-        <label class="loc-label">จังหวัด</label>
-        <select class="ob-loc-input" id="ob-province" onchange="onObLocChange()">
-          <option value="">— เลือกจังหวัด —</option>
-          <option>กรุงเทพมหานคร</option><option>กระบี่</option><option>กาญจนบุรี</option><option>กาฬสินธุ์</option><option>กำแพงเพชร</option><option>ขอนแก่น</option><option>จันทบุรี</option><option>ฉะเชิงเทรา</option><option>ชลบุรี</option><option>ชัยนาท</option><option>ชัยภูมิ</option><option>ชุมพร</option><option>เชียงราย</option><option>เชียงใหม่</option><option>ตรัง</option><option>ตราด</option><option>ตาก</option><option>นครนายก</option><option>นครปฐม</option><option>นครพนม</option><option>นครราชสีมา</option><option>นครศรีธรรมราช</option><option>นครสวรรค์</option><option>นนทบุรี</option><option>นราธิวาส</option><option>น่าน</option><option>บึงกาฬ</option><option>บุรีรัมย์</option><option>ปทุมธานี</option><option>ประจวบคีรีขันธ์</option><option>ปราจีนบุรี</option><option>ปัตตานี</option><option>พระนครศรีอยุธยา</option><option>พะเยา</option><option>พังงา</option><option>พัทลุง</option><option>พิจิตร</option><option>พิษณุโลก</option><option>เพชรบุรี</option><option>เพชรบูรณ์</option><option>แพร่</option><option>ภูเก็ต</option><option>มหาสารคาม</option><option>มุกดาหาร</option><option>แม่ฮ่องสอน</option><option>ยโสธร</option><option>ยะลา</option><option>ร้อยเอ็ด</option><option>ระนอง</option><option>ระยอง</option><option>ราชบุรี</option><option>ลพบุรี</option><option>ลำปาง</option><option>ลำพูน</option><option>เลย</option><option>ศรีสะเกษ</option><option>สกลนคร</option><option>สงขลา</option><option>สตูล</option><option>สมุทรปราการ</option><option>สมุทรสงคราม</option><option>สมุทรสาคร</option><option>สระแก้ว</option><option>สระบุรี</option><option>สิงห์บุรี</option><option>สุโขทัย</option><option>สุพรรณบุรี</option><option>สุราษฎร์ธานี</option><option>สุรินทร์</option><option>หนองคาย</option><option>หนองบัวลำภู</option><option>อ่างทอง</option><option>อำนาจเจริญ</option><option>อุดรธานี</option><option>อุตรดิตถ์</option><option>อุทัยธานี</option><option>อุบลราชธานี</option>
-        </select>
-        <label class="loc-label">อำเภอ / เขต (ไม่บังคับ)</label>
-        <input class="ob-loc-input" id="ob-district" placeholder="เช่น เมือง, ลาดกระบัง..." oninput="onObLocChange()">
-        <div class="ob-loc-status ok" id="ob-loc-status"></div>
-        <div class="ob-loc-skip" onclick="finishOnboarding()">ข้ามสำหรับตอนนี้</div>
-      </div>
-    </div>
-  </div>
-  <div class="ob-bottom">
-    <button class="ob-back" id="ob-back-btn" onclick="obPrev()" style="visibility:hidden">←</button>
-    <button class="ob-next" id="ob-next-btn" onclick="obNext()">เริ่มเลย! →</button>
-  </div>
-</div>
-
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="tb-logo" id="app-logo"><span>🌿</span><span>เพื่อนสวน</span></div>
+  <div class="tb-logo" id="app-logo">facebook</div>
   <button class="tb-btn" style="font-size:16px">🔍</button>
   <button class="tb-btn">🔔<span class="tb-badge">3</span></button>
   <button class="tb-btn">💬<span class="tb-badge">5</span></button>
 </div>
 
-<!-- FEED SCREEN -->
+<!-- ══ FEED SCREEN ══ -->
 <div class="screen active" id="screen-feed">
   <div class="feed-tabs">
     <div class="ftab active" onclick="switchFeedTab(this)">ฟีดของคุณ</div>
     <div class="ftab" onclick="switchFeedTab(this)">รายการโปรด</div>
     <div class="ftab" onclick="switchFeedTab(this)">ใกล้ฉัน 📍</div>
   </div>
+
   <div class="stories-bar">
     <div class="story" onclick="openPostModal()">
-      <div class="s-ring mine"><div class="s-inner">➕</div></div>
+      <div class="s-ring mine"><div class="s-inner" style="font-size:28px">➕</div></div>
       <div class="s-name">สร้างสตอรี</div>
     </div>
     <div class="story"><div class="s-ring"><div class="s-inner">🥭</div></div><div class="s-name">ลุงสมชาย</div></div>
     <div class="story"><div class="s-ring"><div class="s-inner">🌶️</div></div><div class="s-name">ป้าวิไล</div></div>
     <div class="story"><div class="s-ring"><div class="s-inner">🥬</div></div><div class="s-name">นายสุรศักดิ์</div></div>
+    <div class="story"><div class="s-ring"><div class="s-inner">🍈</div></div><div class="s-name">คุณประเสริฐ</div></div>
+    <div class="story"><div class="s-ring"><div class="s-inner">🌾</div></div><div class="s-name">ลุงวิชัย</div></div>
   </div>
+
   <div class="create-post">
     <div class="cp-row">
       <div class="cp-me" id="cp-me-avatar">ฉ</div>
-      <button class="cp-box" id="cp-placeholder" onclick="openPostModal()">คุณพบปัญหาอะไรในสวนวันนี้?</button>
+      <button class="cp-box" onclick="openPostModal()">คุณพบปัญหาอะไรในสวนวันนี้?</button>
     </div>
     <div class="cp-divider"></div>
     <div class="cp-btns">
@@ -317,29 +314,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <div class="cp-btn" onclick="openPostModal()">💡 แชร์ความรู้</div>
     </div>
   </div>
-  <div class="alert-banner" id="alert-banner" style="display:none">
-    <span>⚠️</span><div id="alert-banner-text"></div>
+
+  <div class="alert-banner" id="alert-banner">
+    <span>⚠️</span>
+    <div id="alert-banner-text"><strong>แจ้งเตือนพื้นที่ 15 กม.</strong> — พบโรคแอนแทรคโนสในมะม่วง 3 สวน บริเวณ อ.บ้านโป่ง ราชบุรี</div>
   </div>
+
+  <!-- Dynamic Feed -->
   <div id="feed-container">
-    <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด Feed...</div>
+    <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px">
+      <div style="font-size:32px;margin-bottom:8px">🌿</div>
+      กำลังโหลด Feed...
+    </div>
   </div>
+
 </div>
 
-<!-- PROFILE SCREEN -->
+<!-- ══ PROFILE SCREEN ══ -->
 <div class="screen" id="screen-profile">
-  <div class="prof-cover"></div>
+  <div class="prof-cover">
+    <button class="prof-cover-btn">📷 แก้ไขรูปหน้าปก</button>
+  </div>
   <div class="prof-body">
     <div class="prof-av-row">
       <div class="prof-av" id="prof-avatar">ฉ</div>
       <div class="prof-btns">
-        <button class="prof-btn-p" onclick="openEditProfile()">✏️ แก้ไขโปรไฟล์</button>
+        <button class="prof-btn-p">✏️ แก้ไขโปรไฟล์</button>
         <button class="prof-btn-s">••• เพิ่มเติม</button>
       </div>
     </div>
-    <div class="prof-name" id="prof-name">—</div>
-    <div class="prof-sub" id="prof-sub"></div>
-    <div class="prof-bio" id="prof-bio"></div>
-    <div class="prof-badges" id="prof-badges"></div>
+    <div class="prof-name" id="prof-name">ลุงสมชาย วงษ์เกษตร</div>
+    <div class="prof-sub" id="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
+    <div class="prof-bio">เกษตรกรสวนมะม่วง 20 ปี 🥭 รักการแบ่งปันความรู้ให้เพื่อนชาวสวน</div>
+    <div class="prof-badges">
+      <span class="pb pb-gold">⭐ ปราชญ์มะม่วง</span>
+      <span class="pb pb-blue">🥇 Gold Member</span>
+      <span class="pb pb-green">🤝 เพื่อนบ้านที่ดี</span>
+    </div>
     <div class="prof-stats">
       <div class="ps"><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
       <div class="ps"><div class="ps-n" id="stat-followers">0</div><div class="ps-l">ผู้ติดตาม</div></div>
@@ -348,8 +359,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     </div>
   </div>
   <div class="prof-nav">
-    <div class="pnav active">โพส</div><div class="pnav">เกี่ยวกับ</div>
-    <div class="pnav">รูปภาพ</div><div class="pnav">สินค้าที่ใช้</div>
+    <div class="pnav active">โพส</div>
+    <div class="pnav">เกี่ยวกับ</div>
+    <div class="pnav">รูปภาพ</div>
+    <div class="pnav">สินค้าที่ใช้</div>
   </div>
   <div class="points-card">
     <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
@@ -359,61 +372,44 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
   <div class="crops-card">
     <div class="sec-title">พืชที่ปลูก</div>
-    <div class="crops-grid" id="crops-list"><div style="color:var(--muted);font-size:13px;grid-column:span 3;text-align:center;padding:16px">กดแก้ไขโปรไฟล์เพื่อเพิ่มพืชที่ปลูก</div></div>
+    <div class="crops-grid" id="crops-list"></div>
   </div>
 </div>
 
-<!-- COMMUNITY SCREEN -->
+<!-- ══ COMMUNITY SCREEN ══ -->
 <div class="screen" id="screen-community">
   <div class="comm-screen">
     <div class="comm-head-label">กลุ่มของคุณ</div>
+    <div class="comm-alert"><span>📍</span><div><strong>3 กลุ่มใกล้คุณ</strong> กำลังพูดถึงโรคระบาดในช่วงนี้ — แตะเพื่อดู</div></div>
     <div class="comm-card">
-      <div class="cc-head"><div class="cc-icon cci-g">🥭</div>
-        <div style="flex:1"><div class="cc-name">ชาวสวนมะม่วง ราชบุรี</div><div class="cc-sub">อ.บ้านโป่ง · อ.โพธาราม</div></div>
+      <div class="cc-head">
+        <div class="cc-icon cci-g">🥭</div>
+        <div style="flex:1"><div class="cc-name">ชาวสวนมะม่วง ราชบุรี</div><div class="cc-sub">อ.บ้านโป่ง · อ.โพธาราม · อ.ดำเนินสะดวก</div></div>
         <button class="cc-joined">เข้าแล้ว ✓</button>
       </div>
-      <div class="cc-stats"><span>👥 1,240 คน</span><span>💬 18 โพสวันนี้</span></div>
+      <div class="cc-stats"><span>👥 1,240 คน</span><span>💬 18 โพสวันนี้</span><span>⚠️ แจ้งเตือน 2</span></div>
     </div>
     <div class="comm-card">
-      <div class="cc-head"><div class="cc-icon cci-a">🌶️</div>
+      <div class="cc-head">
+        <div class="cc-icon cci-a">🌶️</div>
         <div style="flex:1"><div class="cc-name">กลุ่มพริกภาคกลาง</div><div class="cc-sub">ราชบุรี · กาญจนบุรี · นครปฐม</div></div>
         <button class="cc-join">เข้าร่วม</button>
       </div>
       <div class="cc-stats"><span>👥 856 คน</span><span>💬 9 โพสวันนี้</span></div>
     </div>
-  </div>
-</div>
-
-<!-- EDIT PROFILE MODAL -->
-<div class="overlay" id="editProfileModal" onclick="if(event.target===this)closeEditProfile()">
-  <div class="modal">
-    <div class="modal-top">
-      <button class="modal-close" onclick="closeEditProfile()">✕</button>
-      <div class="modal-title">แก้ไขโปรไฟล์</div>
-      <button class="modal-submit" id="ep-save-btn" onclick="saveProfile()">บันทึก</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px;background:var(--bg);border-radius:12px">
-        <div id="ep-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center"></div>
-        <div><div style="font-size:15px;font-weight:700" id="ep-name-show">—</div><div style="font-size:12px;color:var(--muted);margin-top:2px">รูปโปรไฟล์ดึงจาก LINE อัตโนมัติ</div></div>
+    <div class="comm-card">
+      <div class="cc-head">
+        <div class="cc-icon cci-b">🌿</div>
+        <div style="flex:1"><div class="cc-name">เกษตรอินทรีย์ ภาคตะวันตก</div><div class="cc-sub">ราชบุรี · เพชรบุรี · ประจวบฯ</div></div>
+        <button class="cc-join">เข้าร่วม</button>
       </div>
-      <div class="fg"><label>✍️ แนะนำตัว / Bio</label><textarea id="ep-bio" placeholder="เช่น เกษตรกรชาวสวน รักการแบ่งปันความรู้..."></textarea></div>
-      <div class="fg"><label>📍 จังหวัด</label>
-        <select id="ep-province">
-          <option value="">— เลือกจังหวัด —</option>
-          <option>กรุงเทพมหานคร</option><option>กระบี่</option><option>กาญจนบุรี</option><option>กาฬสินธุ์</option><option>กำแพงเพชร</option><option>ขอนแก่น</option><option>จันทบุรี</option><option>ฉะเชิงเทรา</option><option>ชลบุรี</option><option>ชัยนาท</option><option>ชัยภูมิ</option><option>ชุมพร</option><option>เชียงราย</option><option>เชียงใหม่</option><option>ตรัง</option><option>ตราด</option><option>ตาก</option><option>นครนายก</option><option>นครปฐม</option><option>นครพนม</option><option>นครราชสีมา</option><option>นครศรีธรรมราช</option><option>นครสวรรค์</option><option>นนทบุรี</option><option>นราธิวาส</option><option>น่าน</option><option>บึงกาฬ</option><option>บุรีรัมย์</option><option>ปทุมธานี</option><option>ประจวบคีรีขันธ์</option><option>ปราจีนบุรี</option><option>ปัตตานี</option><option>พระนครศรีอยุธยา</option><option>พะเยา</option><option>พังงา</option><option>พัทลุง</option><option>พิจิตร</option><option>พิษณุโลก</option><option>เพชรบุรี</option><option>เพชรบูรณ์</option><option>แพร่</option><option>ภูเก็ต</option><option>มหาสารคาม</option><option>มุกดาหาร</option><option>แม่ฮ่องสอน</option><option>ยโสธร</option><option>ยะลา</option><option>ร้อยเอ็ด</option><option>ระนอง</option><option>ระยอง</option><option>ราชบุรี</option><option>ลพบุรี</option><option>ลำปาง</option><option>ลำพูน</option><option>เลย</option><option>ศรีสะเกษ</option><option>สกลนคร</option><option>สงขลา</option><option>สตูล</option><option>สมุทรปราการ</option><option>สมุทรสงคราม</option><option>สมุทรสาคร</option><option>สระแก้ว</option><option>สระบุรี</option><option>สิงห์บุรี</option><option>สุโขทัย</option><option>สุพรรณบุรี</option><option>สุราษฎร์ธานี</option><option>สุรินทร์</option><option>หนองคาย</option><option>หนองบัวลำภู</option><option>อ่างทอง</option><option>อำนาจเจริญ</option><option>อุดรธานี</option><option>อุตรดิตถ์</option><option>อุทัยธานี</option><option>อุบลราชธานี</option>
-        </select>
-      </div>
-      <div class="fg"><label>🏘️ อำเภอ / เขต</label><input id="ep-district" placeholder="เช่น เมือง, ลาดกระบัง, บ้านโป่ง..."></div>
-      <div class="fg"><label>🌱 พืชที่ปลูก (เลือกได้หลายอย่าง)</label>
-        <div class="ob-crops-grid" id="ep-crops-grid" style="margin-top:10px"></div>
-      </div>
+      <div class="cc-stats"><span>👥 2,100 คน</span><span>💬 32 โพสวันนี้</span></div>
     </div>
   </div>
 </div>
 
-<!-- POST MODAL -->
-<div class="overlay" id="postModal" onclick="if(event.target===this)closeModal()">
+<!-- ══ POST MODAL ══ -->
+<div class="overlay" id="postModal" onclick="closeOverlay(event)">
   <div class="modal">
     <div class="modal-top">
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -422,8 +418,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     </div>
     <div class="modal-body">
       <div class="modal-user">
-        <div class="modal-av" id="modal-av">ฉ</div>
-        <div><div class="modal-uname" id="modal-uname">ชื่อของคุณ</div><div class="privacy-chip">🌍 สาธารณะ</div></div>
+        <div class="modal-av">ฉ</div>
+        <div>
+          <div class="modal-uname">ชื่อของคุณ</div>
+          <div class="privacy-chip">🌍 สาธารณะ ▾</div>
+        </div>
       </div>
       <div class="type-chips">
         <button class="type-chip sel" onclick="selType(this)">🦠 โรคพืช</button>
@@ -431,441 +430,594 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         <button class="type-chip" onclick="selType(this)">⚠️ แจ้งเตือนพื้นที่</button>
         <button class="type-chip" onclick="selType(this)">📦 รีวิวสินค้า</button>
       </div>
-      <div class="photo-area" onclick="document.getElementById('post-img-input').click()">
+      <div class="photo-area" onclick="document.getElementById('post-img-input').click()" id="photo-area-box">
         <input type="file" id="post-img-input" accept="image/*" style="display:none" onchange="previewPostImage(this)">
-        <div style="font-size:32px;opacity:0.4" id="photo-area-ico">📷</div>
+        <div class="ph-ico" id="photo-area-ico">📷</div>
         <img id="post-img-preview" style="display:none;width:100%;border-radius:8px;max-height:200px;object-fit:cover">
-        <span id="photo-area-txt" style="display:block;font-size:14px;color:var(--muted);margin-top:6px">เพิ่มภาพหรือวิดีโอ</span>
+        <span id="photo-area-txt">เพิ่มภาพหรือวิดีโอ</span>
       </div>
-      <div class="fg"><label>พืชที่เกี่ยวข้อง</label><select id="modal-crop"><option value="">เลือกพืช...</option></select></div>
-      <div class="fg"><label>รายละเอียด</label><textarea id="modal-text" placeholder="บอกเล่าอาการที่เห็น หรือแชร์ประสบการณ์..."></textarea></div>
+      <div class="fg">
+        <label>พืชที่เกี่ยวข้อง</label>
+        <select id="modal-crop"><option value="">เลือกพืช...</option></select>
+      </div>
+      <div class="fg">
+        <label>รายละเอียด</label>
+        <textarea id="modal-text" placeholder="บอกเล่าอาการที่เห็น หรือแชร์ประสบการณ์ของคุณ..."></textarea>
+      </div>
       <div id="post-uploading" style="display:none;text-align:center;padding:8px;font-size:14px;color:var(--muted)">⏳ กำลังโพส...</div>
       <button class="submit-btn" onclick="submitPost()" id="submit-btn">📤 โพสเลย</button>
-      <div class="pts-hint" id="pts-hint">✨ คุณจะได้รับ +10 แต้มสะสม</div>
+      <div class="pts-hint" id="pts-hint">✨ คุณจะได้รับ +10 แต้มสะสมจากการโพสนี้</div>
     </div>
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- ══ BOTTOM NAV ══ -->
 <div class="bottom-nav">
-  <div class="bn active" id="nav-feed" onclick="switchScreen('feed')"><div class="bn-ico">🏠</div><div class="bn-lbl">หน้าหลัก</div></div>
-  <div class="bn" id="nav-community" onclick="switchScreen('community')"><div class="bn-ico">👥</div><div class="bn-lbl">ชุมชน</div><span class="bn-badge">2</span></div>
-  <div class="bn" onclick="openPostModal()"><div class="bn-ico">🎬</div><div class="bn-lbl">วิดีโอ</div></div>
-  <div class="bn" id="nav-profile" onclick="switchScreen('profile')"><div class="bn-ico">👤</div><div class="bn-lbl">โปรไฟล์</div></div>
-  <div class="bn"><div class="bn-ico">☰</div><div class="bn-lbl">เมนู</div></div>
+  <div class="bn active" id="nav-feed" onclick="switchScreen('feed')">
+    <div class="bn-ico">🏠</div>
+    <div class="bn-lbl">หน้าหลัก</div>
+  </div>
+  <div class="bn" id="nav-community" onclick="switchScreen('community')">
+    <div class="bn-ico">👥</div>
+    <div class="bn-lbl">ชุมชน</div>
+    <span class="bn-badge">2</span>
+  </div>
+  <div class="bn" onclick="openPostModal()">
+    <div class="bn-ico">🎬</div>
+    <div class="bn-lbl">วิดีโอ</div>
+  </div>
+  <div class="bn" id="nav-profile" onclick="switchScreen('profile')">
+    <div class="bn-ico">👤</div>
+    <div class="bn-lbl">โปรไฟล์</div>
+  </div>
+  <div class="bn">
+    <div class="bn-ico">☰</div>
+    <div class="bn-lbl">เมนู</div>
+  </div>
 </div>
 
+<script src="config.js"></script>
 <script>
-// ══ STATE ══
-var currentUser = null;
-var db = null;
-var obStep = 0;
-var obSelectedCrops = [];
-var obLocation = null;
-var epSelectedCrops = [];
+// ══════════════════════════════════════════════════════════
+//  PHUANSUAN — Main App Script
+//  Firebase + LIFF + LINE Login
+// ══════════════════════════════════════════════════════════
 
-// ══ INIT ══
-window.addEventListener('load', async function() {
+// ── State ─────────────────────────────────────────────────
+let currentUser = null;  // { uid, displayName, photoUrl, lineUserId }
+let db = null;
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('load', async () => {
   applyConfig();
+
+  // ถ้าไม่มี firebase-config.js (dev mode) ข้าม auth
   if (typeof FIREBASE_CONFIG === 'undefined' || typeof LIFF_ID === 'undefined') {
-    console.warn('firebase-config.js ไม่พบ');
-    hideLoading(); return;
+    console.warn('firebase-config.js ไม่พบ — ข้าม auth (dev mode)');
+    hideLoading();
+    return;
   }
+
   try {
+    // Init Firebase
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
+
+    // Init LIFF
     await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) { hideLoading(); showLoginScreen(); return; }
-    await firebase.auth().signInAnonymously();
-    await loadUserProfile();
+
+    if (!liff.isLoggedIn()) {
+      // ยังไม่ login → แสดงหน้า login
+      hideLoading();
+      showLoginScreen();
+    } else {
+      // login แล้ว → sign in Firebase anonymously ก่อน
+      await firebase.auth().signInAnonymously();
+      // จากนั้นดึงข้อมูล profile จาก LINE
+      await loadUserProfile();
+      hideLoading();
+      loadFeed();
+    }
+  } catch (err) {
+    console.error('Init error:', err);
     hideLoading();
-    if (!currentUser.onboardingDone) { showOnboarding(); }
-    else { loadFeed(); }
-  } catch(err) { console.error('Init error:', err); hideLoading(); }
+    // fallback — เปิดแอปได้แม้ error
+  }
 });
 
-// ══ AUTH ══
-function loginWithLine() { liff.login(); }
+// ── LINE Login ────────────────────────────────────────────
+function loginWithLine() {
+  if (typeof liff === 'undefined') {
+    alert('ไม่พบ LIFF SDK');
+    return;
+  }
+  liff.login();
+}
 
 async function loadUserProfile() {
   try {
-    var profile = await liff.getProfile();
-    currentUser = { uid: profile.userId, displayName: profile.displayName, photoUrl: profile.pictureUrl||'', lineUserId: profile.userId };
+    const profile = await liff.getProfile();
+
+    currentUser = {
+      uid:         profile.userId,
+      displayName: profile.displayName,
+      photoUrl:    profile.pictureUrl || '',
+      lineUserId:  profile.userId,
+    };
+
+    // บันทึก/อัพเดต user ใน Firestore
     await saveUserToFirestore(currentUser);
+
+    // อัพเดต UI
     updateUIWithUser(currentUser);
-  } catch(err) { console.error('loadUserProfile:', err); }
+
+  } catch (err) {
+    console.error('loadUserProfile error:', err);
+  }
 }
 
 async function saveUserToFirestore(user) {
   if (!db) return;
   try {
-    var ref = db.collection('users').doc(user.uid);
-    var doc = await ref.get();
+    const userRef = db.collection('users').doc(user.uid);
+    const doc = await userRef.get();
+
     if (!doc.exists) {
-      await ref.set({ displayName: user.displayName, photoUrl: user.photoUrl, lineUserId: user.lineUserId,
-        points: APP_CONFIG.points.dailyLoginBonus, tier: 'bronze', crops: [], postCount: 0, helpCount: 0,
-        onboardingDone: false, createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() });
+      // User ใหม่ — สร้าง record
+      await userRef.set({
+        displayName:  user.displayName,
+        photoUrl:     user.photoUrl,
+        lineUserId:   user.lineUserId,
+        points:       APP_CONFIG.points.dailyLoginBonus,
+        tier:         'bronze',
+        crops:        [],
+        postCount:    0,
+        helpCount:    0,
+        createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+        lastLoginAt:  firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log('✅ สร้าง user ใหม่:', user.displayName);
     } else {
-      var data = doc.data();
-      var lastLogin = data.lastLoginAt ? data.lastLoginAt.toDate() : null;
-      var isNewDay = !lastLogin || lastLogin.toDateString() !== new Date().toDateString();
-      var updates = { lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() };
-      if (isNewDay) updates.points = firebase.firestore.FieldValue.increment(APP_CONFIG.points.dailyLoginBonus);
-      await ref.update(updates);
+      // User เก่า — อัพเดต lastLogin + daily bonus
+      const data = doc.data();
+      const lastLogin = data.lastLoginAt?.toDate();
+      const today = new Date();
+      const isNewDay = !lastLogin ||
+        lastLogin.toDateString() !== today.toDateString();
+
+      const updates = { lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if (isNewDay) {
+        updates.points = firebase.firestore.FieldValue.increment(
+          APP_CONFIG.points.dailyLoginBonus
+        );
+      }
+      await userRef.update(updates);
     }
-    var fresh = await ref.get();
-    currentUser = Object.assign({}, currentUser, fresh.data());
-  } catch(err) { console.error('saveUserToFirestore:', err); }
+
+    // ดึงข้อมูลล่าสุด
+    const fresh = await userRef.get();
+    currentUser = { ...currentUser, ...fresh.data() };
+
+  } catch (err) {
+    console.error('saveUserToFirestore error:', err);
+  }
 }
 
-// ══ UI UPDATE ══
 function updateUIWithUser(user) {
   if (!user) return;
-  var init = user.displayName ? user.displayName.charAt(0) : 'ฉ';
-  function setAv(el, url, fb) {
+
+  const initials = user.displayName ? user.displayName.charAt(0) : 'ฉ';
+
+  // ── Avatar helper ─────────────────────────────────────
+  function setAvatar(el, photoUrl, fallback) {
     if (!el) return;
-    if (url) { el.style.backgroundImage='url('+url+')'; el.style.backgroundSize='cover'; el.style.backgroundPosition='center'; el.textContent=''; }
-    else { el.style.backgroundImage=''; el.textContent=fb; }
-  }
-  setAv(document.getElementById('cp-me-avatar'), user.photoUrl, init);
-  setAv(document.getElementById('prof-avatar'), user.photoUrl, init);
-  setAv(document.getElementById('modal-av'), user.photoUrl, init);
-  setAv(document.querySelector('.cmt-me'), user.photoUrl, init);
-
-  var name = user.displayName || 'ชื่อของคุณ';
-  if (document.getElementById('prof-name')) document.getElementById('prof-name').textContent = name;
-  if (document.getElementById('modal-uname')) document.getElementById('modal-uname').textContent = name;
-
-  // Location
-  var loc = user.locationLabel || [user.district, user.province].filter(Boolean).join(' ');
-  var profSub = document.getElementById('prof-sub');
-  if (profSub) profSub.textContent = loc ? '📍 '+loc : '';
-
-  // Bio
-  var profBio = document.getElementById('prof-bio');
-  if (profBio) profBio.textContent = user.bio || '';
-
-  // Badges
-  var profBadges = document.getElementById('prof-badges');
-  if (profBadges) {
-    var t = APP_CONFIG.tiers[getTier(user.points||0)];
-    profBadges.innerHTML = '<span class="pb pb-blue">'+t.emoji+' '+t.label+' Member</span>';
-  }
-
-  // Crops
-  var cropsList = document.getElementById('crops-list');
-  if (cropsList) {
-    var uc = (user.crops && user.crops.length > 0) ? APP_CONFIG.crops.filter(function(c){ return user.crops.includes(c.id); }) : [];
-    if (uc.length > 0) {
-      cropsList.innerHTML = uc.map(function(c){ return '<div class="crop-item"><div class="crop-emoji">'+c.emoji+'</div><div class="crop-name">'+c.name+'</div><div class="crop-posts">— โพส</div></div>'; }).join('');
+    if (photoUrl) {
+      el.style.backgroundImage = `url(${photoUrl})`;
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
+      el.textContent = '';
     } else {
-      cropsList.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:span 3;text-align:center;padding:16px">กดแก้ไขโปรไฟล์เพื่อเพิ่มพืชที่ปลูก</div>';
+      el.textContent = fallback;
     }
   }
 
-  // Stats
-  var pts = user.points || 0;
-  function el(id){ return document.getElementById(id); }
-  if (el('stat-posts')) el('stat-posts').textContent = user.postCount||0;
-  if (el('stat-helped')) el('stat-helped').textContent = user.helpCount||0;
-  if (el('stat-points')) el('stat-points').textContent = pts.toLocaleString();
-  if (el('stat-followers')) el('stat-followers').textContent = user.followers||0;
-  if (el('pts-val-display')) el('pts-val-display').textContent = pts.toLocaleString()+' แต้ม';
+  // ── Avatars ───────────────────────────────────────────
+  setAvatar(document.getElementById('cp-me-avatar'),   user.photoUrl, initials);
+  setAvatar(document.getElementById('prof-avatar'),    user.photoUrl, initials);
+  setAvatar(document.querySelector('.modal-av'),       user.photoUrl, initials);
+  setAvatar(document.querySelector('.cmt-me'),         user.photoUrl, initials);
 
-  var T = APP_CONFIG.tiers;
-  var tierKey = getTier(pts);
-  var tierInfo = T[tierKey];
-  var nextMap = {bronze:{key:'silver',min:T.silver.min},silver:{key:'gold',min:T.gold.min},gold:{key:'platinum',min:T.platinum.min},platinum:null};
-  var next = nextMap[tierKey];
-  var barPct = next ? Math.min(100,Math.round(((pts-tierInfo.min)/(next.min-tierInfo.min))*100)) : 100;
-  if (el('pts-bar')) el('pts-bar').style.width = barPct+'%';
-  if (el('tier-label')) el('tier-label').textContent = tierInfo.emoji+' '+tierInfo.label+' ✓';
-  if (el('pts-next-tier')) el('pts-next-tier').textContent = next ? 'เหลืออีก '+(next.min-pts).toLocaleString()+' แต้ม → '+T[next.key].label+' · ได้ส่วนลด '+T[next.key].discount+'%' : '🎉 คุณอยู่ระดับสูงสุดแล้ว! ได้ส่วนลด 15%';
+  // ── Names ─────────────────────────────────────────────
+  const name = user.displayName || 'ชื่อของคุณ';
+  const profName = document.getElementById('prof-name');
+  if (profName) profName.textContent = name;
+  const modalUname = document.querySelector('.modal-uname');
+  if (modalUname) modalUname.textContent = name;
+
+  // ── Stats ─────────────────────────────────────────────
+  const points    = user.points    || 0;
+  const postCount = user.postCount || 0;
+  const helpCount = user.helpCount || 0;
+
+  const el = (id) => document.getElementById(id);
+  if (el('stat-posts'))   el('stat-posts').textContent   = postCount;
+  if (el('stat-helped'))  el('stat-helped').textContent  = helpCount;
+  if (el('stat-points'))  el('stat-points').textContent  = points.toLocaleString();
+  if (el('stat-followers')) el('stat-followers').textContent = user.followers || 0;
+
+  // ── Points & Tier ─────────────────────────────────────
+  if (el('pts-val-display')) el('pts-val-display').textContent = points.toLocaleString() + ' แต้ม';
+  if (el('stat-points'))     el('stat-points').textContent     = points.toLocaleString();
+
+  const T = APP_CONFIG.tiers;
+  let tierKey = 'bronze', nextTier = null, nextMin = 0;
+  if      (points >= T.platinum.min) { tierKey = 'platinum'; }
+  else if (points >= T.gold.min)     { tierKey = 'gold';     nextTier = 'Platinum'; nextMin = T.platinum.min; }
+  else if (points >= T.silver.min)   { tierKey = 'silver';   nextTier = 'Gold';     nextMin = T.gold.min; }
+  else                               { tierKey = 'bronze';   nextTier = 'Silver';   nextMin = T.silver.min; }
+
+  const tierInfo = T[tierKey];
+  const tierMax  = tierInfo.max === 99999 ? tierInfo.min : tierInfo.max;
+  const barPct   = tierKey === 'platinum' ? 100
+    : Math.min(100, Math.round(((points - tierInfo.min) / (nextMin - tierInfo.min)) * 100));
+
+  if (el('pts-bar'))    el('pts-bar').style.width = barPct + '%';
+  if (el('tier-label')) el('tier-label').textContent = tierInfo.emoji + ' ' + tierInfo.label + ' ✓';
+
+  const nextMsg = tierKey === 'platinum'
+    ? '🎉 คุณอยู่ระดับสูงสุดแล้ว! ได้ส่วนลด 15%'
+    : `เหลืออีก ${(nextMin - points).toLocaleString()} แต้ม → ${nextTier} · ได้ส่วนลด ${T[tierKey === 'bronze' ? 'silver' : tierKey === 'silver' ? 'gold' : 'platinum'].discount}%`;
+  if (el('pts-next-tier')) el('pts-next-tier').textContent = nextMsg;
 }
 
-function getTier(pts) {
-  var T = APP_CONFIG.tiers;
-  if (pts >= T.platinum.min) return 'platinum';
-  if (pts >= T.gold.min) return 'gold';
-  if (pts >= T.silver.min) return 'silver';
+function getTier(points) {
+  const tiers = APP_CONFIG.tiers;
+  if (points >= tiers.platinum.min) return 'platinum';
+  if (points >= tiers.gold.min) return 'gold';
+  if (points >= tiers.silver.min) return 'silver';
   return 'bronze';
 }
 
-// ══ SCREENS ══
-function hideLoading(){ var e=document.getElementById('loading-screen'); if(e) e.style.display='none'; }
-function showLoginScreen(){ var e=document.getElementById('login-screen'); if(e) e.classList.add('show'); }
-function switchScreen(name){
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.querySelectorAll('.bn').forEach(function(n){n.classList.remove('active');});
-  document.getElementById('screen-'+name).classList.add('active');
-  var nav=document.getElementById('nav-'+name); if(nav) nav.classList.add('active');
+// ── Loading / Login Screen ─────────────────────────────────
+function hideLoading() {
+  const el = document.getElementById('loading-screen');
+  if (el) el.style.display = 'none';
 }
-function switchFeedTab(el){ document.querySelectorAll('.ftab').forEach(function(t){t.classList.remove('active');}); el.classList.add('active'); }
 
-// ══ CONFIG ══
+function showLoginScreen() {
+  const el = document.getElementById('login-screen');
+  if (el) el.classList.add('show');
+}
+
+function hideLoginScreen() {
+  const el = document.getElementById('login-screen');
+  if (el) el.classList.remove('show');
+}
+
+// ── Apply Config ──────────────────────────────────────────
 function applyConfig() {
   if (typeof APP_CONFIG === 'undefined') return;
-  document.title = APP_CONFIG.app.name;
-  document.documentElement.style.setProperty('--primary', APP_CONFIG.app.primaryColor);
-  var sel = document.getElementById('modal-crop');
-  if (sel) APP_CONFIG.crops.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.emoji+' '+c.name; sel.appendChild(o); });
-  if (document.getElementById('pts-hint')) document.getElementById('pts-hint').textContent = '✨ คุณจะได้รับ +'+APP_CONFIG.points.perPost+' แต้มสะสม';
+  const C = APP_CONFIG;
+
+  document.title = C.app.name;
+  document.getElementById('app-logo').textContent = C.app.logoEmoji + ' ' + C.app.name;
+  document.documentElement.style.setProperty('--primary', C.app.primaryColor);
+
+  // Crops dropdown
+  const sel = document.getElementById('modal-crop');
+  C.crops.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.emoji + ' ' + c.name;
+    sel.appendChild(o);
+  });
+
+  // Crops grid (profile)
+  const grid = document.getElementById('crops-list');
+  const shown = C.crops.filter(c => c.id !== 'other').slice(0, 6);
+  shown.forEach(c => {
+    grid.innerHTML += `<div class="crop-item"><div class="crop-emoji">${c.emoji}</div><div class="crop-name">${c.name}</div><div class="crop-posts">— โพส</div></div>`;
+  });
+
+  // Points hint
+  document.getElementById('pts-hint').textContent =
+    `✨ คุณจะได้รับ +${C.points.perPost} แต้มสะสมจากการโพสนี้`;
 }
 
-// ══ ONBOARDING ══
-function showOnboarding() {
-  var av = document.getElementById('ob-av');
-  if (av && currentUser) {
-    if (currentUser.photoUrl) { av.style.backgroundImage='url('+currentUser.photoUrl+')'; av.style.backgroundSize='cover'; av.style.backgroundPosition='center'; av.textContent=''; }
-    else { av.textContent = currentUser.displayName?currentUser.displayName.charAt(0):'ฉ'; }
-  }
-  var nameEl = document.getElementById('ob-name');
-  if (nameEl && currentUser) nameEl.textContent = 'สวัสดี '+(currentUser.displayName||'เพื่อน')+'!';
-  buildCropsGrid('ob-crops-grid', obSelectedCrops, 'toggleObCrop');
-  obStep = 0; updateObUI();
-  document.getElementById('onboarding-screen').classList.add('show');
+// ── UI Functions ─────────────────────────────────────────
+function switchScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.bn').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const nav=document.getElementById('nav-'+name);
+  if(nav) nav.classList.add('active');
 }
-function hideOnboarding(){ document.getElementById('onboarding-screen').classList.remove('show'); }
-function buildCropsGrid(gridId, selectedArr, toggleFn) {
-  var grid = document.getElementById(gridId); if (!grid) return;
-  var crops = APP_CONFIG.crops.filter(function(c){return c.id!=='other';});
-  grid.innerHTML = crops.map(function(c){
-    return '<div class="ob-crop'+(selectedArr.includes(c.id)?' selected':'')+'" id="'+gridId+'-'+c.id+'" onclick="'+toggleFn+'(\''+c.id+'\')">'+'<div class="ob-crop-check">✓</div><div class="ob-crop-emoji">'+c.emoji+'</div><div class="ob-crop-name">'+c.name+'</div></div>';
-  }).join('');
+function switchFeedTab(el){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
 }
-function toggleObCrop(id) {
-  var el = document.getElementById('ob-crops-grid-'+id); if (!el) return;
-  var idx = obSelectedCrops.indexOf(id);
-  if (idx>=0){obSelectedCrops.splice(idx,1);el.classList.remove('selected');}
-  else{obSelectedCrops.push(id);el.classList.add('selected');}
-  updateObBtn();
+function toggleFollow(btn){
+  const f=btn.classList.contains('following');
+  btn.classList.toggle('following',!f);
+  btn.textContent = f ? '+ ติดตาม' : 'กำลังติดตาม ▾';
 }
-function updateObUI() {
-  for (var i=0;i<3;i++){ var d=document.getElementById('ob-dot-'+i); if(d) d.classList.toggle('done',i<=obStep); }
-  var s=document.getElementById('ob-slides'); if(s) s.style.transform='translateX(-'+(obStep*33.333)+'%)';
-  var back=document.getElementById('ob-back-btn'); if(back) back.style.visibility=obStep===0?'hidden':'visible';
-  updateObBtn();
+function toggleLike(btn){ btn.classList.toggle('liked'); }
+function toggleHelp(btn){ btn.classList.toggle('helped'); }
+function toggleComments(id){
+  const el=document.getElementById(id);
+  el.style.display=el.style.display==='none'?'block':'none';
 }
-function updateObBtn() {
-  var btn = document.getElementById('ob-next-btn'); if (!btn) return;
-  if (obStep===0) { btn.textContent='เริ่มเลย! →'; }
-  else if (obStep===1) { btn.textContent=obSelectedCrops.length>0?'ถัดไป ('+obSelectedCrops.length+' อย่าง) →':'ข้ามสำหรับตอนนี้ →'; }
-  else { btn.textContent='🎉 เข้าใช้งานเลย!'; }
+function openPostModal(){
+  document.getElementById('postModal').classList.add('open');
 }
-function obNext(){ if(obStep<2){obStep++;updateObUI();}else{finishOnboarding();} }
-function obPrev(){ if(obStep>0){obStep--;updateObUI();} }
-function onObLocChange() {
-  var prov=document.getElementById('ob-province')?document.getElementById('ob-province').value:'';
-  var dist=document.getElementById('ob-district')?document.getElementById('ob-district').value.trim():'';
-  var label=[dist,prov].filter(Boolean).join(' ');
-  obLocation = label ? {lat:null,lng:null,label:label} : null;
-  var s=document.getElementById('ob-loc-status'); if(s) s.textContent=label?'📍 '+label:'';
+function closeModal(){
+  document.getElementById('postModal').classList.remove('open');
 }
-async function finishOnboarding() {
-  var btn=document.getElementById('ob-next-btn'); if(btn){btn.disabled=true;btn.textContent='⏳ กำลังบันทึก...';}
-  try {
-    var prov=document.getElementById('ob-province')?document.getElementById('ob-province').value:'';
-    var dist=document.getElementById('ob-district')?document.getElementById('ob-district').value.trim():'';
-    var label=[dist,prov].filter(Boolean).join(' ');
-    var finalLoc=obLocation||(label?{label:label}:null);
-    if (db && currentUser) {
-      var upd={onboardingDone:true,crops:obSelectedCrops,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-      if(finalLoc){upd.locationLabel=finalLoc.label;if(prov)upd.province=prov;if(dist)upd.district=dist;}
-      await db.collection('users').doc(currentUser.uid).update(upd);
-      currentUser=Object.assign({},currentUser,upd);
-    }
-  } catch(e){console.error('finishOnboarding:',e);}
-  if(btn) btn.disabled=false;
-  hideOnboarding(); loadFeed();
+function closeOverlay(e){
+  if(e.target===document.getElementById('postModal')) closeModal();
 }
-
-// ══ EDIT PROFILE ══
-function openEditProfile() {
-  if (!currentUser) return;
-  var av=document.getElementById('ep-avatar');
-  if(av){if(currentUser.photoUrl){av.style.backgroundImage='url('+currentUser.photoUrl+')';av.style.backgroundSize='cover';av.style.backgroundPosition='center';av.textContent='';}else{av.style.backgroundImage='';av.textContent=currentUser.displayName?currentUser.displayName.charAt(0):'ฉ';}}
-  var ns=document.getElementById('ep-name-show'); if(ns) ns.textContent=currentUser.displayName||'—';
-  var bio=document.getElementById('ep-bio'); if(bio) bio.value=currentUser.bio||'';
-  var prov=document.getElementById('ep-province'); if(prov) prov.value=currentUser.province||'';
-  var dist=document.getElementById('ep-district'); if(dist) dist.value=currentUser.district||'';
-  epSelectedCrops=[].concat(currentUser.crops||[]);
-  buildCropsGrid('ep-crops-grid',epSelectedCrops,'toggleEpCrop');
-  document.getElementById('editProfileModal').classList.add('open');
+function selType(el){
+  document.querySelectorAll('.type-chip').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
 }
-function toggleEpCrop(id){
-  var el=document.getElementById('ep-crops-grid-'+id); if(!el) return;
-  var idx=epSelectedCrops.indexOf(id);
-  if(idx>=0){epSelectedCrops.splice(idx,1);el.classList.remove('selected');}
-  else{epSelectedCrops.push(id);el.classList.add('selected');}
-}
-function closeEditProfile(){ document.getElementById('editProfileModal').classList.remove('open'); }
-async function saveProfile() {
-  if(!currentUser||!db) return;
-  var btn=document.getElementById('ep-save-btn'); if(btn){btn.disabled=true;btn.textContent='⏳ บันทึก...';}
-  try {
-    var bio=document.getElementById('ep-bio').value.trim();
-    var prov=document.getElementById('ep-province').value;
-    var dist=document.getElementById('ep-district').value.trim();
-    var label=[dist,prov].filter(Boolean).join(' ');
-    var upd={bio:bio,province:prov,district:dist,locationLabel:label,crops:epSelectedCrops,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-    await db.collection('users').doc(currentUser.uid).update(upd);
-    currentUser=Object.assign({},currentUser,upd);
-    updateUIWithUser(currentUser);
-    closeEditProfile();
-  } catch(e){alert('บันทึกไม่ได้: '+e.message);}
-  finally{if(btn){btn.disabled=false;btn.textContent='บันทึก';}}
-}
-
-// ══ POST MODAL ══
-function openPostModal(){ document.getElementById('postModal').classList.add('open'); }
-function closeModal(){ document.getElementById('postModal').classList.remove('open'); }
-function selType(el){ document.querySelectorAll('.type-chip').forEach(function(b){b.classList.remove('sel');}); el.classList.add('sel'); }
+// ── Preview Image ─────────────────────────────────────────
 function previewPostImage(input) {
-  var file=input.files[0]; if(!file) return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    document.getElementById('post-img-preview').src=e.target.result;
-    document.getElementById('post-img-preview').style.display='block';
-    document.getElementById('photo-area-ico').style.display='none';
-    document.getElementById('photo-area-txt').textContent='✅ เลือกรูปแล้ว';
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('post-img-preview').src = e.target.result;
+    document.getElementById('post-img-preview').style.display = 'block';
+    document.getElementById('photo-area-ico').style.display = 'none';
+    document.getElementById('photo-area-txt').textContent = '✅ เลือกรูปแล้ว — แตะเพื่อเปลี่ยน';
   };
   reader.readAsDataURL(file);
 }
+
+// ── Submit Post ───────────────────────────────────────────
 async function submitPost() {
-  if(!currentUser){alert('กรุณา Login ก่อนโพส');return;}
-  var text=document.getElementById('modal-text').value.trim();
-  var crop=document.getElementById('modal-crop').value;
-  var typeEl=document.querySelector('.type-chip.sel');
-  var type=typeEl?typeEl.textContent.trim():'โพส';
-  var imgFile=document.getElementById('post-img-input').files[0];
-  if(!text&&!imgFile){alert('กรุณาเขียนข้อความหรือเพิ่มรูปภาพ');return;}
-  document.getElementById('submit-btn').disabled=true;
-  document.getElementById('post-uploading').style.display='block';
+  if (!currentUser) { alert('กรุณา Login ก่อนโพส'); return; }
+
+  const text   = document.getElementById('modal-text')?.value?.trim();
+  const crop   = document.getElementById('modal-crop')?.value;
+  const typeEl = document.querySelector('.type-chip.sel');
+  const type   = typeEl ? typeEl.textContent.trim() : 'โพส';
+  const imgFile = document.getElementById('post-img-input')?.files[0];
+
+  if (!text && !imgFile) { alert('กรุณาเขียนข้อความหรือเพิ่มรูปภาพ'); return; }
+
+  // UI: loading state
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('post-uploading').style.display = 'block';
+
   try {
-    var imageUrl=null;
-    if(imgFile&&typeof firebase!=='undefined'){
-      var storageRef=firebase.storage().ref('posts/'+currentUser.uid+'_'+Date.now()+'.'+imgFile.name.split('.').pop());
-      var snap=await storageRef.put(imgFile);
-      imageUrl=await snap.ref.getDownloadURL();
+    let imageUrl = null;
+
+    // อัพโหลดรูปถ้ามี
+    if (imgFile && typeof firebase !== 'undefined') {
+      const storageRef = firebase.storage().ref(`posts/${currentUser.uid}_${Date.now()}.${imgFile.name.split('.').pop()}`);
+      const snapshot = await storageRef.put(imgFile);
+      imageUrl = await snapshot.ref.getDownloadURL();
     }
-    if(db){
-      var pts=APP_CONFIG.points[imageUrl?'perPostWithImg':'perPost']||10;
-      await db.collection('posts').add({text:text,type:type,crop:crop||'',imageUrl:imageUrl||null,authorId:currentUser.uid,authorName:currentUser.displayName||'ผู้ใช้',authorPhoto:currentUser.photoUrl||'',likes:0,helps:0,comments:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-      await db.collection('users').doc(currentUser.uid).update({points:firebase.firestore.FieldValue.increment(pts),postCount:firebase.firestore.FieldValue.increment(1)});
-      currentUser.points=(currentUser.points||0)+pts;
-      currentUser.postCount=(currentUser.postCount||0)+1;
+
+    // บันทึกโพสลง Firestore
+    if (db) {
+      const pts = APP_CONFIG.points[imageUrl ? 'perPostWithImg' : 'perPost'] || 10;
+      await db.collection('posts').add({
+        text,
+        type,
+        crop:        crop || '',
+        imageUrl:    imageUrl || null,
+        authorId:    currentUser.uid,
+        authorName:  currentUser.displayName || 'ผู้ใช้',
+        authorPhoto: currentUser.photoUrl    || '',
+        likes:       0,
+        helps:       0,
+        comments:    0,
+        createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // อัพเดทแต้ม + postCount
+      await db.collection('users').doc(currentUser.uid).update({
+        points:    firebase.firestore.FieldValue.increment(pts),
+        postCount: firebase.firestore.FieldValue.increment(1),
+      });
+      currentUser.points = (currentUser.points || 0) + pts;
+      currentUser.postCount = (currentUser.postCount || 0) + 1;
       updateUIWithUser(currentUser);
     }
+
     closeModal();
-    document.getElementById('modal-text').value='';
-    document.getElementById('modal-crop').value='';
-    document.getElementById('post-img-input').value='';
-    document.getElementById('post-img-preview').style.display='none';
-    document.getElementById('photo-area-ico').style.display='block';
-    document.getElementById('photo-area-txt').textContent='เพิ่มภาพหรือวิดีโอ';
-    alert('โพสสำเร็จ! 🎉\n+'+APP_CONFIG.points[imageUrl?'perPostWithImg':'perPost']+' แต้มเข้าบัญชีแล้ว');
-    loadFeed();
-  } catch(err){alert('เกิดข้อผิดพลาด: '+err.message);}
-  finally{document.getElementById('submit-btn').disabled=false;document.getElementById('post-uploading').style.display='none';}
+    resetPostModal();
+    alert(`โพสสำเร็จ! 🎉\n+${APP_CONFIG.points[imageUrl?'perPostWithImg':'perPost']} แต้มเข้าบัญชีแล้ว`);
+    loadFeed(); // รีโหลด feed
+
+  } catch (err) {
+    console.error('submitPost error:', err);
+    alert('เกิดข้อผิดพลาด: ' + err.message);
+  } finally {
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('post-uploading').style.display = 'none';
+  }
 }
 
-// ══ FEED ══
+function resetPostModal() {
+  document.getElementById('modal-text').value = '';
+  document.getElementById('modal-crop').value = '';
+  document.getElementById('post-img-input').value = '';
+  document.getElementById('post-img-preview').style.display = 'none';
+  document.getElementById('photo-area-ico').style.display = 'block';
+  document.getElementById('photo-area-txt').textContent = 'เพิ่มภาพหรือวิดีโอ';
+}
+
+// ── Load Feed ─────────────────────────────────────────────
 async function loadFeed() {
-  var container=document.getElementById('feed-container'); if(!container||!db) return;
-  container.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
+  const container = document.getElementById('feed-container');
+  if (!container || !db) return;
+
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
+
   try {
-    var snap=await db.collection('posts').orderBy('createdAt','desc').limit(20).get();
-    if(snap.empty){container.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🌱</div><div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสเลย</div><div style="font-size:14px">เป็นคนแรกที่แชร์ปัญหาในสวน!</div></div>';return;}
-    container.innerHTML=snap.docs.map(function(doc,i){return renderPost(doc.id,doc.data(),i);}).join('');
-  } catch(err){container.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">โหลด Feed ไม่ได้ กรุณาลองใหม่</div>';}
+    const snap = await db.collection('posts')
+      .orderBy('createdAt', 'desc')
+      .limit(APP_CONFIG.feed.postsPerPage || 10)
+      .get();
+
+    if (snap.empty) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+          <div style="font-size:48px;margin-bottom:12px">🌱</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสเลย</div>
+          <div style="font-size:14px">เป็นคนแรกที่แชร์ปัญหาในสวน!</div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = snap.docs.map((doc, i) => renderPost(doc.id, doc.data(), i)).join('');
+
+  } catch (err) {
+    console.error('loadFeed error:', err);
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">โหลด Feed ไม่ได้ กรุณาลองใหม่</div>';
+  }
 }
 
-function renderPost(id,p,i) {
-  var init=p.authorName?p.authorName.charAt(0):'?';
-  var colors=['av-blue','av-orange','av-teal','av-purple'];
-  var avClass=colors[i%colors.length];
-  var time=formatTimeAgo(p.createdAt);
-  var isOwn=currentUser&&p.authorId===currentUser.uid;
-  var tagMap={'🦠 โรคพืช':'pt-red','💡 แชร์ความรู้':'pt-blue','⚠️ แจ้งเตือนพื้นที่':'pt-amber','📦 รีวิวสินค้า':'pt-green'};
-  var tagClass=tagMap[p.type]||'pt-blue';
-  var cropObj=p.crop?APP_CONFIG.crops.find(function(c){return c.id===p.crop;}):null;
-  return '<div class="post-card" id="post-'+id+'">'+
-    '<div class="pc-head"><div class="pc-av '+avClass+'" style="'+(p.authorPhoto?'background-image:url('+p.authorPhoto+');background-size:cover;background-position:center':'')+'">'+
-    (p.authorPhoto?'':init)+'</div>'+
-    '<div class="pc-info"><div class="pc-name">'+p.authorName+'</div><div class="pc-meta">'+time+' · 🌍</div></div>'+
-    (isOwn?'<button class="pc-more" onclick="deletePost(\''+id+'\')">🗑️</button>':'<button class="pc-more">•••</button>')+
-    '</div>'+
-    '<div class="pc-tags">'+(p.type?'<span class="ptag '+tagClass+'">'+p.type+'</span>':'')+
-    (cropObj?'<span class="ptag pt-green">'+cropObj.emoji+' '+cropObj.name+'</span>':'')+
-    '</div>'+
-    (p.text?'<div class="pc-text">'+p.text+'</div>':'')+
-    (p.imageUrl?'<img src="'+p.imageUrl+'" style="width:100%;max-height:300px;object-fit:cover">':'')+
-    '<div class="pc-reactions"><div class="r-counts"><div class="r-icons"><span class="ri ri-b">👍</span></div><span id="likes-'+id+'">'+(p.likes||0)+'</span></div>'+
-    '<div class="c-count" onclick="toggleComments(\'cmt-'+id+'\')">ความคิดเห็น '+(p.comments||0)+'</div></div>'+
-    '<div class="pc-actions">'+
-    '<button class="pa" onclick="likePost(\''+id+'\',this)"><span>👍</span>ถูกใจ</button>'+
-    '<button class="pa" onclick="helpPost(\''+id+'\',this)"><span>✅</span>ช่วยได้</button>'+
-    '<button class="pa" onclick="toggleComments(\'cmt-'+id+'\')"><span>💬</span>แสดงความคิดเห็น</button>'+
-    '<button class="pa"><span>↗️</span>แชร์</button></div>'+
-    '<div class="comments-wrap" id="cmt-'+id+'" style="display:none">'+
-    '<div class="cmt-input-row">'+
-    '<div class="cmt-me" style="'+(currentUser&&currentUser.photoUrl?'background-image:url('+currentUser.photoUrl+');background-size:cover;background-position:center':'')+'">'+(currentUser&&currentUser.photoUrl?'':(currentUser&&currentUser.displayName?currentUser.displayName.charAt(0):'ฉ'))+'</div>'+
-    '<input class="cmt-input" placeholder="เขียนความคิดเห็น..." id="cmt-input-'+id+'">'+
-    '<button class="cmt-send" onclick="addComment(\''+id+'\')">➤</button></div>'+
-    '<div id="cmts-'+id+'"></div></div></div>';
+function renderPost(id, p, i) {
+  const initials = p.authorName?.charAt(0) || '?';
+  const avatarColors = ['av-blue','av-orange','av-teal','av-purple'];
+  const avatarClass = avatarColors[i % avatarColors.length];
+  const timeAgo = formatTimeAgo(p.createdAt);
+  const isOwn = currentUser && p.authorId === currentUser.uid;
+
+  const typeTagMap = {
+    '🦠 โรคพืช':      'pt-red',
+    '💡 แชร์ความรู้': 'pt-blue',
+    '⚠️ แจ้งเตือนพื้นที่': 'pt-amber',
+    '📦 รีวิวสินค้า':  'pt-green',
+  };
+  const tagClass = typeTagMap[p.type] || 'pt-blue';
+
+  const cropEmoji = p.crop ? (APP_CONFIG.crops.find(c => c.id === p.crop)?.emoji || '🌱') : '';
+  const cropName  = p.crop ? (APP_CONFIG.crops.find(c => c.id === p.crop)?.name  || '')   : '';
+
+  return `
+    <div class="post-card" id="post-${id}">
+      <div class="pc-head">
+        <div class="pc-av ${avatarClass}" style="${p.authorPhoto ? `background-image:url(${p.authorPhoto});background-size:cover;background-position:center` : ''}">
+          ${p.authorPhoto ? '' : initials}
+        </div>
+        <div class="pc-info">
+          <div class="pc-name">${p.authorName || 'ผู้ใช้'}</div>
+          <div class="pc-meta">${timeAgo} · 🌍</div>
+        </div>
+        ${isOwn ? `<button class="pc-more" onclick="deletePost('${id}')">🗑️</button>` : '<button class="pc-more">•••</button>'}
+      </div>
+      <div class="pc-tags">
+        ${p.type ? `<span class="ptag ${tagClass}">${p.type}</span>` : ''}
+        ${cropName ? `<span class="ptag pt-green">${cropEmoji} ${cropName}</span>` : ''}
+      </div>
+      ${p.text ? `<div class="pc-text">${p.text}</div>` : ''}
+      ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;max-height:300px;object-fit:cover">` : ''}
+      <div class="pc-reactions">
+        <div class="r-counts">
+          <div class="r-icons"><span class="ri ri-b">👍</span></div>
+          <span id="likes-${id}">${p.likes || 0}</span>
+        </div>
+        <div class="c-count" onclick="toggleComments('cmt-${id}')">ความคิดเห็น ${p.comments || 0}</div>
+      </div>
+      <div class="pc-actions">
+        <button class="pa" onclick="likePost('${id}',this)"><span class="pi">👍</span>ถูกใจ</button>
+        <button class="pa" onclick="helpPost('${id}',this)"><span class="pi">✅</span>ช่วยได้</button>
+        <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
+        <button class="pa"><span class="pi">↗️</span>แชร์</button>
+      </div>
+      <div class="comments-wrap" id="cmt-${id}" style="display:none">
+        <div class="cmt-input-row">
+          <div class="cmt-me" style="${currentUser?.photoUrl ? `background-image:url(${currentUser.photoUrl});background-size:cover;background-position:center` : ''}">
+            ${currentUser?.photoUrl ? '' : (currentUser?.displayName?.charAt(0) || 'ฉ')}
+          </div>
+          <input class="cmt-input" placeholder="เขียนความคิดเห็น..." id="cmt-input-${id}">
+          <button class="cmt-send" onclick="addComment('${id}')">➤</button>
+        </div>
+        <div id="cmts-${id}"></div>
+      </div>
+    </div>`;
 }
 
-function toggleComments(id){ var e=document.getElementById(id); if(e) e.style.display=e.style.display==='none'?'block':'none'; }
-
-async function likePost(id,btn){
-  if(!currentUser||!db) return;
+// ── Post Actions ──────────────────────────────────────────
+async function likePost(id, btn) {
+  if (!currentUser || !db) return;
   btn.classList.toggle('liked');
-  var inc=btn.classList.contains('liked')?1:-1;
-  try{
-    await db.collection('posts').doc(id).update({likes:firebase.firestore.FieldValue.increment(inc)});
-    var el=document.getElementById('likes-'+id); if(el) el.textContent=Math.max(0,parseInt(el.textContent)+inc);
-    if(inc>0) await db.collection('users').doc(currentUser.uid).update({points:firebase.firestore.FieldValue.increment(APP_CONFIG.points.perLike||2)});
-  }catch(e){console.error(e);}
+  const inc = btn.classList.contains('liked') ? 1 : -1;
+  try {
+    await db.collection('posts').doc(id).update({ likes: firebase.firestore.FieldValue.increment(inc) });
+    const el = document.getElementById('likes-' + id);
+    if (el) el.textContent = Math.max(0, parseInt(el.textContent) + inc);
+    if (inc > 0) {
+      await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perLike || 2) });
+    }
+  } catch(e) { console.error(e); }
 }
 
-async function helpPost(id,btn){
-  if(!currentUser||!db) return;
+async function helpPost(id, btn) {
+  if (!currentUser || !db) return;
   btn.classList.toggle('helped');
-  var inc=btn.classList.contains('helped')?1:-1;
-  try{
-    await db.collection('posts').doc(id).update({helps:firebase.firestore.FieldValue.increment(inc)});
-    if(inc>0) await db.collection('users').doc(currentUser.uid).update({points:firebase.firestore.FieldValue.increment(APP_CONFIG.points.perHelp||15),helpCount:firebase.firestore.FieldValue.increment(1)});
-  }catch(e){console.error(e);}
+  const inc = btn.classList.contains('helped') ? 1 : -1;
+  try {
+    await db.collection('posts').doc(id).update({ helps: firebase.firestore.FieldValue.increment(inc) });
+    if (inc > 0) {
+      await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perHelp || 15), helpCount: firebase.firestore.FieldValue.increment(1) });
+    }
+  } catch(e) { console.error(e); }
 }
 
-async function addComment(postId){
-  var input=document.getElementById('cmt-input-'+postId);
-  var text=input?input.value.trim():'';
-  if(!text||!currentUser||!db) return;
-  try{
-    await db.collection('posts').doc(postId).collection('comments').add({text:text,authorId:currentUser.uid,authorName:currentUser.displayName,authorPhoto:currentUser.photoUrl||'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-    await db.collection('posts').doc(postId).update({comments:firebase.firestore.FieldValue.increment(1)});
-    await db.collection('users').doc(currentUser.uid).update({points:firebase.firestore.FieldValue.increment(APP_CONFIG.points.perComment||3)});
-    input.value='';
-    var cmtsEl=document.getElementById('cmts-'+postId);
-    if(cmtsEl) cmtsEl.innerHTML+='<div class="cmt" style="margin-top:8px"><div class="cmt-av" style="'+(currentUser.photoUrl?'background-image:url('+currentUser.photoUrl+');background-size:cover;background-position:center':'')+'">'+(currentUser.photoUrl?'':init)+'</div><div><div class="cmt-bubble"><div class="cmt-name">'+(currentUser.displayName||'คุณ')+'</div><div class="cmt-text">'+text+'</div></div></div></div>';
-  }catch(e){console.error(e);}
+async function addComment(postId) {
+  const input = document.getElementById('cmt-input-' + postId);
+  const text = input?.value?.trim();
+  if (!text || !currentUser || !db) return;
+  try {
+    await db.collection('posts').doc(postId).collection('comments').add({
+      text, authorId: currentUser.uid, authorName: currentUser.displayName, authorPhoto: currentUser.photoUrl || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('posts').doc(postId).update({ comments: firebase.firestore.FieldValue.increment(1) });
+    await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perComment || 3) });
+    input.value = '';
+
+    // แสดงความคิดเห็น
+    const cmtsEl = document.getElementById('cmts-' + postId);
+    if (cmtsEl) {
+      const initials = currentUser.displayName?.charAt(0) || 'ฉ';
+      cmtsEl.innerHTML += `
+        <div class="cmt" style="margin-top:8px">
+          <div class="cmt-av" style="${currentUser.photoUrl?`background-image:url(${currentUser.photoUrl});background-size:cover;background-position:center`:''}">
+            ${currentUser.photoUrl?'':initials}
+          </div>
+          <div><div class="cmt-bubble">
+            <div class="cmt-name">${currentUser.displayName||'คุณ'}</div>
+            <div class="cmt-text">${text}</div>
+          </div></div>
+        </div>`;
+    }
+  } catch(e) { console.error(e); }
 }
 
-async function deletePost(id){
-  if(!confirm('ลบโพสนี้?')) return;
-  try{ await db.collection('posts').doc(id).delete(); var el=document.getElementById('post-'+id); if(el) el.remove(); }
-  catch(e){alert('ลบไม่ได้: '+e.message);}
+async function deletePost(id) {
+  if (!confirm('ลบโพสนี้?')) return;
+  try {
+    await db.collection('posts').doc(id).delete();
+    document.getElementById('post-' + id)?.remove();
+  } catch(e) { alert('ลบไม่ได้: ' + e.message); }
 }
 
-function formatTimeAgo(ts){
-  if(!ts) return 'เมื่อกี้';
-  var d=ts.toDate?ts.toDate():new Date(ts);
-  var diff=Math.floor((Date.now()-d.getTime())/1000);
-  if(diff<60) return 'เมื่อกี้';
-  if(diff<3600) return Math.floor(diff/60)+' นาทีที่แล้ว';
-  if(diff<86400) return Math.floor(diff/3600)+' ชม. ที่แล้ว';
-  return Math.floor(diff/86400)+' วันที่แล้ว';
+// ── Time Formatter ────────────────────────────────────────
+function formatTimeAgo(ts) {
+  if (!ts) return 'เมื่อกี้';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diff < 60)   return 'เมื่อกี้';
+  if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว';
+  if (diff < 86400)return Math.floor(diff/3600) + ' ชม. ที่แล้ว';
+  return Math.floor(diff/86400) + ' วันที่แล้ว';
 }
 </script>
 </body>
