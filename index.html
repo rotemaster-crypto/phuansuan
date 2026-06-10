@@ -245,6 +245,58 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .btn-line-login{width:100%;max-width:300px;background:#06C755;color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(6,199,85,0.35)}
 .btn-line-login:active{opacity:0.85}
 .login-terms{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6}
+
+/* ── ONBOARDING ── */
+#onboarding-screen{position:fixed;inset:0;background:#fff;display:none;flex-direction:column;z-index:9997;max-width:480px;margin:0 auto;overflow:hidden}
+#onboarding-screen.show{display:flex}
+.ob-progress{display:flex;gap:6px;padding:16px 20px 0}
+.ob-dot{flex:1;height:4px;border-radius:4px;background:var(--border);transition:background 0.3s}
+.ob-dot.done{background:var(--primary)}
+.ob-slides{display:flex;width:300%;transition:transform 0.35s cubic-bezier(.4,0,.2,1);flex:1}
+.ob-slide{width:33.333%;display:flex;flex-direction:column;align-items:center;padding:24px 24px 0;overflow-y:auto}
+
+/* slide 1 — welcome */
+.ob-welcome-av{width:96px;height:96px;border-radius:50%;background:var(--primary);color:#fff;font-size:36px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:24px 0 16px;border:4px solid #e7f3ff;background-size:cover;background-position:center}
+.ob-welcome-name{font-size:24px;font-weight:800;color:var(--text);text-align:center}
+.ob-welcome-sub{font-size:15px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.5}
+.ob-welcome-badge{display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;color:#1b5e20;font-size:13px;font-weight:700;padding:6px 14px;border-radius:20px;margin-top:14px}
+.ob-features{width:100%;margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.ob-feat{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px}
+.ob-feat-ico{font-size:26px;flex-shrink:0}
+.ob-feat-text{font-size:14px;font-weight:600;color:var(--text)}
+.ob-feat-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* slide 2 — crops */
+.ob-slide-title{font-size:20px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px}
+.ob-slide-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5}
+.ob-crops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.ob-crop{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--bg);border-radius:14px;padding:14px 8px;cursor:pointer;border:2.5px solid transparent;transition:all 0.2s;position:relative}
+.ob-crop.selected{background:#e7f3ff;border-color:var(--primary)}
+.ob-crop-emoji{font-size:32px}
+.ob-crop-name{font-size:12px;font-weight:700;color:var(--text);text-align:center}
+.ob-crop-check{position:absolute;top:6px;right:6px;width:18px;height:18px;background:var(--primary);border-radius:50%;display:none;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800}
+.ob-crop.selected .ob-crop-check{display:flex}
+
+/* slide 3 — location */
+.ob-loc-icon{font-size:56px;margin:16px 0 12px}
+.ob-loc-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:14px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
+.ob-loc-btn:active{opacity:0.85}
+.ob-loc-btn.success{background:#2e7d32}
+.ob-loc-btn.loading{opacity:0.7;pointer-events:none}
+.ob-loc-manual{width:100%;margin-bottom:12px}
+.ob-loc-manual label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.ob-loc-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:15px;font-family:inherit;outline:none;color:var(--text);background:#fff}
+.ob-loc-input:focus{border-color:var(--primary)}
+.ob-loc-status{font-size:13px;color:var(--muted);text-align:center;min-height:20px;margin-bottom:8px}
+.ob-loc-status.ok{color:#2e7d32;font-weight:700}
+.ob-loc-status.err{color:#e41e3f}
+.ob-loc-skip{font-size:13px;color:var(--muted);text-align:center;cursor:pointer;margin-top:8px;text-decoration:underline}
+
+/* bottom bar */
+.ob-bottom{padding:16px 20px;border-top:1px solid var(--border);background:#fff;display:flex;align-items:center;gap:12px}
+.ob-back{width:44px;height:44px;border-radius:50%;background:var(--bg);border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ob-next{flex:1;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+.ob-next:disabled{opacity:0.5;pointer-events:none}
 </style>
 </head>
 <body>
@@ -273,6 +325,69 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </button>
   <div class="login-terms">การเข้าสู่ระบบถือว่าคุณยอมรับ<br>เงื่อนไขการใช้งานของเพื่อนสวน</div>
 </div>
+
+<!-- ══ ONBOARDING SCREEN ══ -->
+<div id="onboarding-screen">
+
+  <!-- Progress dots -->
+  <div class="ob-progress">
+    <div class="ob-dot done" id="ob-dot-0"></div>
+    <div class="ob-dot" id="ob-dot-1"></div>
+    <div class="ob-dot" id="ob-dot-2"></div>
+  </div>
+
+  <!-- Slides wrapper -->
+  <div class="ob-slides" id="ob-slides">
+
+    <!-- ── Slide 1: Welcome ── -->
+    <div class="ob-slide">
+      <div class="ob-welcome-av" id="ob-av">ฉ</div>
+      <div class="ob-welcome-name" id="ob-name">ยินดีต้อนรับ!</div>
+      <div class="ob-welcome-sub">คุณเข้าร่วมชุมชนเพื่อนสวนแล้ว<br>มาแนะนำตัวกันสักหน่อยนะครับ 🌿</div>
+      <div class="ob-welcome-badge">🏅 Bronze Member · เริ่มต้น 0 แต้ม</div>
+      <div class="ob-features">
+        <div class="ob-feat"><div class="ob-feat-ico">🤖</div><div><div class="ob-feat-text">AI วิเคราะห์โรคพืช</div><div class="ob-feat-sub">ถ่ายรูปต้นไม้ รู้โรคทันที</div></div></div>
+        <div class="ob-feat"><div class="ob-feat-ico">📍</div><div><div class="ob-feat-text">Feed ใกล้บ้าน</div><div class="ob-feat-sub">ดูปัญหาสวนในพื้นที่ของคุณ</div></div></div>
+        <div class="ob-feat"><div class="ob-feat-ico">🏅</div><div><div class="ob-feat-text">สะสมแต้ม รับส่วนลด</div><div class="ob-feat-sub">โพส ช่วยเหลือ → ได้แต้ม DemeterRich</div></div></div>
+      </div>
+    </div>
+
+    <!-- ── Slide 2: เลือกพืช ── -->
+    <div class="ob-slide">
+      <div style="width:100%">
+        <div class="ob-slide-title">🌱 คุณปลูกพืชอะไรบ้าง?</div>
+        <div class="ob-slide-sub">เลือกได้หลายอย่าง — Feed จะแสดง<br>โพสที่เกี่ยวข้องกับพืชของคุณ</div>
+        <div class="ob-crops-grid" id="ob-crops-grid"></div>
+      </div>
+    </div>
+
+    <!-- ── Slide 3: Location ── -->
+    <div class="ob-slide">
+      <div class="ob-loc-icon">📍</div>
+      <div class="ob-slide-title">บอกตำแหน่งของคุณ</div>
+      <div class="ob-slide-sub" style="margin-bottom:20px">ใช้เพื่อแสดงปัญหาสวนใกล้บ้าน<br>และแจ้งเตือนโรคระบาดในพื้นที่</div>
+      <div style="width:100%">
+        <button class="ob-loc-btn" id="ob-gps-btn" onclick="getGPSLocation()">
+          <span>📡</span> ระบุตำแหน่งอัตโนมัติ
+        </button>
+        <div class="ob-loc-status" id="ob-loc-status"></div>
+        <div class="ob-loc-manual">
+          <label>หรือพิมพ์ชื่ออำเภอ / จังหวัด</label>
+          <input class="ob-loc-input" id="ob-loc-text" placeholder="เช่น บ้านโป่ง ราชบุรี" oninput="onLocTextInput()">
+        </div>
+        <div class="ob-loc-skip" onclick="skipLocation()">ข้ามสำหรับตอนนี้</div>
+      </div>
+    </div>
+
+  </div><!-- /ob-slides -->
+
+  <!-- Bottom bar -->
+  <div class="ob-bottom">
+    <button class="ob-back" id="ob-back-btn" onclick="obPrev()" style="visibility:hidden">←</button>
+    <button class="ob-next" id="ob-next-btn" onclick="obNext()">ถัดไป →</button>
+  </div>
+
+</div><!-- /onboarding-screen -->
 
 <!-- TOPBAR -->
 <div class="topbar">
@@ -516,7 +631,12 @@ window.addEventListener('load', async () => {
       // จากนั้นดึงข้อมูล profile จาก LINE
       await loadUserProfile();
       hideLoading();
-      loadFeed();
+      // ตรวจว่าผ่าน onboarding แล้วหรือยัง
+      if (!currentUser.onboardingDone) {
+        showOnboarding();
+      } else {
+        loadFeed();
+      }
     }
   } catch (err) {
     console.error('Init error:', err);
@@ -1018,6 +1138,216 @@ function formatTimeAgo(ts) {
   if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว';
   if (diff < 86400)return Math.floor(diff/3600) + ' ชม. ที่แล้ว';
   return Math.floor(diff/86400) + ' วันที่แล้ว';
+}
+
+// ══════════════════════════════════════════════════════════
+//  ONBOARDING
+// ══════════════════════════════════════════════════════════
+let obStep = 0;
+let obSelectedCrops = [];
+let obLocation = null; // { lat, lng, label }
+
+function showOnboarding() {
+  // ตั้งค่า avatar + ชื่อใน slide 1
+  const av = document.getElementById('ob-av');
+  const nameEl = document.getElementById('ob-name');
+  if (currentUser) {
+    if (currentUser.photoUrl) {
+      av.style.backgroundImage = `url(${currentUser.photoUrl})`;
+      av.style.backgroundSize = 'cover';
+      av.style.backgroundPosition = 'center';
+      av.textContent = '';
+    } else {
+      av.textContent = currentUser.displayName?.charAt(0) || 'ฉ';
+    }
+    if (nameEl) nameEl.textContent = 'สวัสดี ' + (currentUser.displayName || 'เพื่อน') + '!';
+  }
+
+  // Build crops grid
+  buildObCropsGrid();
+
+  obStep = 0;
+  updateObUI();
+  document.getElementById('onboarding-screen').classList.add('show');
+}
+
+function hideOnboarding() {
+  document.getElementById('onboarding-screen').classList.remove('show');
+}
+
+function buildObCropsGrid() {
+  const grid = document.getElementById('ob-crops-grid');
+  if (!grid) return;
+  const crops = APP_CONFIG.crops.filter(c => c.id !== 'other');
+  grid.innerHTML = crops.map(c => `
+    <div class="ob-crop" id="ob-crop-${c.id}" onclick="toggleObCrop('${c.id}')">
+      <div class="ob-crop-check">✓</div>
+      <div class="ob-crop-emoji">${c.emoji}</div>
+      <div class="ob-crop-name">${c.name}</div>
+    </div>
+  `).join('');
+}
+
+function toggleObCrop(id) {
+  const el = document.getElementById('ob-crop-' + id);
+  if (!el) return;
+  const idx = obSelectedCrops.indexOf(id);
+  if (idx >= 0) {
+    obSelectedCrops.splice(idx, 1);
+    el.classList.remove('selected');
+  } else {
+    obSelectedCrops.push(id);
+    el.classList.add('selected');
+  }
+  updateObNextBtn();
+}
+
+function updateObUI() {
+  // Progress dots
+  for (let i = 0; i < 3; i++) {
+    const dot = document.getElementById('ob-dot-' + i);
+    if (dot) dot.classList.toggle('done', i <= obStep);
+  }
+
+  // Slides
+  const slides = document.getElementById('ob-slides');
+  if (slides) slides.style.transform = `translateX(-${obStep * 33.333}%)`;
+
+  // Back button
+  const back = document.getElementById('ob-back-btn');
+  if (back) back.style.visibility = obStep === 0 ? 'hidden' : 'visible';
+
+  // Next button label
+  updateObNextBtn();
+}
+
+function updateObNextBtn() {
+  const btn = document.getElementById('ob-next-btn');
+  if (!btn) return;
+  if (obStep === 0) {
+    btn.textContent = 'เริ่มเลย! →';
+    btn.disabled = false;
+  } else if (obStep === 1) {
+    btn.textContent = obSelectedCrops.length > 0
+      ? `ถัดไป (เลือก ${obSelectedCrops.length} อย่าง) →`
+      : 'ข้ามสำหรับตอนนี้ →';
+    btn.disabled = false;
+  } else if (obStep === 2) {
+    const hasLoc = obLocation || document.getElementById('ob-loc-text')?.value?.trim();
+    btn.textContent = '🎉 เข้าใช้งานเลย!';
+    btn.disabled = false;
+  }
+}
+
+function obNext() {
+  if (obStep < 2) {
+    obStep++;
+    updateObUI();
+  } else {
+    finishOnboarding();
+  }
+}
+
+function obPrev() {
+  if (obStep > 0) {
+    obStep--;
+    updateObUI();
+  }
+}
+
+function onLocTextInput() {
+  const val = document.getElementById('ob-loc-text')?.value?.trim();
+  if (val) {
+    obLocation = { lat: null, lng: null, label: val };
+    const status = document.getElementById('ob-loc-status');
+    if (status) { status.textContent = '📍 ' + val; status.className = 'ob-loc-status ok'; }
+  } else {
+    obLocation = null;
+    const status = document.getElementById('ob-loc-status');
+    if (status) { status.textContent = ''; status.className = 'ob-loc-status'; }
+  }
+  updateObNextBtn();
+}
+
+function skipLocation() {
+  obLocation = null;
+  finishOnboarding();
+}
+
+function getGPSLocation() {
+  if (!navigator.geolocation) {
+    const s = document.getElementById('ob-loc-status');
+    if (s) { s.textContent = '❌ อุปกรณ์ไม่รองรับ GPS'; s.className = 'ob-loc-status err'; }
+    return;
+  }
+  const btn = document.getElementById('ob-gps-btn');
+  const status = document.getElementById('ob-loc-status');
+  if (btn) { btn.classList.add('loading'); btn.innerHTML = '<span>⏳</span> กำลังระบุตำแหน่ง...'; }
+  if (status) { status.textContent = 'กำลังขอสิทธิ์ GPS...'; status.className = 'ob-loc-status'; }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      let label = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      // Reverse geocode ด้วย nominatim
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=th`);
+        if (res.ok) {
+          const data = await res.json();
+          const addr = data.address;
+          label = [addr.suburb||addr.village||addr.town, addr.city||addr.county, addr.state].filter(Boolean).join(', ');
+        }
+      } catch(e) {}
+
+      obLocation = { lat, lng, label };
+      if (btn) { btn.classList.remove('loading'); btn.classList.add('success'); btn.innerHTML = `<span>✅</span> ${label}`; }
+      if (status) { status.textContent = '📍 พบตำแหน่งแล้ว!'; status.className = 'ob-loc-status ok'; }
+      updateObNextBtn();
+    },
+    (err) => {
+      if (btn) { btn.classList.remove('loading'); btn.innerHTML = '<span>📡</span> ระบุตำแหน่งอัตโนมัติ'; }
+      if (status) {
+        const msgs = { 1: 'ไม่ได้รับอนุญาต GPS', 2: 'ไม่พบตำแหน่ง', 3: 'หมดเวลา GPS' };
+        status.textContent = '❌ ' + (msgs[err.code] || 'เกิดข้อผิดพลาด');
+        status.className = 'ob-loc-status err';
+      }
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+async function finishOnboarding() {
+  const btn = document.getElementById('ob-next-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...'; }
+
+  try {
+    const locText = document.getElementById('ob-loc-text')?.value?.trim();
+    const finalLocation = obLocation || (locText ? { lat: null, lng: null, label: locText } : null);
+
+    if (db && currentUser) {
+      const updateData = {
+        onboardingDone: true,
+        crops: obSelectedCrops,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+      if (finalLocation) {
+        updateData.locationLabel = finalLocation.label;
+        if (finalLocation.lat) {
+          updateData.locationLat = finalLocation.lat;
+          updateData.locationLng = finalLocation.lng;
+          // Firestore GeoPoint
+          updateData.geopoint = new firebase.firestore.GeoPoint(finalLocation.lat, finalLocation.lng);
+        }
+      }
+      await db.collection('users').doc(currentUser.uid).update(updateData);
+      currentUser = { ...currentUser, ...updateData };
+    }
+  } catch(e) {
+    console.error('finishOnboarding error:', e);
+  }
+
+  hideOnboarding();
+  loadFeed();
 }
 </script>
 </body>
