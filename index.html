@@ -10,6 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <!-- LIFF SDK -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
@@ -314,122 +315,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     </div>
   </div>
 
-  <div class="alert-banner">
+  <div class="alert-banner" id="alert-banner">
     <span>⚠️</span>
-    <div><strong>แจ้งเตือนพื้นที่ 15 กม.</strong> — พบโรคแอนแทรคโนสในมะม่วง 3 สวน บริเวณ อ.บ้านโป่ง ราชบุรี</div>
+    <div id="alert-banner-text"><strong>แจ้งเตือนพื้นที่ 15 กม.</strong> — พบโรคแอนแทรคโนสในมะม่วง 3 สวน บริเวณ อ.บ้านโป่ง ราชบุรี</div>
   </div>
 
-  <!-- POST 1 -->
-  <div class="post-card">
-    <div class="pc-head">
-      <div class="pc-av av-orange">สช</div>
-      <div class="pc-info">
-        <div class="pc-name">ลุงสมชาย วงษ์เกษตร <span class="expert-badge">⭐ ปราชญ์มะม่วง</span></div>
-        <div class="pc-meta">
-          📍 อ.บ้านโป่ง · 2 ชม. · 🌍
-          <span class="pc-dot"></span>
-          <button class="follow-link following" onclick="toggleFollow(this)">กำลังติดตาม ▾</button>
-        </div>
-      </div>
-      <button class="pc-more">•••</button>
-    </div>
-    <div class="pc-tags">
-      <span class="ptag pt-red">🦠 โรคพืช</span>
-      <span class="ptag pt-green">🥭 มะม่วง</span>
-    </div>
-    <div class="pc-text">ใบเริ่มมีจุดดำขอบเหลือง ลามเร็วมาก ฝนตกทุกวัน 3 อาทิตย์แล้ว ใครเจอบ้างแถวนี้? <span class="more">ดูเพิ่มเติม</span></div>
-    <div class="pc-img">📸<span>ใบมะม่วงมีจุดดำ ขอบเหลือง</span></div>
-    <div class="ai-box">
-      <div class="ai-title">🤖 AI วิเคราะห์เบื้องต้น</div>
-      <div class="ai-body">น่าจะเป็น <strong>โรคแอนแทรคโนส</strong> (Colletotrichum sp.) ระบาดช่วงฝนชุก ควรพ่นสาร Mancozeb หรือ Carbendazim และตัดใบที่เป็นโรคออก</div>
-    </div>
-    <div class="prod-link">
-      <span class="prod-link-text">🛒 Mancozeb 80% WP — มีในร้าน ดูราคา</span>
-      <span class="prod-arrow">›</span>
-    </div>
-    <div class="pc-reactions">
-      <div class="r-counts">
-        <div class="r-icons">
-          <span class="ri ri-b">👍</span><span class="ri ri-r">❤️</span><span class="ri ri-g">✅</span>
-        </div>
-        <span>37</span>
-      </div>
-      <div class="c-count" onclick="toggleComments('c1')">ความคิดเห็น 8 รายการ</div>
-    </div>
-    <div class="pc-actions">
-      <button class="pa" onclick="toggleLike(this)"><span class="pi">👍</span>ถูกใจ</button>
-      <button class="pa helped"><span class="pi">✅</span>ช่วยได้</button>
-      <button class="pa" onclick="toggleComments('c1')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
-      <button class="pa"><span class="pi">↗️</span>แชร์</button>
-    </div>
-    <div class="comments-wrap" id="c1" style="display:none">
-      <div class="cmt">
-        <div class="cmt-av">วล</div>
-        <div>
-          <div class="cmt-bubble">
-            <div class="cmt-name">ป้าวิไล ชาวไร่</div>
-            <div class="cmt-text">เจอเหมือนกันเลยค่ะ พ่น Mancozeb แล้วดีขึ้นมากเลยค่ะ 😊</div>
-          </div>
-          <div class="cmt-acts">
-            <button class="cmt-act">ถูกใจ</button>
-            <button class="cmt-act">ตอบกลับ</button>
-            <span style="font-size:12px;color:var(--muted)">1 ชม.</span>
-          </div>
-        </div>
-      </div>
-      <div class="cmt-input-row">
-        <div class="cmt-me">ฉ</div>
-        <input class="cmt-input" placeholder="เขียนความคิดเห็นสาธารณะ...">
-        <button class="cmt-send">➤</button>
-      </div>
+  <!-- Dynamic Feed -->
+  <div id="feed-container">
+    <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px">
+      <div style="font-size:32px;margin-bottom:8px">🌿</div>
+      กำลังโหลด Feed...
     </div>
   </div>
 
-  <!-- POST 2 -->
-  <div class="post-card">
-    <div class="pc-head">
-      <div class="pc-av av-teal">วล</div>
-      <div class="pc-info">
-        <div class="pc-name">ป้าวิไล ชาวไร่</div>
-        <div class="pc-meta">
-          📍 อ.โพธาราม · 5 ชม. · 🌍
-          <span class="pc-dot"></span>
-          <button class="follow-link" onclick="toggleFollow(this)">+ ติดตาม</button>
-        </div>
-      </div>
-      <button class="pc-more">•••</button>
-    </div>
-    <div class="pc-tags">
-      <span class="ptag pt-blue">💡 แชร์ความรู้</span>
-      <span class="ptag pt-amber">🌶️ พริก</span>
-    </div>
-    <div class="pc-text">ปีนี้พ่นโปแตสสูตรที่ร้านแนะนำ ผลใหญ่ขึ้น สีสวยขึ้นมาก แนะนำเลยนะคะ ใครสนใจถามได้เลยค่ะ 😊</div>
-    <div class="pc-img" style="background:#fce4ec">📸<span>ผลพริกแดงสวยงาม</span></div>
-    <div class="prod-link">
-      <span class="prod-link-text">🛒 โปแตสเซียม 0-0-60 DemeterRich — ดูสินค้า</span>
-      <span class="prod-arrow">›</span>
-    </div>
-    <div class="pc-reactions">
-      <div class="r-counts">
-        <div class="r-icons"><span class="ri ri-b">👍</span><span class="ri ri-g">✅</span></div>
-        <span>42</span>
-      </div>
-      <div class="c-count" onclick="toggleComments('c2')">ความคิดเห็น 14 รายการ</div>
-    </div>
-    <div class="pc-actions">
-      <button class="pa" onclick="toggleLike(this)"><span class="pi">👍</span>ถูกใจ</button>
-      <button class="pa" onclick="toggleHelp(this)"><span class="pi">✅</span>ช่วยได้</button>
-      <button class="pa" onclick="toggleComments('c2')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
-      <button class="pa"><span class="pi">↗️</span>แชร์</button>
-    </div>
-    <div class="comments-wrap" id="c2" style="display:none">
-      <div class="cmt-input-row">
-        <div class="cmt-me">ฉ</div>
-        <input class="cmt-input" placeholder="เขียนความคิดเห็นสาธารณะ...">
-        <button class="cmt-send">➤</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- ══ PROFILE SCREEN ══ -->
@@ -532,9 +430,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         <button class="type-chip" onclick="selType(this)">⚠️ แจ้งเตือนพื้นที่</button>
         <button class="type-chip" onclick="selType(this)">📦 รีวิวสินค้า</button>
       </div>
-      <div class="photo-area">
-        <div class="ph-ico">📷</div>
-        <span>เพิ่มภาพหรือวิดีโอ</span>
+      <div class="photo-area" onclick="document.getElementById('post-img-input').click()" id="photo-area-box">
+        <input type="file" id="post-img-input" accept="image/*" style="display:none" onchange="previewPostImage(this)">
+        <div class="ph-ico" id="photo-area-ico">📷</div>
+        <img id="post-img-preview" style="display:none;width:100%;border-radius:8px;max-height:200px;object-fit:cover">
+        <span id="photo-area-txt">เพิ่มภาพหรือวิดีโอ</span>
       </div>
       <div class="fg">
         <label>พืชที่เกี่ยวข้อง</label>
@@ -542,9 +442,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       </div>
       <div class="fg">
         <label>รายละเอียด</label>
-        <textarea placeholder="บอกเล่าอาการที่เห็น หรือแชร์ประสบการณ์ของคุณ..."></textarea>
+        <textarea id="modal-text" placeholder="บอกเล่าอาการที่เห็น หรือแชร์ประสบการณ์ของคุณ..."></textarea>
       </div>
-      <button class="submit-btn" onclick="submitPost()">📤 โพสเลย</button>
+      <div id="post-uploading" style="display:none;text-align:center;padding:8px;font-size:14px;color:var(--muted)">⏳ กำลังโพส...</div>
+      <button class="submit-btn" onclick="submitPost()" id="submit-btn">📤 โพสเลย</button>
       <div class="pts-hint" id="pts-hint">✨ คุณจะได้รับ +10 แต้มสะสมจากการโพสนี้</div>
     </div>
   </div>
@@ -615,6 +516,7 @@ window.addEventListener('load', async () => {
       // จากนั้นดึงข้อมูล profile จาก LINE
       await loadUserProfile();
       hideLoading();
+      loadFeed();
     }
   } catch (err) {
     console.error('Init error:', err);
@@ -858,10 +760,264 @@ function selType(el){
   document.querySelectorAll('.type-chip').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel');
 }
-function submitPost(){
-  const pts = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG.points.perPost : 10;
-  closeModal();
-  alert(`โพสสำเร็จ! 🎉\n+${pts} แต้มเข้าบัญชีแล้ว`);
+// ── Preview Image ─────────────────────────────────────────
+function previewPostImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('post-img-preview').src = e.target.result;
+    document.getElementById('post-img-preview').style.display = 'block';
+    document.getElementById('photo-area-ico').style.display = 'none';
+    document.getElementById('photo-area-txt').textContent = '✅ เลือกรูปแล้ว — แตะเพื่อเปลี่ยน';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Submit Post ───────────────────────────────────────────
+async function submitPost() {
+  if (!currentUser) { alert('กรุณา Login ก่อนโพส'); return; }
+
+  const text   = document.getElementById('modal-text')?.value?.trim();
+  const crop   = document.getElementById('modal-crop')?.value;
+  const typeEl = document.querySelector('.type-chip.sel');
+  const type   = typeEl ? typeEl.textContent.trim() : 'โพส';
+  const imgFile = document.getElementById('post-img-input')?.files[0];
+
+  if (!text && !imgFile) { alert('กรุณาเขียนข้อความหรือเพิ่มรูปภาพ'); return; }
+
+  // UI: loading state
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('post-uploading').style.display = 'block';
+
+  try {
+    let imageUrl = null;
+
+    // อัพโหลดรูปถ้ามี
+    if (imgFile && typeof firebase !== 'undefined') {
+      const storageRef = firebase.storage().ref(`posts/${currentUser.uid}_${Date.now()}.${imgFile.name.split('.').pop()}`);
+      const snapshot = await storageRef.put(imgFile);
+      imageUrl = await snapshot.ref.getDownloadURL();
+    }
+
+    // บันทึกโพสลง Firestore
+    if (db) {
+      const pts = APP_CONFIG.points[imageUrl ? 'perPostWithImg' : 'perPost'] || 10;
+      await db.collection('posts').add({
+        text,
+        type,
+        crop:        crop || '',
+        imageUrl:    imageUrl || null,
+        authorId:    currentUser.uid,
+        authorName:  currentUser.displayName || 'ผู้ใช้',
+        authorPhoto: currentUser.photoUrl    || '',
+        likes:       0,
+        helps:       0,
+        comments:    0,
+        createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // อัพเดทแต้ม + postCount
+      await db.collection('users').doc(currentUser.uid).update({
+        points:    firebase.firestore.FieldValue.increment(pts),
+        postCount: firebase.firestore.FieldValue.increment(1),
+      });
+      currentUser.points = (currentUser.points || 0) + pts;
+      currentUser.postCount = (currentUser.postCount || 0) + 1;
+      updateUIWithUser(currentUser);
+    }
+
+    closeModal();
+    resetPostModal();
+    alert(`โพสสำเร็จ! 🎉\n+${APP_CONFIG.points[imageUrl?'perPostWithImg':'perPost']} แต้มเข้าบัญชีแล้ว`);
+    loadFeed(); // รีโหลด feed
+
+  } catch (err) {
+    console.error('submitPost error:', err);
+    alert('เกิดข้อผิดพลาด: ' + err.message);
+  } finally {
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('post-uploading').style.display = 'none';
+  }
+}
+
+function resetPostModal() {
+  document.getElementById('modal-text').value = '';
+  document.getElementById('modal-crop').value = '';
+  document.getElementById('post-img-input').value = '';
+  document.getElementById('post-img-preview').style.display = 'none';
+  document.getElementById('photo-area-ico').style.display = 'block';
+  document.getElementById('photo-area-txt').textContent = 'เพิ่มภาพหรือวิดีโอ';
+}
+
+// ── Load Feed ─────────────────────────────────────────────
+async function loadFeed() {
+  const container = document.getElementById('feed-container');
+  if (!container || !db) return;
+
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
+
+  try {
+    const snap = await db.collection('posts')
+      .orderBy('createdAt', 'desc')
+      .limit(APP_CONFIG.feed.postsPerPage || 10)
+      .get();
+
+    if (snap.empty) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+          <div style="font-size:48px;margin-bottom:12px">🌱</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสเลย</div>
+          <div style="font-size:14px">เป็นคนแรกที่แชร์ปัญหาในสวน!</div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = snap.docs.map((doc, i) => renderPost(doc.id, doc.data(), i)).join('');
+
+  } catch (err) {
+    console.error('loadFeed error:', err);
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">โหลด Feed ไม่ได้ กรุณาลองใหม่</div>';
+  }
+}
+
+function renderPost(id, p, i) {
+  const initials = p.authorName?.charAt(0) || '?';
+  const avatarColors = ['av-blue','av-orange','av-teal','av-purple'];
+  const avatarClass = avatarColors[i % avatarColors.length];
+  const timeAgo = formatTimeAgo(p.createdAt);
+  const isOwn = currentUser && p.authorId === currentUser.uid;
+
+  const typeTagMap = {
+    '🦠 โรคพืช':      'pt-red',
+    '💡 แชร์ความรู้': 'pt-blue',
+    '⚠️ แจ้งเตือนพื้นที่': 'pt-amber',
+    '📦 รีวิวสินค้า':  'pt-green',
+  };
+  const tagClass = typeTagMap[p.type] || 'pt-blue';
+
+  const cropEmoji = p.crop ? (APP_CONFIG.crops.find(c => c.id === p.crop)?.emoji || '🌱') : '';
+  const cropName  = p.crop ? (APP_CONFIG.crops.find(c => c.id === p.crop)?.name  || '')   : '';
+
+  return `
+    <div class="post-card" id="post-${id}">
+      <div class="pc-head">
+        <div class="pc-av ${avatarClass}" style="${p.authorPhoto ? `background-image:url(${p.authorPhoto});background-size:cover;background-position:center` : ''}">
+          ${p.authorPhoto ? '' : initials}
+        </div>
+        <div class="pc-info">
+          <div class="pc-name">${p.authorName || 'ผู้ใช้'}</div>
+          <div class="pc-meta">${timeAgo} · 🌍</div>
+        </div>
+        ${isOwn ? `<button class="pc-more" onclick="deletePost('${id}')">🗑️</button>` : '<button class="pc-more">•••</button>'}
+      </div>
+      <div class="pc-tags">
+        ${p.type ? `<span class="ptag ${tagClass}">${p.type}</span>` : ''}
+        ${cropName ? `<span class="ptag pt-green">${cropEmoji} ${cropName}</span>` : ''}
+      </div>
+      ${p.text ? `<div class="pc-text">${p.text}</div>` : ''}
+      ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;max-height:300px;object-fit:cover">` : ''}
+      <div class="pc-reactions">
+        <div class="r-counts">
+          <div class="r-icons"><span class="ri ri-b">👍</span></div>
+          <span id="likes-${id}">${p.likes || 0}</span>
+        </div>
+        <div class="c-count" onclick="toggleComments('cmt-${id}')">ความคิดเห็น ${p.comments || 0}</div>
+      </div>
+      <div class="pc-actions">
+        <button class="pa" onclick="likePost('${id}',this)"><span class="pi">👍</span>ถูกใจ</button>
+        <button class="pa" onclick="helpPost('${id}',this)"><span class="pi">✅</span>ช่วยได้</button>
+        <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
+        <button class="pa"><span class="pi">↗️</span>แชร์</button>
+      </div>
+      <div class="comments-wrap" id="cmt-${id}" style="display:none">
+        <div class="cmt-input-row">
+          <div class="cmt-me" style="${currentUser?.photoUrl ? `background-image:url(${currentUser.photoUrl});background-size:cover;background-position:center` : ''}">
+            ${currentUser?.photoUrl ? '' : (currentUser?.displayName?.charAt(0) || 'ฉ')}
+          </div>
+          <input class="cmt-input" placeholder="เขียนความคิดเห็น..." id="cmt-input-${id}">
+          <button class="cmt-send" onclick="addComment('${id}')">➤</button>
+        </div>
+        <div id="cmts-${id}"></div>
+      </div>
+    </div>`;
+}
+
+// ── Post Actions ──────────────────────────────────────────
+async function likePost(id, btn) {
+  if (!currentUser || !db) return;
+  btn.classList.toggle('liked');
+  const inc = btn.classList.contains('liked') ? 1 : -1;
+  try {
+    await db.collection('posts').doc(id).update({ likes: firebase.firestore.FieldValue.increment(inc) });
+    const el = document.getElementById('likes-' + id);
+    if (el) el.textContent = Math.max(0, parseInt(el.textContent) + inc);
+    if (inc > 0) {
+      await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perLike || 2) });
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function helpPost(id, btn) {
+  if (!currentUser || !db) return;
+  btn.classList.toggle('helped');
+  const inc = btn.classList.contains('helped') ? 1 : -1;
+  try {
+    await db.collection('posts').doc(id).update({ helps: firebase.firestore.FieldValue.increment(inc) });
+    if (inc > 0) {
+      await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perHelp || 15), helpCount: firebase.firestore.FieldValue.increment(1) });
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function addComment(postId) {
+  const input = document.getElementById('cmt-input-' + postId);
+  const text = input?.value?.trim();
+  if (!text || !currentUser || !db) return;
+  try {
+    await db.collection('posts').doc(postId).collection('comments').add({
+      text, authorId: currentUser.uid, authorName: currentUser.displayName, authorPhoto: currentUser.photoUrl || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('posts').doc(postId).update({ comments: firebase.firestore.FieldValue.increment(1) });
+    await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perComment || 3) });
+    input.value = '';
+
+    // แสดงความคิดเห็น
+    const cmtsEl = document.getElementById('cmts-' + postId);
+    if (cmtsEl) {
+      const initials = currentUser.displayName?.charAt(0) || 'ฉ';
+      cmtsEl.innerHTML += `
+        <div class="cmt" style="margin-top:8px">
+          <div class="cmt-av" style="${currentUser.photoUrl?`background-image:url(${currentUser.photoUrl});background-size:cover;background-position:center`:''}">
+            ${currentUser.photoUrl?'':initials}
+          </div>
+          <div><div class="cmt-bubble">
+            <div class="cmt-name">${currentUser.displayName||'คุณ'}</div>
+            <div class="cmt-text">${text}</div>
+          </div></div>
+        </div>`;
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function deletePost(id) {
+  if (!confirm('ลบโพสนี้?')) return;
+  try {
+    await db.collection('posts').doc(id).delete();
+    document.getElementById('post-' + id)?.remove();
+  } catch(e) { alert('ลบไม่ได้: ' + e.message); }
+}
+
+// ── Time Formatter ────────────────────────────────────────
+function formatTimeAgo(ts) {
+  if (!ts) return 'เมื่อกี้';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diff < 60)   return 'เมื่อกี้';
+  if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว';
+  if (diff < 86400)return Math.floor(diff/3600) + ' ชม. ที่แล้ว';
+  return Math.floor(diff/86400) + ' วันที่แล้ว';
 }
 </script>
 </body>
