@@ -31,6 +31,18 @@ service cloud.firestore {
             && !request.resource.data.diff(resource.data)
                  .affectedKeys().hasAny(['banned', 'tier']));
       allow delete: if isAdmin();
+
+      // ── Diagnoses (ผล AI ส่วนตัว) ──────────────────────
+      // เจ้าของอ่าน/ลบได้ / เขียนผ่าน Cloud Function (admin SDK) เท่านั้น
+      match /diagnoses/{diagId} {
+        allow read, delete: if isOwner(uid);
+        allow write: if false;
+      }
+      // ── AI Usage (ตัวนับโควต้า) — เขียนผ่าน server เท่านั้น ──
+      match /aiUsage/{day} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
     }
 
     // ── Posts ────────────────────────────────────────────

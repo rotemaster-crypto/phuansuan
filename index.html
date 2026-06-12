@@ -263,6 +263,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .ob-gps-t{font-size:14px;font-weight:800;color:var(--text)}
 .ob-gps-s{font-size:13px;color:var(--muted);margin-top:2px}
 .ob-skip{display:block;width:100%;background:none;border:none;color:var(--muted);font-size:14px;font-weight:700;padding:12px;cursor:pointer;font-family:inherit;text-align:center}
+.ai-drop{display:block;border:2px dashed var(--border);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;background:var(--bg)}
+.ai-spin{animation:aispin 1.4s linear infinite;display:inline-block}
+@keyframes aispin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.ai-res-card{border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-top:6px}
+.ai-res-head{padding:14px 16px;color:#fff;font-weight:800;font-size:17px}
+.ai-res-row{padding:12px 16px;border-bottom:1px solid var(--border)}
+.ai-res-row:last-child{border-bottom:none}
+.ai-res-lb{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.ai-res-tx{font-size:15px;color:var(--text);line-height:1.5;margin-top:3px}
+.ai-hist-item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px}
+.ai-hist-ic{font-size:24px;flex-shrink:0}
+.ai-hist-d{font-size:14px;font-weight:700;color:var(--text)}
+.ai-hist-c{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -328,7 +341,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="cp-divider"></div>
     <div class="cp-btns">
       <div class="cp-btn" onclick="openPostModal()">📷 ภาพ/วิดีโอ</div>
-      <div class="cp-btn" onclick="openPostModal()">🦠 โรคพืช</div>
+      <div class="cp-btn" onclick="openAiDoctor()">🔬 หมอพืช AI</div>
       <div class="cp-btn" onclick="openPostModal()">💡 แชร์ความรู้</div>
     </div>
   </div>
@@ -383,6 +396,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="bar-bg"><div class="bar-fg" id="pts-bar" style="width:0%"></div></div>
     <div class="tier-lbs"><span>Bronze</span><span>Silver</span><span id="tier-label" class="tier-act">Bronze</span><span>Platinum</span></div>
     <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
+  </div>
+  <div class="crops-card">
+    <button onclick="openAiDoctor()" style="width:100%;background:linear-gradient(135deg,#1877f2,#00b894);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">🔬 หมอพืช AI — วิเคราะห์โรคจากรูป</button>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px">ถ่ายรูปใบ/ต้น แล้วให้ AI ช่วยวินิจฉัย · ผลเป็นความลับ เห็นคนเดียว</div>
   </div>
   <div class="crops-card">
     <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">พืชที่ปลูก
@@ -467,6 +484,50 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <div id="post-uploading" style="display:none;text-align:center;padding:8px;font-size:14px;color:var(--muted)">⏳ กำลังโพส...</div>
       <button class="submit-btn" onclick="submitPost()" id="submit-btn">📤 โพสเลย</button>
       <div class="pts-hint" id="pts-hint">✨ คุณจะได้รับ +10 แต้มสะสมจากการโพสนี้</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AI DOCTOR MODAL ══ -->
+<div class="overlay" id="aiDoctorModal">
+  <div class="modal" style="border-radius:16px 16px 0 0;max-height:92vh;overflow-y:auto">
+    <div class="modal-body" style="padding-top:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="ob-title" style="margin:0">🔬 หมอพืช AI</div>
+        <button onclick="closeAiDoctor()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">✕</button>
+      </div>
+      <div class="ob-sub" style="margin-bottom:14px">ถ่ายหรือเลือกรูปใบ/ต้นที่มีปัญหา AI จะช่วยวินิจฉัยโรคและแนะนำวิธีรักษา 🌿 <b>ผลวิเคราะห์เป็นความลับ เห็นได้คนเดียว</b></div>
+
+      <div id="ai-input-area">
+        <label class="ai-drop" id="ai-drop">
+          <input type="file" id="ai-file" accept="image/*" capture="environment" style="display:none" onchange="aiPreview(this)">
+          <div id="ai-drop-empty">
+            <div style="font-size:46px">📷</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-top:8px">แตะเพื่อถ่าย / เลือกรูป</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">เห็นใบหรือจุดที่เป็นโรคชัดๆ จะแม่นขึ้น</div>
+          </div>
+          <img id="ai-preview" style="display:none;width:100%;border-radius:12px;max-height:280px;object-fit:cover">
+        </label>
+
+        <div class="ob-sub" style="margin:14px 0 6px">พืชชนิดไหน?</div>
+        <select id="ai-crop" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;background:#fff"></select>
+
+        <button class="submit-btn" id="ai-analyze-btn" onclick="runAiDoctor()" style="margin-top:16px">🔬 วิเคราะห์เลย</button>
+        <div id="ai-quota" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px"></div>
+      </div>
+
+      <div id="ai-loading" style="display:none;text-align:center;padding:40px 20px">
+        <div style="font-size:40px" class="ai-spin">🔬</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-top:14px">กำลังวิเคราะห์...</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">AI กำลังตรวจดูรูปของคุณ รอสักครู่</div>
+      </div>
+
+      <div id="ai-result" style="display:none"></div>
+
+      <div id="ai-history-sec" style="margin-top:22px">
+        <div class="sec-title" style="padding:0 0 8px">ประวัติการวิเคราะห์</div>
+        <div id="ai-history"><div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">ยังไม่มีประวัติ</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -760,6 +821,153 @@ function getTier(points) {
   if (points >= tiers.gold.min) return 'gold';
   if (points >= tiers.silver.min) return 'silver';
   return 'bronze';
+}
+
+// ── หมอพืช AI ─────────────────────────────────────────────
+let aiSelectedFile = null;
+
+function openAiDoctor() {
+  if (!currentUser) { alert('กรุณาเข้าสู่ระบบก่อนครับ'); return; }
+  // เติม dropdown พืช
+  const sel = document.getElementById('ai-crop');
+  if (sel && sel.options.length === 0 && typeof APP_CONFIG !== 'undefined') {
+    APP_CONFIG.crops.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.name; o.textContent = c.emoji + ' ' + c.name;
+      sel.appendChild(o);
+    });
+    // เลือกพืชแรกของ user เป็นค่าเริ่มต้น
+    if (currentUser.crops && currentUser.crops.length) {
+      const first = APP_CONFIG.crops.find(c => c.id === currentUser.crops[0]);
+      if (first) sel.value = first.name;
+    }
+  }
+  resetAiDoctor();
+  loadAiHistory();
+  document.getElementById('aiDoctorModal').classList.add('open');
+}
+
+function closeAiDoctor() {
+  document.getElementById('aiDoctorModal').classList.remove('open');
+}
+
+function resetAiDoctor() {
+  aiSelectedFile = null;
+  document.getElementById('ai-input-area').style.display = 'block';
+  document.getElementById('ai-loading').style.display = 'none';
+  document.getElementById('ai-result').style.display = 'none';
+  document.getElementById('ai-result').innerHTML = '';
+  const pv = document.getElementById('ai-preview');
+  pv.style.display = 'none'; pv.src = '';
+  document.getElementById('ai-drop-empty').style.display = 'block';
+  const f = document.getElementById('ai-file'); if (f) f.value = '';
+}
+
+function aiPreview(input) {
+  const file = input.files[0];
+  if (!file) return;
+  aiSelectedFile = file;
+  const pv = document.getElementById('ai-preview');
+  pv.src = URL.createObjectURL(file);
+  pv.style.display = 'block';
+  document.getElementById('ai-drop-empty').style.display = 'none';
+}
+
+async function runAiDoctor() {
+  if (!aiSelectedFile) { alert('เลือกรูปก่อนนะครับ 📷'); return; }
+  if (!currentUser) return;
+  document.getElementById('ai-input-area').style.display = 'none';
+  document.getElementById('ai-loading').style.display = 'block';
+  document.getElementById('ai-result').style.display = 'none';
+  try {
+    // ย่อรูปก่อนส่ง (ใช้ compressImage เดิม) แล้วแปลงเป็น base64
+    const blob = await compressImage(aiSelectedFile, 1024, 0.8);
+    const base64 = await blobToBase64(blob);
+    const cropName = document.getElementById('ai-crop').value || 'พืชทั่วไป';
+    const fn = firebase.app().functions('asia-southeast1').httpsCallable('analyzePlant');
+    const res = await fn({ imageBase64: base64, cropName: cropName });
+    renderAiResult(res.data.result, res.data.quotaLeft, URL.createObjectURL(blob));
+    loadAiHistory();
+  } catch (err) {
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-input-area').style.display = 'block';
+    const msg = (err && err.message) ? err.message : 'เกิดข้อผิดพลาด';
+    alert('วิเคราะห์ไม่สำเร็จ: ' + msg);
+  }
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onloadend = () => resolve(String(r.result).split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+function renderAiResult(result, quotaLeft, imgUrl) {
+  document.getElementById('ai-loading').style.display = 'none';
+  const box = document.getElementById('ai-result');
+  const healthy = result.healthy === true;
+  const headColor = healthy ? '#2e7d32' : (result.confidence === 'สูง' ? '#c62828' : '#e65100');
+  const confTxt = result.confidence ? ('ความมั่นใจ: ' + escapeHtml(result.confidence)) : '';
+  let html = '<div class="ai-res-card">';
+  html += `<div class="ai-res-head" style="background:${headColor}">${healthy ? '✅ ' : '🦠 '}${escapeHtml(result.disease || 'ไม่ทราบผล')}</div>`;
+  if (confTxt) html += `<div class="ai-res-row"><div class="ai-res-lb">${confTxt}</div></div>`;
+  if (result.symptoms) html += `<div class="ai-res-row"><div class="ai-res-lb">อาการที่พบ</div><div class="ai-res-tx">${escapeHtml(result.symptoms)}</div></div>`;
+  if (result.cause) html += `<div class="ai-res-row"><div class="ai-res-lb">สาเหตุ</div><div class="ai-res-tx">${escapeHtml(result.cause)}</div></div>`;
+  if (result.treatment) html += `<div class="ai-res-row"><div class="ai-res-lb">วิธีรักษา / ป้องกัน</div><div class="ai-res-tx">${escapeHtml(result.treatment)}</div></div>`;
+  if (result.advice) html += `<div class="ai-res-row"><div class="ai-res-lb">คำแนะนำเพิ่มเติม</div><div class="ai-res-tx">${escapeHtml(result.advice)}</div></div>`;
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--muted);text-align:center;margin:10px 0">⚠️ ผลจาก AI เป็นการประเมินเบื้องต้น ควรปรึกษาผู้เชี่ยวชาญหากอาการรุนแรง</div>';
+  if (typeof quotaLeft === 'number') html += `<div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px">เหลือโควต้าวันนี้ ${quotaLeft} ครั้ง</div>`;
+  // ปุ่มแชร์ถามชุมชน (เก็บผลไว้ใช้เติม post modal)
+  window._aiLastResult = { result: result, imgUrl: imgUrl, crop: document.getElementById('ai-crop').value };
+  html += '<button class="submit-btn" onclick="shareAiToCommy()" style="background:#00b894">💬 แชร์ถามชุมชน</button>';
+  html += '<button class="ob-skip" onclick="resetAiDoctor()">🔄 วิเคราะห์รูปใหม่</button>';
+  box.innerHTML = html;
+  box.style.display = 'block';
+}
+
+function shareAiToCommy() {
+  // เปิด post modal พร้อมเติมข้อความสรุปจากผล AI ให้ (user กดโพสเอง)
+  const d = window._aiLastResult;
+  closeAiDoctor();
+  openPostModal();
+  const ta = document.querySelector('#postModal textarea');
+  if (ta && d && d.result) {
+    const r = d.result;
+    ta.value = `ขอความช่วยเหลือครับ 🙏 หมอพืช AI วิเคราะห์ว่าอาจเป็น "${r.disease || '-'}"\n\nอาการ: ${r.symptoms || '-'}\n\nมีใครเคยเจอแบบนี้ในสวนบ้างไหมครับ?`;
+  }
+}
+
+async function loadAiHistory() {
+  const box = document.getElementById('ai-history');
+  if (!box || !currentUser || !db) return;
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid)
+      .collection('diagnoses').limit(20).get();
+    let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+    docs.sort((a, b) => (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0));
+    if (docs.length === 0) {
+      box.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">ยังไม่มีประวัติ</div>';
+      return;
+    }
+    box.innerHTML = docs.map(d => {
+      const r = d.data.result || {};
+      const healthy = r.healthy === true;
+      const date = d.data.createdAt ? new Date(d.data.createdAt.seconds * 1000).toLocaleDateString('th-TH', {day:'numeric',month:'short'}) : '';
+      return `<div class="ai-hist-item">
+        <div class="ai-hist-ic">${healthy ? '✅' : '🦠'}</div>
+        <div style="flex:1">
+          <div class="ai-hist-d">${escapeHtml(r.disease || 'ไม่ทราบผล')}</div>
+          <div class="ai-hist-c">${escapeHtml(d.data.crop || '')} · ${date}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    box.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">โหลดประวัติไม่สำเร็จ</div>';
+  }
 }
 
 // ── Escape HTML (กัน XSS) ─────────────────────────────────
