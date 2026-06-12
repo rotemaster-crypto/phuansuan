@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>เพื่อนสวน</title>
+<script src="config.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1c1e21;max-width:480px;margin:0 auto;min-height:100vh}
+:root{--primary:#1877f2;--bg:#f0f2f5;--card:#fff;--border:#e4e6eb;--text:#1c1e21;--muted:#65676b}
+
+/* ── TOPBAR ── */
+.topbar{background:#fff;border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 12px;gap:8px;position:sticky;top:0;z-index:200}
+.tb-logo{font-size:26px;font-weight:800;color:var(--primary);font-family:Georgia,serif;flex:1}
+.tb-btn{width:38px;height:38px;border-radius:50%;background:#e4e6eb;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;position:relative;flex-shrink:0}
+.tb-badge{position:absolute;top:1px;right:1px;background:#e41e3f;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 4px;border:1.5px solid #fff;min-width:16px;text-align:center;line-height:14px}
+
+/* ── FEED TABS ── */
+.feed-tabs{background:#fff;display:flex;border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:199}
+.ftab{flex:1;padding:13px 0;text-align:center;font-size:15px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+.ftab.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* ── STORIES ── */
+.stories-bar{background:#fff;padding:10px 12px;display:flex;gap:10px;overflow-x:auto;border-bottom:8px solid var(--bg);scrollbar-width:none}
+.stories-bar::-webkit-scrollbar{display:none}
+.story{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0}
+.s-ring{width:60px;height:60px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+.s-ring.mine{background:var(--border)}
+.s-inner{width:100%;height:100%;border-radius:50%;background:#e7f3ff;display:flex;align-items:center;justify-content:center;font-size:26px;border:2px solid #fff}
+.s-name{font-size:11px;color:var(--muted);max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+
+/* ── CREATE POST ── */
+.create-post{background:#fff;padding:12px 16px;border-bottom:8px solid var(--bg)}
+.cp-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cp-me{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cp-box{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:9px 16px;font-size:15px;color:var(--muted);cursor:pointer;text-align:left;font-family:inherit}
+.cp-divider{height:1px;background:var(--border);margin-bottom:8px}
+.cp-btns{display:flex}
+.cp-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 4px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted)}
+.cp-btn:active{background:var(--bg)}
+
+/* ── ALERT ── */
+.alert-wrap{padding:0}
+.alert-banner{background:#fff8e1;border-bottom:1px solid #f9a825;padding:10px 16px;display:flex;gap:8px;font-size:13px;color:#5d4037;line-height:1.4}
+
+/* ── POST CARD ── */
+.post-card{background:#fff;margin-bottom:8px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.pc-head{padding:12px 16px 0;display:flex;align-items:flex-start;gap:10px}
+.pc-av{width:42px;height:42px;border-radius:50%;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.av-blue{background:#1877f2}.av-orange{background:#e65100}.av-teal{background:#00695c}.av-purple{background:#6a1b9a}
+.pc-info{flex:1}
+.pc-name{font-size:15px;font-weight:700;color:var(--text);display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.expert-badge{background:#e7f3ff;color:#1877f2;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+.pc-meta{font-size:13px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pc-dot{width:3px;height:3px;background:var(--muted);border-radius:50%;display:inline-block;flex-shrink:0}
+.follow-link{color:var(--primary);font-weight:700;cursor:pointer;font-size:13px;background:none;border:none;font-family:inherit;padding:0}
+.follow-link.following{color:var(--muted)}
+.pc-more{width:34px;height:34px;border-radius:50%;border:none;background:none;font-size:20px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-2px}
+.pc-more:hover{background:var(--bg)}
+
+/* tags */
+.pc-tags{padding:6px 16px 4px;display:flex;flex-wrap:wrap;gap:5px}
+.ptag{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
+.pt-red{background:#fce4ec;color:#880e4f}
+.pt-green{background:#e8f5e9;color:#1b5e20}
+.pt-amber{background:#fff8e1;color:#e65100}
+.pt-blue{background:#e7f3ff;color:#1877f2}
+
+/* text */
+.pc-text{padding:6px 16px 10px;font-size:15px;line-height:1.5;color:var(--text)}
+.pc-text .more{color:var(--muted);cursor:pointer}
+
+/* image */
+.pc-img{width:100%;background:#e7f3ff;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:4/3;gap:8px;font-size:44px}
+.pc-img span{font-size:13px;color:var(--muted)}
+
+/* ai */
+.ai-box{margin:0 16px 10px;background:#e7f3ff;border:1px solid #b3d4fb;border-radius:12px;padding:10px 12px}
+.ai-title{font-size:12px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:5px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em}
+.ai-body{font-size:14px;color:#0d47a1;line-height:1.5}
+.ai-body strong{color:#b71c1c;font-weight:800}
+
+/* product */
+.prod-link{margin:0 16px 10px;display:flex;align-items:center;gap:8px;background:#f0fff0;border:1px solid #c8e6c9;border-radius:20px;padding:8px 14px;cursor:pointer}
+.prod-link-text{flex:1;font-size:13px;font-weight:700;color:#1b5e20}
+.prod-arrow{font-size:16px;color:var(--muted)}
+
+/* reaction row */
+.pc-reactions{padding:6px 16px;display:flex;justify-content:space-between;align-items:center}
+.r-counts{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);cursor:pointer}
+.r-icons{display:flex}
+.ri{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-right:-3px;border:1.5px solid #fff}
+.ri-b{background:var(--primary)}.ri-r{background:#e41e3f}.ri-g{background:#2e7d32}
+.c-count{font-size:13px;color:var(--muted);cursor:pointer}
+.c-count:hover{text-decoration:underline}
+
+/* action bar */
+.pc-actions{border-top:1px solid var(--border);display:flex}
+.pa{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 2px;background:none;border:none;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.pa:hover{background:var(--bg);border-radius:6px}
+.pa .pi{font-size:18px}
+.pa.liked{color:#e41e3f}
+.pa.helped{color:#2e7d32}
+.pa.liked .pi{filter:drop-shadow(0 0 2px #e41e3f)}
+
+/* comments */
+.comments-wrap{padding:6px 16px 12px}
+.cmt{display:flex;gap:8px;margin-bottom:8px}
+.cmt-av{width:32px;height:32px;border-radius:50%;background:#e4e6eb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--muted);flex-shrink:0}
+.cmt-bubble{background:var(--bg);border-radius:18px;padding:8px 12px;flex:1}
+.cmt-name{font-size:13px;font-weight:800;color:var(--text)}
+.cmt-text{font-size:14px;color:var(--text);line-height:1.4;margin-top:2px}
+.cmt-acts{display:flex;gap:12px;margin-top:3px;padding-left:2px}
+.cmt-act{font-size:12px;color:var(--muted);cursor:pointer;font-weight:700;background:none;border:none;font-family:inherit;padding:0}
+.cmt-act:hover{text-decoration:underline}
+.cmt-input-row{display:flex;gap:8px;align-items:center;margin-top:6px}
+.cmt-me{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cmt-input{flex:1;background:var(--bg);border:none;border-radius:20px;padding:8px 14px;font-size:14px;font-family:inherit;outline:none;color:var(--text)}
+.cmt-send{background:var(--primary);color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── PROFILE ── */
+.prof-cover{height:200px;background:linear-gradient(160deg,#1877f2 0%,#42b883 100%);position:relative}
+.prof-cover-btn{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.4);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.prof-body{background:#fff;border-bottom:8px solid var(--bg);padding:0 16px 16px}
+.prof-av-row{display:flex;align-items:flex-end;justify-content:space-between;margin-top:-32px;margin-bottom:10px}
+.prof-av{width:90px;height:90px;border-radius:50%;background:#e7f3ff;border:4px solid #fff;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:800;color:var(--primary)}
+.prof-btns{display:flex;gap:8px;padding-bottom:6px}
+.prof-btn-p{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.prof-btn-s{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.prof-name{font-size:22px;font-weight:800;color:var(--text)}
+.prof-sub{font-size:14px;color:var(--muted);margin-top:2px}
+.prof-bio{font-size:15px;color:var(--text);margin-top:6px;line-height:1.4}
+.prof-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.pb{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:12px}
+.pb-blue{background:#e7f3ff;color:#1877f2}
+.pb-gold{background:#fff8e1;color:#e65100}
+.pb-green{background:#e8f5e9;color:#1b5e20}
+.prof-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.ps{background:var(--bg);border-radius:10px;padding:10px 4px;text-align:center}
+.ps-n{font-size:18px;font-weight:800;color:var(--text)}
+.ps-l{font-size:11px;color:var(--muted);margin-top:2px}
+.prof-nav{display:flex;border-bottom:1px solid var(--border);background:#fff;margin-top:0}
+.pnav{flex:1;padding:13px 0;text-align:center;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+.pnav.active{color:var(--primary);border-bottom-color:var(--primary)}
+.points-card{background:#fff;padding:14px 16px;border-bottom:8px solid var(--bg)}
+.pts-head{display:flex;justify-content:space-between;margin-bottom:8px}
+.pts-title{font-size:15px;font-weight:800;color:var(--text)}
+.pts-val{font-size:18px;font-weight:800;color:var(--primary)}
+.bar-bg{background:var(--bg);border-radius:20px;height:8px;overflow:hidden;margin-bottom:5px}
+.bar-fg{background:var(--primary);height:100%;border-radius:20px}
+.tier-lbs{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.tier-act{color:var(--primary);font-weight:800}
+.crops-card{background:#fff;padding:14px 16px;border-bottom:8px solid var(--bg)}
+.sec-title{font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+.crops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.crop-item{background:var(--bg);border-radius:10px;padding:10px 6px;text-align:center}
+.crop-emoji{font-size:26px}
+.crop-name{font-size:12px;font-weight:700;color:var(--text);margin-top:4px}
+.crop-posts{font-size:11px;color:var(--muted)}
+
+/* ── COMMUNITY ── */
+.comm-screen{padding:8px 0 72px}
+.comm-head-label{padding:10px 16px 4px;font-size:15px;font-weight:800;color:var(--text)}
+.comm-alert{background:#fff8e1;border-left:4px solid #f9a825;padding:10px 14px;margin:0 12px 8px;border-radius:0 8px 8px 0;font-size:13px;color:#5d4037;display:flex;gap:8px;line-height:1.4}
+.comm-card{background:#fff;border-radius:12px;margin:0 12px 8px;padding:14px;border:1px solid var(--border)}
+.cc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cc-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.cci-g{background:#e8f5e9}.cci-a{background:#fff8e1}.cci-b{background:#e7f3ff}
+.cc-name{font-size:15px;font-weight:700;color:var(--text)}
+.cc-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.cc-stats{display:flex;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.cc-join{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.cc-joined{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ── POST MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
+.modal-top{display:flex;align-items:center;padding:14px 16px 12px;border-bottom:1px solid var(--border)}
+.modal-close{width:34px;height:34px;background:var(--bg);border:none;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:10px;font-weight:800}
+.modal-title{flex:1;font-size:17px;font-weight:800;text-align:center;color:var(--text)}
+.modal-submit{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.modal-submit:disabled{opacity:0.5}
+.modal-body{padding:16px}
+.modal-user{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.modal-av{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.modal-uname{font-size:15px;font-weight:700;color:var(--text)}
+.privacy-chip{display:inline-flex;align-items:center;gap:3px;background:var(--bg);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:700;color:var(--text);margin-top:2px;cursor:pointer}
+.type-chips{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.type-chips::-webkit-scrollbar{display:none}
+.type-chip{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;border:2px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:inherit}
+.type-chip.sel{border-color:var(--primary);background:#e7f3ff;color:var(--primary)}
+.photo-area{border:2px dashed var(--border);border-radius:12px;padding:22px;text-align:center;cursor:pointer;margin-bottom:14px;background:#fafafa}
+.photo-area .ph-ico{font-size:34px;opacity:0.5}
+.photo-area span{display:block;font-size:14px;color:var(--muted);margin-top:6px}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px}
+.fg select,.fg textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;background:#fff;outline:none;color:var(--text)}
+.fg select:focus,.fg textarea:focus{border-color:var(--primary)}
+.fg textarea{resize:none;height:90px}
+.submit-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+.pts-hint{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;height:56px;z-index:300}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-top:3px solid transparent;position:relative;gap:2px}
+.bn.active{border-top-color:var(--primary)}
+.bn-ico{font-size:22px;color:var(--muted)}
+.bn.active .bn-ico{color:var(--primary)}
+.bn-lbl{font-size:10px;color:var(--muted)}
+.bn.active .bn-lbl{color:var(--primary);font-weight:700}
+.bn-badge{position:absolute;top:5px;right:calc(50% - 18px);background:#e41e3f;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 4px;min-width:16px;text-align:center}
+
+/* screens */
+.screen{display:none;padding-bottom:64px}
+.screen.active{display:block}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-logo" id="app-logo">facebook</div>
+  <button class="tb-btn" style="font-size:16px">🔍</button>
+  <button class="tb-btn">🔔<span class="tb-badge">3</span></button>
+  <button class="tb-btn">💬<span class="tb-badge">5</span></button>
+</div>
+
+<!-- ══ FEED SCREEN ══ -->
+<div class="screen active" id="screen-feed">
+  <div class="feed-tabs">
+    <div class="ftab active" onclick="switchFeedTab(this)">ฟีดของคุณ</div>
+    <div class="ftab" onclick="switchFeedTab(this)">รายการโปรด</div>
+    <div class="ftab" onclick="switchFeedTab(this)">ใกล้ฉัน 📍</div>
+  </div>
+
+  <div class="stories-bar">
+    <div class="story" onclick="openPostModal()">
+      <div class="s-ring mine"><div class="s-inner" style="font-size:28px">➕</div></div>
+      <div class="s-name">สร้างสตอรี</div>
+    </div>
+    <div class="story"><div class="s-ring"><div class="s-inner">🥭</div></div><div class="s-name">ลุงสมชาย</div></div>
+    <div class="story"><div class="s-ring"><div class="s-inner">🌶️</div></div><div class="s-name">ป้าวิไล</div></div>
+    <div class="story"><div class="s-ring"><div class="s-inner">🥬</div></div><div class="s-name">นายสุรศักดิ์</div></div>
+    <div class="story"><div class="s-ring"><div class="s-inner">🍈</div></div><div class="s-name">คุณประเสริฐ</div></div>
+    <div class="story"><div class="s-ring"><div class="s-inner">🌾</div></div><div class="s-name">ลุงวิชัย</div></div>
+  </div>
+
+  <div class="create-post">
+    <div class="cp-row">
+      <div class="cp-me" id="cp-me-avatar">ฉ</div>
+      <button class="cp-box" onclick="openPostModal()">คุณพบปัญหาอะไรในสวนวันนี้?</button>
+    </div>
+    <div class="cp-divider"></div>
+    <div class="cp-btns">
+      <div class="cp-btn" onclick="openPostModal()">📷 ภาพ/วิดีโอ</div>
+      <div class="cp-btn" onclick="openPostModal()">🦠 โรคพืช</div>
+      <div class="cp-btn" onclick="openPostModal()">💡 แชร์ความรู้</div>
+    </div>
+  </div>
+
+  <div class="alert-banner">
+    <span>⚠️</span>
+    <div><strong>แจ้งเตือนพื้นที่ 15 กม.</strong> — พบโรคแอนแทรคโนสในมะม่วง 3 สวน บริเวณ อ.บ้านโป่ง ราชบุรี</div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="post-card">
+    <div class="pc-head">
+      <div class="pc-av av-orange">สช</div>
+      <div class="pc-info">
+        <div class="pc-name">ลุงสมชาย วงษ์เกษตร <span class="expert-badge">⭐ ปราชญ์มะม่วง</span></div>
+        <div class="pc-meta">
+          📍 อ.บ้านโป่ง · 2 ชม. · 🌍
+          <span class="pc-dot"></span>
+          <button class="follow-link following" onclick="toggleFollow(this)">กำลังติดตาม ▾</button>
+        </div>
+      </div>
+      <button class="pc-more">•••</button>
+    </div>
+    <div class="pc-tags">
+      <span class="ptag pt-red">🦠 โรคพืช</span>
+      <span class="ptag pt-green">🥭 มะม่วง</span>
+    </div>
+    <div class="pc-text">ใบเริ่มมีจุดดำขอบเหลือง ลามเร็วมาก ฝนตกทุกวัน 3 อาทิตย์แล้ว ใครเจอบ้างแถวนี้? <span class="more">ดูเพิ่มเติม</span></div>
+    <div class="pc-img">📸<span>ใบมะม่วงมีจุดดำ ขอบเหลือง</span></div>
+    <div class="ai-box">
+      <div class="ai-title">🤖 AI วิเคราะห์เบื้องต้น</div>
+      <div class="ai-body">น่าจะเป็น <strong>โรคแอนแทรคโนส</strong> (Colletotrichum sp.) ระบาดช่วงฝนชุก ควรพ่นสาร Mancozeb หรือ Carbendazim และตัดใบที่เป็นโรคออก</div>
+    </div>
+    <div class="prod-link">
+      <span class="prod-link-text">🛒 Mancozeb 80% WP — มีในร้าน ดูราคา</span>
+      <span class="prod-arrow">›</span>
+    </div>
+    <div class="pc-reactions">
+      <div class="r-counts">
+        <div class="r-icons">
+          <span class="ri ri-b">👍</span><span class="ri ri-r">❤️</span><span class="ri ri-g">✅</span>
+        </div>
+        <span>37</span>
+      </div>
+      <div class="c-count" onclick="toggleComments('c1')">ความคิดเห็น 8 รายการ</div>
+    </div>
+    <div class="pc-actions">
+      <button class="pa" onclick="toggleLike(this)"><span class="pi">👍</span>ถูกใจ</button>
+      <button class="pa helped"><span class="pi">✅</span>ช่วยได้</button>
+      <button class="pa" onclick="toggleComments('c1')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
+      <button class="pa"><span class="pi">↗️</span>แชร์</button>
+    </div>
+    <div class="comments-wrap" id="c1" style="display:none">
+      <div class="cmt">
+        <div class="cmt-av">วล</div>
+        <div>
+          <div class="cmt-bubble">
+            <div class="cmt-name">ป้าวิไล ชาวไร่</div>
+            <div class="cmt-text">เจอเหมือนกันเลยค่ะ พ่น Mancozeb แล้วดีขึ้นมากเลยค่ะ 😊</div>
+          </div>
+          <div class="cmt-acts">
+            <button class="cmt-act">ถูกใจ</button>
+            <button class="cmt-act">ตอบกลับ</button>
+            <span style="font-size:12px;color:var(--muted)">1 ชม.</span>
+          </div>
+        </div>
+      </div>
+      <div class="cmt-input-row">
+        <div class="cmt-me">ฉ</div>
+        <input class="cmt-input" placeholder="เขียนความคิดเห็นสาธารณะ...">
+        <button class="cmt-send">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="post-card">
+    <div class="pc-head">
+      <div class="pc-av av-teal">วล</div>
+      <div class="pc-info">
+        <div class="pc-name">ป้าวิไล ชาวไร่</div>
+        <div class="pc-meta">
+          📍 อ.โพธาราม · 5 ชม. · 🌍
+          <span class="pc-dot"></span>
+          <button class="follow-link" onclick="toggleFollow(this)">+ ติดตาม</button>
+        </div>
+      </div>
+      <button class="pc-more">•••</button>
+    </div>
+    <div class="pc-tags">
+      <span class="ptag pt-blue">💡 แชร์ความรู้</span>
+      <span class="ptag pt-amber">🌶️ พริก</span>
+    </div>
+    <div class="pc-text">ปีนี้พ่นโปแตสสูตรที่ร้านแนะนำ ผลใหญ่ขึ้น สีสวยขึ้นมาก แนะนำเลยนะคะ ใครสนใจถามได้เลยค่ะ 😊</div>
+    <div class="pc-img" style="background:#fce4ec">📸<span>ผลพริกแดงสวยงาม</span></div>
+    <div class="prod-link">
+      <span class="prod-link-text">🛒 โปแตสเซียม 0-0-60 DemeterRich — ดูสินค้า</span>
+      <span class="prod-arrow">›</span>
+    </div>
+    <div class="pc-reactions">
+      <div class="r-counts">
+        <div class="r-icons"><span class="ri ri-b">👍</span><span class="ri ri-g">✅</span></div>
+        <span>42</span>
+      </div>
+      <div class="c-count" onclick="toggleComments('c2')">ความคิดเห็น 14 รายการ</div>
+    </div>
+    <div class="pc-actions">
+      <button class="pa" onclick="toggleLike(this)"><span class="pi">👍</span>ถูกใจ</button>
+      <button class="pa" onclick="toggleHelp(this)"><span class="pi">✅</span>ช่วยได้</button>
+      <button class="pa" onclick="toggleComments('c2')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
+      <button class="pa"><span class="pi">↗️</span>แชร์</button>
+    </div>
+    <div class="comments-wrap" id="c2" style="display:none">
+      <div class="cmt-input-row">
+        <div class="cmt-me">ฉ</div>
+        <input class="cmt-input" placeholder="เขียนความคิดเห็นสาธารณะ...">
+        <button class="cmt-send">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROFILE SCREEN ══ -->
+<div class="screen" id="screen-profile">
+  <div class="prof-cover">
+    <button class="prof-cover-btn">📷 แก้ไขรูปหน้าปก</button>
+  </div>
+  <div class="prof-body">
+    <div class="prof-av-row">
+      <div class="prof-av">สช</div>
+      <div class="prof-btns">
+        <button class="prof-btn-p">✏️ แก้ไขโปรไฟล์</button>
+        <button class="prof-btn-s">••• เพิ่มเติม</button>
+      </div>
+    </div>
+    <div class="prof-name">ลุงสมชาย วงษ์เกษตร</div>
+    <div class="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
+    <div class="prof-bio">เกษตรกรสวนมะม่วง 20 ปี 🥭 รักการแบ่งปันความรู้ให้เพื่อนชาวสวน</div>
+    <div class="prof-badges">
+      <span class="pb pb-gold">⭐ ปราชญ์มะม่วง</span>
+      <span class="pb pb-blue">🥇 Gold Member</span>
+      <span class="pb pb-green">🤝 เพื่อนบ้านที่ดี</span>
+    </div>
+    <div class="prof-stats">
+      <div class="ps"><div class="ps-n">84</div><div class="ps-l">โพส</div></div>
+      <div class="ps"><div class="ps-n">312</div><div class="ps-l">ผู้ติดตาม</div></div>
+      <div class="ps"><div class="ps-n">47</div><div class="ps-l">ช่วยคน</div></div>
+      <div class="ps"><div class="ps-n">3,240</div><div class="ps-l">แต้ม</div></div>
+    </div>
+  </div>
+  <div class="prof-nav">
+    <div class="pnav active">โพส</div>
+    <div class="pnav">เกี่ยวกับ</div>
+    <div class="pnav">รูปภาพ</div>
+    <div class="pnav">สินค้าที่ใช้</div>
+  </div>
+  <div class="points-card">
+    <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val">3,240 แต้ม</div></div>
+    <div class="bar-bg"><div class="bar-fg" style="width:68%"></div></div>
+    <div class="tier-lbs"><span>Bronze</span><span>Silver</span><span class="tier-act">Gold ✓</span><span>Platinum</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px">เหลืออีก 760 แต้ม → Platinum · ได้ส่วนลด 15%</div>
+  </div>
+  <div class="crops-card">
+    <div class="sec-title">พืชที่ปลูก</div>
+    <div class="crops-grid" id="crops-list"></div>
+  </div>
+</div>
+
+<!-- ══ COMMUNITY SCREEN ══ -->
+<div class="screen" id="screen-community">
+  <div class="comm-screen">
+    <div class="comm-head-label">กลุ่มของคุณ</div>
+    <div class="comm-alert"><span>📍</span><div><strong>3 กลุ่มใกล้คุณ</strong> กำลังพูดถึงโรคระบาดในช่วงนี้ — แตะเพื่อดู</div></div>
+    <div class="comm-card">
+      <div class="cc-head">
+        <div class="cc-icon cci-g">🥭</div>
+        <div style="flex:1"><div class="cc-name">ชาวสวนมะม่วง ราชบุรี</div><div class="cc-sub">อ.บ้านโป่ง · อ.โพธาราม · อ.ดำเนินสะดวก</div></div>
+        <button class="cc-joined">เข้าแล้ว ✓</button>
+      </div>
+      <div class="cc-stats"><span>👥 1,240 คน</span><span>💬 18 โพสวันนี้</span><span>⚠️ แจ้งเตือน 2</span></div>
+    </div>
+    <div class="comm-card">
+      <div class="cc-head">
+        <div class="cc-icon cci-a">🌶️</div>
+        <div style="flex:1"><div class="cc-name">กลุ่มพริกภาคกลาง</div><div class="cc-sub">ราชบุรี · กาญจนบุรี · นครปฐม</div></div>
+        <button class="cc-join">เข้าร่วม</button>
+      </div>
+      <div class="cc-stats"><span>👥 856 คน</span><span>💬 9 โพสวันนี้</span></div>
+    </div>
+    <div class="comm-card">
+      <div class="cc-head">
+        <div class="cc-icon cci-b">🌿</div>
+        <div style="flex:1"><div class="cc-name">เกษตรอินทรีย์ ภาคตะวันตก</div><div class="cc-sub">ราชบุรี · เพชรบุรี · ประจวบฯ</div></div>
+        <button class="cc-join">เข้าร่วม</button>
+      </div>
+      <div class="cc-stats"><span>👥 2,100 คน</span><span>💬 32 โพสวันนี้</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ POST MODAL ══ -->
+<div class="overlay" id="postModal" onclick="closeOverlay(event)">
+  <div class="modal">
+    <div class="modal-top">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title">สร้างโพส</div>
+      <button class="modal-submit" onclick="submitPost()">โพส</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-user">
+        <div class="modal-av">ฉ</div>
+        <div>
+          <div class="modal-uname">ชื่อของคุณ</div>
+          <div class="privacy-chip">🌍 สาธารณะ ▾</div>
+        </div>
+      </div>
+      <div class="type-chips">
+        <button class="type-chip sel" onclick="selType(this)">🦠 โรคพืช</button>
+        <button class="type-chip" onclick="selType(this)">💡 แชร์ความรู้</button>
+        <button class="type-chip" onclick="selType(this)">⚠️ แจ้งเตือนพื้นที่</button>
+        <button class="type-chip" onclick="selType(this)">📦 รีวิวสินค้า</button>
+      </div>
+      <div class="photo-area">
+        <div class="ph-ico">📷</div>
+        <span>เพิ่มภาพหรือวิดีโอ</span>
+      </div>
+      <div class="fg">
+        <label>พืชที่เกี่ยวข้อง</label>
+        <select id="modal-crop"><option value="">เลือกพืช...</option></select>
+      </div>
+      <div class="fg">
+        <label>รายละเอียด</label>
+        <textarea placeholder="บอกเล่าอาการที่เห็น หรือแชร์ประสบการณ์ของคุณ..."></textarea>
+      </div>
+      <button class="submit-btn" onclick="submitPost()">📤 โพสเลย</button>
+      <div class="pts-hint" id="pts-hint">✨ คุณจะได้รับ +10 แต้มสะสมจากการโพสนี้</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BOTTOM NAV ══ -->
+<div class="bottom-nav">
+  <div class="bn active" id="nav-feed" onclick="switchScreen('feed')">
+    <div class="bn-ico">🏠</div>
+    <div class="bn-lbl">หน้าหลัก</div>
+  </div>
+  <div class="bn" id="nav-community" onclick="switchScreen('community')">
+    <div class="bn-ico">👥</div>
+    <div class="bn-lbl">ชุมชน</div>
+    <span class="bn-badge">2</span>
+  </div>
+  <div class="bn" onclick="openPostModal()">
+    <div class="bn-ico">🎬</div>
+    <div class="bn-lbl">วิดีโอ</div>
+  </div>
+  <div class="bn" id="nav-profile" onclick="switchScreen('profile')">
+    <div class="bn-ico">👤</div>
+    <div class="bn-lbl">โปรไฟล์</div>
+  </div>
+  <div class="bn">
+    <div class="bn-ico">☰</div>
+    <div class="bn-lbl">เมนู</div>
+  </div>
+</div>
+
+<script>
+// ── Apply Config ──────────────────────────────────────────
+(function applyConfig(){
+  if(typeof APP_CONFIG === 'undefined') return;
+  const C = APP_CONFIG;
+
+  // App name & color
+  document.title = C.app.name;
+  document.getElementById('app-logo').textContent = C.app.logoEmoji + ' ' + C.app.name;
+  document.documentElement.style.setProperty('--primary', C.app.primaryColor);
+
+  // Populate crops dropdown
+  const sel = document.getElementById('modal-crop');
+  C.crops.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.emoji + ' ' + c.name;
+    sel.appendChild(o);
+  });
+
+  // Populate crops on profile
+  const grid = document.getElementById('crops-list');
+  const shown = C.crops.filter(c => c.id !== 'other').slice(0, 6);
+  shown.forEach(c => {
+    grid.innerHTML += `<div class="crop-item"><div class="crop-emoji">${c.emoji}</div><div class="crop-name">${c.name}</div><div class="crop-posts">— โพส</div></div>`;
+  });
+
+  // Points hint
+  document.getElementById('pts-hint').textContent =
+    `✨ คุณจะได้รับ +${C.points.perPost} แต้มสะสมจากการโพสนี้`;
+})();
+
+// ── UI Functions ─────────────────────────────────────────
+function switchScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.bn').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const nav=document.getElementById('nav-'+name);
+  if(nav) nav.classList.add('active');
+}
+function switchFeedTab(el){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleFollow(btn){
+  const f=btn.classList.contains('following');
+  btn.classList.toggle('following',!f);
+  btn.textContent = f ? '+ ติดตาม' : 'กำลังติดตาม ▾';
+}
+function toggleLike(btn){
+  btn.classList.toggle('liked');
+}
+function toggleHelp(btn){
+  btn.classList.toggle('helped');
+}
+function toggleComments(id){
+  const el=document.getElementById(id);
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+function openPostModal(){
+  document.getElementById('postModal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('postModal').classList.remove('open');
+}
+function closeOverlay(e){
+  if(e.target===document.getElementById('postModal')) closeModal();
+}
+function selType(el){
+  document.querySelectorAll('.type-chip').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function submitPost(){
+  const pts = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG.points.perPost : 10;
+  closeModal();
+  alert(`โพสสำเร็จ! 🎉\n+${pts} แต้มเข้าบัญชีแล้ว`);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — เพื่อนสวน</title>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1c1e21}
+:root{--primary:#1877f2;--bg:#f0f2f5;--card:#fff;--border:#e4e6eb;--text:#1c1e21;--muted:#65676b;--danger:#e41e3f;--success:#2e7d32;--warn:#f9a825}
+#loading-screen,#deny-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;text-align:center;padding:24px}
+#deny-screen{display:none}
+.spinner{width:40px;height:40px;border:4px solid #e4e6eb;border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.deny-icon{font-size:64px}.deny-title{font-size:24px;font-weight:800;color:var(--danger)}.deny-sub{font-size:15px;color:var(--muted)}
+#app{display:none}
+.sidebar{width:240px;background:#fff;border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
+.main{margin-left:240px;min-height:100vh;padding:24px}
+.sb-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sb-logo-icon{width:36px;height:36px;object-fit:contain}
+.sb-logo-text{font-size:17px;font-weight:800;color:var(--primary)}.sb-logo-sub{font-size:11px;color:var(--muted)}
+.sb-admin{padding:12px 16px;background:#e7f3ff;margin:8px;border-radius:10px;display:flex;align-items:center;gap:8px}
+.sb-admin-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.sb-admin-name{font-size:13px;font-weight:700;color:var(--primary)}.sb-admin-role{font-size:11px;color:var(--muted)}
+.sb-menu{padding:8px 0}
+.sb-section{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;padding:12px 16px 4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);transition:background 0.1s}
+.sb-item:hover{background:var(--bg)}.sb-item.active{background:#e7f3ff;color:var(--primary);font-weight:700}
+.sb-item .si{font-size:18px;width:24px;text-align:center}
+.sb-badge{background:var(--danger);color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 6px;margin-left:auto}
+.page-header{margin-bottom:24px}
+.page-title{font-size:24px;font-weight:800;color:var(--text)}.page-sub{font-size:14px;color:var(--muted);margin-top:4px}
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:16px 20px}
+.stat-icon{font-size:28px;margin-bottom:8px}.stat-val{font-size:28px;font-weight:800;color:var(--text)}.stat-label{font-size:13px;color:var(--muted);margin-top:2px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.fg{margin-bottom:0}
+.fg label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.fg input,.fg select,.fg textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;background:#fff;outline:none;color:var(--text)}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary)}
+.fg textarea{resize:vertical;min-height:80px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:14px;font-weight:600;color:var(--text)}.toggle-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:24px;cursor:pointer;transition:0.3s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:0.3s}
+.toggle input:checked + .toggle-slider{background:var(--primary)}
+.toggle input:checked + .toggle-slider:before{transform:translateX(20px)}
+.btn{padding:9px 18px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.15s}
+.btn-primary{background:var(--primary);color:#fff}.btn-danger{background:var(--danger);color:#fff}
+.btn-success{background:var(--success);color:#fff}.btn-ghost{background:var(--bg);color:var(--text)}
+.btn:active{opacity:0.8}
+.save-row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:10px 12px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;border-bottom:2px solid var(--border)}
+td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
+.user-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.tier-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
+.tc-bronze{background:#fce4ec;color:#880e4f}.tc-silver{background:#f5f5f5;color:#616161}
+.tc-gold{background:#fff8e1;color:#e65100}.tc-platinum{background:#e8eaf6;color:#3949ab}
+.tag-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#e7f3ff;color:var(--primary)}
+.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+/* Upload Zone */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s;background:#fafafa}
+.upload-zone:hover{border-color:var(--primary);background:#e7f3ff}
+.upload-zone input{display:none}
+.upload-preview{width:80px;height:80px;border-radius:12px;object-fit:contain;border:2px solid var(--border);background:#fff;display:none}
+.icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.icon-item{text-align:center}
+.icon-item label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px}
+.icon-preview{width:56px;height:56px;border-radius:12px;object-fit:contain;border:2px solid var(--border);background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;margin:0 auto 6px;overflow:hidden}
+.icon-preview img{width:100%;height:100%;object-fit:contain}
+.color-swatch{width:32px;height:32px;border-radius:6px;border:2px solid var(--border);cursor:pointer;display:inline-block}
+/* Range slider */
+.range-row{display:flex;align-items:center;gap:12px}
+.range-row input[type=range]{flex:1;height:4px;accent-color:var(--primary)}
+.range-val{font-size:14px;font-weight:700;color:var(--primary);min-width:40px;text-align:right}
+/* Points table */
+.pts-table{width:100%;border-collapse:collapse}
+.pts-table td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.pts-table td:first-child{font-size:14px;font-weight:600;color:var(--text);width:60%}
+.pts-table input{width:80px;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:14px;text-align:center}
+/* Search */
+.search-row{display:flex;gap:10px;margin-bottom:16px}
+.search-input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:14px;font-family:inherit;outline:none}
+.search-input:focus{border-color:var(--primary)}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#1c1e21;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;transform:translateY(100px);opacity:0;transition:all 0.3s;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}.toast.success{background:var(--success)}.toast.error{background:var(--danger)}
+/* Upload progress */
+.upload-progress{height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px;display:none}
+.upload-progress-bar{height:100%;background:var(--primary);width:0%;transition:width 0.3s}
+.screen{display:none}.screen.active{display:block}
+@media(max-width:768px){.sidebar{width:100%;height:auto;position:relative}.main{margin-left:0}.stats-grid{grid-template-columns:repeat(2,1fr)}.form-grid,.form-grid-3{grid-template-columns:1fr}.icon-grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div id="loading-screen"><div class="spinner"></div><div style="font-size:15px;color:var(--muted)">กำลังตรวจสอบสิทธิ์...</div></div>
+<div id="deny-screen"><div class="deny-icon">🚫</div><div class="deny-title">ไม่มีสิทธิ์เข้าถึง</div><div class="deny-sub">หน้านี้สำหรับ Admin เท่านั้น</div><a href="/" style="margin-top:16px;color:var(--primary);font-weight:700;text-decoration:none">← กลับหน้าหลัก</a></div>
+<div class="toast" id="toast"></div>
+
+<div id="app">
+<div class="sidebar">
+  <div class="sb-logo">
+    <img id="sb-logo-img" class="sb-logo-icon" src="" onerror="this.style.display='none';document.getElementById('sb-logo-emoji').style.display='block'" style="display:none">
+    <span id="sb-logo-emoji" style="font-size:28px">🌿</span>
+    <div><div class="sb-logo-text" id="sb-app-name">เพื่อนสวน</div><div class="sb-logo-sub">Admin Dashboard</div></div>
+  </div>
+  <div class="sb-admin">
+    <div class="sb-admin-av" id="admin-av">A</div>
+    <div><div class="sb-admin-name" id="admin-name">Admin</div><div class="sb-admin-role">🔑 Super Admin</div></div>
+  </div>
+  <div class="sb-menu">
+    <div class="sb-section">ภาพรวม</div>
+    <div class="sb-item active" onclick="showScreen('dashboard',this)"><span class="si">📊</span> Dashboard</div>
+    <div class="sb-section">จัดการ</div>
+    <div class="sb-item" onclick="showScreen('users',this)"><span class="si">👥</span> Users <span class="sb-badge" id="badge-users">0</span></div>
+    <div class="sb-item" onclick="showScreen('posts',this)"><span class="si">📝</span> โพส <span class="sb-badge" id="badge-posts">0</span></div>
+    <div class="sb-section">ตั้งค่า</div>
+    <div class="sb-item" onclick="showScreen('appearance',this)"><span class="si">🎨</span> หน้าตา & โลโก้</div>
+    <div class="sb-item" onclick="showScreen('icons',this)"><span class="si">🖼️</span> ไอคอน & รูปภาพ</div>
+    <div class="sb-item" onclick="showScreen('content',this)"><span class="si">📢</span> Content & ข้อความ</div>
+    <div class="sb-item" onclick="showScreen('features',this)"><span class="si">⚙️</span> Features Toggle</div>
+    <div class="sb-item" onclick="showScreen('points',this)"><span class="si">🏅</span> แต้ม & Tier</div>
+    <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
+    <div class="sb-section">ระบบ</div>
+    <div class="sb-item" onclick="window.open('https://phuansuan.web.app','_blank')"><span class="si">🌐</span> เปิดแอป</div>
+    <div class="sb-item" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><span class="si">🔥</span> Firebase Console</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="screen active" id="screen-dashboard">
+  <div class="page-header"><div class="page-title">📊 Dashboard</div><div class="page-sub">ภาพรวมระบบเพื่อนสวน</div></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="ds-users">—</div><div class="stat-label">Users ทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-val" id="ds-posts">—</div><div class="stat-label">โพสทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-val" id="ds-points">—</div><div class="stat-label">แต้มรวมทั้งระบบ</div></div>
+    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="ds-today">—</div><div class="stat-label">Login วันนี้</div></div>
+  </div>
+  <div class="card"><div class="card-title">👥 Users ล่าสุด</div>
+    <div class="table-wrap"><table><thead><tr><th>User</th><th>แต้ม</th><th>Tier</th><th>เข้าล่าสุด</th></tr></thead>
+    <tbody id="recent-users-table"><tr><td colspan="4" class="empty-state">กำลังโหลด...</td></tr></tbody></table></div>
+  </div>
+</div>
+
+<!-- USERS -->
+<div class="screen" id="screen-users">
+  <div class="page-header"><div class="page-title">👥 จัดการ Users</div><div class="page-sub">ดู แก้ไข และจัดการ users ทั้งหมด</div></div>
+  <div class="search-row"><input class="search-input" id="user-search" placeholder="🔍 ค้นหาชื่อ..." oninput="filterUsers()"></div>
+  <div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>User</th><th>แต้ม</th><th>Tier</th><th>โพส</th><th>เข้าล่าสุด</th><th>Action</th></tr></thead>
+    <tbody id="users-table"><tr><td colspan="6" class="empty-state">กำลังโหลด...</td></tr></tbody>
+  </table></div></div>
+</div>
+
+<!-- POSTS -->
+<div class="screen" id="screen-posts">
+  <div class="page-header"><div class="page-title">📝 จัดการโพส</div><div class="page-sub">ดูและลบโพสในระบบ</div></div>
+  <div class="search-row"><input class="search-input" id="post-search" placeholder="🔍 ค้นหาโพส..." oninput="filterPosts()"></div>
+  <div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>โพส</th><th>ผู้โพส</th><th>ประเภท</th><th>เวลา</th><th>Action</th></tr></thead>
+    <tbody id="posts-table"><tr><td colspan="5" class="empty-state">ยังไม่มีโพส</td></tr></tbody>
+  </table></div></div>
+</div>
+
+<!-- APPEARANCE -->
+<div class="screen" id="screen-appearance">
+  <div class="page-header"><div class="page-title">🎨 หน้าตา & โลโก้</div><div class="page-sub">ปรับแต่ง UI ของแอป</div></div>
+  <div class="card"><div class="card-title">🌿 ข้อมูลแอป</div>
+    <div class="form-grid">
+      <div class="fg"><label>ชื่อแอป</label><input id="cfg-appname" value="เพื่อนสวน"></div>
+      <div class="fg"><label>Subtitle</label><input id="cfg-subtitle" value="DemeterRich Community"></div>
+      <div class="fg"><label>Logo Emoji (ถ้าไม่มีรูป)</label><input id="cfg-logo" value="🌿" style="font-size:20px"></div>
+      <div class="fg"><label>ชื่อร้านค้า</label><input id="cfg-shopname" value="DemeterRich"></div>
+      <div class="fg"><label>LINE OA ID</label><input id="cfg-lineoa" value="@demeterrich"></div>
+      <div class="fg"><label>เบอร์โทร</label><input id="cfg-phone" value="099-999-9999"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">🎨 สี</div>
+    <div class="form-grid">
+      <div class="fg"><label>สีหลัก (Primary)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="color" id="cfg-primary" value="#1877f2" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)">
+          <input id="cfg-primary-hex" value="#1877f2" style="flex:1" oninput="syncColor('primary')">
+        </div>
+      </div>
+      <div class="fg"><label>สีเสริม (Accent)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="color" id="cfg-accent" value="#42b883" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)">
+          <input id="cfg-accent-hex" value="#42b883" style="flex:1" oninput="syncColor('accent')">
+        </div>
+      </div>
+      <div class="fg"><label>Cover Gradient สีต้น</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="color" id="cfg-grad1" value="#1877f2" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)">
+          <input id="cfg-grad1-hex" value="#1877f2" style="flex:1" oninput="syncColor('grad1')">
+        </div>
+      </div>
+      <div class="fg"><label>Cover Gradient สีปลาย</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="color" id="cfg-grad2" value="#42b883" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)">
+          <input id="cfg-grad2-hex" value="#42b883" style="flex:1" oninput="syncColor('grad2')">
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Preview</div>
+      <div id="color-preview" style="height:44px;border-radius:10px;background:#1877f2;display:flex;align-items:center;padding:0 16px;gap:10px">
+        <span style="font-size:22px" id="prev-emoji">🌿</span>
+        <span style="color:#fff;font-weight:800;font-size:16px" id="prev-name">เพื่อนสวน</span>
+      </div>
+    </div>
+  </div>
+  <div class="save-row">
+    <button class="btn btn-ghost" onclick="loadAppearance()">↺ รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveAppearance()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- ICONS -->
+<div class="screen" id="screen-icons">
+  <div class="page-header"><div class="page-title">🖼️ ไอคอน & รูปภาพ</div><div class="page-sub">อัพโหลดโลโก้และไอคอนแอป</div></div>
+  <div class="card"><div class="card-title">🌿 โลโก้แอป (Topbar)</div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div class="upload-zone" style="width:160px" onclick="document.getElementById('upload-logo').click()">
+        <input type="file" id="upload-logo" accept="image/*" onchange="uploadIcon('logo',this)">
+        <div id="prev-logo" style="font-size:40px;margin-bottom:8px">🌿</div>
+        <div style="font-size:13px;color:var(--muted)">คลิกเพื่ออัพโหลด<br>PNG / JPG / SVG</div>
+        <div class="upload-progress" id="prog-logo"><div class="upload-progress-bar" id="progbar-logo"></div></div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8">
+        แนะนำ: PNG พื้นหลังโปร่งใส<br>ขนาด 200×200px ขึ้นไป<br>ไฟล์ไม่เกิน 2MB
+      </div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">🔘 ไอคอน Bottom Navigation</div>
+    <div class="icon-grid">
+      <div class="icon-item">
+        <label>หน้าหลัก</label>
+        <div class="icon-preview" id="prev-nav-home" onclick="document.getElementById('upload-nav-home').click()">🏠</div>
+        <input type="file" id="upload-nav-home" accept="image/*" style="display:none" onchange="uploadIcon('nav_home',this)">
+        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+      </div>
+      <div class="icon-item">
+        <label>ชุมชน</label>
+        <div class="icon-preview" id="prev-nav-community" onclick="document.getElementById('upload-nav-community').click()">👥</div>
+        <input type="file" id="upload-nav-community" accept="image/*" style="display:none" onchange="uploadIcon('nav_community',this)">
+        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+      </div>
+      <div class="icon-item">
+        <label>วิดีโอ</label>
+        <div class="icon-preview" id="prev-nav-video" onclick="document.getElementById('upload-nav-video').click()">🎬</div>
+        <input type="file" id="upload-nav-video" accept="image/*" style="display:none" onchange="uploadIcon('nav_video',this)">
+        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+      </div>
+      <div class="icon-item">
+        <label>โปรไฟล์</label>
+        <div class="icon-preview" id="prev-nav-profile" onclick="document.getElementById('upload-nav-profile').click()">👤</div>
+        <input type="file" id="upload-nav-profile" accept="image/*" style="display:none" onchange="uploadIcon('nav_profile',this)">
+        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+      </div>
+      <div class="icon-item">
+        <label>เมนู</label>
+        <div class="icon-preview" id="prev-nav-menu" onclick="document.getElementById('upload-nav-menu').click()">☰</div>
+        <input type="file" id="upload-nav-menu" accept="image/*" style="display:none" onchange="uploadIcon('nav_menu',this)">
+        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:13px;color:var(--muted)">แนะนำ: PNG พื้นหลังโปร่งใส 64×64px — รูปจะถูกอัพโหลดและบันทึกอัตโนมัติ</div>
+  </div>
+  <div class="card"><div class="card-title">📸 รูปภาพอื่นๆ</div>
+    <div class="form-grid">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Default Post Cover</div>
+        <div class="upload-zone" onclick="document.getElementById('upload-cover').click()">
+          <input type="file" id="upload-cover" accept="image/*" onchange="uploadIcon('default_cover',this)">
+          <div id="prev-cover" style="font-size:36px;margin-bottom:6px">📸</div>
+          <div style="font-size:13px;color:var(--muted)">รูป placeholder ของโพส</div>
+          <div class="upload-progress" id="prog-cover"><div class="upload-progress-bar" id="progbar-cover"></div></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Login Screen Background</div>
+        <div class="upload-zone" onclick="document.getElementById('upload-login-bg').click()">
+          <input type="file" id="upload-login-bg" accept="image/*" onchange="uploadIcon('login_bg',this)">
+          <div id="prev-login-bg" style="font-size:36px;margin-bottom:6px">🌿</div>
+          <div style="font-size:13px;color:var(--muted)">รูปพื้นหลังหน้า login</div>
+          <div class="upload-progress" id="prog-login-bg"><div class="upload-progress-bar" id="progbar-login-bg"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="screen" id="screen-content">
+  <div class="page-header"><div class="page-title">📢 Content & ข้อความ</div><div class="page-sub">แก้ไขข้อความและ banner ในแอป</div></div>
+  <div class="card"><div class="card-title">⚠️ Banner แจ้งเตือน (Feed)</div>
+    <div class="fg" style="margin-bottom:12px"><label>ข้อความ Banner</label>
+      <textarea id="cfg-banner-text" placeholder="เช่น พบโรคแอนแทรคโนสในมะม่วง 3 สวน บริเวณ อ.บ้านโป่ง"></textarea>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">แสดง Banner แจ้งเตือน</div><div class="toggle-sub">แถบสีเหลืองด้านบน Feed</div></div>
+      <label class="toggle"><input type="checkbox" id="cfg-banner-show" checked><span class="toggle-slider"></span></label>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">✍️ Placeholder ข้อความ</div>
+    <div class="form-grid">
+      <div class="fg"><label>Create Post placeholder</label><input id="cfg-post-placeholder" value="คุณพบปัญหาอะไรในสวนวันนี้?"></div>
+      <div class="fg"><label>Comment placeholder</label><input id="cfg-comment-placeholder" value="เขียนความคิดเห็นสาธารณะ..."></div>
+      <div class="fg"><label>Login tagline บรรทัด 1</label><input id="cfg-login-line1" value="ชุมชนชาวสวนออนไลน์"></div>
+      <div class="fg"><label>Login tagline บรรทัด 2</label><input id="cfg-login-line2" value="แชร์ปัญหา รับคำแนะนำ สะสมแต้ม"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">📍 Feed Settings</div>
+    <div class="form-grid-3">
+      <div class="fg"><label>Nearby radius (กม.)</label>
+        <div class="range-row"><input type="range" id="cfg-nearby" min="1" max="100" value="15" oninput="document.getElementById('val-nearby').textContent=this.value"><span class="range-val" id="val-nearby">15</span></div>
+      </div>
+      <div class="fg"><label>Alert radius (กม.)</label>
+        <div class="range-row"><input type="range" id="cfg-alert-r" min="1" max="200" value="20" oninput="document.getElementById('val-alert-r').textContent=this.value"><span class="range-val" id="val-alert-r">20</span></div>
+      </div>
+      <div class="fg"><label>โพสต่อหน้า</label>
+        <div class="range-row"><input type="range" id="cfg-perpage" min="5" max="50" value="10" oninput="document.getElementById('val-perpage').textContent=this.value"><span class="range-val" id="val-perpage">10</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="save-row">
+    <button class="btn btn-ghost" onclick="loadContent()">↺ รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveContent()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="screen" id="screen-features">
+  <div class="page-header"><div class="page-title">⚙️ Features Toggle</div><div class="page-sub">เปิด/ปิดฟีเจอร์ต่างๆ ในแอป</div></div>
+  <div class="card">
+    <div id="features-list">
+      <div class="toggle-row"><div><div class="toggle-label">🤖 AI วิเคราะห์โรคพืช</div><div class="toggle-sub">วิเคราะห์ภาพด้วย Gemini Vision</div></div><label class="toggle"><input type="checkbox" id="feat-ai" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">📍 Proximity Alert</div><div class="toggle-sub">แจ้งเตือนโรคระบาดในพื้นที่</div></div><label class="toggle"><input type="checkbox" id="feat-proximity" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🛒 Product Link</div><div class="toggle-sub">ลิงก์สินค้าร้านในโพส</div></div><label class="toggle"><input type="checkbox" id="feat-product" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">📖 Stories</div><div class="toggle-sub">Stories bar บนสุด Feed</div></div><label class="toggle"><input type="checkbox" id="feat-stories" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🏅 Point System</div><div class="toggle-sub">ระบบแต้มสะสม</div></div><label class="toggle"><input type="checkbox" id="feat-points" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">👥 Community Groups</div><div class="toggle-sub">กลุ่ม/ชุมชน</div></div><label class="toggle"><input type="checkbox" id="feat-community" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🌤️ Weather Alert</div><div class="toggle-sub">แจ้งเตือนสภาพอากาศ</div></div><label class="toggle"><input type="checkbox" id="feat-weather"><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🔔 Notification: โพสใกล้บ้าน</div></div><label class="toggle"><input type="checkbox" id="notif-nearby" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🔔 Notification: โรคระบาด</div></div><label class="toggle"><input type="checkbox" id="notif-disease" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🔔 Notification: ตอบโพส</div></div><label class="toggle"><input type="checkbox" id="notif-comment" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🔔 Notification: ได้แต้ม</div></div><label class="toggle"><input type="checkbox" id="notif-points" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🔔 Notification: โปรโมชั่น</div></div><label class="toggle"><input type="checkbox" id="notif-promo" checked><span class="toggle-slider"></span></label></div>
+    </div>
+  </div>
+  <div class="save-row">
+    <button class="btn btn-ghost" onclick="loadFeatures()">↺ รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveFeatures()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- POINTS -->
+<div class="screen" id="screen-points">
+  <div class="page-header"><div class="page-title">🏅 แต้ม & Tier</div><div class="page-sub">ปรับค่าแต้มและเกณฑ์ระดับ</div></div>
+  <div class="card"><div class="card-title">💰 แต้มต่อ Action</div>
+    <table class="pts-table">
+      <tr><td>📝 โพสใหม่</td><td><input type="number" id="pts-post" value="10"></td></tr>
+      <tr><td>📸 โพสพร้อมรูป</td><td><input type="number" id="pts-post-img" value="15"></td></tr>
+      <tr><td>💬 แสดงความคิดเห็น</td><td><input type="number" id="pts-comment" value="3"></td></tr>
+      <tr><td>✅ กด "ช่วยได้"</td><td><input type="number" id="pts-help" value="15"></td></tr>
+      <tr><td>👍 ได้รับ Like</td><td><input type="number" id="pts-like" value="2"></td></tr>
+      <tr><td>🛒 ซื้อสินค้า</td><td><input type="number" id="pts-purchase" value="20"></td></tr>
+      <tr><td>⚠️ โพสแจ้งโรคระบาด</td><td><input type="number" id="pts-alert" value="8"></td></tr>
+      <tr><td>⭐ Expert ยืนยันโพส</td><td><input type="number" id="pts-verified" value="25"></td></tr>
+      <tr><td>📅 เข้าแอปทุกวัน</td><td><input type="number" id="pts-daily" value="5"></td></tr>
+    </table>
+  </div>
+  <div class="card"><div class="card-title">🏆 Tier Thresholds</div>
+    <table class="pts-table">
+      <tr><td>🥉 Bronze (แต้มต่ำสุด)</td><td><input type="number" id="tier-bronze" value="0" disabled style="opacity:0.5"></td></tr>
+      <tr><td>🥈 Silver เริ่มที่</td><td><input type="number" id="tier-silver" value="1000"></td></tr>
+      <tr><td>🥇 Gold เริ่มที่</td><td><input type="number" id="tier-gold" value="3000"></td></tr>
+      <tr><td>💎 Platinum เริ่มที่</td><td><input type="number" id="tier-platinum" value="6000"></td></tr>
+    </table>
+  </div>
+  <div class="card"><div class="card-title">🎁 ส่วนลดแต่ละ Tier</div>
+    <table class="pts-table">
+      <tr><td>🥉 Bronze</td><td><input type="number" id="disc-bronze" value="0"> %</td></tr>
+      <tr><td>🥈 Silver</td><td><input type="number" id="disc-silver" value="5"> %</td></tr>
+      <tr><td>🥇 Gold</td><td><input type="number" id="disc-gold" value="10"> %</td></tr>
+      <tr><td>💎 Platinum</td><td><input type="number" id="disc-platinum" value="15"> %</td></tr>
+    </table>
+  </div>
+  <div class="save-row">
+    <button class="btn btn-ghost" onclick="loadPoints()">↺ รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="savePoints()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="screen" id="screen-products">
+  <div class="page-header"><div class="page-title">📦 จัดการสินค้า</div><div class="page-sub">เพิ่ม ลบ แก้ไขสินค้าในแอป</div></div>
+  <div class="card"><div class="card-title">➕ เพิ่มสินค้าใหม่</div>
+    <div class="form-grid">
+      <div class="fg"><label>ชื่อสินค้า</label><input id="new-prod-name" placeholder="เช่น Mancozeb 80% WP"></div>
+      <div class="fg"><label>ราคา</label><input id="new-prod-price" placeholder="เช่น 180 บาท"></div>
+      <div class="fg"><label>หมวดหมู่</label>
+        <select id="new-prod-cat">
+          <option value="pesticide">🧴 ยาฆ่าแมลง</option>
+          <option value="fertilizer">💊 ปุ๋ย</option>
+          <option value="hormone">💧 ฮอร์โมน</option>
+          <option value="organic">🌱 อินทรีย์</option>
+          <option value="equipment">🔧 อุปกรณ์</option>
+        </select>
+      </div>
+      <div class="fg"><label>LINE Shop URL</label><input id="new-prod-url" value="https://line.me/R/ti/p/@demeterrich"></div>
+      <div class="fg"><label>โรคที่ใช้รักษา (คั่นด้วยจุลภาค)</label><input id="new-prod-diseases" placeholder="เช่น แอนแทรคโนส, ราสนิม"></div>
+      <div class="fg"><label>พืชที่ใช้ได้ (คั่นด้วยจุลภาค)</label><input id="new-prod-crops" placeholder="เช่น mango, chili"></div>
+    </div>
+    <div class="save-row"><button class="btn btn-primary" onclick="addProduct()">➕ เพิ่มสินค้า</button></div>
+  </div>
+  <div class="card"><div class="card-title">📋 สินค้าทั้งหมด</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ชื่อสินค้า</th><th>หมวด</th><th>ราคา</th><th>Action</th></tr></thead>
+      <tbody id="products-table"><tr><td colspan="4" class="empty-state">กำลังโหลด...</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+const ADMIN_LINE_ID = 'U03582167674331d9005dfb42728c7151';
+let db = null, storage = null, adminUser = null;
+let allUsers = [], allPosts = [];
+
+window.addEventListener('load', async () => {
+  if (typeof FIREBASE_CONFIG === 'undefined') { showDeny(); return; }
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    storage = firebase.storage();
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+    const profile = await liff.getProfile();
+    if (profile.userId !== ADMIN_LINE_ID) { showDeny(); return; }
+    adminUser = profile;
+    showApp();
+    await Promise.all([loadDashboard(), loadSidebarBranding()]);
+  } catch(err) { console.error(err); showDeny(); }
+});
+
+function showApp() {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const av = document.getElementById('admin-av');
+  if (adminUser.pictureUrl) { av.style.backgroundImage = `url(${adminUser.pictureUrl})`; av.textContent = ''; }
+  else { av.textContent = adminUser.displayName?.charAt(0) || 'A'; }
+  document.getElementById('admin-name').textContent = adminUser.displayName || 'Admin';
+}
+function showDeny() {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('deny-screen').style.display = 'flex';
+}
+function showScreen(name, el) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, products: loadProducts };
+  if (loaders[name]) loaders[name]();
+}
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2800);
+}
+
+// ── Sidebar Branding ──────────────────────────────────────
+async function loadSidebarBranding() {
+  try {
+    const doc = await db.collection('settings').doc('app').get();
+    if (!doc.exists) return;
+    const d = doc.data();
+    if (d.appName) document.getElementById('sb-app-name').textContent = d.appName;
+    if (d.logoUrl) { document.getElementById('sb-logo-img').src = d.logoUrl; document.getElementById('sb-logo-img').style.display = 'block'; }
+    if (d.primary) document.documentElement.style.setProperty('--primary', d.primary);
+  } catch(e) {}
+}
+
+// ── Dashboard ─────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const snap = await db.collection('users').get();
+    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const today = new Date().toDateString();
+    const todayLogins = users.filter(u => u.lastLoginAt?.toDate?.()?.toDateString() === today).length;
+    const totalPoints = users.reduce((s, u) => s + (u.points || 0), 0);
+    document.getElementById('ds-users').textContent = users.length;
+    document.getElementById('ds-points').textContent = totalPoints.toLocaleString();
+    document.getElementById('ds-today').textContent = todayLogins;
+    document.getElementById('badge-users').textContent = users.length;
+    try {
+      const ps = await db.collection('posts').get();
+      document.getElementById('ds-posts').textContent = ps.size;
+      document.getElementById('badge-posts').textContent = ps.size;
+    } catch { document.getElementById('ds-posts').textContent = '0'; }
+    const sorted = [...users].sort((a,b) => (b.lastLoginAt?.seconds||0)-(a.lastLoginAt?.seconds||0)).slice(0,5);
+    document.getElementById('recent-users-table').innerHTML = sorted.map(u => `
+      <tr><td><div style="display:flex;align-items:center;gap:10px">
+        <div class="user-av" style="${u.photoUrl?`background-image:url(${u.photoUrl})`:''}">
+          ${u.photoUrl?'':(u.displayName?.charAt(0)||'?')}</div>
+        <div style="font-weight:700">${u.displayName||'ไม่ระบุ'}</div></div></td>
+        <td><b>${(u.points||0).toLocaleString()}</b></td>
+        <td><span class="tier-chip tc-${u.tier||'bronze'}">${tierEmoji(u.tier)} ${u.tier||'bronze'}</span></td>
+        <td style="color:var(--muted);font-size:13px">${fmtDate(u.lastLoginAt)}</td></tr>
+    `).join('') || '<tr><td colspan="4" class="empty-state">ไม่มีข้อมูล</td></tr>';
+  } catch(err) { console.error(err); }
+}
+
+// ── Users ─────────────────────────────────────────────────
+async function loadUsers() {
+  document.getElementById('users-table').innerHTML = '<tr><td colspan="6" class="empty-state">กำลังโหลด...</td></tr>';
+  try {
+    const snap = await db.collection('users').orderBy('lastLoginAt','desc').get();
+    allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('badge-users').textContent = allUsers.length;
+    renderUsers(allUsers);
+  } catch(err) { document.getElementById('users-table').innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${err.message}</td></tr>`; }
+}
+function renderUsers(users) {
+  document.getElementById('users-table').innerHTML = users.map(u => `
+    <tr><td><div style="display:flex;align-items:center;gap:10px">
+      <div class="user-av" style="${u.photoUrl?`background-image:url(${u.photoUrl})`:''}">
+        ${u.photoUrl?'':(u.displayName?.charAt(0)||'?')}</div>
+      <div><div style="font-weight:700">${u.displayName||'ไม่ระบุ'}</div>
+      <div style="font-size:11px;color:var(--muted)">${u.lineUserId?.slice(0,20)||''}</div></div></div></td>
+      <td><input type="number" value="${u.points||0}" style="width:80px;border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px" onchange="updateUserPoints('${u.id}',this.value)"></td>
+      <td><select onchange="updateUserTier('${u.id}',this.value)" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px">
+        ${['bronze','silver','gold','platinum'].map(t=>`<option value="${t}" ${(u.tier||'bronze')===t?'selected':''}>${tierEmoji(t)} ${t}</option>`).join('')}
+      </select></td>
+      <td>${u.postCount||0}</td>
+      <td style="color:var(--muted);font-size:13px">${fmtDate(u.lastLoginAt)}</td>
+      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="banUser('${u.id}','${u.displayName}')">🚫 Ban</button></td></tr>
+  `).join('') || '<tr><td colspan="6" class="empty-state">ไม่มี users</td></tr>';
+}
+function filterUsers() {
+  const q = document.getElementById('user-search').value.toLowerCase();
+  renderUsers(allUsers.filter(u => (u.displayName||'').toLowerCase().includes(q)));
+}
+async function updateUserPoints(uid, pts) {
+  try { await db.collection('users').doc(uid).update({ points: parseInt(pts) }); toast('✅ อัพเดทแต้มแล้ว','success'); } catch(e) { toast('❌ '+e.message,'error'); }
+}
+async function updateUserTier(uid, tier) {
+  try { await db.collection('users').doc(uid).update({ tier }); toast('✅ อัพเดท Tier แล้ว','success'); } catch(e) { toast('❌ '+e.message,'error'); }
+}
+async function banUser(uid, name) {
+  if (!confirm(`Ban "${name}"?`)) return;
+  try { await db.collection('users').doc(uid).update({ banned: true }); toast('🚫 Ban แล้ว','success'); loadUsers(); } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── Posts ─────────────────────────────────────────────────
+async function loadPosts() {
+  document.getElementById('posts-table').innerHTML = '<tr><td colspan="5" class="empty-state">กำลังโหลด...</td></tr>';
+  try {
+    const snap = await db.collection('posts').orderBy('createdAt','desc').limit(100).get();
+    allPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('badge-posts').textContent = allPosts.length;
+    renderPosts(allPosts);
+  } catch { document.getElementById('posts-table').innerHTML = '<tr><td colspan="5" class="empty-state">ยังไม่มีโพส</td></tr>'; }
+}
+function renderPosts(posts) {
+  document.getElementById('posts-table').innerHTML = posts.map(p => `
+    <tr><td><div style="font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.text||'(ไม่มีข้อความ)'}</div></td>
+    <td style="font-size:13px">${p.authorName||'ไม่ระบุ'}</td>
+    <td><span class="tag-chip">${p.type||'โพส'}</span></td>
+    <td style="color:var(--muted);font-size:13px">${fmtDate(p.createdAt)}</td>
+    <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePost('${p.id}')">🗑️ ลบ</button></td></tr>
+  `).join('') || '<tr><td colspan="5" class="empty-state">ไม่มีโพส</td></tr>';
+}
+function filterPosts() {
+  const q = document.getElementById('post-search').value.toLowerCase();
+  renderPosts(allPosts.filter(p => (p.text||'').toLowerCase().includes(q) || (p.authorName||'').toLowerCase().includes(q)));
+}
+async function deletePost(id) {
+  if (!confirm('ลบโพสนี้?')) return;
+  try { await db.collection('posts').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadPosts(); } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── Appearance ────────────────────────────────────────────
+async function loadAppearance() {
+  try {
+    const doc = await db.collection('settings').doc('app').get();
+    if (!doc.exists) return;
+    const d = doc.data();
+    const set = (id, val) => { if (val && document.getElementById(id)) document.getElementById(id).value = val; };
+    set('cfg-appname', d.appName); set('cfg-subtitle', d.subtitle); set('cfg-logo', d.logoEmoji);
+    set('cfg-shopname', d.shopName); set('cfg-lineoa', d.lineOaId); set('cfg-phone', d.phone);
+    if (d.primary) { document.getElementById('cfg-primary').value = d.primary; document.getElementById('cfg-primary-hex').value = d.primary; }
+    if (d.accent)  { document.getElementById('cfg-accent').value  = d.accent;  document.getElementById('cfg-accent-hex').value  = d.accent;  }
+    if (d.grad1)   { document.getElementById('cfg-grad1').value   = d.grad1;   document.getElementById('cfg-grad1-hex').value   = d.grad1;   }
+    if (d.grad2)   { document.getElementById('cfg-grad2').value   = d.grad2;   document.getElementById('cfg-grad2-hex').value   = d.grad2;   }
+    updateColorPreview();
+  } catch(e) {}
+}
+async function saveAppearance() {
+  try {
+    await db.collection('settings').doc('app').set({
+      appName: document.getElementById('cfg-appname').value,
+      subtitle: document.getElementById('cfg-subtitle').value,
+      logoEmoji: document.getElementById('cfg-logo').value,
+      shopName: document.getElementById('cfg-shopname').value,
+      lineOaId: document.getElementById('cfg-lineoa').value,
+      phone: document.getElementById('cfg-phone').value,
+      primary: document.getElementById('cfg-primary').value,
+      accent: document.getElementById('cfg-accent').value,
+      grad1: document.getElementById('cfg-grad1').value,
+      grad2: document.getElementById('cfg-grad2').value,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    toast('✅ บันทึกแล้ว','success');
+    document.documentElement.style.setProperty('--primary', document.getElementById('cfg-primary').value);
+    loadSidebarBranding();
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+function syncColor(key) {
+  const hex = document.getElementById(`cfg-${key}-hex`).value;
+  if (/^#[0-9a-f]{6}$/i.test(hex)) { document.getElementById(`cfg-${key}`).value = hex; updateColorPreview(); }
+}
+function updateColorPreview() {
+  const color = document.getElementById('cfg-primary')?.value || '#1877f2';
+  document.getElementById('color-preview').style.background = color;
+  document.getElementById('prev-name').textContent = document.getElementById('cfg-appname')?.value || 'เพื่อนสวน';
+  document.getElementById('prev-emoji').textContent = document.getElementById('cfg-logo')?.value || '🌿';
+}
+document.addEventListener('change', e => { if (e.target.id?.startsWith('cfg-')) updateColorPreview(); });
+
+// ── Icons Upload ──────────────────────────────────────────
+async function loadIcons() {
+  try {
+    const doc = await db.collection('settings').doc('icons').get();
+    if (!doc.exists) return;
+    const d = doc.data();
+    const iconMap = { logo: 'prev-logo', nav_home: 'prev-nav-home', nav_community: 'prev-nav-community', nav_video: 'prev-nav-video', nav_profile: 'prev-nav-profile', nav_menu: 'prev-nav-menu', default_cover: 'prev-cover', login_bg: 'prev-login-bg' };
+    Object.entries(iconMap).forEach(([key, previewId]) => {
+      if (d[key]) {
+        const el = document.getElementById(previewId);
+        if (el) { el.innerHTML = `<img src="${d[key]}" style="width:100%;height:100%;object-fit:contain">`; }
+      }
+    });
+  } catch(e) {}
+}
+
+async function uploadIcon(key, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('❌ ไฟล์ใหญ่เกิน 2MB','error'); return; }
+
+  const progEl = document.getElementById(`prog-${key.replace('_','-')}`);
+  const barEl  = document.getElementById(`progbar-${key.replace('_','-')}`);
+  if (progEl) progEl.style.display = 'block';
+
+  try {
+    const ref = storage.ref(`app-icons/${key}_${Date.now()}.${file.name.split('.').pop()}`);
+    const task = ref.put(file);
+    task.on('state_changed', snap => {
+      const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+      if (barEl) barEl.style.width = pct + '%';
+    });
+    await task;
+    const url = await ref.getDownloadURL();
+    await db.collection('settings').doc('icons').set({ [key]: url, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+
+    // Update preview
+    const previewMap = { logo:'prev-logo', nav_home:'prev-nav-home', nav_community:'prev-nav-community', nav_video:'prev-nav-video', nav_profile:'prev-nav-profile', nav_menu:'prev-nav-menu', default_cover:'prev-cover', login_bg:'prev-login-bg' };
+    const prevEl = document.getElementById(previewMap[key]);
+    if (prevEl) prevEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:contain">`;
+
+    if (progEl) progEl.style.display = 'none';
+    toast('✅ อัพโหลดสำเร็จ!','success');
+  } catch(e) {
+    if (progEl) progEl.style.display = 'none';
+    toast('❌ '+e.message,'error');
+  }
+}
+
+// ── Content ───────────────────────────────────────────────
+async function loadContent() {
+  try {
+    const doc = await db.collection('settings').doc('content').get();
+    if (!doc.exists) return;
+    const d = doc.data();
+    const set = (id, val) => { if (val !== undefined && document.getElementById(id)) document.getElementById(id).value = val; };
+    const setChk = (id, val) => { if (document.getElementById(id)) document.getElementById(id).checked = !!val; };
+    set('cfg-banner-text', d.bannerText);
+    setChk('cfg-banner-show', d.bannerShow !== false);
+    set('cfg-post-placeholder', d.postPlaceholder);
+    set('cfg-comment-placeholder', d.commentPlaceholder);
+    set('cfg-login-line1', d.loginLine1);
+    set('cfg-login-line2', d.loginLine2);
+    if (d.nearbyRadius) { document.getElementById('cfg-nearby').value = d.nearbyRadius; document.getElementById('val-nearby').textContent = d.nearbyRadius; }
+    if (d.alertRadius)  { document.getElementById('cfg-alert-r').value = d.alertRadius;  document.getElementById('val-alert-r').textContent = d.alertRadius;  }
+    if (d.postsPerPage) { document.getElementById('cfg-perpage').value = d.postsPerPage;  document.getElementById('val-perpage').textContent = d.postsPerPage;  }
+  } catch(e) {}
+}
+async function saveContent() {
+  try {
+    await db.collection('settings').doc('content').set({
+      bannerText: document.getElementById('cfg-banner-text').value,
+      bannerShow: document.getElementById('cfg-banner-show').checked,
+      postPlaceholder: document.getElementById('cfg-post-placeholder').value,
+      commentPlaceholder: document.getElementById('cfg-comment-placeholder').value,
+      loginLine1: document.getElementById('cfg-login-line1').value,
+      loginLine2: document.getElementById('cfg-login-line2').value,
+      nearbyRadius: parseInt(document.getElementById('cfg-nearby').value),
+      alertRadius: parseInt(document.getElementById('cfg-alert-r').value),
+      postsPerPage: parseInt(document.getElementById('cfg-perpage').value),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    toast('✅ บันทึกแล้ว','success');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── Features ──────────────────────────────────────────────
+async function loadFeatures() {
+  try {
+    const doc = await db.collection('settings').doc('features').get();
+    if (!doc.exists) return;
+    const d = doc.data();
+    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', productLink:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
+    Object.entries(map).forEach(([key, id]) => { if (document.getElementById(id)) document.getElementById(id).checked = d[key] !== false; });
+  } catch(e) {}
+}
+async function saveFeatures() {
+  try {
+    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', productLink:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
+    const data = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    Object.entries(map).forEach(([key, id]) => { data[key] = document.getElementById(id)?.checked ?? true; });
+    await db.collection('settings').doc('features').set(data, { merge: true });
+    toast('✅ บันทึกแล้ว','success');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── Points ────────────────────────────────────────────────
+async function loadPoints() {
+  try {
+    const doc = await db.collection('settings').doc('points').get();
+    if (!doc.exists) return;
+    const d = doc.data();
+    const map = { perPost:'pts-post', perPostWithImg:'pts-post-img', perComment:'pts-comment', perHelp:'pts-help', perLike:'pts-like', perPurchase:'pts-purchase', perAlert:'pts-alert', perVerified:'pts-verified', dailyLoginBonus:'pts-daily', tierSilver:'tier-silver', tierGold:'tier-gold', tierPlatinum:'tier-platinum', discSilver:'disc-silver', discGold:'disc-gold', discPlatinum:'disc-platinum' };
+    Object.entries(map).forEach(([key, id]) => { if (d[key] !== undefined && document.getElementById(id)) document.getElementById(id).value = d[key]; });
+  } catch(e) {}
+}
+async function savePoints() {
+  try {
+    await db.collection('settings').doc('points').set({
+      perPost: +document.getElementById('pts-post').value,
+      perPostWithImg: +document.getElementById('pts-post-img').value,
+      perComment: +document.getElementById('pts-comment').value,
+      perHelp: +document.getElementById('pts-help').value,
+      perLike: +document.getElementById('pts-like').value,
+      perPurchase: +document.getElementById('pts-purchase').value,
+      perAlert: +document.getElementById('pts-alert').value,
+      perVerified: +document.getElementById('pts-verified').value,
+      dailyLoginBonus: +document.getElementById('pts-daily').value,
+      tierSilver: +document.getElementById('tier-silver').value,
+      tierGold: +document.getElementById('tier-gold').value,
+      tierPlatinum: +document.getElementById('tier-platinum').value,
+      discSilver: +document.getElementById('disc-silver').value,
+      discGold: +document.getElementById('disc-gold').value,
+      discPlatinum: +document.getElementById('disc-platinum').value,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    toast('✅ บันทึกแล้ว','success');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── Products ──────────────────────────────────────────────
+async function loadProducts() {
+  try {
+    const snap = await db.collection('products').get();
+    document.getElementById('products-table').innerHTML = snap.empty
+      ? '<tr><td colspan="4" class="empty-state">ยังไม่มีสินค้า</td></tr>'
+      : snap.docs.map(doc => {
+          const p = doc.data();
+          return `<tr><td style="font-weight:700">${p.name}</td><td><span class="tag-chip">${p.category||'—'}</span></td><td>${p.price||'—'}</td>
+          <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteProduct('${doc.id}')">🗑️ ลบ</button></td></tr>`;
+        }).join('');
+  } catch(e) { document.getElementById('products-table').innerHTML = `<tr><td colspan="4" class="empty-state">Error: ${e.message}</td></tr>`; }
+}
+async function addProduct() {
+  const name = document.getElementById('new-prod-name').value.trim();
+  if (!name) { toast('❌ กรอกชื่อสินค้า','error'); return; }
+  try {
+    await db.collection('products').add({
+      name, price: document.getElementById('new-prod-price').value,
+      category: document.getElementById('new-prod-cat').value,
+      url: document.getElementById('new-prod-url').value,
+      diseases: document.getElementById('new-prod-diseases').value.split(',').map(s=>s.trim()).filter(Boolean),
+      crops: document.getElementById('new-prod-crops').value.split(',').map(s=>s.trim()).filter(Boolean),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('✅ เพิ่มสินค้าแล้ว','success');
+    document.getElementById('new-prod-name').value = '';
+    document.getElementById('new-prod-price').value = '';
+    loadProducts();
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+async function deleteProduct(id) {
+  if (!confirm('ลบสินค้านี้?')) return;
+  try { await db.collection('products').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadProducts(); } catch(e) { toast('❌ '+e.message,'error'); }
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function tierEmoji(t) { return {bronze:'🥉',silver:'🥈',gold:'🥇',platinum:'💎'}[t]||'🥉'; }
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+</script>
+</body>
+</html>

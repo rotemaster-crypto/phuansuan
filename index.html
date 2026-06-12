@@ -748,9 +748,9 @@ function getTier(points) {
 let obSelectedCrops = [];
 let obLocation = null;
 
-function maybeShowOnboarding() {
+function maybeShowOnboarding(force) {
   if (!currentUser || !db) return;
-  if (currentUser.onboarded === true) return;
+  if (!force && currentUser.onboarded === true) return;
   // เติม crop chips จาก config
   const grid = document.getElementById('ob-crops');
   grid.innerHTML = APP_CONFIG.crops.map(c => `
@@ -897,6 +897,8 @@ function switchScreen(name){
 function switchFeedTab(el){
   document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+  if ((el.textContent || '').indexOf('ใกล้ฉัน') !== -1) loadFeed('nearby');
+  else loadFeed();
 }
 function toggleFollow(btn){
   const f=btn.classList.contains('following');
@@ -936,6 +938,28 @@ function previewPostImage(input) {
   reader.readAsDataURL(file);
 }
 
+function compressImage(file, maxSize, quality) {
+  maxSize = maxSize || 1280; quality = quality || 0.8;
+  return new Promise(function(resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      var w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        var r = Math.min(maxSize / w, maxSize / h);
+        w = Math.round(w * r); h = Math.round(h * r);
+      }
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      c.toBlob(function(b) { b ? resolve(b) : reject(new Error('compress failed')); }, 'image/jpeg', quality);
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); reject(new Error('read image failed')); };
+    img.src = url;
+  });
+}
+
 // ── Submit Post ───────────────────────────────────────────
 async function submitPost() {
   if (!currentUser) { alert('กรุณา Login ก่อนโพส'); return; }
@@ -957,8 +981,9 @@ async function submitPost() {
 
     // อัพโหลดรูปถ้ามี
     if (imgFile && typeof firebase !== 'undefined') {
-      const storageRef = firebase.storage().ref(`posts/${currentUser.uid}_${Date.now()}.${imgFile.name.split('.').pop()}`);
-      const snapshot = await storageRef.put(imgFile);
+      const compressed = await compressImage(imgFile);
+      const storageRef = firebase.storage().ref(`posts/${currentUser.uid}_${Date.now()}.jpg`);
+      const snapshot = await storageRef.put(compressed, { contentType: 'image/jpeg' });
       imageUrl = await snapshot.ref.getDownloadURL();
     }
 
@@ -1013,8 +1038,16 @@ function resetPostModal() {
   document.getElementById('photo-area-txt').textContent = 'เพิ่มภาพหรือวิดีโอ';
 }
 
+function haversineKm(lat1, lng1, lat2, lng2) {
+  var R = 6371, rad = Math.PI / 180;
+  var dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
+  var s1 = Math.sin(dLat / 2), s2 = Math.sin(dLng / 2);
+  var a = s1 * s1 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * s2 * s2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 // ── Load Feed ─────────────────────────────────────────────
-async function loadFeed() {
+async function loadFeed(mode) {
   const container = document.getElementById('feed-container');
   if (!container || !db) return;
 
@@ -1023,7 +1056,7 @@ async function loadFeed() {
   try {
     const snap = await db.collection('posts')
       .orderBy('createdAt', 'desc')
-      .limit(APP_CONFIG.feed.postsPerPage || 10)
+      .limit(mode === 'nearby' ? 100 : (APP_CONFIG.feed.postsPerPage || 10))
       .get();
 
     if (snap.empty) {
@@ -1036,7 +1069,37 @@ async function loadFeed() {
       return;
     }
 
-    container.innerHTML = snap.docs.map((doc, i) => renderPost(doc.id, doc.data(), i)).join('');
+    let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+
+    if (mode === 'nearby') {
+      const loc = currentUser && currentUser.location;
+      if (!loc) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+            <div style="font-size:48px;margin-bottom:12px">📍</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่ได้ตั้งตำแหน่งสวน</div>
+            <div style="font-size:14px;margin-bottom:16px">ตั้งตำแหน่งเพื่อดูโพสใกล้บ้านคุณ</div>
+            <button onclick="maybeShowOnboarding(true)" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📍 ตั้งตำแหน่งเลย</button>
+          </div>`;
+        return;
+      }
+      const radius = APP_CONFIG.feed.nearbyRadius || 15;
+      docs = docs.filter(d => d.data.location && typeof d.data.location.lat === 'number')
+        .map(d => { d.data._dist = haversineKm(loc.lat, loc.lng, d.data.location.lat, d.data.location.lng); return d; })
+        .filter(d => d.data._dist <= radius)
+        .sort((a, b) => a.data._dist - b.data._dist);
+      if (docs.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+            <div style="font-size:48px;margin-bottom:12px">🏞️</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสในรัศมี ${radius} กม.</div>
+            <div style="font-size:14px">เป็นคนแรกที่โพสในพื้นที่ของคุณ!</div>
+          </div>`;
+        return;
+      }
+    }
+
+    container.innerHTML = docs.map((d, i) => renderPost(d.id, d.data, i)).join('');
 
   } catch (err) {
     console.error('loadFeed error:', err);
@@ -1070,7 +1133,7 @@ function renderPost(id, p, i) {
         </div>
         <div class="pc-info">
           <div class="pc-name">${p.authorName || 'ผู้ใช้'}</div>
-          <div class="pc-meta">${timeAgo} · 🌍</div>
+          <div class="pc-meta">${timeAgo} · ${p._dist !== undefined ? '📍 ' + p._dist.toFixed(1) + ' กม.' : '🌍'}</div>
         </div>
         ${isOwn ? `<button class="pc-more" onclick="deletePost('${id}')">🗑️</button>` : '<button class="pc-more">•••</button>'}
       </div>
