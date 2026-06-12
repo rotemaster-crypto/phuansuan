@@ -11,6 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <!-- LIFF SDK -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
@@ -245,6 +246,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .btn-line-login{width:100%;max-width:300px;background:#06C755;color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(6,199,85,0.35)}
 .btn-line-login:active{opacity:0.85}
 .login-terms{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6}
+
+/* ── ONBOARDING ── */
+.ob-step-label{font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+.ob-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px}
+.ob-sub{font-size:14px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.ob-crops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.ob-chip{border:2px solid var(--border);border-radius:12px;background:#fff;padding:12px 4px;text-align:center;cursor:pointer;font-family:inherit}
+.ob-chip .oce{font-size:26px;display:block}
+.ob-chip .ocn{font-size:13px;font-weight:700;color:var(--text);margin-top:4px;display:block}
+.ob-chip.sel{border-color:var(--primary);background:#e7f3ff}
+.ob-chip.sel .ocn{color:var(--primary)}
+.ob-gps{width:100%;display:flex;align-items:center;gap:12px;border:2px solid var(--border);border-radius:12px;background:#fff;padding:14px;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:8px}
+.ob-gps.ok{border-color:#2e7d32;background:#e8f5e9}
+.ob-gps-ico{font-size:26px;flex-shrink:0}
+.ob-gps-t{font-size:14px;font-weight:800;color:var(--text)}
+.ob-gps-s{font-size:13px;color:var(--muted);margin-top:2px}
+.ob-skip{display:block;width:100%;background:none;border:none;color:var(--muted);font-size:14px;font-weight:700;padding:12px;cursor:pointer;font-family:inherit;text-align:center}
 </style>
 </head>
 <body>
@@ -339,14 +357,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="prof-av-row">
       <div class="prof-av" id="prof-avatar">ฉ</div>
       <div class="prof-btns">
-        <button class="prof-btn-p" onclick="openEditProfile()">✏️ แก้ไขโปรไฟล์</button>
+        <button class="prof-btn-p">✏️ แก้ไขโปรไฟล์</button>
         <button class="prof-btn-s">••• เพิ่มเติม</button>
       </div>
     </div>
-    <div class="prof-name" id="prof-name">—</div>
-    <div class="prof-sub" id="prof-sub"></div>
-    <div class="prof-bio" id="prof-bio"></div>
-    <div class="prof-badges" id="prof-badges"></div>
+    <div class="prof-name" id="prof-name">ลุงสมชาย วงษ์เกษตร</div>
+    <div class="prof-sub" id="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
+    <div class="prof-bio">เกษตรกรสวนมะม่วง 20 ปี 🥭 รักการแบ่งปันความรู้ให้เพื่อนชาวสวน</div>
+    <div class="prof-badges">
+      <span class="pb pb-gold">⭐ ปราชญ์มะม่วง</span>
+      <span class="pb pb-blue">🥇 Gold Member</span>
+      <span class="pb pb-green">🤝 เพื่อนบ้านที่ดี</span>
+    </div>
     <div class="prof-stats">
       <div class="ps"><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
       <div class="ps"><div class="ps-n" id="stat-followers">0</div><div class="ps-l">ผู้ติดตาม</div></div>
@@ -447,6 +469,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
 </div>
 
+<!-- ══ ONBOARDING MODAL ══ -->
+<div class="overlay" id="onboardModal">
+  <div class="modal" style="border-radius:16px 16px 0 0">
+    <div class="modal-body" style="padding-top:22px">
+      <div class="ob-step-label">ตั้งค่าครั้งแรก · 1 นาทีเสร็จ</div>
+      <div class="ob-title">คุณปลูกอะไรอยู่บ้าง? 🌱</div>
+      <div class="ob-sub">เลือกได้หลายอย่าง — เราจะคัดโพสและคำแนะนำที่ตรงกับสวนของคุณ</div>
+      <div class="ob-crops" id="ob-crops"></div>
+
+      <div class="ob-title" style="font-size:17px">ตำแหน่งสวนของคุณ 📍</div>
+      <div class="ob-sub">ใช้แสดงโพส "ใกล้ฉัน" และแจ้งเตือนโรคระบาดในพื้นที่ — เก็บเป็นพิกัดกว้างๆ ไม่เปิดเผยที่อยู่จริง</div>
+      <button class="ob-gps" id="ob-gps-btn" onclick="requestGps()">
+        <span class="ob-gps-ico" id="ob-gps-ico">📍</span>
+        <span>
+          <span class="ob-gps-t" id="ob-gps-t">แชร์ตำแหน่งสวน</span>
+          <span class="ob-gps-s" id="ob-gps-s">แตะเพื่ออนุญาตการเข้าถึงตำแหน่ง</span>
+        </span>
+      </button>
+
+      <button class="submit-btn" id="ob-save-btn" onclick="saveOnboarding()" style="margin-top:10px">✅ เริ่มใช้เพื่อนสวน</button>
+      <button class="ob-skip" onclick="skipOnboarding()">ข้ามไปก่อน ตั้งค่าทีหลังได้</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ BOTTOM NAV ══ -->
 <div class="bottom-nav">
   <div class="bn active" id="nav-feed" onclick="switchScreen('feed')">
@@ -472,6 +519,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
 // ══════════════════════════════════════════════════════════
 //  PHUANSUAN — Main App Script
@@ -506,11 +554,13 @@ window.addEventListener('load', async () => {
       hideLoading();
       showLoginScreen();
     } else {
-      // login แล้ว → sign in Firebase anonymously ก่อน
-      await firebase.auth().signInAnonymously();
+      // login แล้ว → ยืนยันตัวตนกับ Cloud Function (lineAuth)
+      // ได้ Firebase uid = LINE userId จริง (Security Rules ใช้ตัวนี้)
+      await signInWithLineToken();
       // จากนั้นดึงข้อมูล profile จาก LINE
       await loadUserProfile();
       hideLoading();
+      maybeShowOnboarding();
       loadFeed();
     }
   } catch (err) {
@@ -521,6 +571,24 @@ window.addEventListener('load', async () => {
 });
 
 // ── LINE Login ────────────────────────────────────────────
+async function signInWithLineToken() {
+  const accessToken = liff.getAccessToken();
+  if (!accessToken) throw new Error('ไม่พบ LINE access token');
+  try {
+    const lineAuth = firebase.app()
+      .functions('asia-southeast1')
+      .httpsCallable('lineAuth');
+    const res = await lineAuth({ accessToken });
+    await firebase.auth().signInWithCustomToken(res.data.token);
+    console.log('✅ Firebase auth ด้วย LINE custom token สำเร็จ');
+  } catch (err) {
+    // Fallback: ถ้า function ยังไม่ deploy ให้ใช้ anonymous ไปก่อน
+    // (โหมดนี้จะอ่าน feed ได้ แต่เขียนข้อมูลไม่ผ่าน Security Rules)
+    console.warn('lineAuth ล้มเหลว — fallback anonymous:', err.message);
+    await firebase.auth().signInAnonymously();
+  }
+}
+
 function loginWithLine() {
   if (typeof liff === 'undefined') {
     alert('ไม่พบ LIFF SDK');
@@ -545,7 +613,6 @@ async function loadUserProfile() {
 
     // อัพเดต UI
     updateUIWithUser(currentUser);
-    updateProfileUI();
 
   } catch (err) {
     console.error('loadUserProfile error:', err);
@@ -567,6 +634,8 @@ async function saveUserToFirestore(user) {
         points:       APP_CONFIG.points.dailyLoginBonus,
         tier:         'bronze',
         crops:        [],
+        location:     null,
+        onboarded:    false,
         postCount:    0,
         helpCount:    0,
         createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
@@ -601,6 +670,7 @@ async function saveUserToFirestore(user) {
 
 function updateUIWithUser(user) {
   if (!user) return;
+  renderMyCrops();
 
   const initials = user.displayName ? user.displayName.charAt(0) : 'ฉ';
 
@@ -672,6 +742,102 @@ function getTier(points) {
   if (points >= tiers.gold.min) return 'gold';
   if (points >= tiers.silver.min) return 'silver';
   return 'bronze';
+}
+
+// ── Onboarding (เลือกพืช + GPS) ───────────────────────────
+let obSelectedCrops = [];
+let obLocation = null;
+
+function maybeShowOnboarding() {
+  if (!currentUser || !db) return;
+  if (currentUser.onboarded === true) return;
+  // เติม crop chips จาก config
+  const grid = document.getElementById('ob-crops');
+  grid.innerHTML = APP_CONFIG.crops.map(c => `
+    <button class="ob-chip" data-crop="${c.id}" onclick="toggleObCrop(this)">
+      <span class="oce">${c.emoji}</span><span class="ocn">${c.name}</span>
+    </button>`).join('');
+  // ถ้ามีข้อมูลเดิมบางส่วน เติมให้
+  obSelectedCrops = Array.isArray(currentUser.crops) ? [...currentUser.crops] : [];
+  obSelectedCrops.forEach(id => {
+    grid.querySelector(`[data-crop="${id}"]`)?.classList.add('sel');
+  });
+  document.getElementById('onboardModal').classList.add('open');
+}
+
+function toggleObCrop(el) {
+  const id = el.dataset.crop;
+  if (obSelectedCrops.includes(id)) {
+    obSelectedCrops = obSelectedCrops.filter(c => c !== id);
+    el.classList.remove('sel');
+  } else {
+    obSelectedCrops.push(id);
+    el.classList.add('sel');
+  }
+}
+
+function requestGps() {
+  const t = document.getElementById('ob-gps-t');
+  const s = document.getElementById('ob-gps-s');
+  const ico = document.getElementById('ob-gps-ico');
+  if (!navigator.geolocation) { s.textContent = 'อุปกรณ์นี้ไม่รองรับ GPS'; return; }
+  t.textContent = 'กำลังหาตำแหน่ง...';
+  s.textContent = 'รอสักครู่';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      // ปัดทศนิยม 3 ตำแหน่ง (~110 ม.) เพื่อความเป็นส่วนตัว
+      obLocation = {
+        lat: Math.round(pos.coords.latitude * 1000) / 1000,
+        lng: Math.round(pos.coords.longitude * 1000) / 1000,
+      };
+      document.getElementById('ob-gps-btn').classList.add('ok');
+      ico.textContent = '✅';
+      t.textContent = 'ได้ตำแหน่งแล้ว';
+      s.textContent = `พิกัด ${obLocation.lat}, ${obLocation.lng}`;
+    },
+    err => {
+      t.textContent = 'แชร์ตำแหน่งสวน';
+      s.textContent = 'ไม่ได้รับอนุญาต — ข้ามได้ ตั้งค่าทีหลังในโปรไฟล์';
+    },
+    { enableHighAccuracy: false, timeout: 10000 }
+  );
+}
+
+async function saveOnboarding() {
+  if (!currentUser || !db) return;
+  if (obSelectedCrops.length === 0) { alert('เลือกพืชอย่างน้อย 1 อย่างครับ 🌱'); return; }
+  const btn = document.getElementById('ob-save-btn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+  try {
+    const updates = { crops: obSelectedCrops, onboarded: true };
+    if (obLocation) updates.location = obLocation;
+    await db.collection('users').doc(currentUser.uid).update(updates);
+    currentUser = { ...currentUser, ...updates };
+    document.getElementById('onboardModal').classList.remove('open');
+    renderMyCrops();
+  } catch (err) {
+    alert('บันทึกไม่สำเร็จ: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '✅ เริ่มใช้เพื่อนสวน';
+  }
+}
+
+async function skipOnboarding() {
+  document.getElementById('onboardModal').classList.remove('open');
+  // จดไว้ว่าข้ามแล้ว จะได้ไม่เด้งทุกครั้ง (ถามใหม่ได้จากหน้าโปรไฟล์ภายหลัง)
+  try { await db.collection('users').doc(currentUser.uid).update({ onboarded: true }); } catch (e) {}
+  currentUser.onboarded = true;
+}
+
+// แสดงพืชของ user จริงในโปรไฟล์ (ถ้าเลือกไว้แล้ว)
+function renderMyCrops() {
+  const grid = document.getElementById('crops-list');
+  if (!grid || !currentUser?.crops?.length) return;
+  grid.innerHTML = currentUser.crops.map(id => {
+    const c = APP_CONFIG.crops.find(x => x.id === id);
+    if (!c) return '';
+    return `<div class="crop-item"><div class="crop-emoji">${c.emoji}</div><div class="crop-name">${c.name}</div><div class="crop-posts">ปลูกอยู่</div></div>`;
+  }).join('');
 }
 
 // ── Loading / Login Screen ─────────────────────────────────
@@ -810,6 +976,7 @@ async function submitPost() {
         likes:       0,
         helps:       0,
         comments:    0,
+        location:    currentUser.location || null,
         createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
       });
 
@@ -1014,111 +1181,6 @@ function formatTimeAgo(ts) {
   if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว';
   if (diff < 86400)return Math.floor(diff/3600) + ' ชม. ที่แล้ว';
   return Math.floor(diff/86400) + ' วันที่แล้ว';
-}
-</script>
-<!-- ══ EDIT PROFILE MODAL ══ -->
-<div class="overlay" id="editProfileModal" onclick="if(event.target===this)closeEditProfile()">
-  <div class="modal">
-    <div class="modal-top">
-      <button class="modal-close" onclick="closeEditProfile()">✕</button>
-      <div class="modal-title">แก้ไขโปรไฟล์</div>
-      <button class="modal-submit" id="ep-save-btn" onclick="saveProfile()">บันทึก</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px;background:var(--bg);border-radius:12px">
-        <div id="ep-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center"></div>
-        <div><div style="font-size:15px;font-weight:700" id="ep-name-show">—</div><div style="font-size:12px;color:var(--muted);margin-top:2px">รูปโปรไฟล์ดึงจาก LINE อัตโนมัติ</div></div>
-      </div>
-      <div class="fg"><label>✍️ แนะนำตัว / Bio</label><textarea id="ep-bio" placeholder="เช่น เกษตรกรชาวสวน รักการแบ่งปันความรู้..." style="height:80px"></textarea></div>
-      <div class="fg"><label>📍 จังหวัด</label>
-        <select id="ep-province">
-          <option value="">— เลือกจังหวัด —</option>
-          <option>กรุงเทพมหานคร</option><option>กระบี่</option><option>กาญจนบุรี</option><option>กาฬสินธุ์</option><option>กำแพงเพชร</option><option>ขอนแก่น</option><option>จันทบุรี</option><option>ฉะเชิงเทรา</option><option>ชลบุรี</option><option>ชัยนาท</option><option>ชัยภูมิ</option><option>ชุมพร</option><option>เชียงราย</option><option>เชียงใหม่</option><option>ตรัง</option><option>ตราด</option><option>ตาก</option><option>นครนายก</option><option>นครปฐม</option><option>นครพนม</option><option>นครราชสีมา</option><option>นครศรีธรรมราช</option><option>นครสวรรค์</option><option>นนทบุรี</option><option>นราธิวาส</option><option>น่าน</option><option>บึงกาฬ</option><option>บุรีรัมย์</option><option>ปทุมธานี</option><option>ประจวบคีรีขันธ์</option><option>ปราจีนบุรี</option><option>ปัตตานี</option><option>พระนครศรีอยุธยา</option><option>พะเยา</option><option>พังงา</option><option>พัทลุง</option><option>พิจิตร</option><option>พิษณุโลก</option><option>เพชรบุรี</option><option>เพชรบูรณ์</option><option>แพร่</option><option>ภูเก็ต</option><option>มหาสารคาม</option><option>มุกดาหาร</option><option>แม่ฮ่องสอน</option><option>ยโสธร</option><option>ยะลา</option><option>ร้อยเอ็ด</option><option>ระนอง</option><option>ระยอง</option><option>ราชบุรี</option><option>ลพบุรี</option><option>ลำปาง</option><option>ลำพูน</option><option>เลย</option><option>ศรีสะเกษ</option><option>สกลนคร</option><option>สงขลา</option><option>สตูล</option><option>สมุทรปราการ</option><option>สมุทรสงคราม</option><option>สมุทรสาคร</option><option>สระแก้ว</option><option>สระบุรี</option><option>สิงห์บุรี</option><option>สุโขทัย</option><option>สุพรรณบุรี</option><option>สุราษฎร์ธานี</option><option>สุรินทร์</option><option>หนองคาย</option><option>หนองบัวลำภู</option><option>อ่างทอง</option><option>อำนาจเจริญ</option><option>อุดรธานี</option><option>อุตรดิตถ์</option><option>อุทัยธานี</option><option>อุบลราชธานี</option>
-        </select>
-      </div>
-      <div class="fg"><label>🏘️ อำเภอ / เขต</label><input id="ep-district" placeholder="เช่น เมือง, ลาดกระบัง, บ้านโป่ง..."></div>
-      <div class="fg"><label>🌱 พืชที่ปลูก</label>
-        <div id="ep-crops-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ══ EDIT PROFILE ══
-var epSelectedCrops = [];
-
-function openEditProfile() {
-  if (!currentUser) return;
-  var av = document.getElementById('ep-avatar');
-  if (av) {
-    if (currentUser.photoUrl) { av.style.backgroundImage='url('+currentUser.photoUrl+')'; av.style.backgroundSize='cover'; av.style.backgroundPosition='center'; av.textContent=''; }
-    else { av.style.backgroundImage=''; av.textContent=currentUser.displayName?currentUser.displayName.charAt(0):'ฉ'; }
-  }
-  var ns = document.getElementById('ep-name-show'); if (ns) ns.textContent = currentUser.displayName||'—';
-  var bio = document.getElementById('ep-bio'); if (bio) bio.value = currentUser.bio||'';
-  var prov = document.getElementById('ep-province'); if (prov) prov.value = currentUser.province||'';
-  var dist = document.getElementById('ep-district'); if (dist) dist.value = currentUser.district||'';
-  epSelectedCrops = [].concat(currentUser.crops||[]);
-  buildEpCrops();
-  document.getElementById('editProfileModal').classList.add('open');
-}
-
-function buildEpCrops() {
-  var grid = document.getElementById('ep-crops-grid'); if (!grid) return;
-  var crops = APP_CONFIG.crops.filter(function(c){return c.id!=='other';});
-  grid.innerHTML = crops.map(function(c){
-    var sel = epSelectedCrops.includes(c.id);
-    return '<div onclick="toggleEpCrop(\''+c.id+'\')" id="epc-'+c.id+'" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:'+(sel?'#e7f3ff':'var(--bg)')+';border-radius:12px;padding:10px 6px;cursor:pointer;border:2px solid '+(sel?'var(--primary)':'transparent')+'">'+
-      '<div style="font-size:26px">'+c.emoji+'</div>'+
-      '<div style="font-size:11px;font-weight:700;text-align:center">'+c.name+'</div>'+
-      (sel?'<div style="font-size:10px;color:var(--primary);font-weight:800">✓</div>':'<div style="font-size:10px"> </div>')+
-      '</div>';
-  }).join('');
-}
-
-function toggleEpCrop(id) {
-  var idx = epSelectedCrops.indexOf(id);
-  if (idx>=0) epSelectedCrops.splice(idx,1); else epSelectedCrops.push(id);
-  buildEpCrops();
-}
-
-function closeEditProfile() { document.getElementById('editProfileModal').classList.remove('open'); }
-
-async function saveProfile() {
-  if (!currentUser||!db) return;
-  var btn = document.getElementById('ep-save-btn');
-  if (btn) { btn.disabled=true; btn.textContent='⏳ บันทึก...'; }
-  try {
-    var bio = document.getElementById('ep-bio').value.trim();
-    var prov = document.getElementById('ep-province').value;
-    var dist = document.getElementById('ep-district').value.trim();
-    var label = [dist,prov].filter(Boolean).join(' ');
-    var upd = { bio:bio, province:prov, district:dist, locationLabel:label, crops:epSelectedCrops, updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
-    await db.collection('users').doc(currentUser.uid).update(upd);
-    currentUser = Object.assign({}, currentUser, upd);
-    updateProfileUI();
-    closeEditProfile();
-  } catch(e) { alert('บันทึกไม่ได้: '+e.message); }
-  finally { if (btn) { btn.disabled=false; btn.textContent='บันทึก'; } }
-}
-
-function updateProfileUI() {
-  if (!currentUser) return;
-  var loc = currentUser.locationLabel || [currentUser.district, currentUser.province].filter(Boolean).join(' ');
-  var sub = document.getElementById('prof-sub'); if (sub) sub.textContent = loc ? '📍 '+loc : '';
-  var bio = document.getElementById('prof-bio'); if (bio) bio.textContent = currentUser.bio||'';
-  var badges = document.getElementById('prof-badges');
-  if (badges) {
-    var t = APP_CONFIG.tiers[getTier(currentUser.points||0)];
-    badges.innerHTML = '<span class="pb pb-blue">'+t.emoji+' '+t.label+' Member</span>';
-  }
-  var crops = document.getElementById('crops-list');
-  if (crops && currentUser.crops && currentUser.crops.length>0) {
-    crops.innerHTML = APP_CONFIG.crops.filter(function(c){return currentUser.crops.includes(c.id);}).map(function(c){
-      return '<div class="crop-item"><div class="crop-emoji">'+c.emoji+'</div><div class="crop-name">'+c.name+'</div><div class="crop-posts">— โพส</div></div>';
-    }).join('');
-  }
 }
 </script>
 </body>

@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -458,6 +459,16 @@ window.addEventListener('load', async () => {
     if (!liff.isLoggedIn()) { liff.login(); return; }
     const profile = await liff.getProfile();
     if (profile.userId !== ADMIN_LINE_ID) { showDeny(); return; }
+    // ยืนยันสิทธิ์ admin ฝั่ง server — รับ custom token ที่มี claim admin
+    try {
+      const lineAuth = firebase.app().functions('asia-southeast1').httpsCallable('lineAuth');
+      const res = await lineAuth({ accessToken: liff.getAccessToken() });
+      if (!res.data.isAdmin) { showDeny(); return; }
+      await firebase.auth().signInWithCustomToken(res.data.token);
+    } catch (authErr) {
+      console.error('lineAuth error:', authErr);
+      showDeny(); return;
+    }
     adminUser = profile;
     showApp();
     await Promise.all([loadDashboard(), loadSidebarBranding()]);

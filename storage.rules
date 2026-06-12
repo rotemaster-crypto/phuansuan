@@ -1,0 +1,38 @@
+rules_version = '2';
+// ============================================================
+//  storage.rules — เพื่อนสวน
+// ============================================================
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    function underLimit(mb) {
+      return request.resource.size < mb * 1024 * 1024;
+    }
+
+    // รูปโพส — login แล้วอัพได้ เฉพาะรูป ไม่เกิน 5MB
+    match /posts/{fileName} {
+      allow read: if true;
+      allow write: if signedIn() && isImage() && underLimit(5);
+    }
+
+    // ไอคอน/โลโก้แอป — admin เท่านั้น ไม่เกิน 2MB
+    match /app-icons/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && underLimit(2);
+    }
+
+    // ปิดทุกอย่างที่เหลือ
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
