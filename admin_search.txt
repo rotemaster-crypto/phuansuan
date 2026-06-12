@@ -1,0 +1,4 @@
+./public/admin.html
+./admin.html
+./admin_search.txt
+./functions/node_modules/firebase-admin
