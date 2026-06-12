@@ -357,18 +357,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="prof-av-row">
       <div class="prof-av" id="prof-avatar">ฉ</div>
       <div class="prof-btns">
-        <button class="prof-btn-p">✏️ แก้ไขโปรไฟล์</button>
+        <button class="prof-btn-p" onclick="openEditProfile()">✏️ แก้ไขโปรไฟล์</button>
         <button class="prof-btn-s">••• เพิ่มเติม</button>
       </div>
     </div>
     <div class="prof-name" id="prof-name">ลุงสมชาย วงษ์เกษตร</div>
     <div class="prof-sub" id="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
-    <div class="prof-bio">เกษตรกรสวนมะม่วง 20 ปี 🥭 รักการแบ่งปันความรู้ให้เพื่อนชาวสวน</div>
-    <div class="prof-badges">
-      <span class="pb pb-gold">⭐ ปราชญ์มะม่วง</span>
-      <span class="pb pb-blue">🥇 Gold Member</span>
-      <span class="pb pb-green">🤝 เพื่อนบ้านที่ดี</span>
-    </div>
+    <div class="prof-bio" id="prof-bio" style="display:none"></div>
+    <div class="prof-badges" id="prof-badges"></div>
     <div class="prof-stats">
       <div class="ps"><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
       <div class="ps"><div class="ps-n" id="stat-followers">0</div><div class="ps-l">ผู้ติดตาม</div></div>
@@ -389,8 +385,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
   </div>
   <div class="crops-card">
-    <div class="sec-title">พืชที่ปลูก</div>
+    <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">พืชที่ปลูก
+      <button onclick="maybeShowOnboarding(true)" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✏️ แก้ไข</button>
+    </div>
     <div class="crops-grid" id="crops-list"></div>
+  </div>
+  <div class="crops-card">
+    <div class="sec-title">โพสของฉัน</div>
+    <div id="my-posts"><div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">กำลังโหลด...</div></div>
   </div>
 </div>
 
@@ -465,6 +467,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <div id="post-uploading" style="display:none;text-align:center;padding:8px;font-size:14px;color:var(--muted)">⏳ กำลังโพส...</div>
       <button class="submit-btn" onclick="submitPost()" id="submit-btn">📤 โพสเลย</button>
       <div class="pts-hint" id="pts-hint">✨ คุณจะได้รับ +10 แต้มสะสมจากการโพสนี้</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT PROFILE MODAL ══ -->
+<div class="overlay" id="editProfileModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="border-radius:16px 16px 0 0">
+    <div class="modal-body" style="padding-top:22px">
+      <div class="ob-title">แก้ไขโปรไฟล์ ✏️</div>
+      <div class="ob-sub" style="margin-bottom:6px">แนะนำตัวเอง</div>
+      <textarea id="edit-bio" maxlength="150" placeholder="เช่น ปลูกทุเรียนมา 10 ปี ที่จันทบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;resize:none;height:80px;box-sizing:border-box"></textarea>
+      <div class="ob-sub" style="margin:14px 0 6px">ที่อยู่ (อำเภอ / จังหวัด)</div>
+      <input id="edit-province" maxlength="60" placeholder="เช่น อ.บ้านโป่ง ราชบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;box-sizing:border-box">
+      <button class="submit-btn" id="edit-save-btn" onclick="saveProfileEdit()" style="margin-top:16px">💾 บันทึก</button>
+      <button class="ob-skip" onclick="document.getElementById('editProfileModal').classList.remove('open')">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -671,6 +688,7 @@ async function saveUserToFirestore(user) {
 function updateUIWithUser(user) {
   if (!user) return;
   renderMyCrops();
+  renderProfileInfo();
 
   const initials = user.displayName ? user.displayName.charAt(0) : 'ฉ';
 
@@ -742,6 +760,78 @@ function getTier(points) {
   if (points >= tiers.gold.min) return 'gold';
   if (points >= tiers.silver.min) return 'silver';
   return 'bronze';
+}
+
+// ── Escape HTML (กัน XSS) ─────────────────────────────────
+function escapeHtml(s) {
+  if (s === undefined || s === null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ── Edit Profile ──────────────────────────────────────────
+function openEditProfile() {
+  if (!currentUser) return;
+  document.getElementById('edit-bio').value = currentUser.bio || '';
+  document.getElementById('edit-province').value = currentUser.province || '';
+  document.getElementById('editProfileModal').classList.add('open');
+}
+
+async function saveProfileEdit() {
+  if (!currentUser || !db) return;
+  const bio = document.getElementById('edit-bio').value.trim().slice(0, 150);
+  const province = document.getElementById('edit-province').value.trim().slice(0, 60);
+  const btn = document.getElementById('edit-save-btn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+  try {
+    await db.collection('users').doc(currentUser.uid).update({ bio: bio, province: province });
+    currentUser.bio = bio; currentUser.province = province;
+    renderProfileInfo();
+    document.getElementById('editProfileModal').classList.remove('open');
+  } catch (err) {
+    alert('บันทึกไม่สำเร็จ: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 บันทึก';
+  }
+}
+
+function renderProfileInfo() {
+  if (!currentUser) return;
+  const bioEl = document.getElementById('prof-bio');
+  if (bioEl) {
+    if (currentUser.bio) { bioEl.textContent = currentUser.bio; bioEl.style.display = 'block'; }
+    else { bioEl.style.display = 'none'; }
+  }
+  const subEl = document.getElementById('prof-sub');
+  if (subEl) subEl.textContent = currentUser.province ? ('📍 ' + currentUser.province) : '📍 ยังไม่ได้ระบุที่อยู่ — กดแก้ไขโปรไฟล์';
+  const bEl = document.getElementById('prof-badges');
+  if (bEl && typeof APP_CONFIG !== 'undefined') {
+    const pts = currentUser.points || 0;
+    const tiersObj = APP_CONFIG.tiers || {};
+    let tier = null;
+    Object.keys(tiersObj).forEach(k => { if (pts >= tiersObj[k].min) tier = tiersObj[k]; });
+    bEl.innerHTML = tier ? `<span class="pb pb-blue">${tier.emoji || '🏅'} ${escapeHtml(tier.label)} Member</span>` : '';
+  }
+}
+
+// ── My Posts (โพสของฉันในโปรไฟล์) ─────────────────────────
+async function loadMyPosts() {
+  const box = document.getElementById('my-posts');
+  if (!box || !currentUser || !db) return;
+  try {
+    const snap = await db.collection('posts')
+      .where('authorId', '==', currentUser.uid)
+      .limit(50).get();
+    let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+    docs.sort((a, b) => (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0));
+    if (docs.length === 0) {
+      box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">ยังไม่มีโพส — ลองแชร์เรื่องราวในสวนของคุณดูสิ! 🌱</div>';
+      return;
+    }
+    box.innerHTML = docs.map((d, i) => renderPost(d.id, d.data, i)).join('');
+  } catch (err) {
+    box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">โหลดไม่สำเร็จ ลองใหม่อีกครั้ง</div>';
+  }
 }
 
 // ── Onboarding (เลือกพืช + GPS) ───────────────────────────
@@ -893,6 +983,7 @@ function switchScreen(name){
   document.getElementById('screen-'+name).classList.add('active');
   const nav=document.getElementById('nav-'+name);
   if(nav) nav.classList.add('active');
+  if(name === 'profile'){ renderProfileInfo(); loadMyPosts(); }
 }
 function switchFeedTab(el){
   document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
@@ -1132,7 +1223,7 @@ function renderPost(id, p, i) {
           ${p.authorPhoto ? '' : initials}
         </div>
         <div class="pc-info">
-          <div class="pc-name">${p.authorName || 'ผู้ใช้'}</div>
+          <div class="pc-name">${escapeHtml(p.authorName) || 'ผู้ใช้'}</div>
           <div class="pc-meta">${timeAgo} · ${p._dist !== undefined ? '📍 ' + p._dist.toFixed(1) + ' กม.' : '🌍'}</div>
         </div>
         ${isOwn ? `<button class="pc-more" onclick="deletePost('${id}')">🗑️</button>` : '<button class="pc-more">•••</button>'}
@@ -1141,7 +1232,7 @@ function renderPost(id, p, i) {
         ${p.type ? `<span class="ptag ${tagClass}">${p.type}</span>` : ''}
         ${cropName ? `<span class="ptag pt-green">${cropEmoji} ${cropName}</span>` : ''}
       </div>
-      ${p.text ? `<div class="pc-text">${p.text}</div>` : ''}
+      ${p.text ? `<div class="pc-text">${escapeHtml(p.text)}</div>` : ''}
       ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;max-height:300px;object-fit:cover">` : ''}
       <div class="pc-reactions">
         <div class="r-counts">
@@ -1219,8 +1310,8 @@ async function addComment(postId) {
             ${currentUser.photoUrl?'':initials}
           </div>
           <div><div class="cmt-bubble">
-            <div class="cmt-name">${currentUser.displayName||'คุณ'}</div>
-            <div class="cmt-text">${text}</div>
+            <div class="cmt-name">${escapeHtml(currentUser.displayName)||'คุณ'}</div>
+            <div class="cmt-text">${escapeHtml(text)}</div>
           </div></div>
         </div>`;
     }
