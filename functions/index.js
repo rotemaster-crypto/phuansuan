@@ -154,8 +154,16 @@ exports.analyzePlant = onCall(
       if (!text) throw new HttpsError("internal", "AI ไม่ตอบกลับ ลองใหม่อีกครั้ง");
 
       // ดึง JSON จากข้อความ (เผื่อมี markdown fences)
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      result = jsonMatch ? JSON.parse(jsonMatch[0]) : { disease: "ไม่สามารถวิเคราะห์ได้", advice: text };
+     try {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  result = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+} catch (parseErr) {
+  console.error("JSON parse failed:", text);
+  result = {
+    disease: "ไม่สามารถวิเคราะห์ได้",
+    advice: "AI ตอบกลับไม่สมบูรณ์ ลองถ่ายรูปใหม่ให้ชัดขึ้นแล้ววิเคราะห์อีกครั้งนะครับ 🌱",
+  };
+}
     } catch (err) {
       if (err instanceof HttpsError) throw err;
       console.error("analyzePlant error:", err);
