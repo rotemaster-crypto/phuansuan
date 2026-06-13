@@ -194,3 +194,70 @@ exports.analyzePlant = onCall(
     };
   }
 );
+
+// ============================================================
+//  POINT TRIGGERS — ให้แต้มฝั่ง server (ปลอมจาก client ไม่ได้)
+// ============================================================
+const { onDocumentCreated, onDocumentUpdated } =
+  require("firebase-functions/v2/firestore");
+
+const PTS = {
+  perPost: 10, perPostWithImg: 15, perComment: 3, perHelp: 15,
+};
+const TIERS = [
+  { key: "platinum", min: 6000 }, { key: "gold", min: 3000 },
+  { key: "silver",   min: 1000 }, { key: "bronze", min: 0 },
+];
+function calcTier(pts) {
+  for (const t of TIERS) { if (pts >= t.min) return t.key; }
+  return "bronze";
+}
+async function updateTier(userRef) {
+  const snap = await userRef.get();
+  const pts = snap.data()?.points || 0;
+  const newTier = calcTier(pts);
+  if (snap.data()?.tier !== newTier) await userRef.update({ tier: newTier });
+}
+
+exports.onPostCreated = onDocumentCreated(
+  { document: "posts/{postId}", region: "asia-southeast1" },
+  async (event) => {
+    const post = event.data?.data();
+    if (!post?.authorId) return;
+    const pts = post.imageUrl ? PTS.perPostWithImg : PTS.perPost;
+    const ref = admin.firestore().collection("users").doc(post.authorId);
+    await ref.update({
+      points:    admin.firestore.FieldValue.increment(pts),
+      postCount: admin.firestore.FieldValue.increment(1),
+    });
+    await updateTier(ref);
+  }
+);
+
+exports.onCommentCreated = onDocumentCreated(
+  { document: "posts/{postId}/comments/{commentId}", region: "asia-southeast1" },
+  async (event) => {
+    const cmt = event.data?.data();
+    if (!cmt?.authorId) return;
+    const ref = admin.firestore().collection("users").doc(cmt.authorId);
+    await ref.update({ points: admin.firestore.FieldValue.increment(PTS.perComment) });
+    await updateTier(ref);
+  }
+);
+
+exports.onPostHelped = onDocumentUpdated(
+  { document: "posts/{postId}", region: "asia-southeast1" },
+  async (event) => {
+    const before = event.data?.before?.data();
+    const after  = event.data?.after?.data();
+    if (!before || !after) return;
+    if ((after.helps || 0) > (before.helps || 0) && after.authorId) {
+      const ref = admin.firestore().collection("users").doc(after.authorId);
+      await ref.update({
+        points:    admin.firestore.FieldValue.increment(PTS.perHelp),
+        helpCount: admin.firestore.FieldValue.increment(1),
+      });
+      await updateTier(ref);
+    }
+  }
+);
