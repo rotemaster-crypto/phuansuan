@@ -132,7 +132,12 @@ exports.analyzePlant = onCall(
               { inline_data: { mime_type: "image/jpeg", data: imageBase64 } },
             ],
           }],
-          generationConfig: { temperature: 0.4, maxOutputTokens: 800 },
+          generationConfig: {
+  temperature: 0.4,
+  maxOutputTokens: 2048,
+  responseMimeType: "application/json",
+  thinkingConfig: { thinkingBudget: 0 },
+},
         }),
       });
       if (!geminiRes.ok) {
