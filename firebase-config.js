@@ -15,3 +15,6 @@ const FIREBASE_CONFIG = {
 
 // ── LIFF Config ───────────────────────────────────────────
 const LIFF_ID = "2010356906-9iRWpDO2";
+
+
+const VAPID_KEY="f3S75Zzlpoi9BfY_AUL2uwL-LKKk-Zz8stskYSsygwA";

@@ -1,0 +1,6 @@
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+firebase.initializeApp({apiKey:"AIzaSyB9JIHRKu_BIQsKI78eklg2O7rhJQM8HaM",authDomain:"phuansuan.firebaseapp.com",projectId:"phuansuan",storageBucket:"phuansuan.firebasestorage.app",messagingSenderId:"695339976212",appId:"1:695339976212:web:9b983cd3381ac81b150901"});
+const messaging=firebase.messaging();
+messaging.onBackgroundMessage(p=>{const n=p.notification||{};self.registration.showNotification(n.title||'เพื่อนสวน',{body:n.body||'',icon:'/icons/icon-192.png',data:{url:n.click_action||'https://phuansuan.web.app'}})});
+self.addEventListener('notificationclick',e=>{e.notification.close();const url=(e.notification.data&&e.notification.data.url)||'https://phuansuan.web.app';e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(ws=>{for(const w of ws){if(w.url===url&&'focus'in w)return w.focus()}if(clients.openWindow)return clients.openWindow(url)}))});
