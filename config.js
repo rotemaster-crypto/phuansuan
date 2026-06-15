@@ -15,6 +15,19 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     logoEmoji:   '🌿',
   },
 
+  // ── Tenant (Multi-project / SaaS) ─────────────────
+  // เปลี่ยน tenant.id ตัวเดียว = แยก project ใหม่ (feed ไม่ปนกัน)
+  tenant: {
+    id:   'phuansuan',          // รหัส project นี้ (ใช้กรองทุก query)
+    name: 'เพื่อนสวน',
+    plan: 'free',               // free | pro | enterprise (รองรับ subscription)
+  },
+
+  // ── Admin ─────────────────────────────────
+  admin: {
+    lineUserId: 'U03582167674331d9005dfb42728c7151',
+  },
+
   // ── ร้านค้า ───────────────────────────────────────────────
   shop: {
     name:         'DemeterRich',
