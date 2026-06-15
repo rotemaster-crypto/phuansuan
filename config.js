@@ -36,6 +36,22 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     lineShopUrl:  'https://line.me/R/ti/p/@demeterrich',
     lineOaId:     '@demeterrich',
     contactPhone: '099-999-9999',
+    // ── ระบบร้านค้า + ตะกร้า (Phase 3) ──
+    commerce: {
+      enabled:        true,
+      promptpayId:    '0000000000',   // ⚠️ ใส่เบอร์พร้อมเพย์ หรือเลขผู้เสียภาษี DemeterRich
+      promptpayName:  'DemeterRich',
+      shippingTiers: [                // ค่าส่งตามน้ำหนักรวม (กก.)
+        { maxKg: 1,   fee: 40 },
+        { maxKg: 5,   fee: 60 },
+        { maxKg: 999, fee: 90 },
+      ],
+      freeShippingMin: 1000,          // ส่งฟรีเมื่อยอดสินค้า ≥ (0 = ปิด)
+      defaultWeightKg: 1,             // น้ำหนัก/ชิ้น ถ้าสินค้าไม่ระบุ weightKg
+      currency:       'บาท',
+      useTierDiscount: true,          // ใช้ส่วนลดตาม tier กับยอดสินค้า
+    },
+
   },
 
   // ── Feed & Content ────────────────────────────────────────
@@ -54,6 +70,7 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     pointSystem:     true,   // ระบบแต้มสะสม
     communityGroups: true,   // กลุ่ม/ชุมชน
     weatherAlert:    false,  // แจ้งเตือนสภาพอากาศ (เปิดทีหลัง)
+    commerce:        true,   // ระบบร้านค้า + ตะกร้า (Phase 3)
   },
 
   // ── ระบบแต้มสะสม ─────────────────────────────────────────

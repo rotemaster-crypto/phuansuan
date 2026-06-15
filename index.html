@@ -211,6 +211,50 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .submit-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
 .pts-hint{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
 
+/* ── COMMERCE (ร้านค้า + ตะกร้า) Phase 3.1 ── */
+.shop-head{padding:12px;background:#fff;border-bottom:8px solid var(--bg)}
+.shop-title{font-size:18px;font-weight:800;color:var(--text)}
+.shop-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.cat-bar{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:#fff;border-bottom:1px solid var(--border);scrollbar-width:none;position:sticky;top:56px;z-index:150}
+.cat-bar::-webkit-scrollbar{display:none}
+.cat-chip{flex-shrink:0;padding:7px 14px;border-radius:18px;background:var(--bg);border:1px solid var(--border);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.cat-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}
+.prod-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.prod-img{height:110px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:46px;overflow:hidden}
+.prod-img img{width:100%;height:100%;object-fit:cover}
+.prod-body{padding:9px;display:flex;flex-direction:column;gap:5px;flex:1}
+.prod-name{font-size:13px;font-weight:700;line-height:1.3;color:var(--text)}
+.prod-cat{font-size:11px;color:var(--muted)}
+.prod-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.prod-price{font-size:15px;font-weight:800;color:var(--primary)}
+.prod-add{border:none;background:var(--primary);color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;line-height:1}
+.shop-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:14px;padding:40px 10px}
+.cart-fab{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:space-between;z-index:250;box-shadow:0 4px 14px rgba(24,119,242,.4)}
+.cart-fab.show{display:flex}
+.tb-btn .cart-badge{background:#fa3e3e}
+.cart-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:flex-end;justify-content:center}
+.cart-modal.open{display:flex}
+.cart-sheet{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;max-height:90vh;display:flex;flex-direction:column}
+.cart-hd{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cart-hd-t{font-size:17px;font-weight:800}
+.cart-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)}
+.cart-items{overflow-y:auto;padding:8px 16px;flex:1}
+.cart-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:center}
+.cart-emoji{width:46px;height:46px;border-radius:8px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden}
+.cart-emoji img{width:100%;height:100%;object-fit:cover}
+.cart-info{flex:1;min-width:0}
+.cart-nm{font-size:14px;font-weight:700;line-height:1.3}
+.cart-pr{font-size:13px;color:var(--primary);font-weight:700;margin-top:2px}
+.qty-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.qty-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:#fff;font-size:16px;cursor:pointer;line-height:1}
+.qty-n{font-size:14px;font-weight:700;min-width:18px;text-align:center}
+.cart-empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:14px;line-height:1.8}
+.cart-sum{padding:12px 16px;border-top:1px solid var(--border);background:#fafbfc}
+.sum-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;color:var(--muted)}
+.sum-row.total{font-size:17px;font-weight:800;color:var(--text);margin-top:6px;margin-bottom:0}
+.cart-co{width:100%;margin-top:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+
 /* ── BOTTOM NAV ── */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;height:56px;z-index:300}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-top:3px solid transparent;position:relative;gap:2px}
@@ -311,6 +355,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <button class="tb-btn" style="font-size:16px">🔍</button>
   <button class="tb-btn">🔔<span class="tb-badge">3</span></button>
   <button class="tb-btn">💬<span class="tb-badge">5</span></button>
+  <button class="tb-btn commerce-entry" onclick="openCart()">🛒<span class="tb-badge cart-badge" id="cart-badge" style="display:none">0</span></button>
 </div>
 
 <!-- ══ FEED SCREEN ══ -->
@@ -574,6 +619,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
 </div>
 
+<!-- ══ SHOP SCREEN (ร้านค้า) Phase 3.1 ══ -->
+<div class="screen" id="screen-shop">
+  <div class="shop-head">
+    <div class="shop-title">🛒 ร้านค้า</div>
+    <div class="shop-sub" id="shop-sub">สินค้าจากร้าน</div>
+  </div>
+  <div class="cat-bar" id="cat-bar"></div>
+  <div class="prod-grid" id="prod-grid">
+    <div class="shop-empty">กำลังโหลดสินค้า...</div>
+  </div>
+  <div style="height:80px"></div>
+  <button class="cart-fab" id="cart-fab" onclick="openCart()">
+    <span>🛒 ดูตะกร้า</span>
+    <span id="cart-fab-info">0 ชิ้น · ฿0</span>
+  </button>
+</div>
+
+<!-- ══ CART MODAL (ตะกร้า) ══ -->
+<div class="cart-modal" id="cartModal" onclick="if(event.target===this)closeCart()">
+  <div class="cart-sheet">
+    <div class="cart-hd">
+      <div class="cart-hd-t">🛒 ตะกร้าของฉัน</div>
+      <button class="cart-x" onclick="closeCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cart-items"></div>
+    <div class="cart-sum" id="cart-sum"></div>
+  </div>
+</div>
+
+
 <!-- ══ BOTTOM NAV ══ -->
 <div class="bottom-nav">
   <div class="bn active" id="nav-feed" onclick="switchScreen('feed')">
@@ -593,9 +668,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="bn-ico">👤</div>
     <div class="bn-lbl">โปรไฟล์</div>
   </div>
-  <div class="bn">
-    <div class="bn-ico">☰</div>
-    <div class="bn-lbl">เมนู</div>
+  <div class="bn commerce-entry" id="nav-shop" onclick="switchScreen('shop')">
+    <div class="bn-ico">🛒</div>
+    <div class="bn-lbl">ร้านค้า</div>
   </div>
 </div>
 
@@ -1467,6 +1542,7 @@ function applyFeatureFlags() {
   show('.points-card', f.pointSystem !== false);
   show('#alert-banner', f.proximityAlert !== false);
   document.querySelectorAll('[onclick="openAiDoctor()"]').forEach(el => { el.style.display = f.aiDiagnosis !== false ? '' : 'none'; });
+  document.querySelectorAll('.commerce-entry').forEach(el => { el.style.display = f.commerce !== false ? '' : 'none'; });
 }
 function initFeatureFlags() {
   applyFeatureFlags();
@@ -1697,6 +1773,239 @@ function formatTimeAgo(ts) {
   if (diff < 86400)return Math.floor(diff/3600) + ' ชม. ที่แล้ว';
   return Math.floor(diff/86400) + ' วันที่แล้ว';
 }
+
+// ══════════════════════════════════════════════════════════
+//  COMMERCE — ร้านค้า + ตะกร้า (Phase 3.1)
+// ══════════════════════════════════════════════════════════
+let cart = [];
+let shopProducts = [];
+let shopLoaded = false;
+let activeCat = 'all';
+
+function cartKey(){ return 'phuansuan_cart_' + ((typeof tenantId === 'function') ? tenantId() : 'default'); }
+function commerceCfg(){
+  const C = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.shop && APP_CONFIG.shop.commerce) || {};
+  return Object.assign({
+    promptpayId:'', promptpayName:'', shippingTiers:[{maxKg:999,fee:0}],
+    freeShippingMin:0, defaultWeightKg:1, currency:'บาท', useTierDiscount:true
+  }, C);
+}
+function parsePrice(v){
+  if (typeof v === 'number') return v;
+  const n = parseFloat(String(v||'').replace(/[^\d.]/g,''));
+  return isNaN(n) ? 0 : n;
+}
+function baht(n){ return '฿' + Math.round(n).toLocaleString(); }
+function catName(id){
+  const c = (APP_CONFIG.productCategories||[]).find(x=>x.id===id);
+  return c ? (c.emoji+' '+c.name) : (id||'');
+}
+function catEmoji(id){
+  const c = (APP_CONFIG.productCategories||[]).find(x=>x.id===id);
+  return c ? c.emoji : '📦';
+}
+
+function loadCart(){
+  try { cart = JSON.parse(localStorage.getItem(cartKey())) || []; }
+  catch(e){ cart = []; }
+  if (!Array.isArray(cart)) cart = [];
+}
+function saveCart(){
+  try { localStorage.setItem(cartKey(), JSON.stringify(cart)); } catch(e){}
+  renderCartBadge();
+}
+
+async function loadShop(){
+  const grid = document.getElementById('prod-grid');
+  const sub  = document.getElementById('shop-sub');
+  if (sub && APP_CONFIG.shop && APP_CONFIG.shop.name) sub.textContent = 'สินค้าจาก ' + APP_CONFIG.shop.name;
+  try {
+    let list = [];
+    if (db) {
+      const snap = await db.collection('products').get();
+      const tid = (typeof tenantId === 'function') ? tenantId() : null;
+      list = snap.docs.map(d => Object.assign({ _id:d.id }, d.data()))
+                      .filter(p => !p.tenantId || !tid || p.tenantId === tid);
+    }
+    if (!list.length) list = (APP_CONFIG.products||[]).map(p => Object.assign({_id:p.id}, p));
+    shopProducts = list.map(p => ({
+      id: p._id || p.id,
+      name: p.name || 'สินค้า',
+      price: parsePrice(p.price),
+      category: p.category || '',
+      image: p.image || '',
+      weightKg: Number(p.weightKg) || commerceCfg().defaultWeightKg
+    }));
+    shopLoaded = true;
+    renderCats();
+    renderProducts();
+  } catch(e){
+    if (grid) grid.innerHTML = '<div class="shop-empty">โหลดสินค้าไม่สำเร็จ: '+escapeHtml(e.message)+'</div>';
+  }
+}
+
+function renderCats(){
+  const bar = document.getElementById('cat-bar');
+  if (!bar) return;
+  const cats = (APP_CONFIG.productCategories||[]).filter(c => shopProducts.some(p=>p.category===c.id));
+  let html = '<div class="cat-chip '+(activeCat==='all'?'active':'')+'" onclick="filterCat(\'all\',this)">ทั้งหมด</div>';
+  html += cats.map(c => '<div class="cat-chip '+(activeCat===c.id?'active':'')+'" onclick="filterCat(\''+c.id+'\',this)">'+c.emoji+' '+escapeHtml(c.name)+'</div>').join('');
+  bar.innerHTML = html;
+}
+function filterCat(id, el){
+  activeCat = id;
+  document.querySelectorAll('#cat-bar .cat-chip').forEach(c=>c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderProducts();
+}
+function renderProducts(){
+  const grid = document.getElementById('prod-grid');
+  if (!grid) return;
+  const list = shopProducts.filter(p => activeCat==='all' || p.category===activeCat);
+  if (!list.length){ grid.innerHTML = '<div class="shop-empty">ยังไม่มีสินค้าในหมวดนี้</div>'; return; }
+  grid.innerHTML = list.map(p =>
+    '<div class="prod-card">'+
+      '<div class="prod-img">'+(p.image ? '<img src="'+escapeHtml(p.image)+'" alt="">' : catEmoji(p.category))+'</div>'+
+      '<div class="prod-body">'+
+        '<div class="prod-name">'+escapeHtml(p.name)+'</div>'+
+        '<div class="prod-cat">'+escapeHtml(catName(p.category))+'</div>'+
+        '<div class="prod-foot">'+
+          '<span class="prod-price">'+(p.price ? baht(p.price) : '—')+'</span>'+
+          '<button class="prod-add" onclick="addToCart(\''+p.id+'\')">+</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>'
+  ).join('');
+}
+
+function addToCart(id){
+  const p = shopProducts.find(x=>x.id===id);
+  if (!p) return;
+  const row = cart.find(x=>x.id===id);
+  if (row) row.qty += 1;
+  else cart.push({ id:p.id, name:p.name, price:p.price, category:p.category, image:p.image, weightKg:p.weightKg, qty:1 });
+  saveCart();
+  renderCartFab();
+  toastCart(p.name + ' เพิ่มลงตะกร้าแล้ว');
+}
+function changeQty(id, delta){
+  const row = cart.find(x=>x.id===id);
+  if (!row) return;
+  row.qty += delta;
+  if (row.qty <= 0) cart = cart.filter(x=>x.id!==id);
+  saveCart();
+  renderCart();
+  renderCartFab();
+}
+
+function cartCount(){ return cart.reduce((s,r)=>s+r.qty,0); }
+function cartSubtotal(){ return cart.reduce((s,r)=>s+r.price*r.qty,0); }
+function cartWeight(){ return cart.reduce((s,r)=>s+(r.weightKg||1)*r.qty,0); }
+function shippingFee(){
+  const cfg = commerceCfg();
+  if (!cart.length) return 0;
+  if (cfg.freeShippingMin && cartSubtotal() >= cfg.freeShippingMin) return 0;
+  const w = cartWeight();
+  const tiers = (cfg.shippingTiers||[]).slice().sort((a,b)=>a.maxKg-b.maxKg);
+  for (const t of tiers){ if (w <= t.maxKg) return t.fee; }
+  return tiers.length ? tiers[tiers.length-1].fee : 0;
+}
+function tierDiscountPct(){
+  const cfg = commerceCfg();
+  if (!cfg.useTierDiscount) return 0;
+  if (!currentUser || typeof getTier !== 'function') return 0;
+  try {
+    const t = APP_CONFIG.tiers && APP_CONFIG.tiers[getTier(currentUser.points || 0)];
+    return (t && t.discount) ? t.discount : 0;
+  } catch(e){ return 0; }
+}
+function cartDiscount(){ return Math.round(cartSubtotal() * tierDiscountPct() / 100); }
+function cartTotal(){ return Math.max(0, cartSubtotal() - cartDiscount()) + shippingFee(); }
+
+function renderCartBadge(){
+  const b = document.getElementById('cart-badge');
+  if (!b) return;
+  const n = cartCount();
+  b.textContent = n;
+  b.style.display = n > 0 ? '' : 'none';
+}
+function renderCartFab(){
+  const fab = document.getElementById('cart-fab');
+  if (!fab) return;
+  const info = document.getElementById('cart-fab-info');
+  const n = cartCount();
+  if (info) info.textContent = n + ' ชิ้น · ' + baht(cartTotal());
+  fab.classList.toggle('show', n > 0);
+}
+function renderCart(){
+  const box = document.getElementById('cart-items');
+  const sum = document.getElementById('cart-sum');
+  if (!box || !sum) return;
+  if (!cart.length){
+    box.innerHTML = '<div class="cart-empty">ตะกร้ายังว่างเปล่า 🛒<br>เลือกสินค้าจากร้านค้าได้เลย</div>';
+    sum.innerHTML = '';
+    return;
+  }
+  box.innerHTML = cart.map(r =>
+    '<div class="cart-row">'+
+      '<div class="cart-emoji">'+(r.image ? '<img src="'+escapeHtml(r.image)+'" alt="">' : catEmoji(r.category))+'</div>'+
+      '<div class="cart-info">'+
+        '<div class="cart-nm">'+escapeHtml(r.name)+'</div>'+
+        '<div class="cart-pr">'+baht(r.price)+' × '+r.qty+' = '+baht(r.price*r.qty)+'</div>'+
+      '</div>'+
+      '<div class="qty-ctrl">'+
+        '<button class="qty-btn" onclick="changeQty(\''+r.id+'\',-1)">−</button>'+
+        '<span class="qty-n">'+r.qty+'</span>'+
+        '<button class="qty-btn" onclick="changeQty(\''+r.id+'\',1)">+</button>'+
+      '</div>'+
+    '</div>'
+  ).join('');
+  const pct = tierDiscountPct();
+  let rows = '<div class="sum-row"><span>ยอดสินค้า</span><span>'+baht(cartSubtotal())+'</span></div>';
+  if (pct) rows += '<div class="sum-row"><span>ส่วนลดสมาชิก '+pct+'%</span><span>− '+baht(cartDiscount())+'</span></div>';
+  rows += '<div class="sum-row"><span>ค่าจัดส่ง</span><span>'+(shippingFee()===0?'ฟรี':baht(shippingFee()))+'</span></div>';
+  rows += '<div class="sum-row total"><span>ยอดสุทธิ</span><span>'+baht(cartTotal())+'</span></div>';
+  rows += '<button class="cart-co" onclick="goCheckout()">ดำเนินการสั่งซื้อ</button>';
+  sum.innerHTML = rows;
+}
+function openCart(){ renderCart(); const m=document.getElementById('cartModal'); if(m) m.classList.add('open'); }
+function closeCart(){ const m=document.getElementById('cartModal'); if(m) m.classList.remove('open'); }
+function goCheckout(){
+  alert('🚧 หน้าชำระเงิน PromptPay กำลังมาใน Step 3.2 ครับ\nยอดสุทธิ: ' + baht(cartTotal()));
+}
+
+let _toastT = null;
+function toastCart(msg){
+  let t = document.getElementById('cart-toast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'cart-toast';
+    t.style.cssText = 'position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#1c1e21;color:#fff;padding:10px 16px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:opacity .2s;max-width:90%;text-align:center';
+    document.body.appendChild(t);
+  }
+  t.textContent = '✅ ' + msg;
+  t.style.opacity = '1';
+  clearTimeout(_toastT);
+  _toastT = setTimeout(function(){ t.style.opacity = '0'; }, 1800);
+}
+
+(function(){
+  if (typeof window.switchScreen === 'function'){
+    const _orig = window.switchScreen;
+    window.switchScreen = function(name){
+      _orig(name);
+      if (name === 'shop'){
+        if (!shopLoaded) loadShop();
+        renderCartFab();
+      }
+    };
+  }
+})();
+
+window.addEventListener('load', function(){
+  loadCart();
+  renderCartBadge();
+});
 </script>
 </body>
 </html>
