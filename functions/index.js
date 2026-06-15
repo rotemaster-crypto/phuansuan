@@ -267,31 +267,3 @@ async function sendNotif(db,uid,text,icon){if(!uid)return;await db.collection("n
 exports.onCommentNotify=onDocumentCreated({document:"posts/{postId}/comments/{commentId}",region:"asia-southeast1"},async(event)=>{const cmt=event.data&&event.data.data();if(!cmt||!cmt.authorId)return;const db=admin.firestore();const pSnap=await db.collection("posts").doc(event.params.postId).get();const post=pSnap.data();if(!post||!post.authorId||post.authorId===cmt.authorId)return;await sendNotif(db,post.authorId,(cmt.authorName||"someone")+" commented on your post","comment")});
 exports.onHelpNotify=onDocUpd({document:"posts/{postId}",region:"asia-southeast1"},async(event)=>{const b=event.data&&event.data.before&&event.data.before.data();const a=event.data&&event.data.after&&event.data.after.data();if(!b||!a)return;if((a.helps||0)<=(b.helps||0)||!a.authorId)return;await sendNotif(admin.firestore(),a.authorId,"Someone marked your post as helpful","help")});
 exports.onTierUpgrade=onDocUpd({document:"users/{uid}",region:"asia-southeast1"},async(event)=>{const b=event.data&&event.data.before&&event.data.before.data();const a=event.data&&event.data.after&&event.data.after.data();if(!b||!a||b.tier===a.tier)return;const label={bronze:"Bronze",silver:"Silver",gold:"Gold",platinum:"Platinum"};await sendNotif(admin.firestore(),event.params.uid,"Congrats! You reached "+( label[a.tier]||a.tier),"tier")});
-
-
-// ============================================================
-//  [ONE-TIME] migrateTenant — แปะ tenantId ลง doc เก่า
-//  รันครั้งเดียวแล้ว *ลบทิ้ง* ใน step ถัดไป
-// ============================================================
-const { onRequest } = require("firebase-functions/v2/https");
-exports.migrateTenant = onRequest({ region: "asia-southeast1" }, async (req, res) => {
-  const TOKEN = "mig-phuansuan-8x4k-2026";
-  if (req.query.token !== TOKEN) { res.status(403).json({ ok: false, error: "forbidden" }); return; }
-  const db = admin.firestore();
-  const TENANT = "phuansuan";
-  const cols = ["posts", "users"];
-  const out = {};
-  for (const col of cols) {
-    const snap = await db.collection(col).get();
-    let batch = db.batch(), n = 0, stamped = 0;
-    for (const doc of snap.docs) {
-      if (doc.data().tenantId) continue;            // idempotent
-      batch.set(doc.ref, { tenantId: TENANT }, { merge: true });
-      n++; stamped++;
-      if (n >= 400) { await batch.commit(); batch = db.batch(); n = 0; }
-    }
-    if (n > 0) await batch.commit();
-    out[col] = { total: snap.size, stamped };
-  }
-  res.json({ ok: true, tenant: TENANT, result: out });
-});

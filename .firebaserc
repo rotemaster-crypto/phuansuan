@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "phuansuan"
-  }
+  },
+  "targets": {
+    "phuansuan": {
+      "hosting": {
+        "main": [
+          "phuansuan"
+        ],
+        "office": [
+          "office-phuansuan"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

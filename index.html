@@ -612,6 +612,7 @@ let db = null;
 
 // ── Init ──────────────────────────────────────────────────
 window.addEventListener('load', async () => {
+  resolveTenant();
   applyConfig();
 
   // ถ้าไม่มี firebase-config.js (dev mode) ข้าม auth
@@ -625,6 +626,15 @@ window.addEventListener('load', async () => {
     // Init Firebase
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
+
+    // tenant ที่ใช้ anonymous auth (เช่น office) — ข้าม LINE ทั้งหมด
+    const _ov = (APP_CONFIG.tenant.overrides || {})[tenantId()];
+    if (_ov && _ov.auth === 'anonymous') {
+      await signInAnonTenant();
+      hideLoading();
+      loadFeed();
+      return;
+    }
 
     // Init LIFF
     await liff.init({ liffId: LIFF_ID });
@@ -667,6 +677,23 @@ async function signInWithLineToken() {
     console.warn('lineAuth ล้มเหลว — fallback anonymous:', err.message);
     await firebase.auth().signInAnonymously();
   }
+}
+
+async function signInAnonTenant() {
+  await firebase.auth().signInAnonymously();
+  const u = firebase.auth().currentUser;
+  let name = '';
+  try {
+    const snap = await db.collection('users').doc(u.uid).get();
+    if (snap.exists && snap.data().displayName) name = snap.data().displayName;
+  } catch (e) {}
+  if (!name) {
+    name = ((typeof prompt !== 'undefined' && prompt('ตั้งชื่อที่จะแสดงในออฟฟิศ:', '')) || '').trim() || ('สมาชิก' + u.uid.slice(0, 4));
+  }
+  currentUser = { uid: u.uid, displayName: name, photoUrl: '', lineUserId: u.uid };
+  await saveUserToFirestore(currentUser);
+  updateUIWithUser(currentUser);
+  maybeShowOnboarding();
 }
 
 function loginWithLine() {
@@ -752,6 +779,7 @@ function updateUIWithUser(user) {
   if (!user) return;
   renderMyCrops();
   renderProfileInfo();
+  try { ensureAdminPanel(); initFeatureFlags(); } catch (e) {}
 
   const initials = user.displayName ? user.displayName.charAt(0) : 'ฉ';
 
@@ -954,6 +982,7 @@ async function loadAiHistory() {
     const snap = await db.collection('users').doc(currentUser.uid)
       .collection('diagnoses').limit(20).get();
     let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+    docs = docs.filter(d => d.data.tenantId === tenantId());
     docs.sort((a, b) => (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0));
     if (docs.length === 0) {
       box.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">ยังไม่มีประวัติ</div>';
@@ -1296,6 +1325,7 @@ async function submitPost() {
     if (db) {
       const pts = APP_CONFIG.points[imageUrl ? 'perPostWithImg' : 'perPost'] || 10;
       await db.collection('posts').add({
+        tenantId:    tenantId(),
         text,
         type,
         crop:        crop || '',
@@ -1372,6 +1402,7 @@ async function loadFeed(mode) {
     }
 
     let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+    docs = docs.filter(d => d.data.tenantId === tenantId());
 
     if (mode === 'nearby') {
       const loc = currentUser && currentUser.location;
@@ -1401,12 +1432,102 @@ async function loadFeed(mode) {
       }
     }
 
+    if (mode !== 'nearby') {
+      docs.sort((a, b) => (b.data.pinned ? 1 : 0) - (a.data.pinned ? 1 : 0));
+    }
     container.innerHTML = docs.map((d, i) => renderPost(d.id, d.data, i)).join('');
 
   } catch (err) {
     console.error('loadFeed error:', err);
     container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">โหลด Feed ไม่ได้ กรุณาลองใหม่</div>';
   }
+}
+
+function tenantId() {
+  const t = APP_CONFIG.tenant || {};
+  const host = (typeof location !== 'undefined' && location.hostname) || '';
+  return (t.domains && t.domains[host]) || t.id || 'phuansuan';
+}
+function resolveTenant() {
+  const t = APP_CONFIG.tenant || {};
+  const ov = (t.overrides && t.overrides[tenantId()]) || null;
+  if (!ov) return;
+  if (ov.name && APP_CONFIG.app) APP_CONFIG.app.name = ov.name;
+  if (ov.logoEmoji && APP_CONFIG.app) APP_CONFIG.app.logoEmoji = ov.logoEmoji;
+  if (ov.features) APP_CONFIG.features = Object.assign({}, APP_CONFIG.features, ov.features);
+}
+function isAdmin() { return !!(currentUser && APP_CONFIG.admin && currentUser.uid === APP_CONFIG.admin.lineUserId); }
+
+// ---- Feature Flags (real-time จาก Firestore settings/{tenant}) ----
+let _ffInit = false;
+function applyFeatureFlags() {
+  const f = (APP_CONFIG && APP_CONFIG.features) || {};
+  const show = (sel, on) => document.querySelectorAll(sel).forEach(el => { el.style.display = on ? '' : 'none'; });
+  show('.stories-bar', f.stories !== false);
+  show('.points-card', f.pointSystem !== false);
+  show('#alert-banner', f.proximityAlert !== false);
+  document.querySelectorAll('[onclick="openAiDoctor()"]').forEach(el => { el.style.display = f.aiDiagnosis !== false ? '' : 'none'; });
+}
+function initFeatureFlags() {
+  applyFeatureFlags();
+  if (_ffInit || !db) return;
+  _ffInit = true;
+  db.collection('settings').doc(tenantId()).onSnapshot(
+    snap => {
+      const d = snap.exists ? snap.data() : null;
+      if (d && d.features) APP_CONFIG.features = Object.assign({}, APP_CONFIG.features, d.features);
+      applyFeatureFlags();
+      renderAdminToggles();
+    },
+    err => { console.warn('featureFlags:', err.message); }
+  );
+}
+
+// ---- Admin Panel ----
+const FEATURE_LABELS = {
+  aiDiagnosis: 'หมอพืช AI', proximityAlert: 'แจ้งเตือนพื้นที่', productLink: 'ลิงก์สินค้า',
+  stories: 'สตอรี', pointSystem: 'ระบบแต้ม', communityGroups: 'กลุ่ม/ชุมชน', weatherAlert: 'แจ้งเตือนอากาศ'
+};
+function ensureAdminPanel() {
+  if (!isAdmin() || document.getElementById('admin-fab')) return;
+  const fab = document.createElement('div');
+  fab.id = 'admin-fab'; fab.textContent = '⚙️'; fab.title = 'Admin';
+  fab.style.cssText = 'position:fixed;right:16px;bottom:84px;z-index:9998;width:48px;height:48px;border-radius:50%;background:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer';
+  fab.onclick = openAdminPanel;
+  document.body.appendChild(fab);
+  const m = document.createElement('div');
+  m.id = 'admin-panel';
+  m.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center';
+  m.onclick = e => { if (e.target === m) closeAdminPanel(); };
+  m.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:380px;width:90%;max-height:80vh;overflow:auto;padding:18px;font-family:inherit">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:18px;font-weight:800">⚙️ Admin Panel</div><div onclick="closeAdminPanel()" style="cursor:pointer;font-size:20px;color:#888">✕</div></div>'
+    + '<div style="font-size:12px;color:#888;margin-bottom:12px">tenant: ' + tenantId() + ' · เปิด/ปิด real-time</div>'
+    + '<div id="admin-toggles"></div></div>';
+  document.body.appendChild(m);
+  renderAdminToggles();
+}
+function openAdminPanel() { ensureAdminPanel(); const m = document.getElementById('admin-panel'); if (m) m.style.display = 'flex'; renderAdminToggles(); }
+function closeAdminPanel() { const m = document.getElementById('admin-panel'); if (m) m.style.display = 'none'; }
+function renderAdminToggles() {
+  const box = document.getElementById('admin-toggles'); if (!box) return;
+  const f = (APP_CONFIG && APP_CONFIG.features) || {};
+  box.innerHTML = Object.keys(f).map(k => {
+    const on = f[k] !== false;
+    const label = FEATURE_LABELS[k] || k;
+    return '<label style="display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid #eee;font-size:15px"><span>' + label + '</span>'
+      + '<input type="checkbox" data-fk="' + k + '" ' + (on ? 'checked' : '') + ' style="width:20px;height:20px"></label>';
+  }).join('');
+  box.querySelectorAll('input[data-fk]').forEach(inp => {
+    inp.addEventListener('change', () => setFeature(inp.getAttribute('data-fk'), inp.checked));
+  });
+}
+async function setFeature(key, val) {
+  if (!isAdmin() || !db) return;
+  APP_CONFIG.features[key] = val;
+  applyFeatureFlags();
+  try {
+    await db.collection('settings').doc(tenantId()).set({ features: { [key]: val } }, { merge: true });
+  } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
 }
 
 function renderPost(id, p, i) {
@@ -1437,9 +1558,11 @@ function renderPost(id, p, i) {
           <div class="pc-name">${escapeHtml(p.authorName) || 'ผู้ใช้'}</div>
           <div class="pc-meta">${timeAgo} · ${p._dist !== undefined ? '📍 ' + p._dist.toFixed(1) + ' กม.' : '🌍'}</div>
         </div>
-        ${isOwn ? `<button class="pc-more" onclick="deletePost('${id}')">🗑️</button>` : '<button class="pc-more">•••</button>'}
+        ${isAdmin() ? `<button class="pc-more" onclick="togglePin('${id}',${p.pinned?'true':'false'})" title="ปักหมุด">${p.pinned?'📌':'📍'}</button>` : ''}
+        ${(isOwn || isAdmin()) ? `<button class="pc-more" onclick="deletePost('${id}')">🗑️</button>` : '<button class="pc-more">•••</button>'}
       </div>
       <div class="pc-tags">
+        ${p.pinned ? `<span class="ptag pt-amber">📌 ปักหมุด</span>` : ''}
         ${p.type ? `<span class="ptag ${tagClass}">${p.type}</span>` : ''}
         ${cropName ? `<span class="ptag pt-green">${cropEmoji} ${cropName}</span>` : ''}
       </div>
@@ -1535,6 +1658,14 @@ async function deletePost(id) {
     await db.collection('posts').doc(id).delete();
     document.getElementById('post-' + id)?.remove();
   } catch(e) { alert('ลบไม่ได้: ' + e.message); }
+}
+
+async function togglePin(id, current) {
+  if (!isAdmin()) return;
+  try {
+    await db.collection('posts').doc(id).update({ pinned: !current });
+    loadFeed('feed');
+  } catch(e) { alert('ปักหมุดไม่ได้: ' + e.message); }
 }
 
 // Upload Cover Photo

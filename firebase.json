@@ -1,26 +1,17 @@
 {
-  "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**",
-      "functions/**",
-      "firestore.rules",
-      "storage.rules",
-      "*.md"
-    ]
-  },
-  "firestore": {
-    "rules": "firestore.rules"
-  },
-  "storage": {
-    "rules": "storage.rules"
-  },
-  "functions": [
+  "hosting": [
     {
-      "source": "functions",
-      "runtime": "nodejs20"
+      "target": "main",
+      "public": ".",
+      "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**","firestore.rules","storage.rules","*.md"]
+    },
+    {
+      "target": "office",
+      "public": ".",
+      "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**","firestore.rules","storage.rules","*.md"]
     }
-  ]
+  ],
+  "firestore": { "rules": "firestore.rules" },
+  "storage": { "rules": "storage.rules" },
+  "functions": [ { "source": "functions", "runtime": "nodejs20" } ]
 }

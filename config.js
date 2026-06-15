@@ -20,7 +20,9 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
   tenant: {
     id:   'phuansuan',          // รหัส project นี้ (ใช้กรองทุก query)
     name: 'เพื่อนสวน',
-    plan: 'free',               // free | pro | enterprise (รองรับ subscription)
+    plan: 'free',
+    domains:   { 'phuansuan.web.app':'phuansuan', 'phuansuan.firebaseapp.com':'phuansuan', 'localhost':'phuansuan', 'office-phuansuan.web.app':'office' },
+    overrides: { office: { auth:'anonymous', name:'Office Social', logoEmoji:'💬', features:{ aiDiagnosis:false, proximityAlert:false, productLink:false, weatherAlert:false, communityGroups:false } } },               // free | pro | enterprise (รองรับ subscription)
   },
 
   // ── Admin ─────────────────────────────────
