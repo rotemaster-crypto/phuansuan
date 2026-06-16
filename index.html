@@ -255,6 +255,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .sum-row.total{font-size:17px;font-weight:800;color:var(--text);margin-top:6px;margin-bottom:0}
 .cart-co{width:100%;margin-top:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
 
+/* ── COMMERCE 3.2 (checkout / payment / orders) ── */
+.co-form{overflow-y:auto;padding:12px 16px;flex:1}
+.co-field{margin-bottom:11px}
+.co-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+.co-input,.co-select{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:15px;font-family:inherit;box-sizing:border-box;background:#fff}
+.co-input:focus,.co-select:focus{border-color:var(--primary);outline:none}
+.co-row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.co-summary{padding:10px 16px;border-top:1px solid var(--border);background:#fafbfc}
+.co-actions{padding:12px 16px;border-top:1px solid var(--border)}
+.btn-primary-lg{width:100%;background:var(--primary);color:#fff;border:none;border-radius:11px;padding:14px;font-size:16px;font-weight:700;cursor:pointer}
+.btn-primary-lg:disabled{opacity:.55;cursor:not-allowed}
+/* payment */
+.pay-body{overflow-y:auto;padding:16px;flex:1;text-align:center}
+.pay-amt{font-size:30px;font-weight:800;color:var(--primary);margin:4px 0}
+.pay-oid{font-size:12px;color:var(--muted)}
+.pay-pp{display:flex;align-items:center;justify-content:center;gap:7px;margin:10px 0 4px;font-weight:700;color:var(--text)}
+.pay-pp img{height:22px}
+.pay-qr{display:inline-flex;align-items:center;justify-content:center;min-height:180px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px;margin:8px auto}
+.pay-qr img{width:200px;height:200px;image-rendering:pixelated}
+.pay-hint{font-size:13px;color:var(--muted);line-height:1.7;margin:10px 4px}
+.pay-step{background:#f0f7ff;border:1px solid #cfe3ff;border-radius:10px;padding:10px 12px;font-size:13px;color:#1c3d5e;text-align:left;line-height:1.7;margin:6px 0}
+.slip-btn{width:100%;background:#fff;color:var(--primary);border:2px solid var(--primary);border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px}
+.pay-slip-status{font-size:13px;color:var(--primary);margin-top:8px;min-height:18px}
+/* orders */
+.orders-list{overflow-y:auto;padding:12px 16px;flex:1}
+.ord-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}
+.ord-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.ord-id{font-size:13px;font-weight:800;color:var(--text)}
+.ord-badge{color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px}
+.ord-items{font-size:13px;color:var(--text);margin-bottom:6px}
+.ord-bot{display:flex;align-items:center;justify-content:space-between}
+.ord-date{font-size:12px;color:var(--muted)}
+.ord-total{font-size:15px;font-weight:800;color:var(--primary)}
+.ord-track{font-size:12px;color:#7b61ff;margin-top:5px;font-weight:600}
+.ord-pay{width:100%;margin-top:9px;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:14px;font-weight:700;cursor:pointer}
+.ord-link{background:var(--bg);border:1px solid var(--border);border-radius:18px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;flex-shrink:0}
+
 /* ── BOTTOM NAV ── */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;height:56px;z-index:300}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-top:3px solid transparent;position:relative;gap:2px}
@@ -621,9 +658,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 
 <!-- ══ SHOP SCREEN (ร้านค้า) Phase 3.1 ══ -->
 <div class="screen" id="screen-shop">
-  <div class="shop-head">
-    <div class="shop-title">🛒 ร้านค้า</div>
-    <div class="shop-sub" id="shop-sub">สินค้าจากร้าน</div>
+  <div class="shop-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <div>
+      <div class="shop-title">🛒 ร้านค้า</div>
+      <div class="shop-sub" id="shop-sub">สินค้าจากร้าน</div>
+    </div>
+    <button class="ord-link" onclick="openMyOrders()">📦 ออเดอร์</button>
   </div>
   <div class="cat-bar" id="cat-bar"></div>
   <div class="prod-grid" id="prod-grid">
@@ -645,6 +685,68 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     </div>
     <div class="cart-items" id="cart-items"></div>
     <div class="cart-sum" id="cart-sum"></div>
+  </div>
+</div>
+
+
+<!-- ══ CHECKOUT MODAL (3.2) ══ -->
+<div class="cart-modal" id="checkoutModal" onclick="if(event.target===this)closeCheckout()">
+  <div class="cart-sheet">
+    <div class="cart-hd">
+      <div class="cart-hd-t">📦 ที่อยู่จัดส่ง</div>
+      <button class="cart-x" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="co-form">
+      <div class="co-field"><label class="co-label">ชื่อผู้รับ *</label><input class="co-input" id="co-name" maxlength="80" placeholder="ชื่อ-นามสกุล"></div>
+      <div class="co-field"><label class="co-label">เบอร์โทร *</label><input class="co-input" id="co-phone" inputmode="numeric" maxlength="10" placeholder="08xxxxxxxx"></div>
+      <div class="co-field"><label class="co-label">ที่อยู่ (บ้านเลขที่ / หมู่ / ถนน) *</label><input class="co-input" id="co-addr" maxlength="200" placeholder="เช่น 99 หมู่ 4 ถ.สุขใจ"></div>
+      <div class="co-field"><label class="co-label">จังหวัด *</label><select class="co-select" id="co-province"><option value="">— เลือกจังหวัด —</option></select></div>
+      <div class="co-row2">
+        <div class="co-field"><label class="co-label">อำเภอ/เขต</label><input class="co-input" id="co-district" maxlength="60" placeholder="อำเภอ"></div>
+        <div class="co-field"><label class="co-label">ตำบล/แขวง</label><input class="co-input" id="co-subdistrict" maxlength="60" placeholder="ตำบล"></div>
+      </div>
+      <div class="co-field"><label class="co-label">รหัสไปรษณีย์</label><input class="co-input" id="co-postcode" inputmode="numeric" maxlength="5" placeholder="xxxxx"></div>
+      <div class="co-field"><label class="co-label">หมายเหตุถึงร้าน (ถ้ามี)</label><input class="co-input" id="co-note" maxlength="200" placeholder="เช่น ฝากไว้หน้าบ้าน"></div>
+    </div>
+    <div class="co-summary" id="co-summary"></div>
+    <div class="co-actions">
+      <button class="btn-primary-lg" id="co-submit" onclick="submitCheckout()">ยืนยันสั่งซื้อ → ชำระเงิน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAYMENT MODAL (3.2) ══ -->
+<div class="cart-modal" id="paymentModal" onclick="if(event.target===this)closePayment()">
+  <div class="cart-sheet">
+    <div class="cart-hd">
+      <div class="cart-hd-t">💸 ชำระเงิน PromptPay</div>
+      <button class="cart-x" onclick="closePayment()">✕</button>
+    </div>
+    <div class="pay-body">
+      <div class="pay-oid" id="pay-order-id"></div>
+      <div class="pay-amt" id="pay-amount">฿0</div>
+      <div class="pay-pp">พร้อมเพย์ · <span id="pay-ppname"></span></div>
+      <div class="pay-qr" id="pay-qr"></div>
+      <div class="pay-step">
+        1. เปิดแอปธนาคาร → สแกน QR นี้<br>
+        2. ตรวจยอดให้ตรง แล้วโอน<br>
+        3. กลับมากด "แนบสลิป" ด้านล่าง
+      </div>
+      <input type="file" id="slip-input" accept="image/*" style="display:none" onchange="onSlipPicked(this)">
+      <button class="slip-btn" onclick="pickSlip()">📎 แนบสลิปที่โอนแล้ว</button>
+      <div class="pay-slip-status" id="pay-slip-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MY ORDERS MODAL (3.2) ══ -->
+<div class="cart-modal" id="ordersModal" onclick="if(event.target===this)closeMyOrders()">
+  <div class="cart-sheet">
+    <div class="cart-hd">
+      <div class="cart-hd-t">📦 ออเดอร์ของฉัน</div>
+      <button class="cart-x" onclick="closeMyOrders()">✕</button>
+    </div>
+    <div class="orders-list" id="orders-list"></div>
   </div>
 </div>
 
@@ -1970,9 +2072,7 @@ function renderCart(){
 }
 function openCart(){ renderCart(); const m=document.getElementById('cartModal'); if(m) m.classList.add('open'); }
 function closeCart(){ const m=document.getElementById('cartModal'); if(m) m.classList.remove('open'); }
-function goCheckout(){
-  alert('🚧 หน้าชำระเงิน PromptPay กำลังมาใน Step 3.2 ครับ\nยอดสุทธิ: ' + baht(cartTotal()));
-}
+/* goCheckout — นิยามใหม่ใน Commerce 3.2 ด้านล่าง */
 
 let _toastT = null;
 function toastCart(msg){
@@ -2006,6 +2106,206 @@ window.addEventListener('load', function(){
   loadCart();
   renderCartBadge();
 });
+
+// ══════════════════════════════════════════════════════════
+//  COMMERCE 3.2 — Checkout + PromptPay + Slip + My Orders
+// ══════════════════════════════════════════════════════════
+const TH_PROVINCES = ["กรุงเทพมหานคร","กระบี่","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ชัยนาท","ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก","นครปฐม","นครพนม","นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน","บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์","ปราจีนบุรี","ปัตตานี","พระนครศรีอยุธยา","พะเยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์","แพร่","ภูเก็ต","มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง","ราชบุรี","ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ","สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี","สุราษฎร์ธานี","สุรินทร์","หนองคาย","หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี","อุตรดิตถ์","อุทัยธานี","อุบลราชธานี"];
+
+let _qrLoading = null;
+function ensureQrLib(){
+  if (window.qrcode) return Promise.resolve();
+  if (_qrLoading) return _qrLoading;
+  _qrLoading = new Promise(function(res, rej){
+    const s = document.createElement('script');
+    s.src = 'qrcode.js';
+    s.onload = function(){ res(); };
+    s.onerror = function(){ rej(new Error('โหลดไลบรารี QR ไม่สำเร็จ')); };
+    document.head.appendChild(s);
+  });
+  return _qrLoading;
+}
+
+function ppFmt(id,v){ return id + ('00'+v.length).slice(-2) + v; }
+function ppSan(s){ return String(s).replace(/[^0-9]/g,''); }
+function ppTarget(t){ const s=ppSan(t); if(s.length>=13) return s; return ('0000000000000'+s.replace(/^0/,'66')).slice(-13); }
+function ppCrc(d){ let c=0xFFFF; for(let i=0;i<d.length;i++){ c^=d.charCodeAt(i)<<8; for(let j=0;j<8;j++){ c=(c&0x8000)?((c<<1)^0x1021):(c<<1); c&=0xFFFF; } } return ('0000'+c.toString(16).toUpperCase()).slice(-4); }
+function ppPayload(target, amount){
+  const s = ppSan(target);
+  const hasAmt = (amount!=null && !isNaN(amount) && Number(amount)>0);
+  const merchant = ppFmt('00','A000000677010111') + ppFmt(s.length>=15?'03':(s.length>=13?'02':'01'), ppTarget(target));
+  let p = [ ppFmt('00','01'), ppFmt('01', hasAmt?'12':'11'), ppFmt('29', merchant), ppFmt('58','TH'), ppFmt('53','764') ];
+  if (hasAmt) p.push(ppFmt('54', Number(amount).toFixed(2)));
+  p.push(ppFmt('63', ppCrc(p.join('')+'6304')));
+  return p.join('');
+}
+
+let pendingOrder = null;
+
+function fillProvinces(){
+  const sel = document.getElementById('co-province');
+  if (!sel || sel.options.length > 1) return;
+  TH_PROVINCES.forEach(function(p){ const o=document.createElement('option'); o.value=p; o.textContent=p; sel.appendChild(o); });
+}
+function prefillAddress(){
+  const a = (currentUser && currentUser.shippingAddress) || {};
+  const set = function(id,v){ const e=document.getElementById(id); if(e) e.value = v || ''; };
+  set('co-name', a.name || (currentUser && currentUser.displayName) || '');
+  set('co-phone', a.phone);
+  set('co-addr', a.addressLine);
+  set('co-province', a.province);
+  set('co-district', a.district);
+  set('co-subdistrict', a.subdistrict);
+  set('co-postcode', a.postcode);
+  set('co-note', a.note);
+}
+
+function goCheckout(){
+  if (!cart.length){ alert('ตะกร้ายังว่างอยู่ครับ'); return; }
+  if (!currentUser){ alert('กรุณาเข้าสู่ระบบก่อนสั่งซื้อครับ'); return; }
+  fillProvinces();
+  prefillAddress();
+  renderCheckoutSummary();
+  closeCart();
+  document.getElementById('checkoutModal').classList.add('open');
+}
+function closeCheckout(){ const m=document.getElementById('checkoutModal'); if(m) m.classList.remove('open'); }
+function renderCheckoutSummary(){
+  const el = document.getElementById('co-summary'); if(!el) return;
+  const pct = tierDiscountPct();
+  let h = '<div class="sum-row"><span>ยอดสินค้า ('+cartCount()+' ชิ้น)</span><span>'+baht(cartSubtotal())+'</span></div>';
+  if (pct) h += '<div class="sum-row"><span>ส่วนลดสมาชิก '+pct+'%</span><span>− '+baht(cartDiscount())+'</span></div>';
+  h += '<div class="sum-row"><span>ค่าจัดส่ง</span><span>'+(shippingFee()===0?'ฟรี':baht(shippingFee()))+'</span></div>';
+  h += '<div class="sum-row total"><span>ยอดสุทธิ</span><span>'+baht(cartTotal())+'</span></div>';
+  el.innerHTML = h;
+}
+
+async function submitCheckout(){
+  const v = function(id){ const e=document.getElementById(id); return e?e.value.trim():''; };
+  const name=v('co-name'), phone=v('co-phone'), addr=v('co-addr'), province=v('co-province'),
+        district=v('co-district'), sub=v('co-subdistrict'), postcode=v('co-postcode'), note=v('co-note');
+  if (!name || !phone || !addr || !province){ alert('กรุณากรอก ชื่อผู้รับ / เบอร์โทร / ที่อยู่ / จังหวัด ให้ครบครับ'); return; }
+  if (!/^[0-9]{9,10}$/.test(ppSan(phone))){ alert('เบอร์โทรไม่ถูกต้องครับ'); return; }
+  const cfg = commerceCfg();
+  if (!cfg.promptpayId || cfg.promptpayId === '0000000000'){ alert('⚠️ ร้านยังไม่ได้ตั้งค่าพร้อมเพย์ (promptpayId ใน config.js) — แจ้งแอดมินครับ'); return; }
+  if (!db || !currentUser){ alert('ระบบยังไม่พร้อม ลองใหม่อีกครั้งครับ'); return; }
+  const btn = document.getElementById('co-submit'); if(btn){ btn.disabled=true; btn.textContent='กำลังสร้างออเดอร์...'; }
+  const shipping = { name:name, phone:phone, addressLine:addr, province:province, district:district, subdistrict:sub, postcode:postcode, note:note };
+  const total = cartTotal();
+  const order = {
+    tenantId: (typeof tenantId==='function')?tenantId():'default',
+    userId: currentUser.uid, userName: currentUser.displayName || '',
+    items: cart.map(function(r){ return { id:r.id, name:r.name, price:r.price, qty:r.qty, weightKg:r.weightKg||1, category:r.category||'' }; }),
+    subtotal: cartSubtotal(), discountPct: tierDiscountPct(), discount: cartDiscount(),
+    shippingFee: shippingFee(), weight: cartWeight(), total: total,
+    shipping: shipping, status: 'pending_payment', paymentMethod: 'promptpay', promptpayAmount: total,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    const ref = await db.collection('orders').add(order);
+    try { await db.collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
+    pendingOrder = Object.assign({ id: ref.id }, order, { total: total });
+    closeCheckout();
+    openPayment(pendingOrder);
+  } catch(e){ alert('สร้างออเดอร์ไม่สำเร็จ: '+e.message); }
+  if(btn){ btn.disabled=false; btn.textContent='ยืนยันสั่งซื้อ → ชำระเงิน'; }
+}
+
+async function openPayment(order){
+  const m = document.getElementById('paymentModal'); if(m) m.classList.add('open');
+  const amt = order.total || order.promptpayAmount || 0;
+  document.getElementById('pay-amount').textContent = baht(amt);
+  document.getElementById('pay-order-id').textContent = 'เลขออเดอร์ #' + order.id.slice(-6).toUpperCase();
+  const cfg = commerceCfg();
+  document.getElementById('pay-ppname').textContent = cfg.promptpayName || '';
+  const qrBox = document.getElementById('pay-qr');
+  qrBox.innerHTML = '<div style="color:var(--muted);font-size:13px">กำลังสร้าง QR...</div>';
+  const st = document.getElementById('pay-slip-status'); if(st) st.textContent = '';
+  try {
+    await ensureQrLib();
+    const payload = ppPayload(cfg.promptpayId, amt);
+    const qr = qrcode(0,'M'); qr.addData(payload); qr.make();
+    qrBox.innerHTML = qr.createImgTag(5, 0);
+  } catch(e){ qrBox.innerHTML = '<div style="color:#e41e3f;font-size:13px">สร้าง QR ไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
+}
+function closePayment(){ const m=document.getElementById('paymentModal'); if(m) m.classList.remove('open'); }
+
+function pickSlip(){ const i=document.getElementById('slip-input'); if(i) i.click(); }
+async function onSlipPicked(input){
+  const file = input.files && input.files[0];
+  if (!file || !pendingOrder) return;
+  const st = document.getElementById('pay-slip-status'); if(st) st.textContent = 'กำลังอัปโหลดสลิป...';
+  try {
+    const blob = (typeof compressImage==='function') ? await compressImage(file, 1280, 0.85) : file;
+    const tid = (typeof tenantId==='function')?tenantId():'default';
+    const ref = firebase.storage().ref('slips/'+tid+'/'+pendingOrder.id+'_'+Date.now()+'.jpg');
+    const snap = await ref.put(blob, { contentType: 'image/jpeg' });
+    const url = await snap.ref.getDownloadURL();
+    await db.collection('orders').doc(pendingOrder.id).update({
+      slipUrl: url, status: 'paid_review',
+      paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    cart = []; saveCart(); renderCartFab();
+    if(st) st.textContent = '';
+    closePayment();
+    const oid = pendingOrder.id; pendingOrder = null;
+    alert('✅ ส่งสลิปเรียบร้อย!\nออเดอร์ #'+oid.slice(-6).toUpperCase()+'\nร้านกำลังตรวจสอบการชำระเงิน จะอัปเดตสถานะให้ครับ');
+    openMyOrders();
+  } catch(e){ if(st) st.textContent = 'อัปโหลดไม่สำเร็จ: '+e.message; }
+  input.value = '';
+}
+
+const ORDER_STATUS = {
+  pending_payment:{t:'รอชำระเงิน',c:'#f5a623'},
+  paid_review:{t:'รอตรวจสลิป',c:'#1877f2'},
+  confirmed:{t:'ยืนยันแล้ว',c:'#42b883'},
+  shipped:{t:'จัดส่งแล้ว',c:'#7b61ff'},
+  completed:{t:'สำเร็จ',c:'#2e7d32'},
+  cancelled:{t:'ยกเลิก',c:'#e41e3f'}
+};
+async function openMyOrders(){
+  const m = document.getElementById('ordersModal'); if(m) m.classList.add('open');
+  const box = document.getElementById('orders-list');
+  box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px">กำลังโหลด...</div>';
+  if (!currentUser || !db){ box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px">กรุณาเข้าสู่ระบบ</div>'; return; }
+  try {
+    const snap = await db.collection('orders').where('userId','==',currentUser.uid).get();
+    const tid = (typeof tenantId==='function')?tenantId():null;
+    let docs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }).filter(function(o){ return !tid || o.tenantId===tid; });
+    docs.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
+    if (!docs.length){ box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px">ยังไม่มีออเดอร์ 📦</div>'; return; }
+    box.innerHTML = docs.map(function(o){
+      const s = ORDER_STATUS[o.status] || {t:o.status, c:'#888'};
+      const n = (o.items||[]).reduce(function(x,i){ return x+i.qty; }, 0);
+      const first = (o.items && o.items[0]) ? escapeHtml(o.items[0].name) : '';
+      const more = (o.items && o.items.length>1) ? (' +'+(o.items.length-1)+' รายการ') : '';
+      const dt = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate().toLocaleDateString('th-TH') : '';
+      let extra = '';
+      if (o.status==='shipped' && o.trackingNumber) extra = '<div class="ord-track">📮 พัสดุ: '+escapeHtml(o.trackingNumber)+'</div>';
+      return '<div class="ord-card">'+
+        '<div class="ord-top"><span class="ord-id">#'+o.id.slice(-6).toUpperCase()+'</span>'+
+        '<span class="ord-badge" style="background:'+s.c+'">'+s.t+'</span></div>'+
+        '<div class="ord-items">'+first+more+' · '+n+' ชิ้น</div>'+
+        '<div class="ord-bot"><span class="ord-date">'+dt+'</span><span class="ord-total">'+baht(o.total||0)+'</span></div>'+
+        extra +
+        (o.status==='pending_payment' ? '<button class="ord-pay" onclick="resumePayment(\''+o.id+'\')">ชำระเงิน</button>' : '')+
+      '</div>';
+    }).join('');
+  } catch(e){ box.innerHTML = '<div style="text-align:center;color:#e41e3f;padding:30px">โหลดไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
+}
+function closeMyOrders(){ const m=document.getElementById('ordersModal'); if(m) m.classList.remove('open'); }
+async function resumePayment(orderId){
+  if(!db) return;
+  try {
+    const doc = await db.collection('orders').doc(orderId).get();
+    if (!doc.exists) return;
+    pendingOrder = Object.assign({id:doc.id}, doc.data());
+    closeMyOrders();
+    openPayment(pendingOrder);
+  } catch(e){ alert(e.message); }
+}
 </script>
 </body>
 </html>

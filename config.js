@@ -39,7 +39,7 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     // ── ระบบร้านค้า + ตะกร้า (Phase 3) ──
     commerce: {
       enabled:        true,
-      promptpayId:    '0000000000',   // ⚠️ ใส่เบอร์พร้อมเพย์ หรือเลขผู้เสียภาษี DemeterRich
+      promptpayId:    '0868834583',   // ⚠️ ใส่เบอร์พร้อมเพย์ หรือเลขผู้เสียภาษี DemeterRich
       promptpayName:  'DemeterRich',
       shippingTiers: [                // ค่าส่งตามน้ำหนักรวม (กก.)
         { maxKg: 1,   fee: 40 },

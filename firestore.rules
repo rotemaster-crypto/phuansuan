@@ -86,6 +86,25 @@ service cloud.firestore {
     }
 
     // ── ปิดทุกอย่างที่เหลือ ───────────────────────────────
+    // ── Orders (คำสั่งซื้อ) ───────────────────────────────
+    // อ่าน: เจ้าของ หรือ admin / สร้าง: เจ้าของ เริ่มที่ pending_payment
+    // อัพเดต(เจ้าของ): แนบสลิป + เปลี่ยนเป็น paid_review เท่านั้น / อื่นๆ: admin
+    match /orders/{orderId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending_payment';
+      allow update: if isAdmin()
+        || (signedIn()
+            && resource.data.userId == request.auth.uid
+            && resource.data.status in ['pending_payment', 'paid_review']
+            && request.resource.data.status == 'paid_review'
+            && request.resource.data.diff(resource.data)
+                 .affectedKeys().hasOnly(['status','slipUrl','paidAt','updatedAt']));
+      allow delete: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

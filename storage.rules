@@ -36,6 +36,12 @@ service firebase.storage {
     }
 
     // ปิดทุกอย่างที่เหลือ
+    // สลิปโอนเงิน — login แล้วอัพได้ เฉพาะรูป ไม่เกิน 5MB
+    match /slips/{tenant}/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn() && isImage() && underLimit(5);
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }
