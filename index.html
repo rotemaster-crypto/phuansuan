@@ -292,6 +292,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .ord-pay{width:100%;margin-top:9px;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:14px;font-weight:700;cursor:pointer}
 .ord-link{background:var(--bg);border:1px solid var(--border);border-radius:18px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;flex-shrink:0}
 
+/* ── COMMERCE 3.4a (related products in feed) ── */
+.rel-wrap{margin:4px 12px 10px;background:#f7faff;border:1px solid #e3eeff;border-radius:12px;padding:10px}
+.rel-title{font-size:12.5px;font-weight:800;color:var(--primary);margin-bottom:8px}
+.rel-scroll{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.rel-scroll::-webkit-scrollbar{display:none}
+.rel-card{flex:0 0 132px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px}
+.rel-img{height:64px;background:#f0f2f5;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden}
+.rel-img img{width:100%;height:100%;object-fit:cover}
+.rel-nm{font-size:12px;font-weight:700;line-height:1.3;height:31px;overflow:hidden}
+.rel-pr{font-size:13px;font-weight:800;color:var(--primary)}
+.rel-add{margin-top:2px;border:none;background:var(--primary);color:#fff;border-radius:7px;padding:7px;font-size:12px;font-weight:700;cursor:pointer}
+
 /* ── BOTTOM NAV ── */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;height:56px;z-index:300}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-top:3px solid transparent;position:relative;gap:2px}
@@ -1613,6 +1625,7 @@ async function loadFeed(mode) {
       docs.sort((a, b) => (b.data.pinned ? 1 : 0) - (a.data.pinned ? 1 : 0));
     }
     container.innerHTML = docs.map((d, i) => renderPost(d.id, d.data, i)).join('');
+    populateRelatedProducts(docs);
 
   } catch (err) {
     console.error('loadFeed error:', err);
@@ -1746,6 +1759,7 @@ function renderPost(id, p, i) {
       </div>
       ${p.text ? `<div class="pc-text">${escapeHtml(p.text)}</div>` : ''}
       ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;max-height:300px;object-fit:cover">` : ''}
+      <div class="rel-prod" id="rel-${id}"></div>
       <div class="pc-reactions">
         <div class="r-counts">
           <div class="r-icons"><span class="ri ri-b">👍</span></div>
@@ -2305,6 +2319,89 @@ async function resumePayment(orderId){
     closeMyOrders();
     openPayment(pendingOrder);
   } catch(e){ alert(e.message); }
+}
+
+// ══════════════════════════════════════════════════════════
+//  COMMERCE 3.4a — สินค้าที่เกี่ยวข้องในโพส (related products)
+// ══════════════════════════════════════════════════════════
+let relProducts = null;
+let _relLoading = null;
+function loadRelProducts(){
+  if (relProducts) return Promise.resolve(relProducts);
+  if (_relLoading) return _relLoading;
+  _relLoading = (async function(){
+    let list = [];
+    try {
+      if (db){
+        const snap = await db.collection('products').get();
+        const tid = (typeof tenantId==='function')?tenantId():null;
+        list = snap.docs.map(function(d){ return Object.assign({_id:d.id}, d.data()); })
+                        .filter(function(p){ return !p.tenantId || !tid || p.tenantId===tid; });
+      }
+    } catch(e){ list = []; }
+    if (!list.length) list = (APP_CONFIG.products||[]).map(function(p){ return Object.assign({_id:p.id}, p); });
+    relProducts = list.map(function(p){
+      return {
+        id: p._id || p.id,
+        name: p.name || 'สินค้า',
+        price: parsePrice(p.price),
+        category: p.category || '',
+        image: p.image || '',
+        weightKg: Number(p.weightKg) || commerceCfg().defaultWeightKg,
+        crops: Array.isArray(p.crops) ? p.crops : [],
+        diseases: Array.isArray(p.diseases) ? p.diseases : []
+      };
+    });
+    // ให้ addToCart หาเจอแม้ยังไม่เปิดหน้าร้าน
+    if (typeof shopProducts !== 'undefined' && (!shopProducts || !shopProducts.length)) shopProducts = relProducts;
+    return relProducts;
+  })();
+  return _relLoading;
+}
+
+function matchProductsForPost(p){
+  if (!relProducts || !p) return [];
+  const crop = p.crop || '';
+  const text = (p.text || '').toLowerCase();
+  const scored = relProducts.map(function(prod){
+    let score = 0;
+    if (crop && prod.crops.indexOf(crop) > -1) score += 2;
+    if (prod.diseases.length){
+      for (var i=0;i<prod.diseases.length;i++){
+        var d = String(prod.diseases[i]||'').toLowerCase().trim();
+        if (d && text.indexOf(d) > -1){ score += 3; break; }
+      }
+    }
+    return { prod: prod, score: score };
+  }).filter(function(x){ return x.score > 0; });
+  scored.sort(function(a,b){ return b.score - a.score; });
+  return scored.slice(0, 3).map(function(x){ return x.prod; });
+}
+
+async function populateRelatedProducts(docs){
+  if (!docs || !docs.length) return;
+  if (APP_CONFIG.features && APP_CONFIG.features.commerce === false) return;
+  try { await loadRelProducts(); } catch(e){ return; }
+  docs.forEach(function(d){
+    const box = document.getElementById('rel-' + d.id);
+    if (!box) return;
+    const matches = matchProductsForPost(d.data);
+    if (!matches.length) return;
+    box.innerHTML = relSectionHtml(matches);
+  });
+}
+
+function relSectionHtml(list){
+  const cards = list.map(function(p){
+    const img = p.image ? '<img src="'+escapeHtml(p.image)+'" alt="">' : ((typeof catEmoji==='function')?catEmoji(p.category):'📦');
+    return '<div class="rel-card">'+
+      '<div class="rel-img">'+img+'</div>'+
+      '<div class="rel-nm">'+escapeHtml(p.name)+'</div>'+
+      '<div class="rel-pr">'+(p.price?baht(p.price):'—')+'</div>'+
+      '<button class="rel-add" onclick="addToCart(\''+p.id+'\')">+ ใส่ตะกร้า</button>'+
+    '</div>';
+  }).join('');
+  return '<div class="rel-wrap"><div class="rel-title">🛒 สินค้าที่อาจช่วยได้</div><div class="rel-scroll">'+cards+'</div></div>';
 }
 </script>
 </body>
