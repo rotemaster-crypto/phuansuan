@@ -106,6 +106,37 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 .upload-progress-bar{height:100%;background:var(--primary);width:0%;transition:width 0.3s}
 .screen{display:none}.screen.active{display:block}
 @media(max-width:768px){.sidebar{width:100%;height:auto;position:relative}.main{margin-left:0}.stats-grid{grid-template-columns:repeat(2,1fr)}.form-grid,.form-grid-3{grid-template-columns:1fr}.icon-grid{grid-template-columns:repeat(3,1fr)}}
+/* ── ORDERS ADMIN (3.3) ── */
+.ord-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.ofb{padding:7px 14px;border-radius:18px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;color:var(--text);cursor:pointer}
+.ofb.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.oa-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.oa-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap}
+.oa-id{font-size:15px;font-weight:800;color:var(--text)}
+.oa-badge{color:#fff;font-size:12px;font-weight:700;padding:4px 11px;border-radius:11px}
+.oa-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-bottom:12px}
+@media(max-width:680px){.oa-grid{grid-template-columns:1fr}}
+.oa-box{background:var(--bg,#f5f6f8);border-radius:10px;padding:11px 13px}
+.oa-h{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+.oa-line{font-size:13px;color:var(--text);line-height:1.7}
+.oa-items{font-size:13px;line-height:1.8}
+.oa-it-row{display:flex;justify-content:space-between;gap:8px}
+.oa-sum{border-top:1px dashed var(--border);margin-top:7px;padding-top:7px}
+.oa-sum .r{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.oa-sum .r.tot{font-size:15px;font-weight:800;color:var(--text)}
+.oa-slip{margin:6px 0}
+.oa-slip img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer}
+.oa-noslip{font-size:12px;color:var(--muted)}
+.oa-actions{display:flex;gap:9px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px}
+.oa-btn{border:none;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer}
+.oa-confirm{background:#42b883;color:#fff}
+.oa-ship{background:#7b61ff;color:#fff}
+.oa-done{background:#2e7d32;color:#fff}
+.oa-cancel{background:#fff;color:#e41e3f;border:1px solid #e41e3f}
+.slip-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+.slip-lightbox.open{display:flex}
+.slip-lightbox img{max-width:100%;max-height:100%;border-radius:10px}
+
 </style>
 </head>
 <body>
@@ -137,6 +168,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('features',this)"><span class="si">⚙️</span> Features Toggle</div>
     <div class="sb-item" onclick="showScreen('points',this)"><span class="si">🏅</span> แต้ม & Tier</div>
     <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
+    <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
     <div class="sb-section">ระบบ</div>
     <div class="sb-item" onclick="window.open('https://phuansuan.web.app','_blank')"><span class="si">🌐</span> เปิดแอป</div>
     <div class="sb-item" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><span class="si">🔥</span> Firebase Console</div>
@@ -441,6 +473,24 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<div class="screen" id="screen-orders">
+  <div class="page-header"><div class="page-title">🛒 ออเดอร์</div><div class="page-sub">ตรวจสลิป ยืนยันรับเงิน และจัดส่ง</div></div>
+  <div class="ord-filter" id="ord-filter">
+    <button class="ofb active" data-st="all" onclick="filterOrders('all',this)">ทั้งหมด</button>
+    <button class="ofb" data-st="paid_review" onclick="filterOrders('paid_review',this)">รอตรวจสลิป</button>
+    <button class="ofb" data-st="pending_payment" onclick="filterOrders('pending_payment',this)">รอชำระ</button>
+    <button class="ofb" data-st="confirmed" onclick="filterOrders('confirmed',this)">ยืนยันแล้ว</button>
+    <button class="ofb" data-st="shipped" onclick="filterOrders('shipped',this)">จัดส่งแล้ว</button>
+    <button class="ofb" data-st="completed" onclick="filterOrders('completed',this)">สำเร็จ</button>
+    <button class="ofb" data-st="cancelled" onclick="filterOrders('cancelled',this)">ยกเลิก</button>
+  </div>
+  <div id="orders-admin-list"><div class="empty-state">กำลังโหลด...</div></div>
+</div>
+
+<div class="slip-lightbox" id="slipLightbox" onclick="closeSlip()">
+  <img id="slip-img" src="" alt="สลิปการโอนเงิน">
+</div>
+
 </div><!-- /main -->
 </div><!-- /app -->
 
@@ -492,7 +542,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, products: loadProducts };
+  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, products: loadProducts, orders: loadOrders };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -843,6 +893,136 @@ function fmtDate(ts) {
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
 }
+
+// ══════════════════════════════════════════════════════════
+//  ORDERS ADMIN (3.3) — ตรวจสลิป / ยืนยัน / จัดส่ง
+// ══════════════════════════════════════════════════════════
+function adminTenant(){ return /office/.test(location.hostname) ? 'office' : 'phuansuan'; }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+function baht(n){ return '฿' + Math.round(Number(n)||0).toLocaleString(); }
+
+const ORDER_META = {
+  pending_payment:{t:'รอชำระเงิน',c:'#f5a623'},
+  paid_review:{t:'รอตรวจสลิป',c:'#1877f2'},
+  confirmed:{t:'ยืนยันแล้ว',c:'#42b883'},
+  shipped:{t:'จัดส่งแล้ว',c:'#7b61ff'},
+  completed:{t:'สำเร็จ',c:'#2e7d32'},
+  cancelled:{t:'ยกเลิก',c:'#e41e3f'}
+};
+
+let adminOrders = [];
+let adminOrderFilter = 'all';
+
+async function loadOrders(){
+  const box = document.getElementById('orders-admin-list');
+  if (!box || !db) return;
+  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  try {
+    const snap = await db.collection('orders').get();
+    const t = adminTenant();
+    adminOrders = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(o){ return !o.tenantId || o.tenantId === t; });
+    adminOrders.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
+    const pend = adminOrders.filter(function(o){ return o.status==='paid_review'; }).length;
+    const badge = document.getElementById('badge-orders'); if (badge) badge.textContent = pend;
+    renderAdminOrders();
+  } catch(e){ box.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
+}
+
+function filterOrders(st, el){
+  adminOrderFilter = st;
+  document.querySelectorAll('#ord-filter .ofb').forEach(function(b){ b.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderAdminOrders();
+}
+
+function renderAdminOrders(){
+  const box = document.getElementById('orders-admin-list');
+  if (!box) return;
+  const list = adminOrders.filter(function(o){ return adminOrderFilter==='all' || o.status===adminOrderFilter; });
+  if (!list.length){ box.innerHTML = '<div class="empty-state">ไม่มีออเดอร์ในหมวดนี้</div>'; return; }
+  box.innerHTML = list.map(orderCardHtml).join('');
+}
+
+function orderCardHtml(o){
+  const m = ORDER_META[o.status] || {t:o.status, c:'#888'};
+  const sh = o.shipping || {};
+  const addr = [sh.addressLine, sh.subdistrict, sh.district, sh.province, sh.postcode].filter(Boolean).map(escapeHtml).join(' ');
+  const items = (o.items||[]).map(function(i){
+    return '<div class="oa-it-row"><span>'+escapeHtml(i.name)+' × '+i.qty+'</span><span>'+baht((i.price||0)*i.qty)+'</span></div>';
+  }).join('');
+  let sum = '<div class="oa-sum">';
+  sum += '<div class="r"><span>ยอดสินค้า</span><span>'+baht(o.subtotal||0)+'</span></div>';
+  if (o.discount) sum += '<div class="r"><span>ส่วนลด '+(o.discountPct||0)+'%</span><span>− '+baht(o.discount)+'</span></div>';
+  sum += '<div class="r"><span>ค่าส่ง</span><span>'+(o.shippingFee?baht(o.shippingFee):'ฟรี')+'</span></div>';
+  sum += '<div class="r tot"><span>รวมสุทธิ</span><span>'+baht(o.total||0)+'</span></div></div>';
+
+  const slip = o.slipUrl
+    ? '<div class="oa-slip"><img src="'+escapeHtml(o.slipUrl)+'" onclick="viewSlip(\''+escapeHtml(o.slipUrl)+'\')" alt="สลิป"></div>'
+    : '<div class="oa-noslip">— ยังไม่มีสลิป —</div>';
+
+  let acts = '';
+  if (o.status==='paid_review') acts += '<button class="oa-btn oa-confirm" onclick="confirmOrder(\''+o.id+'\')">✅ ยืนยันรับเงิน</button>';
+  if (o.status==='confirmed')   acts += '<button class="oa-btn oa-ship" onclick="shipOrder(\''+o.id+'\')">📮 จัดส่ง + เลขพัสดุ</button>';
+  if (o.status==='shipped')     acts += '<button class="oa-btn oa-done" onclick="completeOrder(\''+o.id+'\')">🏁 ปิดออเดอร์ (สำเร็จ)</button>';
+  if (['pending_payment','paid_review','confirmed'].indexOf(o.status) > -1)
+    acts += '<button class="oa-btn oa-cancel" onclick="cancelOrder(\''+o.id+'\')">❌ ยกเลิก</button>';
+
+  const track = o.trackingNumber ? '<div class="oa-line" style="color:#7b61ff;font-weight:600">📮 เลขพัสดุ: '+escapeHtml(o.trackingNumber)+'</div>' : '';
+
+  return '<div class="oa-card">'+
+    '<div class="oa-top"><span class="oa-id">#'+o.id.slice(-6).toUpperCase()+'</span>'+
+      '<span class="oa-badge" style="background:'+m.c+'">'+m.t+'</span></div>'+
+    '<div class="oa-grid">'+
+      '<div class="oa-box"><div class="oa-h">👤 ผู้รับ</div>'+
+        '<div class="oa-line">'+escapeHtml(sh.name||o.userName||'-')+'</div>'+
+        '<div class="oa-line">📞 '+escapeHtml(sh.phone||'-')+'</div>'+
+        '<div class="oa-line">📍 '+(addr||'-')+'</div>'+
+        (sh.note?'<div class="oa-line">📝 '+escapeHtml(sh.note)+'</div>':'')+
+        '<div class="oa-line" style="color:var(--muted);font-size:12px;margin-top:5px">'+fmtDate(o.createdAt)+'</div>'+
+        track+
+      '</div>'+
+      '<div class="oa-box"><div class="oa-h">🛒 รายการ</div>'+
+        '<div class="oa-items">'+items+'</div>'+ sum +
+        '<div class="oa-h" style="margin-top:10px">🧾 สลิป</div>'+ slip +
+      '</div>'+
+    '</div>'+
+    (acts ? '<div class="oa-actions">'+acts+'</div>' : '')+
+  '</div>';
+}
+
+async function updateOrder(id, fields, msg){
+  if (!db) return;
+  try {
+    fields.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('orders').doc(id).update(fields);
+    toast(msg||'อัปเดตแล้ว','success');
+    loadOrders();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+function confirmOrder(id){
+  if (!confirm('ยืนยันว่าได้รับเงินสำหรับออเดอร์นี้แล้ว?')) return;
+  updateOrder(id, { status:'confirmed', confirmedAt: firebase.firestore.FieldValue.serverTimestamp() }, '✅ ยืนยันรับเงินแล้ว');
+}
+function shipOrder(id){
+  const tn = prompt('ใส่เลขพัสดุ (tracking number):', '');
+  if (tn === null) return;
+  updateOrder(id, { status:'shipped', trackingNumber: tn.trim(), shippedAt: firebase.firestore.FieldValue.serverTimestamp() }, '📮 บันทึกการจัดส่งแล้ว');
+}
+function completeOrder(id){
+  if (!confirm('ปิดออเดอร์นี้เป็น "สำเร็จ"?')) return;
+  updateOrder(id, { status:'completed', completedAt: firebase.firestore.FieldValue.serverTimestamp() }, '🏁 ปิดออเดอร์แล้ว');
+}
+function cancelOrder(id){
+  if (!confirm('ยกเลิกออเดอร์นี้?')) return;
+  updateOrder(id, { status:'cancelled', cancelledAt: firebase.firestore.FieldValue.serverTimestamp() }, 'ยกเลิกออเดอร์แล้ว');
+}
+function viewSlip(url){
+  const lb = document.getElementById('slipLightbox');
+  document.getElementById('slip-img').src = url;
+  lb.classList.add('open');
+}
+function closeSlip(){ document.getElementById('slipLightbox').classList.remove('open'); }
 </script>
 </body>
 </html>
