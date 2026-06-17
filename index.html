@@ -908,6 +908,7 @@ async function saveUserToFirestore(user) {
     if (!doc.exists) {
       // User ใหม่ — สร้าง record
       await userRef.set({
+        tenantId:     tenantId(),
         displayName:  user.displayName,
         photoUrl:     user.photoUrl,
         lineUserId:   user.lineUserId,
@@ -930,7 +931,7 @@ async function saveUserToFirestore(user) {
       const isNewDay = !lastLogin ||
         lastLogin.toDateString() !== today.toDateString();
 
-      const updates = { lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() };
+      const updates = { lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(), tenantId: tenantId() };
       if (isNewDay) {
         updates.points = firebase.firestore.FieldValue.increment(
           APP_CONFIG.points.dailyLoginBonus
@@ -1275,9 +1276,11 @@ async function loadLeaderboard() {
   if (!box || !db) return;
   box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>';
   try {
-    var snap = await db.collection('users').orderBy('points', 'desc').limit(30).get();
+    var snap = await db.collection('users').orderBy('points', 'desc').limit(100).get();
+    var tid = (typeof tenantId === 'function') ? tenantId() : null;
+    var list = snap.docs.filter(function (d) { return tid ? d.data().tenantId === tid : true; }).slice(0, 30);
     var rows = [], rank = 0;
-    snap.forEach(function (d) {
+    list.forEach(function (d) {
       var u = d.data(); rank++;
       var tiers = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.tiers) || {};
       var t = tiers[u.tier] || {};
