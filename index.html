@@ -400,10 +400,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="tb-logo" id="app-logo">facebook</div>
-  <button class="tb-btn" style="font-size:16px">🔍</button>
+  <div class="tb-logo" id="app-logo">เพื่อนสวน</div>
   <button class="tb-btn">🔔<span class="tb-badge">3</span></button>
-  <button class="tb-btn">💬<span class="tb-badge">5</span></button>
   <button class="tb-btn commerce-entry" onclick="openCart()">🛒<span class="tb-badge cart-badge" id="cart-badge" style="display:none">0</span></button>
 </div>
 
@@ -411,21 +409,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 <div class="screen active" id="screen-feed">
   <div class="feed-tabs">
     <div class="ftab active" onclick="switchFeedTab(this)">ฟีดของคุณ</div>
-    <div class="ftab" onclick="switchFeedTab(this)">รายการโปรด</div>
     <div class="ftab" onclick="switchFeedTab(this)">ใกล้ฉัน 📍</div>
   </div>
 
-  <div class="stories-bar">
-    <div class="story" onclick="openPostModal()">
-      <div class="s-ring mine"><div class="s-inner" style="font-size:28px">➕</div></div>
-      <div class="s-name">สร้างสตอรี</div>
-    </div>
-    <div class="story"><div class="s-ring"><div class="s-inner">🥭</div></div><div class="s-name">ลุงสมชาย</div></div>
-    <div class="story"><div class="s-ring"><div class="s-inner">🌶️</div></div><div class="s-name">ป้าวิไล</div></div>
-    <div class="story"><div class="s-ring"><div class="s-inner">🥬</div></div><div class="s-name">นายสุรศักดิ์</div></div>
-    <div class="story"><div class="s-ring"><div class="s-inner">🍈</div></div><div class="s-name">คุณประเสริฐ</div></div>
-    <div class="story"><div class="s-ring"><div class="s-inner">🌾</div></div><div class="s-name">ลุงวิชัย</div></div>
-  </div>
 
   <div class="create-post">
     <div class="cp-row">
@@ -470,22 +456,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         <button class="prof-btn-s">••• เพิ่มเติม</button>
       </div>
     </div>
-    <div class="prof-name" id="prof-name">ลุงสมชาย วงษ์เกษตร</div>
+    <div class="prof-name" id="prof-name"></div>
     <div class="prof-sub" id="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
     <div class="prof-bio" id="prof-bio" style="display:none"></div>
     <div class="prof-badges" id="prof-badges"></div>
     <div class="prof-stats">
       <div class="ps"><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
-      <div class="ps"><div class="ps-n" id="stat-followers">0</div><div class="ps-l">ผู้ติดตาม</div></div>
       <div class="ps"><div class="ps-n" id="stat-helped">0</div><div class="ps-l">ช่วยคน</div></div>
       <div class="ps"><div class="ps-n" id="stat-points">0</div><div class="ps-l">แต้ม</div></div>
     </div>
   </div>
   <div class="prof-nav">
     <div class="pnav active">โพส</div>
-    <div class="pnav">เกี่ยวกับ</div>
-    <div class="pnav">รูปภาพ</div>
-    <div class="pnav">สินค้าที่ใช้</div>
   </div>
   <div class="points-card">
     <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
@@ -772,11 +754,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div class="bn" id="nav-community" onclick="switchScreen('community')">
     <div class="bn-ico">👥</div>
     <div class="bn-lbl">ชุมชน</div>
-    <span class="bn-badge">2</span>
-  </div>
-  <div class="bn" onclick="openPostModal()">
-    <div class="bn-ico">🎬</div>
-    <div class="bn-lbl">วิดีโอ</div>
   </div>
   <div class="bn" id="nav-profile" onclick="switchScreen('profile')">
     <div class="bn-ico">👤</div>
