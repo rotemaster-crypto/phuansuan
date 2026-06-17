@@ -239,10 +239,16 @@ exports.onCommentCreated = onDocumentCreated(
   async (event) => {
     const cmt = event.data?.data();
     if (!cmt?.authorId) return;
-    // นับคอมเมนต์ฝั่ง server (client แก้ไม่ได้แล้ว)
-    await admin.firestore().collection("posts").doc(event.params.postId)
+    const db = admin.firestore();
+    // นับคอมเมนต์ฝั่ง server (ทุกคอมเมนต์)
+    await db.collection("posts").doc(event.params.postId)
       .update({ comments: admin.firestore.FieldValue.increment(1) }).catch(() => {});
-    const ref = admin.firestore().collection("users").doc(cmt.authorId);
+    // แต้ม: ให้ครั้งแรกต่อโพสต่อ user เท่านั้น (กันสแปมฟาร์มแต้ม)
+    const marker = db.collection("posts").doc(event.params.postId)
+      .collection("commentAwarded").doc(cmt.authorId);
+    if ((await marker.get()).exists) return;
+    await marker.set({ at: admin.firestore.FieldValue.serverTimestamp() });
+    const ref = db.collection("users").doc(cmt.authorId);
     await ref.update({ points: admin.firestore.FieldValue.increment(PTS.perComment) });
     await updateTier(ref);
   }
