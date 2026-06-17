@@ -453,11 +453,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <div class="prof-av" id="prof-avatar">ฉ</div>
       <div class="prof-btns">
         <button class="prof-btn-p" onclick="openEditProfile()">✏️ แก้ไขโปรไฟล์</button>
-        <button class="prof-btn-s">••• เพิ่มเติม</button>
+        <button class="prof-btn-s" onclick="openMoreMenu()">••• เพิ่มเติม</button>
       </div>
     </div>
     <div class="prof-name" id="prof-name"></div>
-    <div class="prof-sub" id="prof-sub">📍 อ.บ้านโป่ง ราชบุรี</div>
+    <div class="prof-sub" id="prof-sub"></div>
     <div class="prof-bio" id="prof-bio" style="display:none"></div>
     <div class="prof-badges" id="prof-badges"></div>
     <div class="prof-stats">
@@ -756,6 +756,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     </div>
     <div class="modal-body" id="notif-list" style="padding:8px 0 16px">
       <div style="text-align:center;color:var(--muted);padding:24px;font-size:14px">ยังไม่มีการแจ้งเตือน</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MORE MENU ══ -->
+<div class="overlay" id="moreMenuModal" onclick="if(event.target===this)closeMoreMenu()">
+  <div class="modal" style="border-radius:16px 16px 0 0">
+    <div class="modal-body" style="padding:10px 0 18px">
+      <div onclick="contactShop()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text)">
+        <span style="font-size:20px">🏪</span> ติดต่อร้าน DemeterRich
+      </div>
+      <div onclick="doLogout()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:#e41e3f;border-top:1px solid var(--border)">
+        <span style="font-size:20px">🚪</span> ออกจากระบบ
+      </div>
     </div>
   </div>
 </div>
@@ -1260,6 +1274,21 @@ async function openNotifs() {
   }
 }
 function closeNotifs() { var m = document.getElementById('notifModal'); if (m) m.classList.remove('open'); }
+
+// ── More menu (โปรไฟล์) ───────────────────────────────────
+function openMoreMenu() { var m = document.getElementById('moreMenuModal'); if (m) m.classList.add('open'); }
+function closeMoreMenu() { var m = document.getElementById('moreMenuModal'); if (m) m.classList.remove('open'); }
+function contactShop() {
+  var url = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.shop && APP_CONFIG.shop.lineShopUrl) || '';
+  closeMoreMenu();
+  if (url) window.open(url, '_blank');
+}
+async function doLogout() {
+  if (!confirm('ออกจากระบบ?')) return;
+  try { if (typeof liff !== 'undefined' && liff.logout && liff.isLoggedIn && liff.isLoggedIn()) liff.logout(); } catch (e) {}
+  try { await firebase.auth().signOut(); } catch (e) {}
+  location.reload();
+}
 
 function escapeHtml(s) {
   if (s === undefined || s === null) return '';
