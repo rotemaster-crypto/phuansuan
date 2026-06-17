@@ -493,32 +493,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 
 <!-- ══ COMMUNITY SCREEN ══ -->
 <div class="screen" id="screen-community">
-  <div class="comm-screen">
-    <div class="comm-head-label">กลุ่มของคุณ</div>
-    <div class="comm-alert"><span>📍</span><div><strong>3 กลุ่มใกล้คุณ</strong> กำลังพูดถึงโรคระบาดในช่วงนี้ — แตะเพื่อดู</div></div>
-    <div class="comm-card">
-      <div class="cc-head">
-        <div class="cc-icon cci-g">🥭</div>
-        <div style="flex:1"><div class="cc-name">ชาวสวนมะม่วง ราชบุรี</div><div class="cc-sub">อ.บ้านโป่ง · อ.โพธาราม · อ.ดำเนินสะดวก</div></div>
-        <button class="cc-joined">เข้าแล้ว ✓</button>
-      </div>
-      <div class="cc-stats"><span>👥 1,240 คน</span><span>💬 18 โพสวันนี้</span><span>⚠️ แจ้งเตือน 2</span></div>
-    </div>
-    <div class="comm-card">
-      <div class="cc-head">
-        <div class="cc-icon cci-a">🌶️</div>
-        <div style="flex:1"><div class="cc-name">กลุ่มพริกภาคกลาง</div><div class="cc-sub">ราชบุรี · กาญจนบุรี · นครปฐม</div></div>
-        <button class="cc-join">เข้าร่วม</button>
-      </div>
-      <div class="cc-stats"><span>👥 856 คน</span><span>💬 9 โพสวันนี้</span></div>
-    </div>
-    <div class="comm-card">
-      <div class="cc-head">
-        <div class="cc-icon cci-b">🌿</div>
-        <div style="flex:1"><div class="cc-name">เกษตรอินทรีย์ ภาคตะวันตก</div><div class="cc-sub">ราชบุรี · เพชรบุรี · ประจวบฯ</div></div>
-        <button class="cc-join">เข้าร่วม</button>
-      </div>
-      <div class="cc-stats"><span>👥 2,100 คน</span><span>💬 32 โพสวันนี้</span></div>
+  <div style="padding:14px 16px 84px">
+    <div style="font-size:20px;font-weight:800;color:var(--text)">🏆 ปราชญ์ชาวสวน</div>
+    <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">อันดับผู้สะสมแต้มสูงสุด — ยิ่งแบ่งปัน ยิ่งไต่อันดับ</div>
+    <div id="leaderboard-list">
+      <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
     </div>
   </div>
 </div>
@@ -1290,6 +1269,41 @@ async function doLogout() {
   location.reload();
 }
 
+// ── Leaderboard (ปราชญ์ชาวสวน) ───────────────────────────
+async function loadLeaderboard() {
+  var box = document.getElementById('leaderboard-list');
+  if (!box || !db) return;
+  box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>';
+  try {
+    var snap = await db.collection('users').orderBy('points', 'desc').limit(30).get();
+    var rows = [], rank = 0;
+    snap.forEach(function (d) {
+      var u = d.data(); rank++;
+      var tiers = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.tiers) || {};
+      var t = tiers[u.tier] || {};
+      var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : String(rank);
+      var isMe = currentUser && d.id === currentUser.uid;
+      var nm = escapeHtml(u.displayName || 'ชาวสวน');
+      var av = u.photoUrl
+        ? '<div style="width:40px;height:40px;border-radius:50%;background-image:url(' + u.photoUrl + ');background-size:cover;background-position:center;flex-shrink:0"></div>'
+        : '<div style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">' + (nm.charAt(0) || 'ช') + '</div>';
+      rows.push(
+        '<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;margin-bottom:8px;background:' + (isMe ? '#eaf3ff' : '#fff') + ';border:1px solid var(--border)">'
+        + '<div style="width:30px;text-align:center;font-weight:800;color:var(--muted);flex-shrink:0;font-size:' + (rank <= 3 ? '20px' : '15px') + '">' + medal + '</div>'
+        + av
+        + '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nm + (isMe ? ' <span style="color:var(--primary);font-size:12px">(คุณ)</span>' : '') + '</div>'
+        + '<div style="font-size:12px;color:var(--muted)">' + (t.emoji || '🏅') + ' ' + (t.label || u.tier || '') + '</div></div>'
+        + '<div style="text-align:right;flex-shrink:0"><div style="font-size:16px;font-weight:800;color:var(--primary)">' + (u.points || 0).toLocaleString() + '</div><div style="font-size:11px;color:var(--muted)">แต้ม</div></div>'
+        + '</div>'
+      );
+    });
+    box.innerHTML = rows.length ? rows.join('') : '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">ยังไม่มีสมาชิก</div>';
+  } catch (e) {
+    console.error('leaderboard:', e);
+    box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">โหลดอันดับไม่สำเร็จ</div>';
+  }
+}
+
 function escapeHtml(s) {
   if (s === undefined || s === null) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -1511,6 +1525,7 @@ function switchScreen(name){
   const nav=document.getElementById('nav-'+name);
   if(nav) nav.classList.add('active');
   if(name === 'profile'){ renderProfileInfo(); loadMyPosts(); }
+  if(name === 'community'){ loadLeaderboard(); }
 }
 function switchFeedTab(el){
   document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
