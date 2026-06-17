@@ -62,7 +62,7 @@ service cloud.firestore {
       allow update: if isAdmin()
         || (signedIn()
             && request.resource.data.diff(resource.data)
-                 .affectedKeys().hasOnly(['likes', 'helps', 'comments']));
+                 .affectedKeys().hasOnly(['comments']));
       allow delete: if isAdmin()
         || (signedIn() && resource.data.authorId == request.auth.uid);
 
@@ -74,6 +74,18 @@ service cloud.firestore {
         allow update: if false;
         allow delete: if isAdmin()
           || (signedIn() && resource.data.authorId == request.auth.uid);
+      }
+
+      // ── Likes / Helps (1 doc ต่อ user — server เป็นคนนับ+ให้แต้ม) ──
+      match /likes/{uid} {
+        allow read: if signedIn();
+        allow create, delete: if isOwner(uid);
+        allow update: if false;
+      }
+      match /helps/{uid} {
+        allow read: if signedIn();
+        allow create, delete: if isOwner(uid);
+        allow update: if false;
       }
     }
 

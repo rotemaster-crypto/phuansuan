@@ -1790,27 +1790,33 @@ function renderPost(id, p, i) {
 async function likePost(id, btn) {
   if (!currentUser || !db) return;
   btn.classList.toggle('liked');
-  const inc = btn.classList.contains('liked') ? 1 : -1;
+  const liked = btn.classList.contains('liked');
+  const inc = liked ? 1 : -1;
+  const el = document.getElementById('likes-' + id);
+  if (el) el.textContent = Math.max(0, parseInt(el.textContent || '0') + inc);
+  const ref = db.collection('posts').doc(id).collection('likes').doc(currentUser.uid);
   try {
-    await db.collection('posts').doc(id).update({ likes: firebase.firestore.FieldValue.increment(inc) });
-    const el = document.getElementById('likes-' + id);
-    if (el) el.textContent = Math.max(0, parseInt(el.textContent) + inc);
-    if (inc > 0) {
-      await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perLike || 2) });
-    }
-  } catch(e) { console.error(e); }
+    if (liked) await ref.set({ at: firebase.firestore.FieldValue.serverTimestamp() });
+    else await ref.delete();
+  } catch(e) {
+    console.error(e);
+    btn.classList.toggle('liked');
+    if (el) el.textContent = Math.max(0, parseInt(el.textContent || '0') - inc);
+  }
 }
 
 async function helpPost(id, btn) {
   if (!currentUser || !db) return;
   btn.classList.toggle('helped');
-  const inc = btn.classList.contains('helped') ? 1 : -1;
+  const helped = btn.classList.contains('helped');
+  const ref = db.collection('posts').doc(id).collection('helps').doc(currentUser.uid);
   try {
-    await db.collection('posts').doc(id).update({ helps: firebase.firestore.FieldValue.increment(inc) });
-    if (inc > 0) {
-      await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perHelp || 15), helpCount: firebase.firestore.FieldValue.increment(1) });
-    }
-  } catch(e) { console.error(e); }
+    if (helped) await ref.set({ at: firebase.firestore.FieldValue.serverTimestamp() });
+    else await ref.delete();
+  } catch(e) {
+    console.error(e);
+    btn.classList.toggle('helped');
+  }
 }
 
 async function addComment(postId) {

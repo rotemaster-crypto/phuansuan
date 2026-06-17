@@ -202,7 +202,7 @@ const { onDocumentCreated, onDocumentUpdated } =
   require("firebase-functions/v2/firestore");
 
 const PTS = {
-  perPost: 10, perPostWithImg: 15, perComment: 3, perHelp: 15,
+  perPost: 10, perPostWithImg: 15, perComment: 3, perHelp: 15, perLike: 2,
 };
 const TIERS = [
   { key: "platinum", min: 6000 }, { key: "gold", min: 3000 },
@@ -245,19 +245,50 @@ exports.onCommentCreated = onDocumentCreated(
   }
 );
 
-exports.onPostHelped = onDocumentUpdated(
-  { document: "posts/{postId}", region: "asia-southeast1" },
+// ── ไลก์/ช่วยได้ → server-side: 1 คน/โพส, ให้แต้มเจ้าของครั้งเดียว ──
+const { onDocumentWritten } = require("firebase-functions/v2/firestore");
+
+async function awardOnce(db, postId, actorUid, markerCol, authorId, pts, extra) {
+  if (!authorId || actorUid === authorId) return;        // ไม่ให้แต้มกดของตัวเอง
+  const marker = db.collection("posts").doc(postId).collection(markerCol).doc(actorUid);
+  const got = await marker.get();
+  if (got.exists) return;                                 // เคยให้แต้มแล้ว ข้าม
+  await marker.set({ at: admin.firestore.FieldValue.serverTimestamp() });
+  const uref = db.collection("users").doc(authorId);
+  await uref.update(Object.assign({ points: admin.firestore.FieldValue.increment(pts) }, extra || {}));
+  await updateTier(uref);
+}
+
+exports.onLikeWrite = onDocumentWritten(
+  { document: "posts/{postId}/likes/{uid}", region: "asia-southeast1" },
   async (event) => {
-    const before = event.data?.before?.data();
-    const after  = event.data?.after?.data();
-    if (!before || !after) return;
-    if ((after.helps || 0) > (before.helps || 0) && after.authorId) {
-      const ref = admin.firestore().collection("users").doc(after.authorId);
-      await ref.update({
-        points:    admin.firestore.FieldValue.increment(PTS.perHelp),
-        helpCount: admin.firestore.FieldValue.increment(1),
-      });
-      await updateTier(ref);
+    const had = event.data?.before?.exists, has = event.data?.after?.exists;
+    const db = admin.firestore();
+    const postRef = db.collection("posts").doc(event.params.postId);
+    if (!had && has) {
+      const p = await postRef.get(); if (!p.exists) return;
+      await postRef.update({ likes: admin.firestore.FieldValue.increment(1) });
+      await awardOnce(db, event.params.postId, event.params.uid, "likeAwarded", p.data().authorId, PTS.perLike);
+    } else if (had && !has) {
+      const p = await postRef.get(); if (!p.exists) return;
+      await postRef.update({ likes: admin.firestore.FieldValue.increment(-1) });
+    }
+  }
+);
+
+exports.onHelpWrite = onDocumentWritten(
+  { document: "posts/{postId}/helps/{uid}", region: "asia-southeast1" },
+  async (event) => {
+    const had = event.data?.before?.exists, has = event.data?.after?.exists;
+    const db = admin.firestore();
+    const postRef = db.collection("posts").doc(event.params.postId);
+    if (!had && has) {
+      const p = await postRef.get(); if (!p.exists) return;
+      await postRef.update({ helps: admin.firestore.FieldValue.increment(1) });
+      await awardOnce(db, event.params.postId, event.params.uid, "helpAwarded", p.data().authorId, PTS.perHelp, { helpCount: admin.firestore.FieldValue.increment(1) });
+    } else if (had && !has) {
+      const p = await postRef.get(); if (!p.exists) return;
+      await postRef.update({ helps: admin.firestore.FieldValue.increment(-1) });
     }
   }
 );
