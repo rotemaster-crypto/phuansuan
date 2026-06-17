@@ -2253,7 +2253,7 @@ async function onSlipPicked(input){
   try {
     const blob = (typeof compressImage==='function') ? await compressImage(file, 1280, 0.85) : file;
     const tid = (typeof tenantId==='function')?tenantId():'default';
-    const ref = firebase.storage().ref('slips/'+tid+'/'+pendingOrder.id+'_'+Date.now()+'.jpg');
+    const ref = firebase.storage().ref('slips/'+tid+'/'+currentUser.uid+'/'+pendingOrder.id+'_'+Date.now()+'.jpg');
     const snap = await ref.put(blob, { contentType: 'image/jpeg' });
     const url = await snap.ref.getDownloadURL();
     await db.collection('orders').doc(pendingOrder.id).update({

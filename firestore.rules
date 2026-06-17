@@ -25,11 +25,17 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if signedIn();
       allow create: if isOwner(uid)
-        && request.resource.data.get('banned', false) == false;
+        && request.resource.data.get('banned', false) == false
+        && request.resource.data.get('tier', 'bronze') == 'bronze'
+        && request.resource.data.get('points', 0) <= 20;
       allow update: if isAdmin()
         || (isOwner(uid)
             && !request.resource.data.diff(resource.data)
-                 .affectedKeys().hasAny(['banned', 'tier']));
+                 .affectedKeys().hasAny(['banned', 'tier'])
+            && request.resource.data.get('points', 0)
+                 <= resource.data.get('points', 0) + 20
+            && request.resource.data.get('points', 0)
+                 >= resource.data.get('points', 0));
       allow delete: if isAdmin();
 
       // ── Diagnoses (ผล AI ส่วนตัว) ──────────────────────

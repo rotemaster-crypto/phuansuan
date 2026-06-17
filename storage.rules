@@ -37,9 +37,9 @@ service firebase.storage {
 
     // ปิดทุกอย่างที่เหลือ
     // สลิปโอนเงิน — login แล้วอัพได้ เฉพาะรูป ไม่เกิน 5MB
-    match /slips/{tenant}/{fileName} {
-      allow read: if signedIn();
-      allow write: if signedIn() && isImage() && underLimit(5);
+    match /slips/{tenant}/{uid}/{fileName} {
+      allow read:  if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow write: if signedIn() && request.auth.uid == uid && isImage() && underLimit(5);
     }
 
     match /{allPaths=**} {
