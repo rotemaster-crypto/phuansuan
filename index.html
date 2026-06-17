@@ -515,7 +515,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         <div class="modal-av">ฉ</div>
         <div>
           <div class="modal-uname">ชื่อของคุณ</div>
-          <div class="privacy-chip">🌍 สาธารณะ ▾</div>
+          <div class="privacy-chip" style="cursor:default">🌍 โพสสาธารณะ</div>
         </div>
       </div>
       <div class="type-chips">
@@ -1304,6 +1304,15 @@ async function loadLeaderboard() {
   }
 }
 
+// ── Share ────────────────────────────────────────────────
+async function sharePost() {
+  var url = (location && location.origin) || 'https://phuansuan.web.app';
+  var text = 'มาเข้าชุมชนเพื่อนสวน — แชร์ปัญหาและความรู้การเกษตร 🌿';
+  try { if (navigator.share) { await navigator.share({ title: 'เพื่อนสวน', text: text, url: url }); return; } } catch (e) { return; }
+  try { await navigator.clipboard.writeText(url); alert('คัดลอกลิงก์แล้ว 📋'); }
+  catch (e) { try { prompt('คัดลอกลิงก์นี้:', url); } catch (e2) {} }
+}
+
 function escapeHtml(s) {
   if (s === undefined || s === null) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -1533,13 +1542,6 @@ function switchFeedTab(el){
   if ((el.textContent || '').indexOf('ใกล้ฉัน') !== -1) loadFeed('nearby');
   else loadFeed();
 }
-function toggleFollow(btn){
-  const f=btn.classList.contains('following');
-  btn.classList.toggle('following',!f);
-  btn.textContent = f ? '+ ติดตาม' : 'กำลังติดตาม ▾';
-}
-function toggleLike(btn){ btn.classList.toggle('liked'); }
-function toggleHelp(btn){ btn.classList.toggle('helped'); }
 function toggleComments(id){
   const el=document.getElementById(id);
   el.style.display=el.style.display==='none'?'block':'none';
@@ -1881,7 +1883,7 @@ function renderPost(id, p, i) {
         <button class="pa" onclick="likePost('${id}',this)"><span class="pi">👍</span>ถูกใจ</button>
         <button class="pa" onclick="helpPost('${id}',this)"><span class="pi">✅</span>ช่วยได้</button>
         <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
-        <button class="pa"><span class="pi">↗️</span>แชร์</button>
+        <button class="pa" onclick="sharePost()"><span class="pi">↗️</span>แชร์</button>
       </div>
       <div class="comments-wrap" id="cmt-${id}" style="display:none">
         <div class="cmt-input-row">
