@@ -239,9 +239,22 @@ exports.onCommentCreated = onDocumentCreated(
   async (event) => {
     const cmt = event.data?.data();
     if (!cmt?.authorId) return;
+    // นับคอมเมนต์ฝั่ง server (client แก้ไม่ได้แล้ว)
+    await admin.firestore().collection("posts").doc(event.params.postId)
+      .update({ comments: admin.firestore.FieldValue.increment(1) }).catch(() => {});
     const ref = admin.firestore().collection("users").doc(cmt.authorId);
     await ref.update({ points: admin.firestore.FieldValue.increment(PTS.perComment) });
     await updateTier(ref);
+  }
+);
+
+// ลบคอมเมนต์ → ลดตัวนับ (กันค้างเกินจริง)
+const { onDocumentDeleted } = require("firebase-functions/v2/firestore");
+exports.onCommentDeleted = onDocumentDeleted(
+  { document: "posts/{postId}/comments/{commentId}", region: "asia-southeast1" },
+  async (event) => {
+    await admin.firestore().collection("posts").doc(event.params.postId)
+      .update({ comments: admin.firestore.FieldValue.increment(-1) }).catch(() => {});
   }
 );
 

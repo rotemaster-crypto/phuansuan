@@ -59,10 +59,7 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if signedIn()
         && request.resource.data.authorId == request.auth.uid;
-      allow update: if isAdmin()
-        || (signedIn()
-            && request.resource.data.diff(resource.data)
-                 .affectedKeys().hasOnly(['comments']));
+      allow update: if isAdmin();
       allow delete: if isAdmin()
         || (signedIn() && resource.data.authorId == request.auth.uid);
 

@@ -1828,8 +1828,6 @@ async function addComment(postId) {
       text, authorId: currentUser.uid, authorName: currentUser.displayName, authorPhoto: currentUser.photoUrl || '',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    await db.collection('posts').doc(postId).update({ comments: firebase.firestore.FieldValue.increment(1) });
-    await db.collection('users').doc(currentUser.uid).update({ points: firebase.firestore.FieldValue.increment(APP_CONFIG.points.perComment || 3) });
     input.value = '';
 
     // แสดงความคิดเห็น
