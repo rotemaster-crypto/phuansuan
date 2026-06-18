@@ -17,7 +17,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1c1e21;max-width:480px;margin:0 auto;min-height:100vh}
-:root{--primary:#1877f2;--bg:#f0f2f5;--card:#fff;--border:#e4e6eb;--text:#1c1e21;--muted:#65676b}
+:root{--primary:#1877f2;--accent:#42b883;--bg:#f0f2f5;--card:#fff;--border:#e4e6eb;--text:#1c1e21;--muted:#65676b}
 
 /* ── TOPBAR ── */
 .topbar{background:#fff;border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 12px;gap:8px;position:sticky;top:0;z-index:200}
@@ -494,7 +494,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 <!-- ══ COMMUNITY SCREEN ══ -->
 <div class="screen" id="screen-community">
   <div style="padding:14px 16px 84px">
-    <div style="font-size:20px;font-weight:800;color:var(--text)">🏆 ปราชญ์ชาวสวน</div>
+    <div id="lb-title" style="font-size:20px;font-weight:800;color:var(--text)">🏆 ปราชญ์ชาวสวน</div>
     <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">อันดับผู้สะสมแต้มสูงสุด — ยิ่งแบ่งปัน ยิ่งไต่อันดับ</div>
     <div id="leaderboard-list">
       <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
@@ -1316,6 +1316,60 @@ async function sharePost() {
   catch (e) { try { prompt('คัดลอกลิงก์นี้:', url); } catch (e2) {} }
 }
 
+// ── Branding (super admin แก้ได้, real-time) ─────────────
+function applyBranding(b) {
+  if (!b) return;
+  var C = APP_CONFIG;
+  var name = b.appName || C.app.name;
+  var emoji = b.logoEmoji || C.app.logoEmoji;
+  var el = document.getElementById('app-logo');
+  if (el) el.textContent = emoji + ' ' + name;
+  document.title = name;
+  if (b.primaryColor) document.documentElement.style.setProperty('--primary', b.primaryColor);
+  if (b.accentColor) document.documentElement.style.setProperty('--accent', b.accentColor);
+  var lt = document.getElementById('lb-title');
+  if (lt && b.leaderboardTitle) lt.textContent = '🏆 ' + b.leaderboardTitle;
+  var sub = document.getElementById('login-tagline');
+  if (sub && b.subtitle) sub.textContent = b.subtitle;
+  window._branding = b;
+}
+
+function renderAdminBranding() {
+  var box = document.getElementById('admin-branding');
+  if (!box || !isAdmin()) return;
+  var b = window._branding || {};
+  var C = APP_CONFIG;
+  function esc(v){ return String(v || '').replace(/"/g, '&quot;'); }
+  function row(label, id, val) {
+    return '<div style="margin:8px 0"><div style="font-size:13px;color:#555;margin-bottom:3px">' + label + '</div>'
+      + '<input id="' + id + '" type="text" value="' + esc(val) + '" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:14px;box-sizing:border-box"></div>';
+  }
+  box.innerHTML = '<div style="font-size:16px;font-weight:800;margin:16px 0 6px;border-top:1px solid #eee;padding-top:14px">🎨 แบรนด์</div>'
+    + row('ชื่อแอป', 'br-name', b.appName || C.app.name)
+    + row('คำโปรย', 'br-sub', b.subtitle || '')
+    + row('อีโมจิโลโก้', 'br-emoji', b.logoEmoji || C.app.logoEmoji)
+    + row('หัวข้อ Leaderboard', 'br-lb', b.leaderboardTitle || 'ปราชญ์ชาวสวน')
+    + '<div style="display:flex;gap:18px;align-items:flex-end;margin:10px 0">'
+    +   '<div><div style="font-size:13px;color:#555;margin-bottom:3px">สีหลัก</div><input id="br-primary" type="color" value="' + esc(b.primaryColor || C.app.primaryColor || '#1877f2') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
+    +   '<div><div style="font-size:13px;color:#555;margin-bottom:3px">สีเสริม</div><input id="br-accent" type="color" value="' + esc(b.accentColor || C.app.accentColor || '#42b883') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
+    + '</div>'
+    + '<button onclick="saveBranding()" style="width:100%;margin-top:6px;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">บันทึกแบรนด์</button>';
+}
+
+async function saveBranding() {
+  if (!isAdmin() || !db) return;
+  function v(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; }
+  var b = {
+    appName: v('br-name'), subtitle: v('br-sub'), logoEmoji: v('br-emoji'),
+    leaderboardTitle: v('br-lb'), primaryColor: v('br-primary'), accentColor: v('br-accent'),
+  };
+  applyBranding(b);
+  try {
+    await db.collection('settings').doc(tenantId()).set({ branding: b }, { merge: true });
+    alert('บันทึกแบรนด์แล้ว ✓');
+  } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
+}
+
 function escapeHtml(s) {
   if (s === undefined || s === null) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -1507,6 +1561,7 @@ function applyConfig() {
   document.title = C.app.name;
   document.getElementById('app-logo').textContent = C.app.logoEmoji + ' ' + C.app.name;
   document.documentElement.style.setProperty('--primary', C.app.primaryColor);
+  if (C.app.accentColor) document.documentElement.style.setProperty('--accent', C.app.accentColor);
 
   // Crops dropdown
   const sel = document.getElementById('modal-crop');
@@ -1782,8 +1837,10 @@ function initFeatureFlags() {
     snap => {
       const d = snap.exists ? snap.data() : null;
       if (d && d.features) APP_CONFIG.features = Object.assign({}, APP_CONFIG.features, d.features);
+      if (d && d.branding) applyBranding(d.branding);
       applyFeatureFlags();
       renderAdminToggles();
+      renderAdminBranding();
     },
     err => { console.warn('featureFlags:', err.message); }
   );
@@ -1808,11 +1865,12 @@ function ensureAdminPanel() {
   m.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:380px;width:90%;max-height:80vh;overflow:auto;padding:18px;font-family:inherit">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:18px;font-weight:800">⚙️ Admin Panel</div><div onclick="closeAdminPanel()" style="cursor:pointer;font-size:20px;color:#888">✕</div></div>'
     + '<div style="font-size:12px;color:#888;margin-bottom:12px">tenant: ' + tenantId() + ' · เปิด/ปิด real-time</div>'
-    + '<div id="admin-toggles"></div></div>';
+    + '<div id="admin-toggles"></div>'
+    + '<div id="admin-branding"></div></div>';
   document.body.appendChild(m);
   renderAdminToggles();
 }
-function openAdminPanel() { ensureAdminPanel(); const m = document.getElementById('admin-panel'); if (m) m.style.display = 'flex'; renderAdminToggles(); }
+function openAdminPanel() { ensureAdminPanel(); const m = document.getElementById('admin-panel'); if (m) m.style.display = 'flex'; renderAdminToggles(); renderAdminBranding(); }
 function closeAdminPanel() { const m = document.getElementById('admin-panel'); if (m) m.style.display = 'none'; }
 function renderAdminToggles() {
   const box = document.getElementById('admin-toggles'); if (!box) return;
