@@ -281,16 +281,26 @@ async function awardOnce(db, postId, actorUid, markerCol, authorId, pts, extra) 
 exports.onLikeWrite = onDocumentWritten(
   { document: "posts/{postId}/likes/{uid}", region: "asia-southeast1" },
   async (event) => {
-    const had = event.data?.before?.exists, has = event.data?.after?.exists;
+    const before = event.data?.before, after = event.data?.after;
+    const had = before?.exists, has = after?.exists;
     const db = admin.firestore();
     const postRef = db.collection("posts").doc(event.params.postId);
+    const inc = admin.firestore.FieldValue.increment;
     if (!had && has) {
       const p = await postRef.get(); if (!p.exists) return;
-      await postRef.update({ likes: admin.firestore.FieldValue.increment(1) });
+      const type = after.data().type || "like";
+      await postRef.update({ likes: inc(1), ["reactions." + type]: inc(1) });
       await awardOnce(db, event.params.postId, event.params.uid, "likeAwarded", p.data().authorId, PTS.perLike);
     } else if (had && !has) {
       const p = await postRef.get(); if (!p.exists) return;
-      await postRef.update({ likes: admin.firestore.FieldValue.increment(-1) });
+      const type = before.data().type || "like";
+      await postRef.update({ likes: inc(-1), ["reactions." + type]: inc(-1) });
+    } else if (had && has) {
+      const ot = before.data().type || "like", nt = after.data().type || "like";
+      if (ot !== nt) {
+        const p = await postRef.get(); if (!p.exists) return;
+        await postRef.update({ ["reactions." + ot]: inc(-1), ["reactions." + nt]: inc(1) });
+      }
     }
   }
 );

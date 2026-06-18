@@ -76,8 +76,7 @@ service cloud.firestore {
       // ── Likes / Helps (1 doc ต่อ user — server เป็นคนนับ+ให้แต้ม) ──
       match /likes/{uid} {
         allow read: if signedIn();
-        allow create, delete: if isOwner(uid);
-        allow update: if false;
+        allow create, update, delete: if isOwner(uid);
       }
       match /helps/{uid} {
         allow read: if signedIn();

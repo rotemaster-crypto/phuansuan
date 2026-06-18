@@ -1370,6 +1370,80 @@ async function saveBranding() {
   } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
 }
 
+// ── Reactions (หลายอีโมจิ) ───────────────────────────────
+const REACTIONS = [
+  { key:'like', emoji:'👍', label:'ถูกใจ' },
+  { key:'love', emoji:'❤️', label:'รักเลย' },
+  { key:'haha', emoji:'😆', label:'ฮา' },
+  { key:'wow',  emoji:'😮', label:'ว้าว' },
+  { key:'sad',  emoji:'😢', label:'เศร้า' },
+];
+function reactionEmojis(p) {
+  var rx = (p && p.reactions) || {};
+  return REACTIONS.filter(function (r) { return (rx[r.key] || 0) > 0; }).map(function (r) { return r.emoji; }).slice(0, 3).join('');
+}
+function ensureReactPicker() {
+  if (document.getElementById('rx-picker')) return;
+  var pk = document.createElement('div');
+  pk.id = 'rx-picker';
+  pk.style.cssText = 'position:fixed;z-index:9999;display:none;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:24px;padding:6px 8px;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+  pk.innerHTML = REACTIONS.map(function (r) {
+    return '<span onclick="setReaction(\'' + r.key + '\')" title="' + r.label + '" style="font-size:28px;cursor:pointer;padding:2px 4px;display:inline-block">' + r.emoji + '</span>';
+  }).join('');
+  document.body.appendChild(pk);
+  document.addEventListener('click', function (e) {
+    var p = document.getElementById('rx-picker');
+    var ctx = window._rxCtx;
+    if (p && p.style.display === 'flex' && !p.contains(e.target) && !(ctx && ctx.btn && ctx.btn.contains(e.target))) hideReactPicker();
+  });
+}
+function hideReactPicker() { var p = document.getElementById('rx-picker'); if (p) p.style.display = 'none'; }
+function toggleReactPicker(event, id, btn) {
+  if (event) event.stopPropagation();
+  ensureReactPicker();
+  var pk = document.getElementById('rx-picker');
+  if (window._rxCtx && window._rxCtx.id === id && pk.style.display === 'flex') { hideReactPicker(); return; }
+  window._rxCtx = { id: id, btn: btn };
+  pk.style.display = 'flex';
+  var r = btn.getBoundingClientRect();
+  var pw = pk.offsetWidth || 240, ph = pk.offsetHeight || 48;
+  pk.style.left = Math.min(Math.max(8, r.left), window.innerWidth - pw - 8) + 'px';
+  pk.style.top = Math.max(8, r.top - ph - 8) + 'px';
+}
+function setReactBtn(btn, id, type) {
+  btn.setAttribute('data-rx', type || '');
+  var r = REACTIONS.filter(function (x) { return x.key === type; })[0];
+  var ico = document.getElementById('rx-ico-' + id), lbl = document.getElementById('rx-lbl-' + id);
+  if (type && r) {
+    if (ico) ico.textContent = r.emoji;
+    if (lbl) { lbl.textContent = r.label; lbl.style.color = 'var(--primary)'; }
+    btn.classList.add('liked');
+  } else {
+    if (ico) ico.textContent = '👍';
+    if (lbl) { lbl.textContent = 'ถูกใจ'; lbl.style.color = ''; }
+    btn.classList.remove('liked');
+  }
+}
+async function setReaction(type) {
+  var ctx = window._rxCtx; if (!ctx || !currentUser || !db) return;
+  hideReactPicker();
+  var ref = db.collection('posts').doc(ctx.id).collection('likes').doc(currentUser.uid);
+  var cur = ctx.btn.getAttribute('data-rx') || '';
+  var el = document.getElementById('likes-' + ctx.id);
+  try {
+    if (cur === type) {
+      await ref.delete();
+      setReactBtn(ctx.btn, ctx.id, '');
+      if (el) el.textContent = Math.max(0, parseInt(el.textContent || '0') - 1);
+    } else {
+      await ref.set({ type: type, at: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      var wasNone = !cur;
+      setReactBtn(ctx.btn, ctx.id, type);
+      if (el && wasNone) el.textContent = (parseInt(el.textContent || '0') + 1);
+    }
+  } catch (e) { console.error('react:', e); }
+}
+
 function escapeHtml(s) {
   if (s === undefined || s === null) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -1936,12 +2010,12 @@ function renderPost(id, p, i) {
       <div class="pc-reactions">
         <div class="r-counts">
           <div class="r-icons"><span class="ri ri-b">👍</span></div>
-          <span id="likes-${id}">${p.likes || 0}</span>
+          <span class="rx-emojis" style="margin-right:3px">${reactionEmojis(p)}</span><span id="likes-${id}">${p.likes || 0}</span>
         </div>
         <div class="c-count" onclick="toggleComments('cmt-${id}')">ความคิดเห็น ${p.comments || 0}</div>
       </div>
       <div class="pc-actions">
-        <button class="pa" onclick="likePost('${id}',this)"><span class="pi">👍</span>ถูกใจ</button>
+        <button class="pa" data-rx="" onclick="toggleReactPicker(event,'${id}',this)"><span class="pi" id="rx-ico-${id}">👍</span><span id="rx-lbl-${id}">ถูกใจ</span></button>
         <button class="pa" onclick="helpPost('${id}',this)"><span class="pi">✅</span>ช่วยได้</button>
         <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
         <button class="pa" onclick="sharePost()"><span class="pi">↗️</span>แชร์</button>
