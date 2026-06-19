@@ -88,10 +88,10 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
 
   // ── ระดับ Tier ───────────────────────────────────────────
   tiers: {
-    bronze:   { min: 0,    max: 999,   discount: 0,  label: 'Bronze',   emoji: '🥉' },
-    silver:   { min: 1000, max: 2999,  discount: 5,  label: 'Silver',   emoji: '🥈' },
-    gold:     { min: 3000, max: 5999,  discount: 10, label: 'Gold',     emoji: '🥇' },
-    platinum: { min: 6000, max: 99999, discount: 15, label: 'Platinum', emoji: '💎' },
+    bronze:   { min: 0,    max: 999,   discount: 0,  label: 'มือใหม่',   emoji: '🥉' },
+    silver:   { min: 1000, max: 2999,  discount: 5,  label: 'เงิน',   emoji: '🥈' },
+    gold:     { min: 3000, max: 5999,  discount: 10, label: 'ทอง',     emoji: '🥇' },
+    platinum: { min: 6000, max: 99999, discount: 15, label: 'ปราชญ์', emoji: '💎' },
   },
 
   // ── การแจ้งเตือน ──────────────────────────────────────────

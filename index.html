@@ -472,7 +472,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div class="points-card">
     <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
     <div class="bar-bg"><div class="bar-fg" id="pts-bar" style="width:0%"></div></div>
-    <div class="tier-lbs"><span>Bronze</span><span>Silver</span><span id="tier-label" class="tier-act">Bronze</span><span>Platinum</span></div>
+    <div class="tier-lbs"><span id="tlb-bronze">มือใหม่</span><span id="tlb-silver">เงิน</span><span id="tier-label" class="tier-act">มือใหม่</span><span id="tlb-platinum">ปราชญ์</span></div>
     <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
   </div>
   <div class="crops-card">
@@ -756,19 +756,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 <div class="bottom-nav">
   <div class="bn active" id="nav-feed" onclick="switchScreen('feed')">
     <div class="bn-ico">🏠</div>
-    <div class="bn-lbl">หน้าหลัก</div>
+    <div class="bn-lbl" id="nav-lbl-feed">หน้าหลัก</div>
   </div>
   <div class="bn" id="nav-community" onclick="switchScreen('community')">
     <div class="bn-ico">👥</div>
-    <div class="bn-lbl">ชุมชน</div>
+    <div class="bn-lbl" id="nav-lbl-community">ชุมชน</div>
   </div>
   <div class="bn" id="nav-profile" onclick="switchScreen('profile')">
     <div class="bn-ico">👤</div>
-    <div class="bn-lbl">โปรไฟล์</div>
+    <div class="bn-lbl" id="nav-lbl-profile">โปรไฟล์</div>
   </div>
   <div class="bn commerce-entry" id="nav-shop" onclick="switchScreen('shop')">
     <div class="bn-ico">🛒</div>
-    <div class="bn-lbl">ร้านค้า</div>
+    <div class="bn-lbl" id="nav-lbl-shop">ร้านค้า</div>
   </div>
 </div>
 
@@ -1331,6 +1331,21 @@ function applyBranding(b) {
   if (lt && b.leaderboardTitle) lt.textContent = '🏆 ' + b.leaderboardTitle;
   var sub = document.getElementById('login-tagline');
   if (sub && b.subtitle) sub.textContent = b.subtitle;
+  if (b.tierLabels) {
+    var TL = b.tierLabels;
+    ['bronze','silver','gold','platinum'].forEach(function (k) {
+      if (C.tiers && C.tiers[k] && TL[k]) C.tiers[k].label = TL[k];
+      var sp = document.getElementById('tlb-' + k);
+      if (sp && TL[k]) sp.textContent = TL[k];
+    });
+    if (document.getElementById('leaderboard-list') && typeof loadLeaderboard === 'function') loadLeaderboard();
+  }
+  if (b.navLabels) {
+    ['feed','community','profile','shop'].forEach(function (k) {
+      var nl = document.getElementById('nav-lbl-' + k);
+      if (nl && b.navLabels[k]) nl.textContent = b.navLabels[k];
+    });
+  }
   window._branding = b;
 }
 
@@ -1353,6 +1368,16 @@ function renderAdminBranding() {
     +   '<div><div style="font-size:13px;color:#555;margin-bottom:3px">สีหลัก</div><input id="br-primary" type="color" value="' + esc(b.primaryColor || C.app.primaryColor || '#1877f2') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
     +   '<div><div style="font-size:13px;color:#555;margin-bottom:3px">สีเสริม</div><input id="br-accent" type="color" value="' + esc(b.accentColor || C.app.accentColor || '#42b883') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
     + '</div>'
+    + '<div style="font-size:14px;font-weight:700;margin:14px 0 4px;color:#333">ชื่อระดับ (Tier)</div>'
+    + row('ระดับ 1 (เริ่มต้น)', 'br-tier-bronze', (b.tierLabels && b.tierLabels.bronze) || C.tiers.bronze.label)
+    + row('ระดับ 2', 'br-tier-silver', (b.tierLabels && b.tierLabels.silver) || C.tiers.silver.label)
+    + row('ระดับ 3', 'br-tier-gold', (b.tierLabels && b.tierLabels.gold) || C.tiers.gold.label)
+    + row('ระดับ 4 (สูงสุด)', 'br-tier-platinum', (b.tierLabels && b.tierLabels.platinum) || C.tiers.platinum.label)
+    + '<div style="font-size:14px;font-weight:700;margin:14px 0 4px;color:#333">ป้ายแท็บล่าง</div>'
+    + row('แท็บ 1', 'br-nav-feed', (b.navLabels && b.navLabels.feed) || 'หน้าหลัก')
+    + row('แท็บ 2', 'br-nav-community', (b.navLabels && b.navLabels.community) || 'ชุมชน')
+    + row('แท็บ 3', 'br-nav-profile', (b.navLabels && b.navLabels.profile) || 'โปรไฟล์')
+    + row('แท็บ 4', 'br-nav-shop', (b.navLabels && b.navLabels.shop) || 'ร้านค้า')
     + '<button onclick="saveBranding()" style="width:100%;margin-top:6px;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">บันทึกแบรนด์</button>';
 }
 
@@ -1362,6 +1387,8 @@ async function saveBranding() {
   var b = {
     appName: v('br-name'), subtitle: v('br-sub'), logoEmoji: v('br-emoji'),
     leaderboardTitle: v('br-lb'), primaryColor: v('br-primary'), accentColor: v('br-accent'),
+    tierLabels: { bronze: v('br-tier-bronze'), silver: v('br-tier-silver'), gold: v('br-tier-gold'), platinum: v('br-tier-platinum') },
+    navLabels: { feed: v('br-nav-feed'), community: v('br-nav-community'), profile: v('br-nav-profile'), shop: v('br-nav-shop') },
   };
   applyBranding(b);
   try {
