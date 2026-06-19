@@ -1945,6 +1945,21 @@ function initFeatureFlags() {
     },
     err => { console.warn('featureFlags:', err.message); }
   );
+  db.collection('settings').doc('app').onSnapshot(
+    snap => {
+      const d = snap.exists ? snap.data() : null;
+      if (!d) return;
+      applyBranding({
+        appName: d.appName, subtitle: d.subtitle, logoEmoji: d.logoEmoji,
+        primaryColor: d.primary, accentColor: d.accent,
+      });
+      if (d.grad1 || d.grad2) {
+        const cov = document.getElementById('prof-cover');
+        if (cov) cov.style.background = 'linear-gradient(160deg,' + (d.grad1 || '#1877f2') + ' 0%,' + (d.grad2 || '#42b883') + ' 100%)';
+      }
+    },
+    err => { console.warn('appSettings:', err.message); }
+  );
 }
 
 // ---- Admin Panel ----
