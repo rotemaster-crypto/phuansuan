@@ -380,6 +380,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div class="ls-sub">DemeterRich Community</div>
   <div class="ls-spinner"></div>
 </div>
+<script>try{var _b=JSON.parse(localStorage.getItem('phuan_brand')||'{}');if(_b.appName){var e1=document.querySelector('.ls-name');if(e1)e1.textContent=_b.appName;}if(_b.logoEmoji){var e2=document.querySelector('.ls-logo');if(e2)e2.textContent=_b.logoEmoji;}if(_b.subtitle){var e3=document.querySelector('.ls-sub');if(e3)e3.textContent=_b.subtitle;}if(_b.primaryColor){document.documentElement.style.setProperty('--primary',_b.primaryColor);}}catch(e){}</script>
 
 <!-- ══ LOGIN SCREEN ══ -->
 <div id="login-screen">
@@ -406,7 +407,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 </div>
 
 <!-- ══ FEED SCREEN ══ -->
-<div class="screen active" id="screen-feed">
+<div class="screen" id="screen-feed">
   <div class="feed-tabs">
     <div class="ftab active" onclick="switchFeedTab(this)">ฟีดของคุณ</div>
     <div class="ftab" onclick="switchFeedTab(this)">ใกล้ฉัน 📍</div>
@@ -630,7 +631,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 </div>
 
 <!-- ══ SHOP SCREEN (ร้านค้า) Phase 3.1 ══ -->
-<div class="screen" id="screen-shop">
+<div class="screen active" id="screen-shop">
   <div class="shop-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
     <div>
       <div class="shop-title">🛒 ร้านค้า</div>
@@ -754,7 +755,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 </div>
 
 <div class="bottom-nav">
-  <div class="bn active" id="nav-feed" onclick="switchScreen('feed')">
+  <div class="bn" id="nav-feed" onclick="switchScreen('feed')">
     <div class="bn-ico">🏠</div>
     <div class="bn-lbl" id="nav-lbl-feed">หน้าหลัก</div>
   </div>
@@ -766,7 +767,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="bn-ico">👤</div>
     <div class="bn-lbl" id="nav-lbl-profile">โปรไฟล์</div>
   </div>
-  <div class="bn commerce-entry" id="nav-shop" onclick="switchScreen('shop')">
+  <div class="bn commerce-entry active" id="nav-shop" onclick="switchScreen('shop')">
     <div class="bn-ico">🛒</div>
     <div class="bn-lbl" id="nav-lbl-shop">ร้านค้า</div>
   </div>
@@ -951,6 +952,7 @@ async function saveUserToFirestore(user) {
 
 function updateUIWithUser(user) {
   if (!user) return;
+  if (typeof loadShop === 'function' && !shopLoaded) { try { loadShop(); renderCartFab(); } catch (e) {} }
   renderMyCrops();
   renderProfileInfo();
   try { ensureAdminPanel(); initFeatureFlags(); } catch (e) {}
@@ -1346,6 +1348,12 @@ function applyBranding(b) {
       if (nl && b.navLabels[k]) nl.textContent = b.navLabels[k];
     });
   }
+  try {
+    var _e1 = document.querySelector('.ls-name'); if (_e1 && name) _e1.textContent = name;
+    var _e2 = document.querySelector('.ls-logo'); if (_e2 && emoji) _e2.textContent = emoji;
+    var _e3 = document.querySelector('.ls-sub'); if (_e3 && b.subtitle) _e3.textContent = b.subtitle;
+    localStorage.setItem('phuan_brand', JSON.stringify({ appName: name, logoEmoji: emoji, subtitle: b.subtitle, primaryColor: b.primaryColor }));
+  } catch (e) {}
   window._branding = b;
 }
 
