@@ -167,6 +167,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('content',this)"><span class="si">📢</span> Content & ข้อความ</div>
     <div class="sb-item" onclick="showScreen('features',this)"><span class="si">⚙️</span> Features Toggle</div>
     <div class="sb-item" onclick="showScreen('points',this)"><span class="si">🏅</span> แต้ม & Tier</div>
+    <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน</div>
     <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
     <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
     <div class="sb-section">ระบบ</div>
@@ -443,6 +444,30 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<div class="screen" id="screen-shopdecor">
+  <div class="page-header"><div class="page-title">🛍️ ตกแต่งร้าน</div><div class="page-sub">แบนเนอร์หัวร้าน + แถบโปรโมชัน</div></div>
+  <div class="card"><div class="card-title">🖼️ แบนเนอร์หัวร้าน</div>
+    <div class="form-grid">
+      <div class="fg"><label>เปิดแบนเนอร์</label><label class="toggle"><input type="checkbox" id="shop-banner-on" checked><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>ชื่อร้านบนแบนเนอร์</label><input id="shop-banner-title-in" placeholder="DemeterRich"></div>
+      <div class="fg"><label>คำโปรย</label><input id="shop-banner-tag-in" placeholder="ปุ๋ยเหลวคุณภาพเพื่อชาวสวน"></div>
+      <div class="fg"><label>รูปปก (URL — เว้นว่าง = ใช้สีไล่เฉด)</label><input id="shop-cover-img" placeholder="https://..."></div>
+      <div class="fg"><label>สีไล่เฉด 1</label><input type="color" id="shop-cover-c1" value="#1877f2"></div>
+      <div class="fg"><label>สีไล่เฉด 2</label><input type="color" id="shop-cover-c2" value="#42b883"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">📣 แถบโปรโมชัน</div>
+    <div class="form-grid">
+      <div class="fg"><label>เปิดแถบโปรโมชัน</label><label class="toggle"><input type="checkbox" id="shop-promo-on" checked><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>ข้อความโปรโมชัน</label><input id="shop-promo-text-in" placeholder="🚚 ส่งฟรีเมื่อซื้อครบ 500 บาท"></div>
+    </div>
+  </div>
+  <div class="save-row">
+    <button class="btn btn-ghost" onclick="loadShopDecor()">↺ รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveShopDecor()">💾 บันทึก</button>
+  </div>
+</div>
+
 <!-- PRODUCTS -->
 <div class="screen" id="screen-products">
   <div class="page-header"><div class="page-title">📦 จัดการสินค้า</div><div class="page-sub">เพิ่ม ลบ แก้ไขสินค้าในแอป</div></div>
@@ -542,7 +567,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, products: loadProducts, orders: loadOrders };
+  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -817,6 +842,38 @@ async function saveFeatures() {
 }
 
 // ── Points ────────────────────────────────────────────────
+async function loadShopDecor() {
+  try {
+    const doc = await db.collection('settings').doc('shop').get();
+    const d = doc.exists ? doc.data() : {};
+    const sv = (id,v)=>{ const e=document.getElementById(id); if(e) e.value=v; };
+    const sc = (id,v)=>{ const e=document.getElementById(id); if(e) e.checked=v; };
+    sc("shop-banner-on", d.bannerOn !== false);
+    sv("shop-banner-title-in", d.bannerTitle || "");
+    sv("shop-banner-tag-in", d.bannerTagline || "");
+    sv("shop-cover-img", d.coverImage || "");
+    if (d.coverColor1) sv("shop-cover-c1", d.coverColor1);
+    if (d.coverColor2) sv("shop-cover-c2", d.coverColor2);
+    sc("shop-promo-on", d.promoOn !== false);
+    sv("shop-promo-text-in", d.promoText || "");
+  } catch(e) {}
+}
+async function saveShopDecor() {
+  try {
+    await db.collection('settings').doc('shop').set({
+      bannerOn: document.getElementById('shop-banner-on').checked,
+      bannerTitle: document.getElementById('shop-banner-title-in').value,
+      bannerTagline: document.getElementById('shop-banner-tag-in').value,
+      coverImage: document.getElementById('shop-cover-img').value.trim(),
+      coverColor1: document.getElementById('shop-cover-c1').value,
+      coverColor2: document.getElementById('shop-cover-c2').value,
+      promoOn: document.getElementById('shop-promo-on').checked,
+      promoText: document.getElementById('shop-promo-text-in').value,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    toast('✅ บันทึกแล้ว','success');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
 async function loadPoints() {
   try {
     const doc = await db.collection('settings').doc('points').get();

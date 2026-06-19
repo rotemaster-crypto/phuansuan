@@ -212,6 +212,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .pts-hint{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
 
 /* ── COMMERCE (ร้านค้า + ตะกร้า) Phase 3.1 ── */
+#shop-banner{position:relative;min-height:118px;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px;color:#fff;background:linear-gradient(135deg,var(--primary,#1877f2),#42b883);background-size:cover;background-position:center}
+#shop-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.45))}
+#shop-banner .sb-inner{position:relative;z-index:1}
+#shop-banner .sb-title{font-size:21px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.35);line-height:1.2}
+#shop-banner .sb-tag{font-size:13px;opacity:.96;margin-top:3px;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+#shop-promo{display:flex;align-items:center;gap:8px;background:#fff7e6;border-bottom:1px solid #ffe0a3;color:#a15c00;font-size:13px;font-weight:600;padding:9px 14px}
+#shop-promo .pp-ico{flex:0 0 auto}
+#shop-promo .pp-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shop-head{padding:12px;background:#fff;border-bottom:8px solid var(--bg)}
 .shop-title{font-size:18px;font-weight:800;color:var(--text)}
 .shop-sub{font-size:13px;color:var(--muted);margin-top:2px}
@@ -632,6 +640,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 
 <!-- ══ SHOP SCREEN (ร้านค้า) Phase 3.1 ══ -->
 <div class="screen active" id="screen-shop">
+  <div id="shop-banner" style="display:none"><div class="sb-inner"><div class="sb-title" id="shop-banner-title"></div><div class="sb-tag" id="shop-banner-tag"></div></div></div>
+  <div id="shop-promo" style="display:none"><span class="pp-ico">📣</span><span class="pp-txt" id="shop-promo-txt"></span></div>
   <div class="shop-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
     <div>
       <div class="shop-title">🛒 ร้านค้า</div>
@@ -1976,6 +1986,11 @@ function initFeatureFlags() {
     snap => { const d = snap.exists ? snap.data() : null; if (d) applyPoints(d); },
     err => { console.warn('pointsSettings:', err.message); }
   );
+  // #3A: settings/shop → แบนเนอร์ + โปรโมชัน (real-time)
+  db.collection('settings').doc('shop').onSnapshot(
+    snap => { applyShop(snap.exists ? snap.data() : {}); },
+    err => { console.warn('shopSettings:', err.message); }
+  );
 }
 function _pnum(v, fb) {
   if (typeof v === 'number' && !isNaN(v)) return v;
@@ -1998,6 +2013,30 @@ function applyPoints(d) {
     if (T.gold && T.platinum)   T.gold.max   = T.platinum.min - 1;
   }
   try { if (typeof currentUser !== 'undefined' && currentUser) updateUIWithUser(currentUser); } catch (e) {}
+}
+
+function applyShop(d) {
+  d = d || {};
+  APP_CONFIG.shopDecor = d;
+  var bn = document.getElementById("shop-banner");
+  if (bn) {
+    var on = d.bannerOn !== false;
+    bn.style.display = on ? "flex" : "none";
+    if (on) {
+      var title = d.bannerTitle || (APP_CONFIG.shop && APP_CONFIG.shop.name) || "🛒 ร้านค้า";
+      var tag = d.bannerTagline || "";
+      var t1 = document.getElementById("shop-banner-title"); if (t1) t1.textContent = title;
+      var t2 = document.getElementById("shop-banner-tag"); if (t2) { t2.textContent = tag; t2.style.display = tag ? "" : "none"; }
+      if (d.coverImage) { bn.style.backgroundImage = "url(\"" + d.coverImage + "\")"; }
+      else { var c1 = d.coverColor1 || "var(--primary,#1877f2)"; var c2 = d.coverColor2 || "#42b883"; bn.style.background = "linear-gradient(135deg," + c1 + "," + c2 + ")"; }
+    }
+  }
+  var pr = document.getElementById("shop-promo");
+  if (pr) {
+    var pon = d.promoOn !== false && !!d.promoText;
+    pr.style.display = pon ? "flex" : "none";
+    if (pon) { var pt = document.getElementById("shop-promo-txt"); if (pt) pt.textContent = d.promoText; }
+  }
 }
 
 // ---- Admin Panel ----
