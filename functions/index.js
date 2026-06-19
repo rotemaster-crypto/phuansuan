@@ -208,14 +208,45 @@ const TIERS = [
   { key: "platinum", min: 6000 }, { key: "gold", min: 3000 },
   { key: "silver",   min: 1000 }, { key: "bronze", min: 0 },
 ];
-function calcTier(pts) {
-  for (const t of TIERS) { if (pts >= t.min) return t.key; }
+// P2: อ่านแต้ม/tier จาก settings/points (cache 60 วิ) + fallback PTS/TIERS
+let _ptsCache = null, _ptsAt = 0;
+function _num(v, fb){
+  if (typeof v === "number" && !isNaN(v)) return v;
+  if (typeof v === "string" && v.trim() !== "" && !isNaN(Number(v))) return Number(v);
+  return fb;
+}
+async function getPts(db) {
+  const now = Date.now();
+  if (_ptsCache && (now - _ptsAt) < 60000) return _ptsCache;
+  let d = {};
+  try { const s = await db.collection("settings").doc("points").get(); if (s.exists) d = s.data() || {}; }
+  catch (e) { /* ใช้ fallback */ }
+  const P = {
+    perPost:        _num(d.perPost,        PTS.perPost),
+    perPostWithImg: _num(d.perPostWithImg, PTS.perPostWithImg),
+    perComment:     _num(d.perComment,     PTS.perComment),
+    perHelp:        _num(d.perHelp,        PTS.perHelp),
+    perLike:        _num(d.perLike,        PTS.perLike),
+    tiers: [
+      { key: "platinum", min: _num(d.tierPlatinum, 6000) },
+      { key: "gold",     min: _num(d.tierGold,     3000) },
+      { key: "silver",   min: _num(d.tierSilver,   1000) },
+      { key: "bronze",   min: 0 },
+    ],
+  };
+  _ptsCache = P; _ptsAt = now; return P;
+}
+function calcTier(pts, tiers) {
+  const list = tiers || TIERS;
+  for (const t of list) { if (pts >= t.min) return t.key; }
   return "bronze";
 }
-async function updateTier(userRef) {
+async function updateTier(userRef, db) {
+  const _db = db || admin.firestore();
+  const P = await getPts(_db);
   const snap = await userRef.get();
   const pts = snap.data()?.points || 0;
-  const newTier = calcTier(pts);
+  const newTier = calcTier(pts, P.tiers);
   if (snap.data()?.tier !== newTier) await userRef.update({ tier: newTier });
 }
 
@@ -224,7 +255,8 @@ exports.onPostCreated = onDocumentCreated(
   async (event) => {
     const post = event.data?.data();
     if (!post?.authorId) return;
-    const pts = post.imageUrl ? PTS.perPostWithImg : PTS.perPost;
+    const P = await getPts(admin.firestore());
+    const pts = post.imageUrl ? P.perPostWithImg : P.perPost;
     const ref = admin.firestore().collection("users").doc(post.authorId);
     await ref.update({
       points:    admin.firestore.FieldValue.increment(pts),
@@ -249,7 +281,8 @@ exports.onCommentCreated = onDocumentCreated(
     if ((await marker.get()).exists) return;
     await marker.set({ at: admin.firestore.FieldValue.serverTimestamp() });
     const ref = db.collection("users").doc(cmt.authorId);
-    await ref.update({ points: admin.firestore.FieldValue.increment(PTS.perComment) });
+    const P = await getPts(db);
+    await ref.update({ points: admin.firestore.FieldValue.increment(P.perComment) });
     await updateTier(ref);
   }
 );
@@ -290,7 +323,8 @@ exports.onLikeWrite = onDocumentWritten(
       const p = await postRef.get(); if (!p.exists) return;
       const type = after.data().type || "like";
       await postRef.update({ likes: inc(1), ["reactions." + type]: inc(1) });
-      await awardOnce(db, event.params.postId, event.params.uid, "likeAwarded", p.data().authorId, PTS.perLike);
+      const P = await getPts(db);
+      await awardOnce(db, event.params.postId, event.params.uid, "likeAwarded", p.data().authorId, P.perLike);
     } else if (had && !has) {
       const p = await postRef.get(); if (!p.exists) return;
       const type = before.data().type || "like";
@@ -314,7 +348,8 @@ exports.onHelpWrite = onDocumentWritten(
     if (!had && has) {
       const p = await postRef.get(); if (!p.exists) return;
       await postRef.update({ helps: admin.firestore.FieldValue.increment(1) });
-      await awardOnce(db, event.params.postId, event.params.uid, "helpAwarded", p.data().authorId, PTS.perHelp, { helpCount: admin.firestore.FieldValue.increment(1) });
+      const P = await getPts(db);
+      await awardOnce(db, event.params.postId, event.params.uid, "helpAwarded", p.data().authorId, P.perHelp, { helpCount: admin.firestore.FieldValue.increment(1) });
     } else if (had && !has) {
       const p = await postRef.get(); if (!p.exists) return;
       await postRef.update({ helps: admin.firestore.FieldValue.increment(-1) });

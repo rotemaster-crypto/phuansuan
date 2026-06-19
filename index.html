@@ -1971,6 +1971,33 @@ function initFeatureFlags() {
     },
     err => { console.warn('appSettings:', err.message); }
   );
+  // P2: settings/points → APP_CONFIG.points + tier min/discount (real-time)
+  db.collection('settings').doc('points').onSnapshot(
+    snap => { const d = snap.exists ? snap.data() : null; if (d) applyPoints(d); },
+    err => { console.warn('pointsSettings:', err.message); }
+  );
+}
+function _pnum(v, fb) {
+  if (typeof v === 'number' && !isNaN(v)) return v;
+  if (typeof v === 'string' && v.trim() !== '' && !isNaN(Number(v))) return Number(v);
+  return fb;
+}
+function applyPoints(d) {
+  const P = APP_CONFIG.points || (APP_CONFIG.points = {});
+  ['perPost','perPostWithImg','perComment','perHelp','perLike','perPurchase','perAlert','perVerified','dailyLoginBonus']
+    .forEach(k => { if (d[k] !== undefined) P[k] = _pnum(d[k], P[k]); });
+  const T = APP_CONFIG.tiers; if (T) {
+    if (T.silver)   T.silver.min   = _pnum(d.tierSilver,   T.silver.min);
+    if (T.gold)     T.gold.min     = _pnum(d.tierGold,     T.gold.min);
+    if (T.platinum) T.platinum.min = _pnum(d.tierPlatinum, T.platinum.min);
+    if (T.silver)   T.silver.discount   = _pnum(d.discSilver,   T.silver.discount);
+    if (T.gold)     T.gold.discount     = _pnum(d.discGold,     T.gold.discount);
+    if (T.platinum) T.platinum.discount = _pnum(d.discPlatinum, T.platinum.discount);
+    if (T.bronze && T.silver)   T.bronze.max = T.silver.min - 1;
+    if (T.silver && T.gold)     T.silver.max = T.gold.min - 1;
+    if (T.gold && T.platinum)   T.gold.max   = T.platinum.min - 1;
+  }
+  try { if (typeof currentUser !== 'undefined' && currentUser) updateUIWithUser(currentUser); } catch (e) {}
 }
 
 // ---- Admin Panel ----
