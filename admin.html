@@ -452,6 +452,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ชื่อร้านบนแบนเนอร์</label><input id="shop-banner-title-in" placeholder="DemeterRich"></div>
       <div class="fg"><label>คำโปรย</label><input id="shop-banner-tag-in" placeholder="ปุ๋ยเหลวคุณภาพเพื่อชาวสวน"></div>
       <div class="fg"><label>รูปปก (URL — เว้นว่าง = ใช้สีไล่เฉด)</label><input id="shop-cover-img" placeholder="https://..."></div>
+      <div class="fg"><label>หรืออัปโหลดรูปปก</label><input type="file" id="shop-cover-file" accept="image/*" onchange="uploadShopBanner(this)"><div id="shop-cover-prog" style="display:none;font-size:12px;color:var(--muted);margin-top:4px">กำลังอัปโหลด...</div></div>
       <div class="fg"><label>สีไล่เฉด 1</label><input type="color" id="shop-cover-c1" value="#1877f2"></div>
       <div class="fg"><label>สีไล่เฉด 2</label><input type="color" id="shop-cover-c2" value="#42b883"></div>
       <div class="fg"><label>สีตัวอักษรบนแบนเนอร์</label><input type="color" id="shop-banner-textcolor" value="#ffffff"></div>
@@ -519,6 +520,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ราคาเดิม (ก่อนลด — เว้นว่างได้)</label><input id="new-prod-oldprice" placeholder="เช่น 220 บาท"></div>
       <div class="fg"><label>ยอดขาย (จำนวนที่ขายแล้ว)</label><input type="number" id="new-prod-sold" placeholder="0"></div>
       <div class="fg"><label>ป้าย Badge (เช่น ขายดี / ใหม่)</label><input id="new-prod-badge" placeholder="เว้นว่าง = ไม่มีป้าย"></div>
+      <div class="fg" style="grid-column:1/-1"><label>รายละเอียดสินค้า</label><textarea id="new-prod-desc" rows="3" placeholder="อธิบายสรรพคุณ วิธีใช้ ขนาดบรรจุ ฯลฯ"></textarea></div>
       <div class="fg"><label>⭐ สินค้าแนะนำ (โชว์ใน carousel)</label><label class="toggle"><input type="checkbox" id="new-prod-featured"><span class="toggle-slider"></span></label></div>
     </div>
     <div class="save-row"><button class="btn btn-primary" onclick="addProduct()">➕ เพิ่มสินค้า</button></div>
@@ -541,6 +543,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ยอดขาย</label><input type="number" id="prodb-sold"></div>
       <div class="fg"><label>ป้าย Badge</label><input id="prodb-badge"></div>
       <div class="fg"><label>⭐ สินค้าแนะนำ</label><label class="toggle"><input type="checkbox" id="prodb-featured"><span class="toggle-slider"></span></label></div>
+      <div class="fg" style="grid-column:1/-1"><label>รายละเอียดสินค้า</label><textarea id="prodb-desc" rows="3"></textarea></div>
     </div>
     <div class="save-row"><button class="btn btn-ghost" onclick="closeProdB()">ยกเลิก</button><button class="btn btn-primary" onclick="saveProdB()">💾 บันทึก</button></div>
   </div>
@@ -799,6 +802,19 @@ async function loadIcons() {
   } catch(e) {}
 }
 
+async function uploadShopBanner(input){
+  const file = input.files[0]; if (!file) return;
+  if (file.size > 3*1024*1024) { toast('❌ ไฟล์ใหญ่เกิน 3MB','error'); return; }
+  const prog = document.getElementById('shop-cover-prog'); if (prog) prog.style.display='block';
+  try {
+    const ref = storage.ref('shop-banner/cover_'+Date.now()+'.'+file.name.split('.').pop());
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    document.getElementById('shop-cover-img').value = url;
+    if (prog) prog.style.display='none';
+    toast('✅ อัปโหลดสำเร็จ — กด บันทึก เพื่อใช้','success');
+  } catch(e){ if (prog) prog.style.display='none'; toast('❌ '+e.message,'error'); }
+}
 async function uploadIcon(key, input) {
   const file = input.files[0];
   if (!file) return;
@@ -1005,6 +1021,7 @@ async function editProductB(id){
     document.getElementById('prodb-sold').value = p.soldCount || 0;
     document.getElementById('prodb-badge').value = p.badge || '';
     document.getElementById('prodb-featured').checked = p.featured === true;
+    document.getElementById('prodb-desc').value = p.description || '';
     document.getElementById('prodb-modal').style.display = 'flex';
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
@@ -1017,7 +1034,8 @@ async function saveProdB(){
       oldPrice: document.getElementById('prodb-oldprice').value,
       soldCount: +document.getElementById('prodb-sold').value || 0,
       badge: document.getElementById('prodb-badge').value.trim(),
-      featured: document.getElementById('prodb-featured').checked
+      featured: document.getElementById('prodb-featured').checked,
+      description: document.getElementById('prodb-desc').value.trim()
     });
     toast('✅ บันทึกแล้ว','success'); closeProdB(); loadProducts();
   } catch(e){ toast('❌ '+e.message,'error'); }
@@ -1048,6 +1066,7 @@ async function addProduct() {
       soldCount: +document.getElementById('new-prod-sold').value || 0,
       badge: document.getElementById('new-prod-badge').value.trim(),
       featured: document.getElementById('new-prod-featured').checked,
+      description: document.getElementById('new-prod-desc').value.trim(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     toast('✅ เพิ่มสินค้าแล้ว','success');
@@ -1057,6 +1076,7 @@ async function addProduct() {
     document.getElementById('new-prod-sold').value = '';
     document.getElementById('new-prod-badge').value = '';
     document.getElementById('new-prod-featured').checked = false;
+    document.getElementById('new-prod-desc').value = '';
     loadProducts();
   } catch(e) { toast('❌ '+e.message,'error'); }
 }

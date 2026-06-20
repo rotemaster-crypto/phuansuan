@@ -42,6 +42,12 @@ service firebase.storage {
       allow write: if signedIn() && request.auth.uid == uid && isImage() && underLimit(5);
     }
 
+    // แบนเนอร์ร้าน — admin อัพได้ เฉพาะรูป ไม่เกิน 5MB
+    match /shop-banner/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && underLimit(5);
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }
