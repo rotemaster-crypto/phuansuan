@@ -692,6 +692,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </button>
 </div>
 
+<!-- ══ LOGIN PROMPT (guest gate) ══ -->
+<div class="cart-modal" id="loginPrompt" onclick="if(event.target===this)closeLoginPrompt()">
+  <div class="cart-sheet">
+    <div style="padding:24px 22px 30px;text-align:center">
+      <div style="font-size:42px">🔒</div>
+      <div style="font-size:18px;font-weight:800;margin-top:8px">เข้าสู่ระบบก่อนนะครับ</div>
+      <div style="font-size:14px;color:var(--muted);margin-top:8px;line-height:1.6">เข้าดูได้ทุกอย่างฟรี แต่ถ้าจะโพส คอมเมนต์ กดไลก์ ใช้ AI หมอพืช หรือสั่งซื้อสินค้า ต้องเข้าสู่ระบบด้วย LINE ก่อน</div>
+      <button onclick="loginWithLine()" style="margin-top:18px;width:100%;background:#06c755;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer">เข้าสู่ระบบด้วย LINE</button>
+      <button onclick="closeLoginPrompt()" style="margin-top:8px;width:100%;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:8px">ไว้ก่อน</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ PRODUCT DETAIL MODAL ══ -->
 <div class="cart-modal" id="prodDetailModal" onclick="if(event.target===this)closeProduct()">
   <div class="cart-sheet">
@@ -864,9 +877,13 @@ window.addEventListener('load', async () => {
     await liff.init({ liffId: LIFF_ID });
 
     if (!liff.isLoggedIn()) {
-      // ยังไม่ login → แสดงหน้า login
+      // เข้าแบบ guest — ดู feed/ร้านได้ ไม่ต้อง login (จะโพส/สั่งซื้อค่อย login)
+      await firebase.auth().signInAnonymously();
+      const gu = firebase.auth().currentUser;
+      currentUser = { uid: gu.uid, displayName: 'ผู้เยี่ยมชม', photoUrl: '', lineUserId: '', isGuest: true };
       hideLoading();
-      showLoginScreen();
+      updateUIWithUser(currentUser);
+      loadFeed();
     } else {
       // login แล้ว → ยืนยันตัวตนกับ Cloud Function (lineAuth)
       // ได้ Firebase uid = LINE userId จริง (Security Rules ใช้ตัวนี้)
@@ -1088,6 +1105,7 @@ function getTier(points) {
 let aiSelectedFile = null;
 
 function openAiDoctor() {
+  if (!requireLogin()) return; // guard-ai
   if (!currentUser) { alert('กรุณาเข้าสู่ระบบก่อนครับ'); return; }
   // เติม dropdown พืช
   const sel = document.getElementById('ai-crop');
@@ -1510,6 +1528,7 @@ function setReactBtn(btn, id, type) {
   }
 }
 async function setReaction(type) {
+  if (!requireLogin()) return; // guard-react
   var ctx = window._rxCtx; if (!ctx || !currentUser || !db) return;
   hideReactPicker();
   var ref = db.collection('posts').doc(ctx.id).collection('likes').doc(currentUser.uid);
@@ -1702,6 +1721,21 @@ function hideLoading() {
   if (el) el.style.display = 'none';
 }
 
+function isGuest(){
+  try {
+    var ov = (APP_CONFIG.tenant.overrides || {})[tenantId()];
+    if (ov && ov.auth === 'anonymous') return false;
+    var u = firebase.auth().currentUser;
+    return !u || u.isAnonymous;
+  } catch(e){ return false; }
+}
+function requireLogin(){
+  if (!isGuest()) return true;
+  showLoginPrompt();
+  return false;
+}
+function showLoginPrompt(){ var m = document.getElementById('loginPrompt'); if (m) m.classList.add('open'); }
+function closeLoginPrompt(){ var m = document.getElementById('loginPrompt'); if (m) m.classList.remove('open'); }
 function showLoginScreen() {
   const el = document.getElementById('login-screen');
   if (el) el.classList.add('show');
@@ -1764,6 +1798,7 @@ function toggleComments(id){
   el.style.display=el.style.display==='none'?'block':'none';
 }
 function openPostModal(){
+  if (!requireLogin()) return; // guard-post
   document.getElementById('postModal').classList.add('open');
 }
 function closeModal(){
@@ -1814,6 +1849,7 @@ function compressImage(file, maxSize, quality) {
 
 // ── Submit Post ───────────────────────────────────────────
 async function submitPost() {
+  if (!requireLogin()) return; // guard-post2
   if (!currentUser) { alert('กรุณา Login ก่อนโพส'); return; }
 
   const text   = document.getElementById('modal-text')?.value?.trim();
@@ -2247,6 +2283,7 @@ async function helpPost(id, btn) {
 }
 
 async function addComment(postId) {
+  if (!requireLogin()) return; // guard-comment
   const input = document.getElementById('cmt-input-' + postId);
   const text = input?.value?.trim();
   if (!text || !currentUser || !db) return;
@@ -2670,6 +2707,7 @@ function prefillAddress(){
 }
 
 function goCheckout(){
+  if (!requireLogin()) return; // guard-checkout
   if (!cart.length){ alert('ตะกร้ายังว่างอยู่ครับ'); return; }
   if (!currentUser){ alert('กรุณาเข้าสู่ระบบก่อนสั่งซื้อครับ'); return; }
   fillProvinces();
