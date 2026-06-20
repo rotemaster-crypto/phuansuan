@@ -445,7 +445,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 </div>
 
 <div class="screen" id="screen-shopdecor">
-  <div class="page-header"><div class="page-title">🛍️ ตกแต่งร้าน</div><div class="page-sub">แบนเนอร์หัวร้าน + แถบโปรโมชัน</div></div>
+  <div class="page-header"><div class="page-title">🛍️ ตกแต่งร้าน</div><div class="page-sub">ปรับแต่งหน้าร้านทุกส่วน</div></div>
   <div class="card"><div class="card-title">🖼️ แบนเนอร์หัวร้าน</div>
     <div class="form-grid">
       <div class="fg"><label>เปิดแบนเนอร์</label><label class="toggle"><input type="checkbox" id="shop-banner-on" checked><span class="toggle-slider"></span></label></div>
@@ -454,12 +454,41 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>รูปปก (URL — เว้นว่าง = ใช้สีไล่เฉด)</label><input id="shop-cover-img" placeholder="https://..."></div>
       <div class="fg"><label>สีไล่เฉด 1</label><input type="color" id="shop-cover-c1" value="#1877f2"></div>
       <div class="fg"><label>สีไล่เฉด 2</label><input type="color" id="shop-cover-c2" value="#42b883"></div>
+      <div class="fg"><label>สีตัวอักษรบนแบนเนอร์</label><input type="color" id="shop-banner-textcolor" value="#ffffff"></div>
+      <div class="fg"><label>ความสูงแบนเนอร์ (px)</label><input type="number" id="shop-banner-height" value="118"></div>
+      <div class="fg"><label>ขนาดชื่อร้าน (px)</label><input type="number" id="shop-banner-titlesize" value="21"></div>
     </div>
   </div>
   <div class="card"><div class="card-title">📣 แถบโปรโมชัน</div>
     <div class="form-grid">
       <div class="fg"><label>เปิดแถบโปรโมชัน</label><label class="toggle"><input type="checkbox" id="shop-promo-on" checked><span class="toggle-slider"></span></label></div>
       <div class="fg"><label>ข้อความโปรโมชัน</label><input id="shop-promo-text-in" placeholder="🚚 ส่งฟรีเมื่อซื้อครบ 500 บาท"></div>
+      <div class="fg"><label>ไอคอนหน้าข้อความ</label><input id="shop-promo-icon" placeholder="📣" maxlength="4"></div>
+      <div class="fg"><label>สีพื้นแถบโปรโมชัน</label><input type="color" id="shop-promo-bg" value="#fff7e6"></div>
+      <div class="fg"><label>สีตัวอักษรโปรโมชัน</label><input type="color" id="shop-promo-textcolor" value="#a15c00"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">🔥 สินค้าแนะนำ (carousel)</div>
+    <div class="form-grid">
+      <div class="fg"><label>เปิดแถบสินค้าแนะนำ</label><label class="toggle"><input type="checkbox" id="shop-feat-on" checked><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>หัวข้อแถบ</label><input id="shop-feat-title" placeholder="🔥 สินค้าแนะนำ"></div>
+      <div class="fg"><label>ความกว้างการ์ด (px)</label><input type="number" id="shop-feat-width" value="134"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">🏷️ การ์ดสินค้า</div>
+    <div class="form-grid">
+      <div class="fg"><label>สีตัวเลขป้ายลด %</label><input type="color" id="shop-disc-color" value="#ee4d2d"></div>
+      <div class="fg"><label>สีพื้นป้ายลด %</label><input type="color" id="shop-disc-bg" value="#ffde00"></div>
+      <div class="fg"><label>ใช้สีราคาเอง (ปิด = ใช้สีแบรนด์)</label><label class="toggle"><input type="checkbox" id="shop-price-on"><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>สีราคา</label><input type="color" id="shop-price-color" value="#ee4d2d"></div>
+      <div class="fg"><label>แสดง "ขายแล้ว N"</label><label class="toggle"><input type="checkbox" id="shop-show-sold" checked><span class="toggle-slider"></span></label></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">📋 หัวข้อร้าน & หมวดหมู่</div>
+    <div class="form-grid">
+      <div class="fg"><label>ชื่อหัวข้อร้าน</label><input id="shop-title-in" placeholder="🛒 ร้านค้า"></div>
+      <div class="fg"><label>คำโปรยใต้หัวข้อ (เว้นว่าง = สินค้าจาก[ชื่อร้าน])</label><input id="shop-sub-in" placeholder="สินค้าจากร้าน"></div>
+      <div class="fg"><label>แสดงแถบหมวดหมู่</label><label class="toggle"><input type="checkbox" id="shop-catbar-on" checked><span class="toggle-slider"></span></label></div>
     </div>
   </div>
   <div class="save-row">
@@ -873,21 +902,58 @@ async function loadShopDecor() {
     sv("shop-cover-img", d.coverImage || "");
     if (d.coverColor1) sv("shop-cover-c1", d.coverColor1);
     if (d.coverColor2) sv("shop-cover-c2", d.coverColor2);
+    sv("shop-banner-textcolor", d.bannerTextColor || "#ffffff");
+    sv("shop-banner-height", d.bannerHeight || 118);
+    sv("shop-banner-titlesize", d.bannerTitleSize || 21);
     sc("shop-promo-on", d.promoOn !== false);
     sv("shop-promo-text-in", d.promoText || "");
+    sv("shop-promo-icon", d.promoIcon || "");
+    sv("shop-promo-bg", d.promoBg || "#fff7e6");
+    sv("shop-promo-textcolor", d.promoTextColor || "#a15c00");
+    sc("shop-feat-on", d.featuredOn !== false);
+    sv("shop-feat-title", d.featuredTitle || "");
+    sv("shop-feat-width", d.featCardWidth || 134);
+    sv("shop-disc-color", d.discColor || "#ee4d2d");
+    sv("shop-disc-bg", d.discBg || "#ffde00");
+    sc("shop-price-on", d.priceColorOn === true);
+    sv("shop-price-color", d.priceColor || "#ee4d2d");
+    sc("shop-show-sold", d.showSold !== false);
+    sv("shop-title-in", d.shopTitle || "");
+    sv("shop-sub-in", d.shopSub || "");
+    sc("shop-catbar-on", d.catBarOn !== false);
   } catch(e) {}
 }
 async function saveShopDecor() {
   try {
+    const gv = id => document.getElementById(id).value;
+    const gc = id => document.getElementById(id).checked;
+    const gn = (id,fb) => (+document.getElementById(id).value || fb);
     await db.collection('settings').doc('shop').set({
-      bannerOn: document.getElementById('shop-banner-on').checked,
-      bannerTitle: document.getElementById('shop-banner-title-in').value,
-      bannerTagline: document.getElementById('shop-banner-tag-in').value,
-      coverImage: document.getElementById('shop-cover-img').value.trim(),
-      coverColor1: document.getElementById('shop-cover-c1').value,
-      coverColor2: document.getElementById('shop-cover-c2').value,
-      promoOn: document.getElementById('shop-promo-on').checked,
-      promoText: document.getElementById('shop-promo-text-in').value,
+      bannerOn: gc('shop-banner-on'),
+      bannerTitle: gv('shop-banner-title-in'),
+      bannerTagline: gv('shop-banner-tag-in'),
+      coverImage: gv('shop-cover-img').trim(),
+      coverColor1: gv('shop-cover-c1'),
+      coverColor2: gv('shop-cover-c2'),
+      bannerTextColor: gv('shop-banner-textcolor'),
+      bannerHeight: gn('shop-banner-height', 118),
+      bannerTitleSize: gn('shop-banner-titlesize', 21),
+      promoOn: gc('shop-promo-on'),
+      promoText: gv('shop-promo-text-in'),
+      promoIcon: gv('shop-promo-icon').trim(),
+      promoBg: gv('shop-promo-bg'),
+      promoTextColor: gv('shop-promo-textcolor'),
+      featuredOn: gc('shop-feat-on'),
+      featuredTitle: gv('shop-feat-title'),
+      featCardWidth: gn('shop-feat-width', 134),
+      discColor: gv('shop-disc-color'),
+      discBg: gv('shop-disc-bg'),
+      priceColorOn: gc('shop-price-on'),
+      priceColor: gv('shop-price-color'),
+      showSold: gc('shop-show-sold'),
+      shopTitle: gv('shop-title-in'),
+      shopSub: gv('shop-sub-in'),
+      catBarOn: gc('shop-catbar-on'),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     toast('✅ บันทึกแล้ว','success');
