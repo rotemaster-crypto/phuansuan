@@ -388,7 +388,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div id="features-list">
       <div class="toggle-row"><div><div class="toggle-label">🤖 AI วิเคราะห์โรคพืช</div><div class="toggle-sub">วิเคราะห์ภาพด้วย Gemini Vision</div></div><label class="toggle"><input type="checkbox" id="feat-ai" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">📍 Proximity Alert</div><div class="toggle-sub">แจ้งเตือนโรคระบาดในพื้นที่</div></div><label class="toggle"><input type="checkbox" id="feat-proximity" checked><span class="toggle-slider"></span></label></div>
-      <div class="toggle-row"><div><div class="toggle-label">🛒 Product Link</div><div class="toggle-sub">ลิงก์สินค้าร้านในโพส</div></div><label class="toggle"><input type="checkbox" id="feat-product" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🛒 ร้านค้า (Commerce)</div><div class="toggle-sub">เปิด-ปิดระบบร้านค้า + ตะกร้า</div></div><label class="toggle"><input type="checkbox" id="feat-product" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">📖 Stories</div><div class="toggle-sub">Stories bar บนสุด Feed</div></div><label class="toggle"><input type="checkbox" id="feat-stories" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🏅 Point System</div><div class="toggle-sub">ระบบแต้มสะสม</div></div><label class="toggle"><input type="checkbox" id="feat-points" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">👥 Community Groups</div><div class="toggle-sub">กลุ่ม/ชุมชน</div></div><label class="toggle"><input type="checkbox" id="feat-community" checked><span class="toggle-slider"></span></label></div>
@@ -891,13 +891,13 @@ async function loadFeatures() {
     const doc = await db.collection('settings').doc('features').get();
     if (!doc.exists) return;
     const d = doc.data();
-    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', productLink:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
+    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
     Object.entries(map).forEach(([key, id]) => { if (document.getElementById(id)) document.getElementById(id).checked = d[key] !== false; });
   } catch(e) {}
 }
 async function saveFeatures() {
   try {
-    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', productLink:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
+    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
     const data = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
     Object.entries(map).forEach(([key, id]) => { data[key] = document.getElementById(id)?.checked ?? true; });
     await db.collection('settings').doc('features').set(data, { merge: true });
