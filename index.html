@@ -1561,6 +1561,40 @@ async function setReaction(type) {
   } catch (e) { console.error('react:', e); }
 }
 
+var _postUnsubs = [];
+function hydrateMyReactions(ids){
+  if (!currentUser || !db || (typeof isGuest === 'function' && isGuest())) return;
+  ids.forEach(function(id){
+    db.collection('posts').doc(id).collection('likes').doc(currentUser.uid).get().then(function(d){
+      if (!d.exists) return;
+      var btn = document.getElementById('rx-btn-' + id);
+      if (!btn) return;
+      var t = (d.data() || {}).type;
+      if (!t && REACTIONS[0]) t = REACTIONS[0].key;
+      setReactBtn(btn, id, t);
+    }).catch(function(){});
+  });
+}
+function updatePostStats(id, data){
+  if (!data) return;
+  var el = document.getElementById('likes-' + id);
+  if (el) el.textContent = data.likes || 0;
+  var rxe = document.getElementById('rxe-' + id);
+  if (rxe) rxe.textContent = reactionEmojis(data);
+  var cc = document.querySelector('[onclick="toggleComments(\'cmt-' + id + '\')"]');
+  if (cc) cc.textContent = "ความคิดเห็น " + (data.comments || 0);
+}
+function subscribePostStats(ids){
+  _postUnsubs.forEach(function(u){ try { u(); } catch(e){} });
+  _postUnsubs = [];
+  if (!db) return;
+  ids.forEach(function(id){
+    var un = db.collection('posts').doc(id).onSnapshot(function(snap){
+      if (snap.exists) updatePostStats(id, snap.data());
+    }, function(){});
+    _postUnsubs.push(un);
+  });
+}
 function escapeHtml(s) {
   if (s === undefined || s === null) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -2004,6 +2038,9 @@ async function loadFeed(mode) {
     }
     container.innerHTML = docs.map((d, i) => renderPost(d.id, d.data, i)).join('');
     populateRelatedProducts(docs);
+    var _ids = docs.map(function(d){ return d.id; });
+    hydrateMyReactions(_ids);
+    subscribePostStats(_ids);
 
   } catch (err) {
     console.error('loadFeed error:', err);
@@ -2239,12 +2276,12 @@ function renderPost(id, p, i) {
       <div class="pc-reactions">
         <div class="r-counts">
           <div class="r-icons"><span class="ri ri-b">👍</span></div>
-          <span class="rx-emojis" style="margin-right:3px">${reactionEmojis(p)}</span><span id="likes-${id}">${p.likes || 0}</span>
+          <span class="rx-emojis" id="rxe-${id}" style="margin-right:3px">${reactionEmojis(p)}</span><span id="likes-${id}">${p.likes || 0}</span>
         </div>
         <div class="c-count" onclick="toggleComments('cmt-${id}')">ความคิดเห็น ${p.comments || 0}</div>
       </div>
       <div class="pc-actions">
-        <button class="pa" data-rx="" onclick="toggleReactPicker(event,'${id}',this)"><span class="pi" id="rx-ico-${id}">👍</span><span id="rx-lbl-${id}">ถูกใจ</span></button>
+        <button class="pa" id="rx-btn-${id}" data-rx="" onclick="toggleReactPicker(event,'${id}',this)"><span class="pi" id="rx-ico-${id}">👍</span><span id="rx-lbl-${id}">ถูกใจ</span></button>
         <button class="pa" onclick="helpPost('${id}',this)"><span class="pi">✅</span>ช่วยได้</button>
         <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
         <button class="pa" onclick="sharePost()"><span class="pi">↗️</span>แชร์</button>
