@@ -1,4 +1,4 @@
-# PROGRESS — เพื่อนสวน (Phuansuan) · อัปเดตล่าสุด
+# PROGRESS — เพื่อนสวน (Phuansuan) · อัปเดตล่าสุด (รอบ Shop Decor + Guest Auth + งานค้าง)
 
 > เอกสารต่อเนื่องสำหรับเปลี่ยน chat — อ่านไฟล์นี้ก่อนเริ่มงานต่อ
 
@@ -7,95 +7,94 @@
 ## 1. ภาพรวมโปรเจกต์
 - **เพื่อนสวน (Phuansuan)** — เว็บแอปชุมชนเกษตรไทยสไตล์ Facebook ของธุรกิจ **DemeterRich** (ปุ๋ยเหลว)
 - กลุ่มเป้าหมาย: ชาวสวน 35–60 ปี · คอนเซปต์: **branding + community + shopping**
-- Stack: **Vanilla JS ไฟล์เดียว `index.html`** + Firebase (Hosting/Firestore/Storage/Functions Node20 asia-southeast1) + LINE LIFF + Gemini Vision
+- Stack: **Vanilla JS ไฟล์เดียว `index.html`** + Firebase (Hosting/Firestore/Storage/Functions **Gen2 nodejs22** asia-southeast1) + LINE LIFF + Gemini Vision
 - Repo (public): `github.com/rotemaster-crypto/phuansuan` · Live: `phuansuan.web.app` · Project ID: `phuansuan`
-- tenant จริง = `phuansuan` (มี tenant ทดสอบ `office`)
+- tenant จริง = `phuansuan` (มี tenant ทดสอบ `office` ใช้ anonymous auth)
 
 ## 2. วิธีทำงาน (สำคัญ — ทำตามนี้)
-1. Claude clone repo public มาในเครื่องตัวเอง → อ่านโค้ด → เขียน **Node.js patch script** (idempotent: เช็ค anchor ทุกจุด → เขียน → ยืนยัน done sentinel มี / gone sentinel หาย, ถ้าพลาด exit error ไม่เขียนทับครึ่งๆ)
-2. **ทดสอบ patch บน fresh clone เสมอ** (verify edits, `node --check` functions, parse client JS ด้วย `vm.Script`, รันซ้ำเช็ค idempotent)
-3. ส่งให้ Roger เป็น **heredoc paste-block**: `cat > script.js << 'PHUAN_EOF' … PHUAN_EOF` + `node script.js` → Roger วางใน Codespace (`/workspaces/phuansuan`, branch main) → รัน → `firebase deploy` → commit/push
-   - **หมายเหตุ:** Roger download ไฟล์จาก chat ไม่ได้ → **ส่ง heredoc paste-block เป็นหลัก** (copy ทั้งก้อนวาง terminal)
-4. Roger ทดสอบบนมือถือ/แอป ส่ง screenshot
+1. Claude `git clone` repo **สาธารณะ** มาในแซนด์บ็อกซ์ตัวเอง → อ่านโค้ดจริง → เขียน **Node.js patch script** (idempotent: เช็ค anchor → เขียน → ยืนยัน done sentinel)
+2. **ทดสอบ patch บน fresh clone เสมอ** (`node --check` functions, parse client/admin ด้วย `vm.Script`, รันซ้ำเช็ค idempotent, ยืนยัน escaping)
+3. ส่งเป็น **heredoc paste-block**: `cat > script.js << 'PHUAN_EOF' … PHUAN_EOF` + `node script.js` → Roger วางใน Codespace (`/workspaces/phuansuan`, main) → รัน → `firebase deploy` → commit/push **เอง**
+   - **Roger download ไฟล์จาก chat ไม่ได้** → ส่ง heredoc เป็นหลักเสมอ · เช็ค delimiter ไม่ชนก่อนส่ง
+4. **Claude ทำงานในระบบจริงแทนไม่ได้** — รัน/deploy/commit ในเครื่อง Roger ไม่ได้ · ที่ทำได้คือ (ก) อ่าน repo สาธารณะผ่าน git clone เพื่อ "ตรวจ GitHub" ว่า commit ขึ้นจริงไหม (ข) เปิดเว็บจริงผ่าน **Claude in Chrome** ส่อง (เบราว์เซอร์ Roger เชื่อมไว้ — Windows "Browser 1")
 - **กฎ:** เสนอก่อน รออนุมัติก่อน build · อธิบายภาษาไทยเสมอ · แก้ผ่าน config/admin ถ้าทำได้
 
-### บทเรียน patch
-- **multiline anchor:** อย่าใช้ `\n` ตรงๆ ใน OLD/NEW (เพี้ยนตอนผ่าน heredoc) → ใช้ `const NL=String.fromCharCode(10)` แล้ว `[...].join(NL)`
-- **gone sentinel ต้องเจาะจง** เฉพาะข้อความที่ลบ (อย่าให้ไปตรงกับโค้ดที่ยังอยู่)
-- มี **inline `<script>` 2 บล็อก** (เพิ่ม splash script) → เทส parse ต้อง locate บล็อกหลักให้ถูก
-- **heredoc delimiter:** ใช้ single-quote (`'PHUAN_EOF'`) กัน shell แตะ `$`/backtick/`!` · เช็คก่อนเสมอว่าไม่มีบรรทัดชนกับ delimiter
+### บทเรียน patch (สะสม)
+- multiline anchor → `const NL=String.fromCharCode(10)` + `[...].join(NL)` (อย่าใช้ `\n` ตรงๆ)
+- substring ชนกันได้ (เช่น weightKg อินเดนต์ต่าง) → anchor 2 บรรทัดให้เจาะจง · ใช้ `replaceAll` เมื่อ key ซ้ำตั้งใจ (เช่น map load+save เหมือนกัน 2 จุด)
+- มี inline `<script>` 2 บล็อกใน index.html · admin.html 1 บล็อก → parse ให้ครบ
+- escaping `onclick="fn('ID')"` ผ่านหลายชั้น → `\\''+id+'\\'` · `url(\"...\")` → `\\"`
+- heredoc delimiter single-quote กัน shell แตะ `$`/backtick/`!`
 
 ---
 
 ## 3. ⭐ โครงสถาปัตยกรรม (สำคัญที่สุด)
 
-มี **2 แอป** คนละไฟล์:
-- **`index.html`** = แอปหลัก (ผู้ใช้ทั่วไป) ที่ `phuansuan.web.app`
-- **`admin.html`** (+ `public/admin.html`) = **แดชบอร์ด Admin เต็มตัว** ที่ Roger ใช้จริง (sidebar: Dashboard, Users, โพส, หน้าตา&โลโก้, ไอคอน&รูปภาพ, Content&ข้อความ, Features Toggle, แต้ม&Tier, สินค้า, ออเดอร์)
-- `firebase.json` มี 2 hosting target (`main`, `office`) ทั้งคู่ serve จาก `.`
+มี **2 แอป** คนละไฟล์ · `firebase.json` ใช้ `"public": "."` → serve จาก **root** (`index.html`, `admin.html` ที่ root คือตัว live · `public/admin.html` เป็นสำเนาเก่าตกค้าง ไม่ใช่ตัวหลัก)
+- **`index.html`** = แอปหลัก (ผู้ใช้) ที่ `phuansuan.web.app`
+- **`admin.html`** (root) = แดชบอร์ด Admin: Dashboard, Users, โพส, หน้าตา&โลโก้, ไอคอน, Content, Features, แต้ม&Tier, **🛍️ ตกแต่งร้าน**, สินค้า, ออเดอร์
 
-### admin.html เขียน settings ที่ doc ชื่อตายตัว (ไม่มี tenant):
-| doc | field สำคัญ |
+### settings docs (ชื่อตายตัว ไม่มี tenant) — admin เขียน, แอปอ่าน real-time
+| doc | field |
 |---|---|
-| `settings/app` | appName, subtitle, logoEmoji, shopName, lineOaId, phone, **primary, accent, grad1, grad2** |
-| `settings/features` | แบนราบ boolean: aiDiagnosis, proximityAlert, productLink, stories, pointSystem, communityGroups, weatherAlert, notifNearby/Disease/Comment/Points/Promo |
-| `settings/points` | perPost, perPostWithImg, perComment, perHelp, perLike, perPurchase, perAlert, perVerified, dailyLoginBonus, **tierSilver/Gold/Platinum, discSilver/Gold/Platinum** |
-| `settings/icons`, `settings/content` | (ยังไม่ได้เจาะลึก) |
+| `settings/app` | appName, subtitle, logoEmoji, shopName, lineOaId, phone, primary, accent, grad1, grad2 |
+| `settings/features` | aiDiagnosis, proximityAlert, **commerce** (เปิด/ปิดร้าน — ดู §5), stories, pointSystem, communityGroups, weatherAlert, notif* |
+| `settings/points` | perPost, perPostWithImg, perComment, perHelp, perLike, perPurchase, perAlert, perVerified, dailyLoginBonus, tierSilver/Gold/Platinum, discSilver/Gold/Platinum |
+| `settings/shop` | **(ตกแต่งร้านครบทุกส่วน)** bannerOn, bannerTitle, bannerTagline, coverImage, coverColor1/2, bannerTextColor, bannerHeight, bannerTitleSize, promoOn, promoText, promoIcon, promoBg, promoTextColor, featuredOn, featuredTitle, featCardWidth, discColor, discBg, priceColorOn, priceColor, showSold, shopTitle, shopSub, catBarOn |
 
-### แอปหลัก (index.html) อ่านจากไหน:
-- **branding** ← `settings/app` (listener ใน `initFeatureFlags`, map `primary→--primary, accent→--accent, grad1/grad2→prof-cover, appName/logo/subtitle`) ✅
-- **features** ← `settings/features` (merge เข้า APP_CONFIG.features) ✅
-- **points & tier** ← `settings/points` (listener `applyPoints(d)` → merge `APP_CONFIG.points` + อัปเดต tier min/discount/max + re-render) ✅ **ต่อแล้ว (P2)**
-- **legacy:** ยังมี listener `settings/{tenantId()}` (.branding/.features) — ส่วนใหญ่ว่าง ไม่ขัดกัน
+### แอปหลักอ่านจากไหน (listener ใน `initFeatureFlags`)
+- branding ← `settings/app` (`applyBranding`) ✅
+- features ← `settings/features` (`applyFeatureFlags`) ✅ · **ร้านโชว์/ซ่อนคุมด้วย key `commerce`** (`.commerce-entry`)
+- แต้ม/tier ← `settings/points` (`applyPoints`) ✅
+- ตกแต่งร้าน ← `settings/shop` (`applyShop` ใช้ CSS vars `--shop-disc/--shop-discbg/--shop-price/--feat-w`) ✅
 
-> `applyBranding(b)` = apply กลาง branding · `applyPoints(d)` = apply กลาง แต้ม/tier (ทั้งคู่ใน index.html)
+### products (Firestore) — field
+ปกติ: name, price (string เช่น "180 บาท"), category, image, weightKg, crops[], diseases[]
+เพิ่มรอบนี้: **oldPrice, discountPct, soldCount, badge, featured, description**
 
 ---
 
-## 4. เสร็จ + deploy แล้ว (push ขึ้น repo หมด)
-- Security (slips/points), like/help/comment ฝั่ง server + ให้แต้มครั้งเดียว (มี marker)
-- ลบ mock UI ทั้งหมด · 🔔 แจ้งเตือนจริง (Firestore) ภาษาไทย · เมนู ••• เพิ่มเติม
-- **Leaderboard "ปราชญ์ชาวสวน"** + กรองตาม tenant · ปุ่มแชร์จริง · privacy chip ซื่อตรง
-- **ระบบแบรนด์ดิ้ง:** ชื่อ tier ไทย (มือใหม่/เงิน/ทอง/ปราชญ์) + ป้ายแท็บแก้ได้ · แอปหลักอ่าน `settings/app`
-- **รีแอคชันหลายอีโมจิ** 👍❤️😆😮😢 (picker + `reactions` map ใน functions)
-- **ต่อ Features** จาก `settings/features` · ลบ 🎨 ซ้ำในปุ่ม ⚙️
-- ✅ **P2 — แต้ม & Tier จาก `settings/points`** (deploy แล้ว 19 มิ.ย. 2026):
-  - **client:** listener `settings/points` → `applyPoints(d)` merge `APP_CONFIG.points` (perX) + tier min/discount + คำนวณ max ใหม่ + `updateUIWithUser(currentUser)` real-time
-  - **functions:** `getPts(db)` (cache 60 วิ + fallback `PTS`/`TIERS`) ใช้ใน `onPostCreated/onCommentCreated/onLikeWrite/onHelpWrite` · `calcTier(pts, tiers)` + `updateTier(userRef, db)` อ่าน tier threshold จาก settings
-  - patch: `apply_points_tier.js` (idempotent) · deploy `--only functions,hosting`
-  - ⚠️ รอ Roger ยืนยันเทสต์ end-to-end บนมือถือ (โพสจริง → แต้มที่ได้ตรงเลขที่ตั้งใน admin)
+## 4. ✅ เสร็จ + deploy + push ขึ้น GitHub แล้ว (commit ล่าสุด: Node 22)
+**ฐานเดิม:** security, like/help/comment server-side + ให้แต้มครั้งเดียว, แจ้งเตือนจริง, Leaderboard, branding (tier ไทย), รีแอคชันหลายอีโมจิ, commerce (ร้าน/ตะกร้า/เช็คเอาท์/PromptPay/สลิป/ออเดอร์), splash แบรนด์ + ร้านเป็นหน้าแรก
 
-## 5. ส่งแล้ว ยังไม่รัน/deploy
-- **`apply_shop_first.js`** (อยู่ใน repo แล้ว แต่ **ยังไม่ได้รัน** → index.html ที่ deploy ยังไม่มีการเปลี่ยนนี้):
-  - **#1** splash ตามแบรนด์ (cache `phuan_brand` ลง localStorage + early `<script>` หลัง `#loading-screen`)
-  - **#2** ร้านค้าเป็นหน้าแรก (default active = `screen-shop`/`nav-shop`, โหลด `loadShop()` ใน `updateUIWithUser`)
-  - ⚠️ ถ้าจะรัน: clone P2 ลงไปแล้ว ต้องเช็ค anchor ยังตรง (P2 แตะ `initFeatureFlags`/`updateUIWithUser` คนละจุด ไม่น่าชน) · deploy `--only hosting`
+**รอบนี้ (ขึ้นแล้วทั้งหมด ยกเว้นที่ระบุใน §5):**
+- **P2 แต้ม & Tier จาก `settings/points`** — client `applyPoints` + functions `getPts(db)` cache 60s + `calcTier(pts,tiers)`/`updateTier(userRef,db)`
+- **ตกแต่งร้าน A/B/C:**
+  - A: แบนเนอร์หัวร้าน + แถบโปรโมชัน
+  - B: การ์ดสไตล์ Shopee (ป้ายลด%/ราคาเดิม/ขายแล้ว/badge) + carousel "🔥 สินค้าแนะนำ" + edit modal ตั้งโปรสินค้าเดิม (admin)
+  - C: ปรับได้ทุกส่วน (สี/ขนาด/ข้อความ/เปิดปิด ทุกชิ้น) ผ่าน CSS vars — admin 🛍️ ตกแต่งร้าน 5 การ์ด
+- **#1 Banner upload** — admin อัปรูปปกขึ้น Storage `shop-banner/` (rule เพิ่มแล้ว admin write ≤5MB) แล้วใส่ URL อัตโนมัติ
+- **#2 หน้ารายละเอียดสินค้า** — กดการ์ด (grid+carousel) → modal: รูปใหญ่/ราคา+ลด%/รายละเอียด/โรค/พืช/ใส่ตะกร้า · เพิ่มฟิลด์ description ใน admin (ฟอร์มเพิ่ม + edit modal)
+- **#3 Guest browsing + login gating** — เปิดแอปเป็น guest (anonymous) ดูได้เลย · `requireLogin()`/`isGuest()` gate 6 จุด (openPostModal, submitPost, addComment, setReaction, openAiDoctor, goCheckout) + modal เชิญ login LINE · client-side ล้วน ไม่แตะ rules
+- **#4 Responsive desktop** — `@media ≥820px` body 780 + สินค้า 3 คอลัมน์ + feed/ชุมชน/โปรไฟล์คุม 620 กลางจอ · `≥1140px` body 1000 + สินค้า 4 คอลัมน์ · มือถือเหมือนเดิม
+- **งานค้าง #2 รีแอคชัน** — `hydrateMyReactions` (จำสถานะปุ่มตอนรีโหลด) + `subscribePostStats` (per-post onSnapshot → likes/emoji/comment count real-time)
+- **งานค้าง #3 Node 20→22** — `functions/package.json` engines + `firebase.json` runtime = nodejs22 (Gen2 รองรับ, ไม่แตะโค้ด)
+
+## 5. ⚠️ ส่งแล้ว แต่ยังไม่ได้รัน/push (ต้องเก็บ)
+- **งานค้าง #1 — feature key (`commerce`)** ❌ ยังไม่ขึ้น GitHub (`productLink:'feat-product'` เก่ายังอยู่ 2 จุดใน admin.html)
+  - **ปัญหา:** toggle "🛒 Product Link" ใน admin เขียน key `productLink` แต่แอปคุมการแสดงร้านด้วย `commerce` → กดปิด/เปิดร้านจาก admin ไม่มีผล
+  - **patch ที่ส่งแล้ว** (`apply_fix_featurekey.js`): admin relabel เป็น "🛒 ร้านค้า (Commerce)" + repoint map (load/save) `productLink:'feat-product'`→`commerce:'feat-product'` (2 จุด) · index.html เพิ่ม `commerce: 'ร้านค้า'` ใน FEATURE_LABELS
+  - **Roger ต้องรัน heredoc + `firebase deploy --only hosting` + commit/push** แล้วตรวจ GitHub ว่า `commerce:'feat-product'` ขึ้น
 
 ---
 
 ## 6. งานค้าง / ถัดไป
+- **ทดสอบ end-to-end จริง** — ร้าน→ตะกร้า→เช็คเอาท์→สลิป→ออเดอร์ / AI หมอพืช / guest→login / รีแอคชัน real-time / ปิดร้านจาก admin (หลังรัน #1)
+- **ของใหญ่ deferred:**
+  - Payment gateway (Opn / GB Prime Pay) — ตอนนี้ PromptPay QR + อัปสลิปเอง
+  - แจ้งเตือนออเดอร์ผ่าน **LINE-OA** (Messaging API)
+  - **Phase 4** — เทมเพลต UI กลุ่มอายุอื่น (IG-style)
+  - **Phase 5** — multi-tenant SaaS + เก็บเงินรายเดือน
 
-### #3 — ตกแต่งร้านแบบ Shopee (เสนอแล้ว รอเลือก scope) ⬅️ ตัวเลือกถัดไป
-เก็บใน `settings/shop` แต่งจาก admin.html · แบ่งเฟส:
-- **เฟส A:** แบนเนอร์หัวร้าน (cover+ชื่อ+คำโปรย) + แถบโปรโมชัน
-- **เฟส B:** สินค้าแนะนำ (carousel) + การ์ดสไตล์ Shopee (ป้ายลด %, ยอดขาย, badge)
-- ตัวเลือกเสริม: คูปอง/วอเชอร์, แฟลชเซล → รอ Roger เลือก
-
-### อื่น ๆ ค้าง
-- **รัน `apply_shop_first.js`** (splash แบรนด์ + ร้านหน้าแรก) — ตัดสินใจว่าจะเอาก่อน/หลัง #3
-- **feature key ไม่ตรง:** admin ใช้ `productLink` แต่แอปใช้ `commerce` — ตัวที่ key ตรงทำงาน, ตัวไม่ตรงต้องจูน
-- **เกลารีแอคชัน:** ปุ่มยังไม่จำรีแอคชันตัวเองตอนรีโหลด + สรุปอีโมจิคนอื่นอัปเดตตอนรีเฟรช
-- **Node 20 → 22** ก่อน 30 ต.ค. 2026 (functions ขึ้น warning ทุก deploy) + `firebase-functions@latest`
-- ทดสอบ flow จริง end-to-end: ร้าน→ตะกร้า→เช็คเอาท์→สลิป→ออเดอร์, AI หมอพืช, onboarding, **P2 แต้ม/tier**
-- **Deferred:** payment gateway (Opn/GB Prime Pay), แจ้งเตือนออเดอร์ LINE-OA (Messaging API), Phase 4 (เทมเพลต UI กลุ่มอายุอื่น/IG), Phase 5 (SaaS หลายร้าน + เก็บเงินรายเดือน)
-
-> หมายเหตุ: `firebase-config.js` อยู่ในรีโป = **ปกติ** (web apiKey เปิดเผยได้; ความปลอดภัยอยู่ที่ Firestore/Storage Rules)
+> หมายเหตุ: `firebase-config.js` ใน repo = ปกติ (web apiKey เปิดเผยได้; ความปลอดภัยอยู่ที่ Rules) · เกล็ดความรู้: anonymous = `signedIn()` → guest อ่าน feed/products ได้ (posts read `if signedIn()`, products read `if true`) แต่ gate การเขียนเป็น client-side
 
 ---
 
-## 7. ไฟล์/ค่าอ้างอิงสำคัญ
-- `index.html` (แอปหลัก) · `admin.html` + `public/admin.html` (แดชบอร์ด) · `config.js` (APP_CONFIG: app, tenant, tiers, points, shop, features) · `functions/index.js` (PTS/TIERS fallback, **getPts**, awardOnce, onLikeWrite/onHelpWrite/onCommentCreated/onTierUpgrade ฯลฯ) · `firestore.rules` · `storage.rules`
-- ฟังก์ชันสำคัญ index.html: `switchScreen`, `updateUIWithUser` (รันหลัง auth ทั้ง 2 ทาง), `initFeatureFlags` (listener settings: features/app/**points**/tenant), `applyBranding`, **`applyPoints`**, `getTier`, `loadLeaderboard`, `loadShop/renderProducts`, `saveUserToFirestore` (แท็ก tenantId), `tenantId()`
-- ฟังก์ชันสำคัญ functions/index.js: **`getPts(db)`** (อ่าน `settings/points` + cache), `calcTier(pts,tiers)`, `updateTier(userRef,db)`
-- deploy: `--only hosting` (index/config) · `--only functions` · `--only firestore:rules` · รวมตามที่แตะ
-- LIFF ID `2010356906-9iRWpDO2` · Admin LINE `U03582167674331d9005dfb42728c7151` · PromptPay `0868834583` / DemeterRich · Gemini `gemini-2.5-flash` (Secret Manager) · Codespace `studious-acorn-jjxjvw6v7wg72qw5j.github.dev`
+## 7. ไฟล์/ฟังก์ชันสำคัญ
+- **index.html** ฟังก์ชันหลัก: `switchScreen`, `updateUIWithUser`, `initFeatureFlags` (listener app/features/points/shop/tenant), `applyBranding`, `applyPoints`, **`applyShop`**, `loadShop`/`renderProducts`/`renderFeatured`/`discPct`, **`openProduct`/`closeProduct`** (รายละเอียดสินค้า), `loadFeed`/`renderPost`, รีแอคชัน: `setReaction`/`setReactBtn`/`reactionEmojis`/**`hydrateMyReactions`**/**`subscribePostStats`**/`updatePostStats`, auth: init guest (`signInAnonymously`)/**`isGuest`/`requireLogin`/`showLoginPrompt`**, `tenantId`
+- **admin.html**: `showScreen`, save/load ของแต่ละ section → `settings/*` · `saveShopDecor`/`loadShopDecor` (settings/shop), **`uploadShopBanner`** (Storage shop-banner/), `addProduct`/`editProductB`/`saveProdB` (มี description), `saveFeatures` (map → ต้องแก้เป็น commerce ตาม §5)
+- **functions/index.js** (Gen2 nodejs22): `getPts(db)`, `calcTier(pts,tiers)`, `updateTier(userRef,db)`, awardOnce, onPostCreated/onCommentCreated/onLikeWrite/onHelpWrite/onCommentNotify, lineAuth(onCall)/analyzePlant(onCall) · deps: firebase-functions ^5.0.1, firebase-admin ^12.1.0
+- **firestore.rules**: posts read `if signedIn()`, create `signedIn()&&authorId==uid` · products read `if true` · `settings/{doc}` read public/write admin · orders signedIn
+- **storage.rules**: app-icons/ + **shop-banner/** (admin write, isImage, ≤5MB) + catch-all deny
+- deploy: `--only hosting` (index/admin/config/storage rules ก็รวม storage) · `--only functions` (Node22) · รวมตามที่แตะ
+- LIFF `2010356906-9iRWpDO2` · Admin LINE `U03582167674331d9005dfb42728c7151` · PromptPay `0868834583`/DemeterRich · Gemini `gemini-2.5-flash` (Secret Manager) · Codespace `studious-acorn-jjxjvw6v7wg72qw5j.github.dev`
