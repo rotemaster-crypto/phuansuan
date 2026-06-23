@@ -129,3 +129,30 @@
 1. **Bocean** — Roger รัน 3 paste-block + `firebase deploy --only hosting,firestore:rules` + push → ทดสอบ: เปิด `phuansuan.web.app/bocean.html` กรอกฟอร์ม → เช็ค admin "📨 คำขอเปิดร้าน" ขึ้น
 2. **feature key `commerce`** (§5 เดิม) — ยังไม่ได้รัน `apply_fix_featurekey.js` → toggle ปิด/เปิดร้าน admin ยังไม่มีผลจนกว่าจะรัน
 3. README.md — อัปเดตเป็น overview เต็มแล้ว (รอบนี้)
+
+---
+
+## 9. Phase 5.1 CUTOVER สำเร็จ — multi-tenant live (tenants/{tid}/...)
+
+> แอปสลับมาทำงานบน `tenants/phuansuan/...` เต็มตัวแล้ว · เพื่อนสวน = tenant แรกของ Bocean · ทดสอบ end-to-end ผ่านครบ ไม่มี error
+
+### ทำอะไรไปบ้าง (deploy แล้ว)
+- **สเต็ป 1 (claim):** `lineAuth` ออก claim `tenants:{[tid]:true}` (map ไม่ใช่ string) + validate กับ `TENANT_ALLOWLIST=["phuansuan"]` · client ส่ง `tid` · anon ไม่ได้ claim (ตามดีไซน์)
+- **สเต็ป 2 (migrate):** คัดลอกข้อมูล → `tenants/phuansuan/...` แบบ additive (Admin SDK + sa.json) · verify นับ doc เก่า=ใหม่ ✅
+- **Stage A:** `functions/index.js` ทุก trigger ผูก `tenants/{tid}/...` + helper `troot(tid)` · `getPts(tid)`/`awardOnce(tid,...)`/`sendNotif(tid,...)` per-tenant · `firestore.rules` เพิ่ม `match /tenants/{t}` (เช็ค `memberOf(t)` จาก claim)
+- **Stage B:** `index.html` helper `tdb()` แปลง 35 จุด · `admin.html` helper `aTid()`(office→phuansuan)/`aDb()` แปลง 28 จุด (ไม่แตะ `tenantRequests`)
+- **Stage C:** sync migrate รอบสุดท้าย → `firebase deploy --only functions,firestore:rules,hosting` พร้อมกัน · tag git `pre-cutover`
+
+### โมเดล/การตัดสินใจที่ล็อกไว้ (ไม่ต้องรื้อ)
+- Bridge model: ฐานเดียว namespace `tenants/{tid}/...` (ไม่แยก DB/project) · enterprise ที่อยาก isolate ค่อยแยก project แบบ "เพิ่ม"
+- claim เป็น **map** `tenants:{...}` รองรับ 1 user หลายแบรนด์โดยไม่แก้ rules
+- user model `tenants/{tid}/users/{uid}` (1 โปรไฟล์/แบรนด์ แต้มแยก)
+- `office` = endpoint admin/เทสต์ ชี้เข้า tenant phuansuan (อยู่นอก tenant scope)
+
+### ค้าง ณ สิ้นรอบ (ทำทีหลังแบบ gated)
+1. **Cleanup ของเก่า** — ลบ collection เก่า (`users/posts/products/orders/notifications/settings` top-level) + legacy block ใน rules · รอ cutover นิ่ง 2-3 วันก่อน · สคริปต์แยก ต้องพิมพ์ยืนยัน
+2. **sa.json** — หลัง cleanup เสร็จ แนะนำลบ/rotate key ใน Console (ใช้แค่ตอน migrate)
+3. **อ่าน relax:** tenant reads ใช้ `signedIn()` (รองรับ guest browsing) ยังไม่ strict `memberOf` — ตั้งใจไว้ ถ้าต้อง isolate เข้มค่อยรัดทีหลัง
+
+### Phase 5.1d (ถัดไป) — เชื่อม Bocean ครบวงจร
+- อนุมัติ `tenantRequests` → provision `tenants/{newtid}` อัตโนมัติ (เพิ่มใน `TENANT_ALLOWLIST` + settings เริ่มต้น) → admin เลือก tenant ได้ → billing รายเดือน
