@@ -15,11 +15,22 @@ setGlobalOptions({ region: "asia-southeast1", maxInstances: 10 });
 // ── ค่าคงที่ ──────────────────────────────────────────────
 const LINE_CHANNEL_ID = "2010356906";
 const ADMIN_LINE_ID = "U03582167674331d9005dfb42728c7151";
-// tenant ที่อนุญาต (Phase 5.1: เพิ่มเมื่อ provision แบรนด์ใหม่จาก tenantRequests)
-const TENANT_ALLOWLIST = ["phuansuan"];
-function safeTid(t) {
-  const x = (t || "").toString();
-  return TENANT_ALLOWLIST.includes(x) ? x : "phuansuan";
+// tenant แบบ data-driven: ตรวจจาก doc tenants/{tid} (cache 60 วิ)
+// เพิ่มแบรนด์ใหม่ = สร้าง doc tenants/{tid} (status != suspended) ไม่ต้องแก้/redeploy โค้ด
+const _tenantCache = {};
+async function resolveTid(reqTid) {
+  const x = (reqTid || "").toString();
+  if (!x) return "phuansuan";
+  const now = Date.now();
+  const c = _tenantCache[x];
+  if (c && (now - c.at) < 60000) return c.ok ? x : "phuansuan";
+  let ok = false;
+  try {
+    const s = await admin.firestore().collection("tenants").doc(x).get();
+    ok = s.exists && s.data().status !== "suspended";
+  } catch (e) { ok = false; }
+  _tenantCache[x] = { ok: ok, at: now };
+  return ok ? x : "phuansuan";
 }
 // document ราก ของ tenant — ใช้สร้าง path tenants/{tid}/...
 function troot(tid) {
@@ -58,7 +69,7 @@ exports.lineAuth = onCall(async (req) => {
 
   // 3) ออก custom token — uid = LINE userId + claim admin + tenants
   const isAdmin = profile.userId === ADMIN_LINE_ID;
-  const tid = safeTid(req.data?.tid);
+  const tid = await resolveTid(req.data?.tid);
   const token = await admin
     .auth()
     .createCustomToken(profile.userId, { admin: isAdmin, tenants: { [tid]: true } });
@@ -95,7 +106,7 @@ exports.analyzePlant = onCall(
       throw new HttpsError("invalid-argument", "ต้องส่งรูปภาพมาด้วย");
     }
 
-    const tid = safeTid(req.data && req.data.tid);
+    const tid = await resolveTid(req.data && req.data.tid);
 
     // ── เช็คโควต้ารายวัน (ใต้ tenant) ─────────────────────
     const today = new Date().toISOString().slice(0, 10);
