@@ -172,6 +172,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
     <div class="sb-section">Bocean</div>
     <div class="sb-item" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
+    <div class="sb-item" onclick="showScreen('tenants',this)"><span class="si">🏢</span> จัดการ Tenant</div>
+    <div class="sb-item" style="pointer-events:none;opacity:.7;font-size:13px"><span class="si">📍</span> ดูแล: <b id="cur-tenant-label" style="margin-left:3px">phuansuan</b></div>
     <div class="sb-section">ระบบ</div>
     <div class="sb-item" onclick="window.open('https://phuansuan.web.app','_blank')"><span class="si">🌐</span> เปิดแอป</div>
     <div class="sb-item" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><span class="si">🔥</span> Firebase Console</div>
@@ -179,6 +181,23 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 </div>
 
 <div class="main">
+
+<!-- TENANTS (Bocean Super Admin) -->
+<div class="screen" id="screen-tenants">
+  <div class="page-header"><div class="page-title">🏢 จัดการ Tenant (Bocean)</div><div class="page-sub">บริหารทุกแบรนด์บนแพลตฟอร์ม · สลับ tenant ที่กำลังดูแล · สร้าง/ระงับ</div></div>
+  <div class="card">
+    <div style="font-weight:800;margin-bottom:10px">➕ สร้าง Tenant ใหม่</div>
+    <div class="form-grid">
+      <div><label style="font-size:13px;font-weight:700">Tenant ID (a-z 0-9 -)</label><input id="nt-tid" placeholder="mybrand" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:13px;font-weight:700">ชื่อแบรนด์</label><input id="nt-name" placeholder="ชื่อร้าน/แบรนด์" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:13px;font-weight:700">แพ็กเกจ</label><select id="nt-plan" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"><option value="free">free</option><option value="pro">pro</option><option value="enterprise">enterprise</option></select></div>
+      <div><label style="font-size:13px;font-weight:700">โดเมน</label><input id="nt-domain" placeholder="mybrand.web.app" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:13px;font-weight:700">Owner LINE ID</label><input id="nt-owner" placeholder="Uxxxxxxxx (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="createTenant()">สร้าง Tenant</button>
+  </div>
+  <div class="card" style="margin-top:16px"><div id="tenant-list"><div class="empty-state">กำลังโหลด...</div></div></div>
+</div>
 
 <!-- BOCEAN REQUESTS -->
 <div class="screen" id="screen-bocean">
@@ -626,7 +645,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders, bocean: loadBoceanRequests };
+  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -1106,7 +1125,9 @@ function fmtDate(ts) {
 // ══════════════════════════════════════════════════════════
 function adminTenant(){ return /office/.test(location.hostname) ? 'office' : 'phuansuan'; }
 function aTid(){ const t = adminTenant(); return t === 'office' ? 'phuansuan' : t; }
-function aDb(){ return db.collection('tenants').doc(aTid()); }
+let currentTenant = aTid();
+function aDb(){ return db.collection('tenants').doc(currentTenant); }
+function setCurrentTenant(tid){ currentTenant = tid; const lbl = document.getElementById('cur-tenant-label'); if (lbl) lbl.textContent = tid; }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 function baht(n){ return '฿' + Math.round(Number(n)||0).toLocaleString(); }
 
@@ -1148,7 +1169,7 @@ function boceanCardHtml(r){
   function row(label, val){ return val ? '<div class="oa-line"><b>'+label+':</b> '+escapeHtml(String(val))+'</div>' : ''; }
   let acts = '';
   acts += '<button class="oa-btn oa-ship" onclick="setBoceanStatus(\''+r.id+'\',\'contacted\')">📞 ติดต่อแล้ว</button>';
-  acts += '<button class="oa-btn oa-confirm" onclick="setBoceanStatus(\''+r.id+'\',\'approved\')">✅ อนุมัติ</button>';
+  acts += '<button class="oa-btn oa-confirm" onclick="provisionFromRequest(\''+r.id+'\')">✅ อนุมัติ + สร้างร้าน</button>';
   acts += '<button class="oa-btn oa-cancel" onclick="setBoceanStatus(\''+r.id+'\',\'rejected\')">❌ ปฏิเสธ</button>';
   return '<div class="oa-card">'+
     '<div class="oa-top"><span class="oa-id">'+escapeHtml(r.brandName||'-')+'</span>'+
@@ -1169,6 +1190,97 @@ async function setBoceanStatus(id, status){
     toast('อัปเดตสถานะแล้ว','success');
     loadBoceanRequests();
   } catch(e){ toast('❌ '+e.message,'error'); }
+}
+
+let _tenants = [];
+async function loadTenants(){
+  const box = document.getElementById('tenant-list');
+  if (!box || !db) return;
+  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  try {
+    const snap = await db.collection('tenants').get();
+    _tenants = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    _tenants.sort(function(a,b){ return (b.id===currentTenant?1:0)-(a.id===currentTenant?1:0) || String(a.id).localeCompare(String(b.id)); });
+    renderTenants();
+  } catch(e){ box.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
+}
+function renderTenants(){
+  const box = document.getElementById('tenant-list');
+  if (!box) return;
+  if (!_tenants.length){ box.innerHTML = '<div class="empty-state">ยังไม่มี tenant</div>'; return; }
+  box.innerHTML = _tenants.map(tenantCardHtml).join('');
+}
+function tenantCardHtml(t){
+  const suspended = t.status === 'suspended';
+  const cur = t.id === currentTenant;
+  const stColor = suspended ? '#888' : '#16a34a';
+  const stText = suspended ? 'ระงับ' : 'ใช้งาน';
+  function row(label,val){ return val ? '<div class="oa-line"><b>'+label+':</b> '+escapeHtml(String(val))+'</div>' : ''; }
+  let acts = '';
+  if (!cur) acts += '<button class="oa-btn oa-ship" onclick="switchToTenant(\''+t.id+'\')">🔁 ดูแลแบรนด์นี้</button>';
+  else acts += '<span class="oa-btn" style="background:#1877f2;color:#fff;cursor:default">📍 กำลังดูแล</span>';
+  acts += suspended
+    ? '<button class="oa-btn oa-confirm" onclick="toggleTenantStatus(\''+t.id+'\',\'active\')">▶️ เปิดใช้</button>'
+    : '<button class="oa-btn oa-cancel" onclick="toggleTenantStatus(\''+t.id+'\',\'suspended\')">⏸️ ระงับ</button>';
+  return '<div class="oa-card"'+(cur?' style="border:2px solid #1877f2"':'')+'>'+
+    '<div class="oa-top"><span class="oa-id">'+escapeHtml(t.name||t.id)+' <span style="color:var(--muted);font-weight:400">('+escapeHtml(t.id)+')</span></span>'+
+      '<span class="oa-badge" style="background:'+stColor+'">'+stText+'</span></div>'+
+    '<div class="oa-box" style="margin-top:8px">'+
+      row('แพ็กเกจ', t.plan)+ row('โดเมน', (t.domains||[]).join(', '))+ row('Owner LINE', t.ownerLineId)+
+    '</div>'+
+    '<div class="oa-actions">'+acts+'</div>'+
+  '</div>';
+}
+function switchToTenant(tid){
+  setCurrentTenant(tid);
+  toast('สลับมาดูแล '+tid+' แล้ว','success');
+  renderTenants();
+  if (typeof loadDashboard === 'function') loadDashboard();
+}
+async function toggleTenantStatus(tid, status){
+  if (!db) return;
+  try {
+    await db.collection('tenants').doc(tid).update({ status: status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast(status==='suspended' ? 'ระงับ '+tid+' แล้ว' : 'เปิดใช้ '+tid+' แล้ว','success');
+    loadTenants();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function createTenant(){
+  if (!db) return;
+  const tid = (document.getElementById('nt-tid').value||'').trim().toLowerCase();
+  const name = (document.getElementById('nt-name').value||'').trim();
+  const plan = document.getElementById('nt-plan').value;
+  const domain = (document.getElementById('nt-domain').value||'').trim();
+  const owner = (document.getElementById('nt-owner').value||'').trim();
+  if (!/^[a-z0-9-]{2,40}$/.test(tid)) { toast('Tenant ID ต้องเป็น a-z 0-9 - (2-40 ตัว)','error'); return; }
+  if (!name) { toast('ใส่ชื่อแบรนด์','error'); return; }
+  try {
+    const ex = await db.collection('tenants').doc(tid).get();
+    if (ex.exists) { toast('Tenant ID นี้มีอยู่แล้ว','error'); return; }
+    await db.collection('tenants').doc(tid).set({
+      name: name, plan: plan, status: 'active',
+      domains: domain ? [domain] : [], ownerLineId: owner || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await db.collection('tenants').doc(tid).collection('settings').doc('app').set({ appName: name }, { merge: true });
+    toast('สร้าง tenant '+tid+' แล้ว 🎉','success');
+    ['nt-tid','nt-name','nt-domain','nt-owner'].forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
+    loadTenants();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+function provisionFromRequest(reqId){
+  const r = (typeof boceanReqs!=='undefined' ? boceanReqs : []).find(function(x){ return x.id===reqId; });
+  if (!r) { toast('ไม่พบคำขอ','error'); return; }
+  const navEl = document.querySelector('.sb-item[onclick*="tenants"]');
+  showScreen('tenants', navEl);
+  const setv=function(id,v){ const el=document.getElementById(id); if(el&&v) el.value=v; };
+  setv('nt-name', r.brandName);
+  setv('nt-tid', (r.desiredDomain||'').toLowerCase().replace(/[^a-z0-9-]/g,''));
+  setv('nt-domain', r.desiredDomain ? r.desiredDomain+'.web.app' : '');
+  setv('nt-owner', r.lineId);
+  setBoceanStatus(reqId, 'approved');
+  toast('เติมข้อมูลจากคำขอแล้ว — ตรวจสอบและกดสร้าง','success');
 }
 
 async function loadOrders(){
