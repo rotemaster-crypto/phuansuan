@@ -156,3 +156,27 @@
 
 ### Phase 5.1d (ถัดไป) — เชื่อม Bocean ครบวงจร
 - อนุมัติ `tenantRequests` → provision `tenants/{newtid}` อัตโนมัติ (เพิ่มใน `TENANT_ALLOWLIST` + settings เริ่มต้น) → admin เลือก tenant ได้ → billing รายเดือน
+
+---
+
+## 10. Foundation + Super Admin (ทำเสร็จ — Bocean บริหารหลายแบรนด์ได้)
+
+### Stage 1: data-driven tenant (deploy functions)
+- `lineAuth`/`analyzePlant` validate tid จาก doc `tenants/{tid}` (status != suspended) + cache 60 วิ แทน `TENANT_ALLOWLIST` ฮาร์ดโค้ด
+- seed `tenants/phuansuan` ครบ field: `name/plan/status:'active'/domains/ownerLineId`
+- **ผล: เพิ่มแบรนด์ใหม่ = สร้าง doc `tenants/{tid}` ไม่ต้องแก้/redeploy โค้ดอีก**
+
+### Stage 2: Super Admin tenant management (admin.html, deploy hosting)
+- `currentTenant` state + `aDb()` ใช้ currentTenant (สลับ tenant ได้) · helper `setCurrentTenant()`
+- sidebar: "🏢 จัดการ Tenant" + ป้าย "ดูแล: {tid}"
+- screen tenants: **รายการ tenant ทั้งหมด** (สถานะ/แพ็กเกจ/โดเมน) · **ฟอร์มสร้าง tenant** (tid validate a-z0-9-, seed settings/app เริ่มต้น) · **สลับ/ระงับ/เปิดใช้**
+- wire ปุ่ม **"อนุมัติ + สร้างร้าน"** ใน คำขอเปิดร้าน → เด้งไปฟอร์ม tenant + เติมข้อมูลจากคำขออัตโนมัติ
+- การเขียนทั้งหมดผ่าน admin claim (rules `tenants` write = isAdmin)
+
+### schema `tenants/{tid}` (มาตรฐาน)
+`{ name, plan:'free'|'pro'|'enterprise', status:'active'|'suspended', domains:[], ownerLineId, createdAt, updatedAt }`
+
+### ค้าง (ทำทีหลังแบบ gated)
+1. **Cleanup ของเก่า** — ลบ collection เก่า top-level + legacy rules block (รอ cutover นิ่ง 2-3 วัน) · สคริปต์แยก ต้องพิมพ์ยืนยัน
+2. **sa.json** — rotate/ลบหลัง cleanup
+3. **Tenant Admin role** — ให้เจ้าของแบรนด์จัดการร้านตัวเอง (ตอนนี้ Super Admin only) + billing รายเดือน
