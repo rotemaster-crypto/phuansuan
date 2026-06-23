@@ -638,7 +638,7 @@ function toast(msg, type='') {
 // ── Sidebar Branding ──────────────────────────────────────
 async function loadSidebarBranding() {
   try {
-    const doc = await db.collection('settings').doc('app').get();
+    const doc = await aDb().collection('settings').doc('app').get();
     if (!doc.exists) return;
     const d = doc.data();
     if (d.appName) document.getElementById('sb-app-name').textContent = d.appName;
@@ -650,7 +650,7 @@ async function loadSidebarBranding() {
 // ── Dashboard ─────────────────────────────────────────────
 async function loadDashboard() {
   try {
-    const snap = await db.collection('users').get();
+    const snap = await aDb().collection('users').get();
     const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const today = new Date().toDateString();
     const todayLogins = users.filter(u => u.lastLoginAt?.toDate?.()?.toDateString() === today).length;
@@ -660,7 +660,7 @@ async function loadDashboard() {
     document.getElementById('ds-today').textContent = todayLogins;
     document.getElementById('badge-users').textContent = users.length;
     try {
-      const ps = await db.collection('posts').get();
+      const ps = await aDb().collection('posts').get();
       document.getElementById('ds-posts').textContent = ps.size;
       document.getElementById('badge-posts').textContent = ps.size;
     } catch { document.getElementById('ds-posts').textContent = '0'; }
@@ -681,7 +681,7 @@ async function loadDashboard() {
 async function loadUsers() {
   document.getElementById('users-table').innerHTML = '<tr><td colspan="6" class="empty-state">กำลังโหลด...</td></tr>';
   try {
-    const snap = await db.collection('users').orderBy('lastLoginAt','desc').get();
+    const snap = await aDb().collection('users').orderBy('lastLoginAt','desc').get();
     allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     document.getElementById('badge-users').textContent = allUsers.length;
     renderUsers(allUsers);
@@ -708,21 +708,21 @@ function filterUsers() {
   renderUsers(allUsers.filter(u => (u.displayName||'').toLowerCase().includes(q)));
 }
 async function updateUserPoints(uid, pts) {
-  try { await db.collection('users').doc(uid).update({ points: parseInt(pts) }); toast('✅ อัพเดทแต้มแล้ว','success'); } catch(e) { toast('❌ '+e.message,'error'); }
+  try { await aDb().collection('users').doc(uid).update({ points: parseInt(pts) }); toast('✅ อัพเดทแต้มแล้ว','success'); } catch(e) { toast('❌ '+e.message,'error'); }
 }
 async function updateUserTier(uid, tier) {
-  try { await db.collection('users').doc(uid).update({ tier }); toast('✅ อัพเดท Tier แล้ว','success'); } catch(e) { toast('❌ '+e.message,'error'); }
+  try { await aDb().collection('users').doc(uid).update({ tier }); toast('✅ อัพเดท Tier แล้ว','success'); } catch(e) { toast('❌ '+e.message,'error'); }
 }
 async function banUser(uid, name) {
   if (!confirm(`Ban "${name}"?`)) return;
-  try { await db.collection('users').doc(uid).update({ banned: true }); toast('🚫 Ban แล้ว','success'); loadUsers(); } catch(e) { toast('❌ '+e.message,'error'); }
+  try { await aDb().collection('users').doc(uid).update({ banned: true }); toast('🚫 Ban แล้ว','success'); loadUsers(); } catch(e) { toast('❌ '+e.message,'error'); }
 }
 
 // ── Posts ─────────────────────────────────────────────────
 async function loadPosts() {
   document.getElementById('posts-table').innerHTML = '<tr><td colspan="5" class="empty-state">กำลังโหลด...</td></tr>';
   try {
-    const snap = await db.collection('posts').orderBy('createdAt','desc').limit(100).get();
+    const snap = await aDb().collection('posts').orderBy('createdAt','desc').limit(100).get();
     allPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     document.getElementById('badge-posts').textContent = allPosts.length;
     renderPosts(allPosts);
@@ -743,13 +743,13 @@ function filterPosts() {
 }
 async function deletePost(id) {
   if (!confirm('ลบโพสนี้?')) return;
-  try { await db.collection('posts').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadPosts(); } catch(e) { toast('❌ '+e.message,'error'); }
+  try { await aDb().collection('posts').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadPosts(); } catch(e) { toast('❌ '+e.message,'error'); }
 }
 
 // ── Appearance ────────────────────────────────────────────
 async function loadAppearance() {
   try {
-    const doc = await db.collection('settings').doc('app').get();
+    const doc = await aDb().collection('settings').doc('app').get();
     if (!doc.exists) return;
     const d = doc.data();
     const set = (id, val) => { if (val && document.getElementById(id)) document.getElementById(id).value = val; };
@@ -764,7 +764,7 @@ async function loadAppearance() {
 }
 async function saveAppearance() {
   try {
-    await db.collection('settings').doc('app').set({
+    await aDb().collection('settings').doc('app').set({
       appName: document.getElementById('cfg-appname').value,
       subtitle: document.getElementById('cfg-subtitle').value,
       logoEmoji: document.getElementById('cfg-logo').value,
@@ -797,7 +797,7 @@ document.addEventListener('change', e => { if (e.target.id?.startsWith('cfg-')) 
 // ── Icons Upload ──────────────────────────────────────────
 async function loadIcons() {
   try {
-    const doc = await db.collection('settings').doc('icons').get();
+    const doc = await aDb().collection('settings').doc('icons').get();
     if (!doc.exists) return;
     const d = doc.data();
     const iconMap = { logo: 'prev-logo', nav_home: 'prev-nav-home', nav_community: 'prev-nav-community', nav_video: 'prev-nav-video', nav_profile: 'prev-nav-profile', nav_menu: 'prev-nav-menu', default_cover: 'prev-cover', login_bg: 'prev-login-bg' };
@@ -841,7 +841,7 @@ async function uploadIcon(key, input) {
     });
     await task;
     const url = await ref.getDownloadURL();
-    await db.collection('settings').doc('icons').set({ [key]: url, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await aDb().collection('settings').doc('icons').set({ [key]: url, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
 
     // Update preview
     const previewMap = { logo:'prev-logo', nav_home:'prev-nav-home', nav_community:'prev-nav-community', nav_video:'prev-nav-video', nav_profile:'prev-nav-profile', nav_menu:'prev-nav-menu', default_cover:'prev-cover', login_bg:'prev-login-bg' };
@@ -859,7 +859,7 @@ async function uploadIcon(key, input) {
 // ── Content ───────────────────────────────────────────────
 async function loadContent() {
   try {
-    const doc = await db.collection('settings').doc('content').get();
+    const doc = await aDb().collection('settings').doc('content').get();
     if (!doc.exists) return;
     const d = doc.data();
     const set = (id, val) => { if (val !== undefined && document.getElementById(id)) document.getElementById(id).value = val; };
@@ -877,7 +877,7 @@ async function loadContent() {
 }
 async function saveContent() {
   try {
-    await db.collection('settings').doc('content').set({
+    await aDb().collection('settings').doc('content').set({
       bannerText: document.getElementById('cfg-banner-text').value,
       bannerShow: document.getElementById('cfg-banner-show').checked,
       postPlaceholder: document.getElementById('cfg-post-placeholder').value,
@@ -896,7 +896,7 @@ async function saveContent() {
 // ── Features ──────────────────────────────────────────────
 async function loadFeatures() {
   try {
-    const doc = await db.collection('settings').doc('features').get();
+    const doc = await aDb().collection('settings').doc('features').get();
     if (!doc.exists) return;
     const d = doc.data();
     const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
@@ -908,7 +908,7 @@ async function saveFeatures() {
     const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
     const data = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
     Object.entries(map).forEach(([key, id]) => { data[key] = document.getElementById(id)?.checked ?? true; });
-    await db.collection('settings').doc('features').set(data, { merge: true });
+    await aDb().collection('settings').doc('features').set(data, { merge: true });
     toast('✅ บันทึกแล้ว','success');
   } catch(e) { toast('❌ '+e.message,'error'); }
 }
@@ -916,7 +916,7 @@ async function saveFeatures() {
 // ── Points ────────────────────────────────────────────────
 async function loadShopDecor() {
   try {
-    const doc = await db.collection('settings').doc('shop').get();
+    const doc = await aDb().collection('settings').doc('shop').get();
     const d = doc.exists ? doc.data() : {};
     const sv = (id,v)=>{ const e=document.getElementById(id); if(e) e.value=v; };
     const sc = (id,v)=>{ const e=document.getElementById(id); if(e) e.checked=v; };
@@ -952,7 +952,7 @@ async function saveShopDecor() {
     const gv = id => document.getElementById(id).value;
     const gc = id => document.getElementById(id).checked;
     const gn = (id,fb) => (+document.getElementById(id).value || fb);
-    await db.collection('settings').doc('shop').set({
+    await aDb().collection('settings').doc('shop').set({
       bannerOn: gc('shop-banner-on'),
       bannerTitle: gv('shop-banner-title-in'),
       bannerTagline: gv('shop-banner-tag-in'),
@@ -985,7 +985,7 @@ async function saveShopDecor() {
 }
 async function loadPoints() {
   try {
-    const doc = await db.collection('settings').doc('points').get();
+    const doc = await aDb().collection('settings').doc('points').get();
     if (!doc.exists) return;
     const d = doc.data();
     const map = { perPost:'pts-post', perPostWithImg:'pts-post-img', perComment:'pts-comment', perHelp:'pts-help', perLike:'pts-like', perPurchase:'pts-purchase', perAlert:'pts-alert', perVerified:'pts-verified', dailyLoginBonus:'pts-daily', tierSilver:'tier-silver', tierGold:'tier-gold', tierPlatinum:'tier-platinum', discSilver:'disc-silver', discGold:'disc-gold', discPlatinum:'disc-platinum' };
@@ -994,7 +994,7 @@ async function loadPoints() {
 }
 async function savePoints() {
   try {
-    await db.collection('settings').doc('points').set({
+    await aDb().collection('settings').doc('points').set({
       perPost: +document.getElementById('pts-post').value,
       perPostWithImg: +document.getElementById('pts-post-img').value,
       perComment: +document.getElementById('pts-comment').value,
@@ -1020,7 +1020,7 @@ async function savePoints() {
 let _prodbId = null;
 async function editProductB(id){
   try {
-    const doc = await db.collection('products').doc(id).get();
+    const doc = await aDb().collection('products').doc(id).get();
     if (!doc.exists) return;
     const p = doc.data(); _prodbId = id;
     document.getElementById('prodb-name').textContent = p.name || '';
@@ -1037,7 +1037,7 @@ function closeProdB(){ document.getElementById('prodb-modal').style.display='non
 async function saveProdB(){
   if (!_prodbId) return;
   try {
-    await db.collection('products').doc(_prodbId).update({
+    await aDb().collection('products').doc(_prodbId).update({
       price: document.getElementById('prodb-price').value,
       oldPrice: document.getElementById('prodb-oldprice').value,
       soldCount: +document.getElementById('prodb-sold').value || 0,
@@ -1050,7 +1050,7 @@ async function saveProdB(){
 }
 async function loadProducts() {
   try {
-    const snap = await db.collection('products').get();
+    const snap = await aDb().collection('products').get();
     document.getElementById('products-table').innerHTML = snap.empty
       ? '<tr><td colspan="4" class="empty-state">ยังไม่มีสินค้า</td></tr>'
       : snap.docs.map(doc => {
@@ -1064,7 +1064,7 @@ async function addProduct() {
   const name = document.getElementById('new-prod-name').value.trim();
   if (!name) { toast('❌ กรอกชื่อสินค้า','error'); return; }
   try {
-    await db.collection('products').add({
+    await aDb().collection('products').add({
       name, price: document.getElementById('new-prod-price').value,
       category: document.getElementById('new-prod-cat').value,
       url: document.getElementById('new-prod-url').value,
@@ -1090,7 +1090,7 @@ async function addProduct() {
 }
 async function deleteProduct(id) {
   if (!confirm('ลบสินค้านี้?')) return;
-  try { await db.collection('products').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadProducts(); } catch(e) { toast('❌ '+e.message,'error'); }
+  try { await aDb().collection('products').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadProducts(); } catch(e) { toast('❌ '+e.message,'error'); }
 }
 
 // ── Helpers ───────────────────────────────────────────────
@@ -1105,6 +1105,8 @@ function fmtDate(ts) {
 //  ORDERS ADMIN (3.3) — ตรวจสลิป / ยืนยัน / จัดส่ง
 // ══════════════════════════════════════════════════════════
 function adminTenant(){ return /office/.test(location.hostname) ? 'office' : 'phuansuan'; }
+function aTid(){ const t = adminTenant(); return t === 'office' ? 'phuansuan' : t; }
+function aDb(){ return db.collection('tenants').doc(aTid()); }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 function baht(n){ return '฿' + Math.round(Number(n)||0).toLocaleString(); }
 
@@ -1174,8 +1176,8 @@ async function loadOrders(){
   if (!box || !db) return;
   box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
   try {
-    const snap = await db.collection('orders').get();
-    const t = adminTenant();
+    const snap = await aDb().collection('orders').get();
+    const t = aTid();
     adminOrders = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
       .filter(function(o){ return !o.tenantId || o.tenantId === t; });
     adminOrders.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
@@ -1251,7 +1253,7 @@ async function updateOrder(id, fields, msg){
   if (!db) return;
   try {
     fields.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-    await db.collection('orders').doc(id).update(fields);
+    await aDb().collection('orders').doc(id).update(fields);
     toast(msg||'อัปเดตแล้ว','success');
     loadOrders();
   } catch(e){ toast('❌ '+e.message,'error'); }

@@ -941,7 +941,7 @@ async function signInAnonTenant() {
   const u = firebase.auth().currentUser;
   let name = '';
   try {
-    const snap = await db.collection('users').doc(u.uid).get();
+    const snap = await tdb().collection('users').doc(u.uid).get();
     if (snap.exists && snap.data().displayName) name = snap.data().displayName;
   } catch (e) {}
   if (!name) {
@@ -986,7 +986,7 @@ async function loadUserProfile() {
 async function saveUserToFirestore(user) {
   if (!db) return;
   try {
-    const userRef = db.collection('users').doc(user.uid);
+    const userRef = tdb().collection('users').doc(user.uid);
     const doc = await userRef.get();
 
     if (!doc.exists) {
@@ -1240,7 +1240,7 @@ async function loadAiHistory() {
   const box = document.getElementById('ai-history');
   if (!box || !currentUser || !db) return;
   try {
-    const snap = await db.collection('users').doc(currentUser.uid)
+    const snap = await tdb().collection('users').doc(currentUser.uid)
       .collection('diagnoses').limit(20).get();
     let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
     docs = docs.filter(d => d.data.tenantId === tenantId());
@@ -1275,7 +1275,7 @@ const NOTIF_ICON = { comment:'💬', help:'🤝', tier:'🏅', bell:'🔔', orde
 function startNotifs() {
   if (notifStarted || !db || !currentUser) return;
   notifStarted = true;
-  db.collection('notifications')
+  tdb().collection('notifications')
     .where('uid', '==', currentUser.uid)
     .limit(50)
     .onSnapshot(function (snap) {
@@ -1335,7 +1335,7 @@ async function openNotifs() {
   var unread = notifItems.filter(function (x) { return !x.read; });
   if (db && unread.length) {
     var batch = db.batch();
-    unread.forEach(function (x) { batch.update(db.collection('notifications').doc(x.id), { read: true }); });
+    unread.forEach(function (x) { batch.update(tdb().collection('notifications').doc(x.id), { read: true }); });
     try { await batch.commit(); } catch (e) { console.error('mark read:', e); }
   }
 }
@@ -1362,7 +1362,7 @@ async function loadLeaderboard() {
   if (!box || !db) return;
   box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>';
   try {
-    var snap = await db.collection('users').orderBy('points', 'desc').limit(100).get();
+    var snap = await tdb().collection('users').orderBy('points', 'desc').limit(100).get();
     var tid = (typeof tenantId === 'function') ? tenantId() : null;
     var list = snap.docs.filter(function (d) { return tid ? d.data().tenantId === tid : true; }).slice(0, 30);
     var rows = [], rank = 0;
@@ -1484,7 +1484,7 @@ async function saveBranding() {
   };
   applyBranding(b);
   try {
-    await db.collection('settings').doc(tenantId()).set({ branding: b }, { merge: true });
+    await tdb().collection('settings').doc(tenantId()).set({ branding: b }, { merge: true });
     alert('บันทึกแบรนด์แล้ว ✓');
   } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
 }
@@ -1547,7 +1547,7 @@ async function setReaction(type) {
   if (!requireLogin()) return; // guard-react
   var ctx = window._rxCtx; if (!ctx || !currentUser || !db) return;
   hideReactPicker();
-  var ref = db.collection('posts').doc(ctx.id).collection('likes').doc(currentUser.uid);
+  var ref = tdb().collection('posts').doc(ctx.id).collection('likes').doc(currentUser.uid);
   var cur = ctx.btn.getAttribute('data-rx') || '';
   var el = document.getElementById('likes-' + ctx.id);
   try {
@@ -1568,7 +1568,7 @@ var _postUnsubs = [];
 function hydrateMyReactions(ids){
   if (!currentUser || !db || (typeof isGuest === 'function' && isGuest())) return;
   ids.forEach(function(id){
-    db.collection('posts').doc(id).collection('likes').doc(currentUser.uid).get().then(function(d){
+    tdb().collection('posts').doc(id).collection('likes').doc(currentUser.uid).get().then(function(d){
       if (!d.exists) return;
       var btn = document.getElementById('rx-btn-' + id);
       if (!btn) return;
@@ -1592,7 +1592,7 @@ function subscribePostStats(ids){
   _postUnsubs = [];
   if (!db) return;
   ids.forEach(function(id){
-    var un = db.collection('posts').doc(id).onSnapshot(function(snap){
+    var un = tdb().collection('posts').doc(id).onSnapshot(function(snap){
       if (snap.exists) updatePostStats(id, snap.data());
     }, function(){});
     _postUnsubs.push(un);
@@ -1619,7 +1619,7 @@ async function saveProfileEdit() {
   const btn = document.getElementById('edit-save-btn');
   btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
   try {
-    await db.collection('users').doc(currentUser.uid).update({ bio: bio, province: province });
+    await tdb().collection('users').doc(currentUser.uid).update({ bio: bio, province: province });
     currentUser.bio = bio; currentUser.province = province;
     renderProfileInfo();
     document.getElementById('editProfileModal').classList.remove('open');
@@ -1654,7 +1654,7 @@ async function loadMyPosts() {
   const box = document.getElementById('my-posts');
   if (!box || !currentUser || !db) return;
   try {
-    const snap = await db.collection('posts')
+    const snap = await tdb().collection('posts')
       .where('authorId', '==', currentUser.uid)
       .limit(50).get();
     let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
@@ -1736,7 +1736,7 @@ async function saveOnboarding() {
   try {
     const updates = { crops: obSelectedCrops, onboarded: true };
     if (obLocation) updates.location = obLocation;
-    await db.collection('users').doc(currentUser.uid).update(updates);
+    await tdb().collection('users').doc(currentUser.uid).update(updates);
     currentUser = { ...currentUser, ...updates };
     document.getElementById('onboardModal').classList.remove('open');
     renderMyCrops();
@@ -1750,7 +1750,7 @@ async function saveOnboarding() {
 async function skipOnboarding() {
   document.getElementById('onboardModal').classList.remove('open');
   // จดไว้ว่าข้ามแล้ว จะได้ไม่เด้งทุกครั้ง (ถามใหม่ได้จากหน้าโปรไฟล์ภายหลัง)
-  try { await db.collection('users').doc(currentUser.uid).update({ onboarded: true }); } catch (e) {}
+  try { await tdb().collection('users').doc(currentUser.uid).update({ onboarded: true }); } catch (e) {}
   currentUser.onboarded = true;
 }
 
@@ -1928,7 +1928,7 @@ async function submitPost() {
     // บันทึกโพสลง Firestore
     if (db) {
       const pts = APP_CONFIG.points[imageUrl ? 'perPostWithImg' : 'perPost'] || 10;
-      await db.collection('posts').add({
+      await tdb().collection('posts').add({
         tenantId:    tenantId(),
         text,
         type,
@@ -1990,7 +1990,7 @@ async function loadFeed(mode) {
   container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
 
   try {
-    const snap = await db.collection('posts')
+    const snap = await tdb().collection('posts')
       .orderBy('createdAt', 'desc')
       .limit(mode === 'nearby' ? 100 : (APP_CONFIG.feed.postsPerPage || 10))
       .get();
@@ -2051,6 +2051,7 @@ async function loadFeed(mode) {
   }
 }
 
+function tdb(){ return db.collection('tenants').doc(tenantId()); }
 function tenantId() {
   const t = APP_CONFIG.tenant || {};
   const host = (typeof location !== 'undefined' && location.hostname) || '';
@@ -2081,11 +2082,11 @@ function initFeatureFlags() {
   applyFeatureFlags();
   if (_ffInit || !db) return;
   _ffInit = true;
-  db.collection('settings').doc('features').onSnapshot(
+  tdb().collection('settings').doc('features').onSnapshot(
     snap => { const d = snap.exists ? snap.data() : null; if (d) { APP_CONFIG.features = Object.assign({}, APP_CONFIG.features, d); applyFeatureFlags(); renderAdminToggles(); } },
     err => { console.warn('featuresDoc:', err.message); }
   );
-  db.collection('settings').doc(tenantId()).onSnapshot(
+  tdb().collection('settings').doc(tenantId()).onSnapshot(
     snap => {
       const d = snap.exists ? snap.data() : null;
       if (d && d.features) APP_CONFIG.features = Object.assign({}, APP_CONFIG.features, d.features);
@@ -2095,7 +2096,7 @@ function initFeatureFlags() {
     },
     err => { console.warn('featureFlags:', err.message); }
   );
-  db.collection('settings').doc('app').onSnapshot(
+  tdb().collection('settings').doc('app').onSnapshot(
     snap => {
       const d = snap.exists ? snap.data() : null;
       if (!d) return;
@@ -2111,12 +2112,12 @@ function initFeatureFlags() {
     err => { console.warn('appSettings:', err.message); }
   );
   // P2: settings/points → APP_CONFIG.points + tier min/discount (real-time)
-  db.collection('settings').doc('points').onSnapshot(
+  tdb().collection('settings').doc('points').onSnapshot(
     snap => { const d = snap.exists ? snap.data() : null; if (d) applyPoints(d); },
     err => { console.warn('pointsSettings:', err.message); }
   );
   // #3A: settings/shop → แบนเนอร์ + โปรโมชัน (real-time)
-  db.collection('settings').doc('shop').onSnapshot(
+  tdb().collection('settings').doc('shop').onSnapshot(
     snap => { applyShop(snap.exists ? snap.data() : {}); },
     err => { console.warn('shopSettings:', err.message); }
   );
@@ -2233,7 +2234,7 @@ async function setFeature(key, val) {
   APP_CONFIG.features[key] = val;
   applyFeatureFlags();
   try {
-    await db.collection('settings').doc(tenantId()).set({ features: { [key]: val } }, { merge: true });
+    await tdb().collection('settings').doc(tenantId()).set({ features: { [key]: val } }, { merge: true });
   } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
 }
 
@@ -2310,7 +2311,7 @@ async function likePost(id, btn) {
   const inc = liked ? 1 : -1;
   const el = document.getElementById('likes-' + id);
   if (el) el.textContent = Math.max(0, parseInt(el.textContent || '0') + inc);
-  const ref = db.collection('posts').doc(id).collection('likes').doc(currentUser.uid);
+  const ref = tdb().collection('posts').doc(id).collection('likes').doc(currentUser.uid);
   try {
     if (liked) await ref.set({ at: firebase.firestore.FieldValue.serverTimestamp() });
     else await ref.delete();
@@ -2325,7 +2326,7 @@ async function helpPost(id, btn) {
   if (!currentUser || !db) return;
   btn.classList.toggle('helped');
   const helped = btn.classList.contains('helped');
-  const ref = db.collection('posts').doc(id).collection('helps').doc(currentUser.uid);
+  const ref = tdb().collection('posts').doc(id).collection('helps').doc(currentUser.uid);
   try {
     if (helped) await ref.set({ at: firebase.firestore.FieldValue.serverTimestamp() });
     else await ref.delete();
@@ -2341,7 +2342,7 @@ async function addComment(postId) {
   const text = input?.value?.trim();
   if (!text || !currentUser || !db) return;
   try {
-    await db.collection('posts').doc(postId).collection('comments').add({
+    await tdb().collection('posts').doc(postId).collection('comments').add({
       text, authorId: currentUser.uid, authorName: currentUser.displayName, authorPhoto: currentUser.photoUrl || '',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -2368,7 +2369,7 @@ async function addComment(postId) {
 async function deletePost(id) {
   if (!confirm('ลบโพสนี้?')) return;
   try {
-    await db.collection('posts').doc(id).delete();
+    await tdb().collection('posts').doc(id).delete();
     document.getElementById('post-' + id)?.remove();
   } catch(e) { alert('ลบไม่ได้: ' + e.message); }
 }
@@ -2376,7 +2377,7 @@ async function deletePost(id) {
 async function togglePin(id, current) {
   if (!isAdmin()) return;
   try {
-    await db.collection('posts').doc(id).update({ pinned: !current });
+    await tdb().collection('posts').doc(id).update({ pinned: !current });
     loadFeed('feed');
   } catch(e) { alert('ปักหมุดไม่ได้: ' + e.message); }
 }
@@ -2392,7 +2393,7 @@ async function uploadCoverPhoto(input) {
     const ref = firebase.storage().ref('covers/' + currentUser.uid + '_cover.jpg');
     const snap = await ref.put(compressed, { contentType: 'image/jpeg' });
     const url = await snap.ref.getDownloadURL();
-    await db.collection('users').doc(currentUser.uid).update({ coverUrl: url });
+    await tdb().collection('users').doc(currentUser.uid).update({ coverUrl: url });
     currentUser.coverUrl = url;
     const cv = document.getElementById('prof-cover');
     if (cv) cv.style.backgroundImage = 'url(' + url + ')';
@@ -2460,7 +2461,7 @@ async function loadShop(){
   try {
     let list = [];
     if (db) {
-      const snap = await db.collection('products').get();
+      const snap = await tdb().collection('products').get();
       const tid = (typeof tenantId === 'function') ? tenantId() : null;
       list = snap.docs.map(d => Object.assign({ _id:d.id }, d.data()))
                       .filter(p => !p.tenantId || !tid || p.tenantId === tid);
@@ -2803,8 +2804,8 @@ async function submitCheckout(){
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
   try {
-    const ref = await db.collection('orders').add(order);
-    try { await db.collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
+    const ref = await tdb().collection('orders').add(order);
+    try { await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
     pendingOrder = Object.assign({ id: ref.id }, order, { total: total });
     closeCheckout();
     openPayment(pendingOrder);
@@ -2842,7 +2843,7 @@ async function onSlipPicked(input){
     const ref = firebase.storage().ref('slips/'+tid+'/'+currentUser.uid+'/'+pendingOrder.id+'_'+Date.now()+'.jpg');
     const snap = await ref.put(blob, { contentType: 'image/jpeg' });
     const url = await snap.ref.getDownloadURL();
-    await db.collection('orders').doc(pendingOrder.id).update({
+    await tdb().collection('orders').doc(pendingOrder.id).update({
       slipUrl: url, status: 'paid_review',
       paidAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2871,7 +2872,7 @@ async function openMyOrders(){
   box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px">กำลังโหลด...</div>';
   if (!currentUser || !db){ box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px">กรุณาเข้าสู่ระบบ</div>'; return; }
   try {
-    const snap = await db.collection('orders').where('userId','==',currentUser.uid).get();
+    const snap = await tdb().collection('orders').where('userId','==',currentUser.uid).get();
     const tid = (typeof tenantId==='function')?tenantId():null;
     let docs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }).filter(function(o){ return !tid || o.tenantId===tid; });
     docs.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
@@ -2899,7 +2900,7 @@ function closeMyOrders(){ const m=document.getElementById('ordersModal'); if(m) 
 async function resumePayment(orderId){
   if(!db) return;
   try {
-    const doc = await db.collection('orders').doc(orderId).get();
+    const doc = await tdb().collection('orders').doc(orderId).get();
     if (!doc.exists) return;
     pendingOrder = Object.assign({id:doc.id}, doc.data());
     closeMyOrders();
@@ -2919,7 +2920,7 @@ function loadRelProducts(){
     let list = [];
     try {
       if (db){
-        const snap = await db.collection('products').get();
+        const snap = await tdb().collection('products').get();
         const tid = (typeof tenantId==='function')?tenantId():null;
         list = snap.docs.map(function(d){ return Object.assign({_id:d.id}, d.data()); })
                         .filter(function(p){ return !p.tenantId || !tid || p.tenantId===tid; });
