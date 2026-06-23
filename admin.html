@@ -170,6 +170,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน</div>
     <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
     <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
+    <div class="sb-section">Bocean</div>
+    <div class="sb-item" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
     <div class="sb-section">ระบบ</div>
     <div class="sb-item" onclick="window.open('https://phuansuan.web.app','_blank')"><span class="si">🌐</span> เปิดแอป</div>
     <div class="sb-item" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><span class="si">🔥</span> Firebase Console</div>
@@ -177,6 +179,12 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 </div>
 
 <div class="main">
+
+<!-- BOCEAN REQUESTS -->
+<div class="screen" id="screen-bocean">
+  <div class="page-header"><div class="page-title">📨 คำขอเปิดร้าน (Bocean)</div><div class="page-sub">แบรนด์ที่สนใจเปิด community + ร้านค้าของตัวเองผ่าน Bocean</div></div>
+  <div class="card"><div id="bocean-req-list"><div class="empty-state">กำลังโหลด...</div></div></div>
+</div>
 
 <!-- DASHBOARD -->
 <div class="screen active" id="screen-dashboard">
@@ -597,7 +605,7 @@ window.addEventListener('load', async () => {
     }
     adminUser = profile;
     showApp();
-    await Promise.all([loadDashboard(), loadSidebarBranding()]);
+    await Promise.all([loadDashboard(), loadSidebarBranding(), loadBoceanRequests()]);
   } catch(err) { console.error(err); showDeny(); }
 });
 
@@ -618,7 +626,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders };
+  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders, bocean: loadBoceanRequests };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -1111,6 +1119,55 @@ const ORDER_META = {
 
 let adminOrders = [];
 let adminOrderFilter = 'all';
+
+let boceanReqs = [];
+async function loadBoceanRequests(){
+  const box = document.getElementById('bocean-req-list');
+  if (!box || !db) return;
+  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  try {
+    const snap = await db.collection('tenantRequests').get();
+    boceanReqs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    boceanReqs.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
+    const nw = boceanReqs.filter(function(r){ return (r.status||'new')==='new'; }).length;
+    const badge = document.getElementById('badge-bocean'); if (badge) badge.textContent = nw;
+    renderBoceanRequests();
+  } catch(e){ box.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
+}
+const BOCEAN_META = { new:{t:'ใหม่',c:'#1877f2'}, contacted:{t:'ติดต่อแล้ว',c:'#f59e0b'}, approved:{t:'อนุมัติ',c:'#16a34a'}, rejected:{t:'ปฏิเสธ',c:'#888'} };
+function renderBoceanRequests(){
+  const box = document.getElementById('bocean-req-list');
+  if (!box) return;
+  if (!boceanReqs.length){ box.innerHTML = '<div class="empty-state">ยังไม่มีคำขอเปิดร้าน</div>'; return; }
+  box.innerHTML = boceanReqs.map(boceanCardHtml).join('');
+}
+function boceanCardHtml(r){
+  const m = BOCEAN_META[r.status||'new'] || {t:r.status,c:'#888'};
+  function row(label, val){ return val ? '<div class="oa-line"><b>'+label+':</b> '+escapeHtml(String(val))+'</div>' : ''; }
+  let acts = '';
+  acts += '<button class="oa-btn oa-ship" onclick="setBoceanStatus(\''+r.id+'\',\'contacted\')">📞 ติดต่อแล้ว</button>';
+  acts += '<button class="oa-btn oa-confirm" onclick="setBoceanStatus(\''+r.id+'\',\'approved\')">✅ อนุมัติ</button>';
+  acts += '<button class="oa-btn oa-cancel" onclick="setBoceanStatus(\''+r.id+'\',\'rejected\')">❌ ปฏิเสธ</button>';
+  return '<div class="oa-card">'+
+    '<div class="oa-top"><span class="oa-id">'+escapeHtml(r.brandName||'-')+'</span>'+
+      '<span class="oa-badge" style="background:'+m.c+'">'+m.t+'</span></div>'+
+    '<div class="oa-box" style="margin-top:8px">'+
+      row('ผู้ติดต่อ', r.contactName)+ row('โทร', r.phone)+ row('อีเมล', r.email)+
+      row('LINE', r.lineId)+ row('ประเภทสินค้า', r.productType)+ row('โดเมนที่อยากได้', r.desiredDomain)+
+      row('ข้อความ', r.message)+
+      '<div class="oa-line" style="color:var(--muted);font-size:12px;margin-top:5px">'+fmtDate(r.createdAt)+'</div>'+
+    '</div>'+
+    '<div class="oa-actions">'+acts+'</div>'+
+  '</div>';
+}
+async function setBoceanStatus(id, status){
+  if (!db) return;
+  try {
+    await db.collection('tenantRequests').doc(id).update({ status: status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast('อัปเดตสถานะแล้ว','success');
+    loadBoceanRequests();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
 
 async function loadOrders(){
   const box = document.getElementById('orders-admin-list');

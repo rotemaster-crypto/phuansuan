@@ -823,6 +823,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <div onclick="contactShop()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text)">
         <span style="font-size:20px">🏪</span> ติดต่อร้าน DemeterRich
       </div>
+      <div onclick="window.open('/bocean.html','_blank')" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text);border-top:1px solid var(--border)">
+        <span style="font-size:20px">🚀</span> เปิดร้านแบรนด์คุณกับ Bocean
+      </div>
       <div onclick="doLogout()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:#e41e3f;border-top:1px solid var(--border)">
         <span style="font-size:20px">🚪</span> ออกจากระบบ
       </div>
@@ -922,7 +925,7 @@ async function signInWithLineToken() {
     const lineAuth = firebase.app()
       .functions('asia-southeast1')
       .httpsCallable('lineAuth');
-    const res = await lineAuth({ accessToken });
+    const res = await lineAuth({ accessToken, tid: (typeof tenantId === 'function' ? tenantId() : 'phuansuan') });
     await firebase.auth().signInWithCustomToken(res.data.token);
     console.log('✅ Firebase auth ด้วย LINE custom token สำเร็จ');
   } catch (err) {

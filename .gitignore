@@ -3,3 +3,9 @@ patch_*.js
 check.js
 node_modules/
 functions/node_modules/
+
+sa.json
+apply_*.js
+patch_*.js
+migrate*.js
+*.gz.b64

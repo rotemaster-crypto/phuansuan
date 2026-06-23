@@ -127,6 +127,22 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    // ── Bocean: คำขอเปิดร้านจากแบรนด์อื่น ──────────────────
+    // create: สาธารณะ (ฟอร์ม bocean.html ไม่ต้อง login) + ตรวจรูปแบบกันสแปม
+    // read/update/delete: admin (Super Admin) เท่านั้น
+    match /tenantRequests/{reqId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if request.resource.data.status == 'new'
+        && request.resource.data.brandName is string
+        && request.resource.data.brandName.size() > 0
+        && request.resource.data.brandName.size() < 120
+        && request.resource.data.contactName is string
+        && request.resource.data.contactName.size() > 0
+        && request.resource.data.contactName.size() < 120
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() < 40;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

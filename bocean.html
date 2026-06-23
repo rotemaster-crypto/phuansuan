@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bocean — สร้างชุมชน + ร้านค้าของแบรนด์คุณ</title>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+  :root{ --pri:#1877f2; --pri2:#0a3d8f; --ink:#0f172a; --muted:#64748b; --line:#e6eaf0; --bg:#f6f8fb; --ok:#16a34a; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 18px}
+  a{color:inherit;text-decoration:none}
+  .nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px;letter-spacing:-.3px}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--pri),#42b883);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+  .nav-cta{background:var(--pri);color:#fff;padding:9px 18px;border-radius:10px;font-weight:700;font-size:14px}
+  .hero{background:radial-gradient(1200px 500px at 50% -120px,#dbeafe,transparent),#fff;border-bottom:1px solid var(--line);padding:64px 0 56px;text-align:center}
+  .hero h1{font-size:40px;line-height:1.18;font-weight:800;letter-spacing:-.8px;margin-bottom:16px}
+  .hero h1 .hl{background:linear-gradient(135deg,var(--pri),#42b883);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p{font-size:18px;color:var(--muted);max-width:640px;margin:0 auto 28px}
+  .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{padding:13px 26px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;border:0;display:inline-flex;align-items:center;gap:8px}
+  .btn-pri{background:var(--pri);color:#fff;box-shadow:0 8px 22px rgba(24,119,242,.28)}
+  .btn-line{background:#06c755;color:#fff}
+  .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .hero-note{margin-top:18px;font-size:13px;color:var(--muted)}
+  section{padding:56px 0}
+  .sec-head{text-align:center;margin-bottom:38px}
+  .sec-head .eyebrow{color:var(--pri);font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase}
+  .sec-head h2{font-size:30px;font-weight:800;letter-spacing:-.5px;margin-top:6px}
+  .sec-head p{color:var(--muted);margin-top:8px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .feat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}
+  .feat .ico{font-size:30px;margin-bottom:12px}
+  .feat h3{font-size:18px;font-weight:800;margin-bottom:6px}
+  .feat p{color:var(--muted);font-size:14px}
+  .showcase{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .show-card{display:flex;gap:22px;align-items:center;background:linear-gradient(135deg,#eef5ff,#f3fdf7);border:1px solid var(--line);border-radius:20px;padding:26px;flex-wrap:wrap}
+  .show-card .badge{background:var(--pri);color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;display:inline-block;margin-bottom:8px}
+  .show-card .em{font-size:54px}
+  .show-card .body{flex:1;min-width:240px}
+  .show-card h3{font-size:22px;font-weight:800}
+  .show-card p{color:var(--muted);margin-top:6px}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .plan{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;display:flex;flex-direction:column}
+  .plan.feat-plan{border:2px solid var(--pri);box-shadow:0 14px 34px rgba(24,119,242,.14);position:relative}
+  .plan.feat-plan .tag{position:absolute;top:-12px;left:26px;background:var(--pri);color:#fff;font-size:12px;font-weight:700;padding:3px 12px;border-radius:999px}
+  .plan h3{font-size:18px;font-weight:800}
+  .plan .price{font-size:32px;font-weight:800;margin:10px 0 2px}
+  .plan .price small{font-size:14px;color:var(--muted);font-weight:600}
+  .plan ul{list-style:none;margin:16px 0;display:flex;flex-direction:column;gap:9px}
+  .plan li{font-size:14px;color:#334155;display:flex;gap:8px}
+  .plan li::before{content:"✓";color:var(--ok);font-weight:800}
+  .plan .btn{margin-top:auto;justify-content:center;text-align:center}
+  .form-sec{background:#0b1f3a;color:#fff}
+  .form-sec .sec-head h2{color:#fff}
+  .form-sec .sec-head p{color:#a9c2e8}
+  .form-card{background:#fff;color:var(--ink);border-radius:20px;padding:30px;max-width:640px;margin:0 auto;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+  .fg{margin-bottom:14px}
+  .fg label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  .fg label .req{color:#e11d48}
+  .fg input,.fg select,.fg textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;font-size:15px;font-family:inherit;background:#fbfcfe}
+  .fg input:focus,.fg select:focus,.fg textarea:focus{outline:0;border-color:var(--pri);background:#fff}
+  .fg textarea{min-height:84px;resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .submit-btn{width:100%;background:var(--pri);color:#fff;border:0;padding:15px;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;margin-top:6px}
+  .submit-btn:disabled{opacity:.6;cursor:default}
+  .form-ok{display:none;text-align:center;padding:18px}
+  .form-ok .big{font-size:48px}
+  .form-ok h3{font-size:22px;font-weight:800;margin:8px 0}
+  .form-ok p{color:var(--muted)}
+  .form-alt{text-align:center;margin-top:16px;font-size:14px;color:#a9c2e8}
+  footer{background:#fff;border-top:1px solid var(--line);padding:30px 0;text-align:center;color:var(--muted);font-size:13px}
+  @media(max-width:760px){
+    .hero h1{font-size:30px}
+    .grid,.plans{grid-template-columns:1fr}
+    .row2{grid-template-columns:1fr}
+    .sec-head h2{font-size:24px}
+  }
+</style>
+</head>
+<body>
+
+<div class="nav"><div class="wrap">
+  <div class="brand"><span class="logo">🌊</span> Bocean</div>
+  <a class="nav-cta" href="#signup">เปิดร้านของคุณ</a>
+</div></div>
+
+<header class="hero"><div class="wrap">
+  <h1>สร้าง<span class="hl">ชุมชน + ร้านค้า</span><br>ของแบรนด์คุณ ในแอปเดียว</h1>
+  <p>Bocean คือแพลตฟอร์มที่ให้แบรนด์สินค้าใดก็ได้ มีระบบนิเวศของตัวเอง — ชุมชนคนใช้สินค้า ร้านค้าออนไลน์ ระบบสะสมแต้ม และ AI ผู้ช่วย โดยไม่ต้องเขียนโค้ดเอง</p>
+  <div class="hero-btns">
+    <a class="btn btn-pri" href="#signup">🚀 เริ่มเปิดร้านฟรี</a>
+    <a class="btn btn-ghost" href="https://phuansuan.web.app" target="_blank">👀 ดูตัวอย่างจริง</a>
+  </div>
+  <div class="hero-note">ตัวอย่างจริง: <b>เพื่อนสวน</b> — ชุมชนเกษตรกรของแบรนด์ DemeterRich สร้างด้วย Bocean</div>
+</div></header>
+
+<section><div class="wrap">
+  <div class="sec-head">
+    <div class="eyebrow">ทุกอย่างในที่เดียว</div>
+    <h2>แบรนด์คุณได้อะไรบ้าง</h2>
+    <p>ระบบครบที่แบรนด์ยุคใหม่ต้องมี เปิดใช้ได้ทันที</p>
+  </div>
+  <div class="grid">
+    <div class="feat"><div class="ico">💬</div><h3>ชุมชนของลูกค้า</h3><p>ฟีดแบบโซเชียล ให้ลูกค้าแชร์ปัญหา ภาพ ความรู้ และพูดคุยกันรอบ ๆ แบรนด์ของคุณ</p></div>
+    <div class="feat"><div class="ico">🛒</div><h3>ร้านค้า + ตะกร้า</h3><p>ขายสินค้าในแอป มีตะกร้า เช็คเอาท์ ค่าส่งอัตโนมัติ และจัดการออเดอร์จากแดชบอร์ด</p></div>
+    <div class="feat"><div class="ico">🏅</div><h3>แต้ม &amp; Tier</h3><p>ระบบสะสมแต้มและระดับสมาชิก ให้ส่วนลด สร้างความผูกพันและการกลับมาซื้อซ้ำ</p></div>
+    <div class="feat"><div class="ico">🤖</div><h3>AI ผู้ช่วย</h3><p>ผู้ช่วยอัจฉริยะเฉพาะทางสำหรับแบรนด์คุณ (เช่น วิเคราะห์ภาพ ตอบคำถามสินค้า)</p></div>
+    <div class="feat"><div class="ico">🎨</div><h3>ปรับแต่งเป็นแบรนด์คุณ</h3><p>โลโก้ สี ชื่อ ป้ายร้าน ข้อความ ปรับได้เองทั้งหมดจากแดชบอร์ด ไม่ต้องแตะโค้ด</p></div>
+    <div class="feat"><div class="ico">📊</div><h3>แดชบอร์ดแอดมิน</h3><p>ดูสมาชิก โพส ออเดอร์ ยอดขาย และตั้งค่าทุกอย่างของร้านในที่เดียว</p></div>
+  </div>
+</div></section>
+
+<section class="showcase"><div class="wrap">
+  <div class="show-card">
+    <div class="em">🌿</div>
+    <div class="body">
+      <span class="badge">CASE STUDY</span>
+      <h3>เพื่อนสวน × DemeterRich</h3>
+      <p>ชุมชนเกษตรกรไทยสำหรับชาวสวน 35–60 ปี ที่รวมฟีดชุมชน ร้านปุ๋ยเหลว ระบบแต้ม และ AI หมอพืชวิเคราะห์โรคจากภาพ — ทั้งหมดสร้างบน Bocean</p>
+    </div>
+    <a class="btn btn-pri" href="https://phuansuan.web.app" target="_blank">เปิดดู →</a>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="sec-head">
+    <div class="eyebrow">แพ็กเกจ</div>
+    <h2>เริ่มฟรี ขยายเมื่อพร้อม</h2>
+    <p>เลือกแพ็กเกจที่เหมาะกับขนาดแบรนด์ของคุณ</p>
+  </div>
+  <div class="plans">
+    <div class="plan">
+      <h3>Free</h3>
+      <div class="price">฿0<small> /เดือน</small></div>
+      <ul><li>ชุมชน + ฟีด</li><li>ร้านค้าพื้นฐาน</li><li>สมาชิกไม่จำกัด</li><li>โดเมน .web.app</li></ul>
+      <a class="btn btn-ghost" href="#signup">เริ่มเลย</a>
+    </div>
+    <div class="plan feat-plan">
+      <span class="tag">แนะนำ</span>
+      <h3>Pro</h3>
+      <div class="price">ติดต่อ<small> /เดือน</small></div>
+      <ul><li>ทุกอย่างใน Free</li><li>แต้ม &amp; Tier + ส่วนลด</li><li>AI ผู้ช่วย</li><li>โดเมนของคุณเอง</li><li>แดชบอร์ดเต็มรูปแบบ</li></ul>
+      <a class="btn btn-pri" href="#signup">ขอใช้งาน</a>
+    </div>
+    <div class="plan">
+      <h3>Enterprise</h3>
+      <div class="price">ติดต่อ</div>
+      <ul><li>ทุกอย่างใน Pro</li><li>ปรับแต่งเฉพาะแบรนด์</li><li>เชื่อมระบบภายนอก</li><li>ดูแลแบบทีมงาน</li></ul>
+      <a class="btn btn-ghost" href="#signup">คุยกับเรา</a>
+    </div>
+  </div>
+</div></section>
+
+<section class="form-sec" id="signup"><div class="wrap">
+  <div class="sec-head">
+    <div class="eyebrow" style="color:#7fb3ff">ลงทะเบียน</div>
+    <h2>ขอเปิดร้านของแบรนด์คุณ</h2>
+    <p>กรอกข้อมูลสั้น ๆ ทีมงานจะติดต่อกลับเพื่อตั้งค่าระบบให้</p>
+  </div>
+
+  <div class="form-card">
+    <div id="bo-form">
+      <div class="fg">
+        <label>ชื่อแบรนด์ / ธุรกิจ <span class="req">*</span></label>
+        <input id="f-brand" placeholder="เช่น DemeterRich" maxlength="100">
+      </div>
+      <div class="row2">
+        <div class="fg">
+          <label>ชื่อผู้ติดต่อ <span class="req">*</span></label>
+          <input id="f-name" placeholder="ชื่อ-นามสกุล" maxlength="100">
+        </div>
+        <div class="fg">
+          <label>เบอร์โทร <span class="req">*</span></label>
+          <input id="f-phone" placeholder="08x-xxx-xxxx" maxlength="30">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fg">
+          <label>อีเมล</label>
+          <input id="f-email" type="email" placeholder="you@email.com" maxlength="120">
+        </div>
+        <div class="fg">
+          <label>LINE ID</label>
+          <input id="f-line" placeholder="@yourbrand" maxlength="80">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fg">
+          <label>ประเภทสินค้า</label>
+          <input id="f-product" placeholder="เช่น ปุ๋ย, เครื่องสำอาง, อาหารเสริม" maxlength="120">
+        </div>
+        <div class="fg">
+          <label>โดเมนที่อยากได้</label>
+          <input id="f-domain" placeholder="เช่น mybrand" maxlength="80">
+        </div>
+      </div>
+      <div class="fg">
+        <label>เล่าเกี่ยวกับแบรนด์ของคุณ</label>
+        <textarea id="f-msg" placeholder="อยากได้ชุมชน + ร้านแบบไหน มีลูกค้าประมาณกี่คน ฯลฯ" maxlength="800"></textarea>
+      </div>
+      <button class="submit-btn" id="f-submit" onclick="submitRequest()">ส่งคำขอเปิดร้าน</button>
+      <div class="form-alt">
+        หรือคุยกับเราทาง <a href="https://line.me/R/ti/p/@demeterrich" target="_blank" style="color:#06c755;font-weight:700">LINE</a>
+      </div>
+    </div>
+
+    <div class="form-ok" id="bo-ok">
+      <div class="big">🎉</div>
+      <h3>ส่งคำขอเรียบร้อย!</h3>
+      <p>ทีมงาน Bocean จะติดต่อกลับโดยเร็วที่สุด ขอบคุณที่สนใจครับ</p>
+    </div>
+  </div>
+</div></section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand" style="justify-content:center;font-size:18px;margin-bottom:8px"><span class="logo" style="width:28px;height:28px;font-size:15px">🌊</span> Bocean</div>
+    แพลตฟอร์มสร้างชุมชน + ร้านค้าสำหรับแบรนด์ · © 2026
+  </div>
+</footer>
+
+<script>
+  var BO_DB = null;
+  try {
+    if (typeof FIREBASE_CONFIG !== 'undefined') {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      BO_DB = firebase.firestore();
+    }
+  } catch (e) { console.warn('Bocean firebase init:', e); }
+
+  function submitRequest() {
+    var brand = (document.getElementById('f-brand').value || '').trim();
+    var name  = (document.getElementById('f-name').value  || '').trim();
+    var phone = (document.getElementById('f-phone').value || '').trim();
+    if (!brand || !name || !phone) {
+      alert('กรุณากรอก ชื่อแบรนด์ / ชื่อผู้ติดต่อ / เบอร์โทร ให้ครบ');
+      return;
+    }
+    if (!BO_DB) { alert('ระบบยังไม่พร้อม กรุณาลองใหม่อีกครั้ง'); return; }
+
+    var btn = document.getElementById('f-submit');
+    btn.disabled = true; btn.textContent = 'กำลังส่ง...';
+
+    var payload = {
+      status:       'new',
+      brandName:    brand,
+      contactName:  name,
+      phone:        phone,
+      email:        (document.getElementById('f-email').value   || '').trim(),
+      lineId:       (document.getElementById('f-line').value    || '').trim(),
+      productType:  (document.getElementById('f-product').value || '').trim(),
+      desiredDomain:(document.getElementById('f-domain').value  || '').trim(),
+      message:      (document.getElementById('f-msg').value     || '').trim(),
+      source:       'bocean.html',
+      createdAt:    firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    BO_DB.collection('tenantRequests').add(payload)
+      .then(function () {
+        document.getElementById('bo-form').style.display = 'none';
+        document.getElementById('bo-ok').style.display = 'block';
+        document.getElementById('bo-ok').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      })
+      .catch(function (err) {
+        console.error('submit error:', err);
+        alert('ส่งไม่สำเร็จ: ' + (err && err.message ? err.message : 'ลองใหม่อีกครั้ง'));
+        btn.disabled = false; btn.textContent = 'ส่งคำขอเปิดร้าน';
+      });
+  }
+</script>
+
+</body>
+</html>
