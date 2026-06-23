@@ -98,3 +98,34 @@
 - **storage.rules**: app-icons/ + **shop-banner/** (admin write, isImage, ≤5MB) + catch-all deny
 - deploy: `--only hosting` (index/admin/config/storage rules ก็รวม storage) · `--only functions` (Node22) · รวมตามที่แตะ
 - LIFF `2010356906-9iRWpDO2` · Admin LINE `U03582167674331d9005dfb42728c7151` · PromptPay `0868834583`/DemeterRich · Gemini `gemini-2.5-flash` (Secret Manager) · Codespace `studious-acorn-jjxjvw6v7wg72qw5j.github.dev`
+
+---
+
+## 8. รอบ Bocean (Platform) — multi-tenant SaaS
+
+> **ชื่อระบบทางการ = Bocean** · แพลตฟอร์มให้แบรนด์ใดก็ได้สร้าง community + ร้านค้า + gamification ของตัวเอง · **เพื่อนสวน = tenant ตัวอย่างตัวแรก**
+
+### สิ่งที่ build + ส่งรอบนี้ (heredoc ส่งแล้ว — Roger ต้องรัน + deploy + push)
+- **`bocean.html`** (ไฟล์ใหม่) — landing page แพลตฟอร์ม Bocean (hero/ฟีเจอร์/case study เพื่อนสวน/แพ็กเกจ free-pro-enterprise) + **ฟอร์มขอเปิดร้าน** เขียนลง Firestore `tenantRequests` (ไม่ต้อง login) + ปุ่มคุย LINE สำรอง · โหลด firebase-config.js + SDK 10.12.0
+- **`firestore.rules`** — เพิ่ม `match /tenantRequests/{reqId}`: create สาธารณะ + validate (status='new', brandName/contactName/phone เป็น string ความยาวจำกัด) · read/update/delete = `isAdmin()` เท่านั้น · catch-all เดิมคงอยู่
+- **`admin.html`** (Super Admin) — เมนูใหม่หมวด **Bocean → "📨 คำขอเปิดร้าน"** + badge นับคำขอใหม่ · screen `#screen-bocean` · `loadBoceanRequests`/`renderBoceanRequests`/`boceanCardHtml`/`setBoceanStatus` (สถานะ ใหม่/ติดต่อแล้ว/อนุมัติ/ปฏิเสธ) · เพิ่มใน loaders map + preload badge ใน Promise.all · reuse CSS oa-* เดิม
+- **`index.html`** — เมนู ••• เพิ่มลิงก์ "🚀 เปิดร้านแบรนด์คุณกับ Bocean" → `/bocean.html`
+- **deploy:** `firebase deploy --only hosting,firestore:rules`
+- ทดสอบบน fresh clone ผ่านครบ: idempotent + parse admin/bocean JS + rules วงเล็บสมดุล 32/32 + marker ครบ
+
+### admin 2 ระดับ (สถาปัตยกรรม)
+- **Super Admin** = เจ้าของ Bocean (Roger) — อนุมัติ tenantRequests, provision, billing · รอบนี้ทำส่วน "คำขอเปิดร้าน" แบบเบาก่อน
+- **Tenant Admin** = เจ้าของแต่ละแบรนด์ — คือ `admin.html` ปัจจุบัน แต่ยังเขียน path ตายตัว (`settings/app|features|points`) = ยัง single-tenant · ต้อง namespace ใน Phase 5.1
+
+### พิมพ์เขียว Phase 5.1 — migration multi-tenant (BLUEPRINT, ยังไม่ลงมือ)
+- ย้าย Pool model (collection รวม แท็ก tenantId) → **Bridge model `tenants/{tid}/...`** (ฐานเดียว) แบบ **copy additive** (ของเก่าอยู่ครบ rollback ได้)
+- path ใหม่: `tenants/{tid}/{users|posts|products|orders|notifications|settings}/...` · `tenantRequests` คงเป็น platform-level
+- **blocker ต้องเคลียร์ก่อน:** ออกแบบ tenant claim รวมกรณี **anonymous (`office`)** ที่ไม่มี claim จาก lineAuth
+- ลำดับ: 5.1a (claim + migrate + verify) → 5.1b (refactor functions→index→admin + rules ใหม่ + dual-read) → 5.1c (cleanup) → 5.1d (provision อัตโนมัติจาก tenantRequests + admin เลือก tenant)
+- migration script: Admin SDK + idempotent + recurse subcol + DRY_RUN · backup ด้วย `gcloud firestore export` ก่อนเสมอ
+- (พิมพ์เขียวเต็มอยู่ในไฟล์ PHASE5_MIGRATION_BLUEPRINT.md ที่ Claude ร่างไว้ — ส่งเป็น heredoc เข้า repo ได้ถ้าต้องการ)
+
+### ค้าง ณ สิ้นรอบนี้ (ต้องเก็บ)
+1. **Bocean** — Roger รัน 3 paste-block + `firebase deploy --only hosting,firestore:rules` + push → ทดสอบ: เปิด `phuansuan.web.app/bocean.html` กรอกฟอร์ม → เช็ค admin "📨 คำขอเปิดร้าน" ขึ้น
+2. **feature key `commerce`** (§5 เดิม) — ยังไม่ได้รัน `apply_fix_featurekey.js` → toggle ปิด/เปิดร้าน admin ยังไม่มีผลจนกว่าจะรัน
+3. README.md — อัปเดตเป็น overview เต็มแล้ว (รอบนี้)
