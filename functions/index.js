@@ -86,6 +86,27 @@ exports.lineAuth = onCall(async (req) => {
   };
 });
 
+// ── claimTenant ───────────────────────────────────────────
+// ผู้ใช้ที่ login ผ่าน provider เนทีฟ (Google/Facebook) ยังไม่มี
+// claim tenants → เรียกฟังก์ชันนี้หลัง login เพื่อเติม claim
+// (merge ของเดิม กัน admin / tenant อื่นหาย)
+exports.claimTenant = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  }
+  const tid = await resolveTid(req.data && req.data.tid);
+
+  const userRec = await admin.auth().getUser(uid);
+  const prev = userRec.customClaims || {};
+  const tenants = Object.assign({}, prev.tenants || {});
+  tenants[tid] = true;
+  const claims = Object.assign({}, prev, { tenants: tenants });
+
+  await admin.auth().setCustomUserClaims(uid, claims);
+  return { ok: true, tid: tid };
+});
+
 // ============================================================
 //  analyzePlant — วิเคราะห์โรคพืชจากรูปด้วย Gemini Vision
 // ============================================================

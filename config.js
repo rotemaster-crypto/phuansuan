@@ -30,6 +30,13 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     lineUserId: 'U03582167674331d9005dfb42728c7151',
   },
 
+  // ── Auth providers (เปิด/ปิดปุ่ม login แต่ละช่อง) ──
+  // line ใช้ผ่าน LIFF เสมอ; google/facebook ใช้ native Firebase provider
+  // (ปุ่ม google/facebook จะซ่อนอัตโนมัติเมื่อเปิดในแอป LINE)
+  auth: {
+    providers: { line: true, google: true, facebook: false },
+  },
+
   // ── ร้านค้า ───────────────────────────────────────────────
   shop: {
     name:         'DemeterRich',
