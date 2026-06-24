@@ -180,3 +180,88 @@
 1. **Cleanup ของเก่า** — ลบ collection เก่า top-level + legacy rules block (รอ cutover นิ่ง 2-3 วัน) · สคริปต์แยก ต้องพิมพ์ยืนยัน
 2. **sa.json** — rotate/ลบหลัง cleanup
 3. **Tenant Admin role** — ให้เจ้าของแบรนด์จัดการร้านตัวเอง (ตอนนี้ Super Admin only) + billing รายเดือน
+
+---
+
+## 11. Multi-Auth (LINE + Google + Facebook) — เสร็จ + deploy
+
+> เพิ่ม login ได้ 3 ช่อง โดย **ไม่แตะ identity model เดิม** (LINE uid = LINE userId) และ **ไม่แก้ firestore.rules** (claim-based `memberOf` รองรับ uid จาก provider ไหนก็ได้)
+
+### หลักการ
+- Google/Facebook ใช้ **native Firebase provider** (ไม่เขียน socialAuth เอง) → login แล้วเติม claim `tenants:{[tid]:true}` ทีหลังผ่านฟังก์ชัน `claimTenant` → client `getIdToken(true)` refresh ก่อนเขียน Firestore ครั้งแรก (ไม่งั้น permission denied)
+- ปุ่มทุก provider คุมจาก `config.js` → `auth.providers {line,google,facebook}`
+- ปุ่ม Google/Facebook **ซ่อนอัตโนมัติในแอป LINE** (`_isLineInApp()` เช็ค UA) เพราะ OAuth ใช้ไม่ได้ใน in-app webview — ใช้ได้เฉพาะเปิดในเบราว์เซอร์ปกติ
+- ใช้ **`signInWithPopup`** เป็นหลัก (เสถียรกว่า `signInWithRedirect` ที่พังเพราะ 3rd-party cookie: แอปอยู่ `phuansuan.web.app` แต่ authDomain `phuansuan.firebaseapp.com` คนละ origin) + fallback redirect ถ้า popup ถูกบล็อก
+
+### สิ่งที่แก้ (patch ส่งครบ)
+- `apply_auth_config.js` — เพิ่ม `auth.providers` ใน config.js
+- `apply_auth_function.js` — `claimTenant` ใน functions/index.js (merge claim เดิม กัน admin/tenant อื่นหาย)
+- `apply_auth_login_ui.js` — CSS ปุ่ม oauth + ปุ่มในหน้า `#login-screen` + ฟังก์ชัน (`_isLineInApp/loginWithGoogle/loginWithFacebook/claimCurrentTenant/loadUserProfileFromFirebase`) + init รับ `getRedirectResult` + `showLoginScreen` toggle
+- `apply_auth_gate.js` — เพิ่มปุ่ม Google/Facebook เข้า **gate modal `#loginPrompt`** (ตัวที่ guest เจอจริงตอนจะโพส/ซื้อ) + `showLoginPrompt` toggle
+- `apply_auth_popup.js` — เปลี่ยน redirect → popup + fallback + แสดง error code จริง
+
+### ต้องทำเองใน Console (ผมแตะไม่ได้)
+- **Google:** Authentication → Sign-in method → Google → Enable → support email → Save
+  - ก่อนเปิด: กดปุ่มขึ้น `auth/operation-not-allowed` (= ยังไม่เปิด provider) — ยืนยันแล้วว่าโค้ดพร้อม
+  - ถ้าเจอ `auth/unauthorized-domain` → Settings → Authorized domains → เพิ่ม `phuansuan.web.app`
+
+### Facebook — โค้ดพร้อม แต่ "พักไว้" (Roger สั่งข้าม)
+- `config.js` ตั้ง `facebook: false` → ปุ่มไม่โผล่
+- เปิดเมื่อพร้อม: สร้าง Meta App (App ID/Secret) + ตั้ง OAuth redirect URI (`https://phuansuan.firebaseapp.com/__/auth/handler`) ทั้งใน Meta และ Firebase → แล้ว `sed -i 's/facebook: false/facebook: true/' config.js && firebase deploy --only hosting`
+- หมายเหตุ: Meta App โหมด Development login ได้เฉพาะ admin/tester · จะเปิดผู้ใช้ทั่วไปต้องผ่าน **App Review** (`public_profile`+`email`)
+
+### ค้าง
+- commit/push งาน multi-auth ขึ้น GitHub
+- เปิด Google provider ใน Console (ขั้นเดียวที่เหลือให้ Google ใช้ได้)
+
+---
+
+## 12. Roadmap หลังคุยรอบนี้ — ทิศทาง Bocean (BLUEPRINT, ยังไม่ลงมือ)
+
+> สรุปการตัดสินใจเชิงทิศทาง · **ยังไม่อนุมัติ build** · ต้องเสนอ design ก่อนตามกฎเดิม
+
+### ทิศทางหลัก (ล็อกแล้ว)
+- เอกลักษณ์ Bocean = **community-first commerce + AI ที่เข้าใจสินค้าจริง + multi-tenant self-serve** → **ลงลึก ไม่ลงกว้าง** (อย่าไปแข่ง "มีครบเหมือน Shopify/Zendesk")
+- 3 เสาหลัก: (1) ปิดวงจร AI→สินค้า (2) ชุมชนสร้างยอดขาย (gamification→commerce loop) (3) Bocean self-serve provisioning
+
+### ⭐ การตัดสินใจสำคัญสุดของรอบนี้ (ล็อก): หัวใจคือ "Smart Matching Engine" ไม่ใช่ LLM API
+- engine จับคู่ **ความต้องการลูกค้า → สินค้า** ด้วย **tag + attribute + behavior + rule** → ฟรี เร็ว เสถียร คาดเดาได้ ครอบทุกแบรนด์ (ขายอะไรก็ได้)
+- **AI เป็น layer เสริม "ถอดได้" (optional)** — ใช้เฉพาะเคสที่ต้องวิเคราะห์รูป/ลึกจริง (หมอพืช/สภาพผิว ฯลฯ) ไม่ใช่ยิง LLM ทุก call
+- เหตุผล: ระบบใหญ่ที่ "ดูฉลาด" ส่วนใหญ่ฉลาดด้วย rule+data ไม่ใช่เผา token ทุกครั้ง (Shopee/Netflix แนะนำของด้วย matching ไม่ใช่ LLM)
+- ของเดิม (`productMatch` ด้วย tag, `diseases[]`, recommendation) = matching engine v0.5 อยู่แล้ว → ยกระดับเป็นแกน ไม่สร้างใหม่
+
+### BYOK (Bring Your Own Key) — โมเดล AI layer
+- แบรนด์ใส่ API key ตัวเอง → **เก็บใน Secret Manager เท่านั้น** (ห้าม Firestore/ห้ามหลุด client เด็ดขาด) → เรียกผ่าน Cloud Function ฝั่ง server เท่านั้น
+- 2 โหมด: **BYOK** (แบรนด์จ่าย provider ตรง, ฟรีสำหรับเรา) / **platform-key** (ใช้ key กลาง Bocean มี quota ตาม plan = **โมเดลรายได้**) — `DAILY_QUOTA` มีในโค้ดแล้ว
+- เริ่ม **1-2 provider** (Gemini + OpenAI) ไม่เปิดทุกเจ้าวันแรก (ยิ่งเยอะ ยิ่งต้องเขียน adapter เยอะ)
+
+### data model ที่เสนอ (ยังไม่ลงมือ)
+`tenants/{tid}/settings/ai` = `{ provider:'gemini'|'openai'|'platform', keyMode:'byok'|'platform', assistants:[{ id, name, icon, enabled, inputType:'image'|'text', systemPrompt(persona), description(โชว์ลูกค้า), productMatch(field จับคู่) }] }`
+→ key จริงไม่อยู่ที่นี่ → Secret Manager `AI_KEY_{tid}`
+→ "หมอพืช (Gemini+diseases)" = assistant ตัวอย่างตัวแรกใน framework นี้
+
+### เฟสของ AI/Matching (เสนอ)
+1. **Generic core** — generalize `analyzePlant`→`runAssistant` + ทำ matching engine เป็นแกน + BYOK Gemini + `settings/ai` (ของเดิมหมอพืชยังทำงานเหมือนเดิม)
+2. **UI เลือก assistant + ปิดวงจรสินค้า** — ลูกค้าเลือกการ์ด AI (มีคำอธิบายความสามารถ) → ผล → ปุ่มซื้อสินค้าที่ match ในจอเดียว
+3. **เพิ่ม provider OpenAI** (adapter ตัวที่ 2)
+4. **platform-key + quota/plan** (โมเดลรายได้)
+
+### Quick wins (แรงต่ำ ROI สูง — แยกจาก AI ทำได้เลย)
+- **ปุ่มลอย LINE OA** ("แชทกับเรา" เด้งเข้า `lineOaId`) — chat integration เวอร์ชันสมเหตุผล (~ครึ่งวัน) ไม่ต้องสร้าง inbox เอง
+- **Cookie consent (PDPA)** + **GA4/GTM/Meta Pixel/TikTok Pixel** — pixel ยิง **หลัง consent เท่านั้น** · module ต่อ tenant
+- **SEO เฉพาะหน้า public** (Bocean landing + tenant landing) — **อย่า** SEO feed/โพสหลัง login (ต้อง SSR = รื้อใหญ่ ไม่คุ้ม)
+
+### พักไว้ / ตัดทิ้ง (gated หรือ demand-driven)
+- **Unified Inbox / Omnichannel / API Connection / webhook** — พักไว้ (Roger ตัดสินใจ): งานใหญ่ระดับทีมทำเป็นปี เสี่ยง "เสียงหาย" · รอ demand จริงค่อยทำ
+- **Email/SMS automation** — ตัด · ใช้ **LINE OA push** แทน (ชาวสวนอยู่ในไลน์) — อยู่ใน roadmap เดิม (ยืนยันออเดอร์ + abandoned cart)
+- **WordPress/Webflow CMS** — ตัด (ค้านแล้ว: ขัดหลัก cutover สมบูรณ์) · พัฒนา `admin.html` ให้เก่งขึ้นแทน
+- **Full payment gateway** (Omise/2C2P/KBANK) — เลื่อน · PromptPay QR พอสำหรับตอนนี้
+
+### มีอยู่แล้ว — ไม่ทำซ้ำ
+SSL/HTTPS (Firebase ให้อัตโนมัติ) · Mobile-first (max-width 480) · PromptPay QR · admin.html (CMS) · Gemini AI · lead capture (`tenantRequests`)
+
+### ลำดับแนะนำ
+quick wins (LINE OA + PDPA/GA4) → เสา 1 เฟส 1 (matching engine core) → เฟส 2 (UI+ปิดวงจร) → เสา 2/3 ตามลำดับ
+
+### Next step (รออนุมัติ)
+ยังไม่ build — รอ Roger เคาะ **data model ของ Smart Matching Engine** (สินค้าต้องมี tag/attribute อะไร, flow คำถาม, logic จับคู่) ก่อนเริ่มเฟส 1
