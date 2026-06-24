@@ -362,3 +362,37 @@ tenant doc: `ownerLineId` (เจ้าของ) + `adminLineIds: []` (แอ�
 
 ### Next step (รออนุมัติ)
 รอ Roger เคาะ design CSV import (preset คอลัมน์ Shopee/Lazada, mapping UI) ก่อนเริ่ม
+
+---
+
+## 16. งานชุด UI/Platform รอบนี้ — เสร็จ + deploy
+
+### ✅ Master Plan ขั้น 2 — ปุ่มลอย LINE OA
+- `config.js`: `shop.lineOaButton {enabled,label}` (ต่อ tenant) · `apply_lineoa_fab.js`
+- ปุ่มลอยเขียว "💬 แชทกับเรา" มุมขวาล่าง (bottom:128 ไม่ชน cart-fab/bottom-nav) → เปิด LINE OA (`lineShopUrl`/`lineOaId`)
+- `initLineOaFab()` เรียกใน `applyConfig()` (รันทุก load ก่อน early-return)
+
+### ✅ Master Plan ขั้น 3 — Provisioning 1-click + seed
+- `apply_provision.js` (admin.html)
+- `TENANT_DEFAULTS` (points) + `seedTenant(tid,{name,plan,domain,owner,admins,mode})` → สร้าง tenant doc + settings/app (แบรนด์ตัวเอง logoEmoji/subtitle/primaryColor) + settings/points + settings/features{shopMode}
+- `createTenant()` ใช้ seedTenant + select "ประเภทร้าน" (nt-mode)
+- `provisionFromRequest()` = **1 คลิก** (confirm → seedTenant → status 'provisioned' → toast ลิงก์ร้าน) แทน prefill เดิม
+- **ตัดสินใจ:** ไม่เปิด self-serve เต็ม (เสี่ยง spam/squat/resource ไม่มี billing) → ใช้ 1-click approve โดย super admin (เหมาะ pre-launch)
+- `shopMode` (native/affiliate) ฝังใน seed แล้ว — กัน migrate ซ้ำตอนทำ affiliate
+
+### ✅ Affiliate products (ลูกค้าขอ: มีฐานลูกค้าแต่ไม่มีสินค้า)
+- `apply_affiliate.js` (admin.html + index.html)
+- flag `affiliate` ต่อสินค้า + reuse field `url` เดิม → ปุ่มในร้านเปลี่ยนเป็น "↗ / ↗ ดูสินค้า" เปิดลิงก์ภายนอก (Shopee/Lazada/ฯลฯ) แทน addToCart
+- admin: checkbox ในฟอร์ม add + edit modal (แปลงสินค้าเดิมได้) · ไม่แตะ cart/PromptPay/rules/backend
+- **ตัดสินใจ:** affiliate = link-out เท่านั้น (ไม่ทำ referral tracking/commission ในระบบ — รอ demand)
+
+### Deploy ทั้งชุด
+`firebase deploy --only functions:lineAuth,firestore:rules,hosting` (tenant admin) + `--only hosting` (อื่นๆ) → push ✓
+
+### สถานะ Master Plan
+✅ ขั้น 1 Tenant Admin · ✅ ขั้น 2 LINE OA · ✅ ขั้น 3 Provisioning · (+ Affiliate เสริม)
+ถัดไป: **ขั้น 4 Generalize terminology** (ถอดคำเกษตร → ตอบทุกแบรนด์) แล้วต่อ **ขั้น 5 Smart Matching Engine**
+
+### ค้าง
+- auto-default affiliate checkbox ตาม tenant shopMode (เสริม ทำทีหลังได้)
+- related-products button ยังไม่ branch affiliate (จุดเล็ก)
