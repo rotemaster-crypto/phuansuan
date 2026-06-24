@@ -37,6 +37,15 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     providers: { line: true, google: true, facebook: false },
   },
 
+  // ── Terminology (ค่ากลาง — แบรนด์ตั้งคำเองได้ ไม่ฝังในโค้ด) ──
+  terms: {
+    item:      'พืช',
+    itemPlace: 'สวน',
+    people:    'ชาวสวน',
+    expert:    'หมอพืช',
+    problem:   'โรคพืช',
+  },
+
   // ── ร้านค้า ───────────────────────────────────────────────
   shop: {
     name:         'DemeterRich',

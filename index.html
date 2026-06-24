@@ -495,7 +495,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div class="cp-divider"></div>
     <div class="cp-btns">
       <div class="cp-btn" onclick="openPostModal()">📷 ภาพ/วิดีโอ</div>
-      <div class="cp-btn" onclick="openAiDoctor()">🔬 หมอพืช AI</div>
+      <div class="cp-btn" onclick="openAiDoctor()" id="t-ai-cp">🔬 หมอพืช AI</div>
       <div class="cp-btn" onclick="openPostModal()">💡 แชร์ความรู้</div>
     </div>
   </div>
@@ -550,7 +550,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
   </div>
   <div class="crops-card">
-    <button onclick="openAiDoctor()" style="width:100%;background:linear-gradient(135deg,#1877f2,#00b894);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">🔬 หมอพืช AI — วิเคราะห์โรคจากรูป</button>
+    <button onclick="openAiDoctor()" id="t-ai-big" style="width:100%;background:linear-gradient(135deg,#1877f2,#00b894);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">🔬 หมอพืช AI — วิเคราะห์โรคจากรูป</button>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px">ถ่ายรูปใบ/ต้น แล้วให้ AI ช่วยวินิจฉัย · ผลเป็นความลับ เห็นคนเดียว</div>
   </div>
   <div class="crops-card">
@@ -624,7 +624,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div class="modal" style="border-radius:16px 16px 0 0;max-height:92vh;overflow-y:auto">
     <div class="modal-body" style="padding-top:18px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div class="ob-title" style="margin:0">🔬 หมอพืช AI</div>
+        <div class="ob-title" style="margin:0" id="t-ai-ob">🔬 หมอพืช AI</div>
         <button onclick="closeAiDoctor()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">✕</button>
       </div>
       <div class="ob-sub" style="margin-bottom:14px">ถ่ายหรือเลือกรูปใบ/ต้นที่มีปัญหา AI จะช่วยวินิจฉัยโรคและแนะนำวิธีรักษา 🌿 <b>ผลวิเคราะห์เป็นความลับ เห็นได้คนเดียว</b></div>
@@ -1332,7 +1332,7 @@ function shareAiToCommy() {
   const ta = document.querySelector('#postModal textarea');
   if (ta && d && d.result) {
     const r = d.result;
-    ta.value = `ขอความช่วยเหลือครับ 🙏 หมอพืช AI วิเคราะห์ว่าอาจเป็น "${r.disease || '-'}"\n\nอาการ: ${r.symptoms || '-'}\n\nมีใครเคยเจอแบบนี้ในสวนบ้างไหมครับ?`;
+    ta.value = `ขอความช่วยเหลือครับ 🙏 ${T('expert')} AI วิเคราะห์ว่าอาจเป็น "${r.disease || '-'}"\n\nอาการ: ${r.symptoms || '-'}\n\nมีใครเคยเจอแบบนี้ในสวนบ้างไหมครับ?`;
   }
 }
 
@@ -1948,6 +1948,11 @@ function initLineOaFab(){
     fab.style.display = 'none';
   }
 }
+function T(k){
+  var d = { item:'พืช', itemPlace:'สวน', people:'ชาวสวน', expert:'หมอพืช', problem:'โรคพืช' };
+  var t = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.terms) || {};
+  return t[k] || d[k] || '';
+}
 function applyConfig() {
   if (typeof APP_CONFIG === 'undefined') return;
   const C = APP_CONFIG;
@@ -1977,6 +1982,10 @@ function applyConfig() {
   document.getElementById('pts-hint').textContent =
     `✨ คุณจะได้รับ +${C.points.perPost} แต้มสะสมจากการโพสนี้`;
   initLineOaFab(); // LINE OA FAB
+  var setT = function(id, txt){ var el = document.getElementById(id); if (el) el.textContent = txt; };
+  setT('t-ai-cp', '🔬 ' + T('expert') + ' AI');
+  setT('t-ai-big', '🔬 ' + T('expert') + ' AI — วิเคราะห์' + T('problem') + 'จากรูป');
+  setT('t-ai-ob', '🔬 ' + T('expert') + ' AI');
 }
 
 // ── UI Functions ─────────────────────────────────────────
