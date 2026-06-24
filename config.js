@@ -42,6 +42,7 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     name:         'DemeterRich',
     lineShopUrl:  'https://line.me/R/ti/p/@demeterrich',
     lineOaId:     '@demeterrich',
+    lineOaButton: { enabled: true, label: 'แชทกับเรา' },
     contactPhone: '099-999-9999',
     // ── ระบบร้านค้า + ตะกร้า (Phase 3) ──
     commerce: {

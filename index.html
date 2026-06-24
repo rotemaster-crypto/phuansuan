@@ -272,6 +272,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .cart-fab{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:space-between;z-index:250;box-shadow:0 4px 14px rgba(24,119,242,.4)}
 .cart-fab.show{display:flex}
 .tb-btn .cart-badge{background:#fa3e3e}
+.line-oa-fab{position:fixed;bottom:128px;right:14px;z-index:260;background:#06C755;color:#fff;border:none;border-radius:26px;height:52px;padding:0 18px 0 14px;display:none;align-items:center;gap:8px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(6,199,85,.45)}
+.line-oa-fab .li{font-size:22px;line-height:1}
+@media(min-width:481px){.line-oa-fab{right:calc(50% - 226px)}}
 .cart-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:flex-end;justify-content:center}
 .cart-modal.open{display:flex}
 .cart-sheet{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;max-height:90vh;display:flex;flex-direction:column}
@@ -861,6 +864,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
 </div>
 
+<button class="line-oa-fab" id="line-oa-fab" onclick="openLineOa()"><span class="li">💬</span><span id="line-oa-label">แชทกับเรา</span></button>
 <div class="bottom-nav">
   <div class="bn" id="nav-feed" onclick="switchScreen('feed')">
     <div class="bn-ico">🏠</div>
@@ -1923,6 +1927,27 @@ function hideLoginScreen() {
 }
 
 // ── Apply Config ──────────────────────────────────────────
+function openLineOa(){
+  var C = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG : {};
+  var oa = (C.shop && C.shop.lineOaId) || '';
+  if (!oa) return;
+  var url = (C.shop && C.shop.lineShopUrl) || ('https://line.me/R/ti/p/' + oa);
+  window.open(url, '_blank');
+}
+function initLineOaFab(){
+  var C = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG : {};
+  var cfg = (C.shop && C.shop.lineOaButton) || {};
+  var oa = (C.shop && C.shop.lineOaId) || '';
+  var fab = document.getElementById('line-oa-fab');
+  if (!fab) return;
+  if (cfg.enabled && oa) {
+    var lbl = document.getElementById('line-oa-label');
+    if (lbl && cfg.label) lbl.textContent = cfg.label;
+    fab.style.display = 'flex';
+  } else {
+    fab.style.display = 'none';
+  }
+}
 function applyConfig() {
   if (typeof APP_CONFIG === 'undefined') return;
   const C = APP_CONFIG;
@@ -1951,6 +1976,7 @@ function applyConfig() {
   // Points hint
   document.getElementById('pts-hint').textContent =
     `✨ คุณจะได้รับ +${C.points.perPost} แต้มสะสมจากการโพสนี้`;
+  initLineOaFab(); // LINE OA FAB
 }
 
 // ── UI Functions ─────────────────────────────────────────
