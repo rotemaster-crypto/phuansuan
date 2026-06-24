@@ -302,3 +302,63 @@ quick wins (LINE OA + PDPA/GA4) → เสา 1 เฟส 1 (matching engine cor
 
 ### Next step (รออนุมัติ)
 เริ่ม **ขั้น 1: Tenant Admin role** — รอ Roger เคาะ แล้ว Claude เสนอ design (สิทธิ์เห็นอะไร/แก้อะไรได้, claim/rules ที่ต้องเพิ่ม, UI ใน admin.html) ก่อน build
+
+---
+
+## 14. Tenant Admin role — เสร็จ + deploy (Master Plan ขั้น 1)
+
+> เจ้าของแบรนด์จัดการร้านตัวเองได้ **ไม่เห็นแบรนด์อื่น** · claim-based ปลอมไม่ได้ · rules ใช้ claim รองรับ uid ทุก provider
+
+### โมเดล 3 ชั้น
+- **Super Admin** (`admin:true`, ฮาร์ดโค้ด ADMIN_LINE_ID) — ทุกอย่าง ทุก tenant + billing + provisioning + คำขอเปิดร้าน
+- **Owner** (`towner:{tid:true}`) — จัดการร้านเต็ม (B+เพดาน) + **เพิ่ม/ลบแอดมินร่วมได้**
+- **Tenant Admin ร่วม** (`tadmin:{tid:true}`) — จัดการร้านเต็ม แต่แตะทีมไม่ได้
+
+### เพดาน (Tenant Admin แตะไม่ได้)
+plan/status/domains (tenants doc = super only) · tenantRequests (super only) · ใครเพิ่มแอดมินร่วม = owner เท่านั้น
+
+### Data model
+tenant doc: `ownerLineId` (เจ้าของ) + `adminLineIds: []` (แอดมินร่วมหลายคน)
+
+### claim ที่ lineAuth แจก (data-driven จาก Firestore — ไม่ต้อง redeploy)
+- query `tenants where ownerLineId == uid` → `tadmin` + `towner`
+- query `tenants where adminLineIds array-contains uid` → `tadmin`
+- return `isTenantAdmin`, `adminTenants`, `ownerTenants`
+
+### ไฟล์ที่แก้ (patch ส่งครบ — committed)
+- `apply_tadmin_function.js` — lineAuth claims tadmin/towner
+- `firestore.rules` (เขียนทับ) — helper `isTenantAdmin/isTenantOwner/canManage` · ใช้ `canManage(t)` ที่ settings/products/users/posts/orders (11 จุด) · owner แก้ `adminLineIds` ได้ผ่าน `isTenantOwner(t)` + hasOnly · tenants doc/tenantRequests คง super-only
+- `apply_tadmin_admin.js` — gate claim-based (เลิกฮาร์ดโค้ด ADMIN_LINE_ID), globals IS_SUPER/ADMIN_TENANTS/OWNER_TENANTS, `applyRole()` (ล็อก tenant + ซ่อนเมนู super), ฟอร์ม tenant รับ adminLineIds
+- `apply_team_admin.js` — หน้า "ทีมแอดมิน" (owner เพิ่ม/ลบ adminLineIds, super เห็นทุก tenant)
+
+### ข้อควรรู้
+- แอดมินทุกคนต้อง **LINE login ≥1 ครั้ง** ให้ claim ติด · ถูกเพิ่ม/ตั้งชื่อแล้วต้อง **re-login** ให้ claim สด
+- LINE User ID format: `U` + 32 hex
+
+### Deploy
+`firebase deploy --only functions:lineAuth,firestore:rules,hosting` → push GitHub ✓
+
+---
+
+## 15. เสา 4: External Catalog (CSV Import) — BLUEPRINT (รออนุมัติ design)
+
+> แบรนด์ที่มีร้าน Shopee/Lazada อยู่แล้ว ไม่ต้องพิมพ์สินค้าทีละชิ้น · **ตัดสินใจ: CSV import เท่านั้น — ไม่แตะ marketplace API** (OAuth/app review ยุ่งเกิน) · **affiliate พักไว้ก่อน**
+
+### Flow ที่เสนอ
+1. แบรนด์ export CSV จาก Shopee/Lazada (ฟีเจอร์ marketplace เอง)
+2. admin → "นำเข้าสินค้า" → อัปโหลด CSV
+3. ระบบอ่าน header → ให้ map คอลัมน์ → field เรา (preset Shopee/Lazada จับอัตโนมัติ)
+4. preview → ยืนยัน → เขียนเข้า `tenants/{tid}/products` รวด
+
+### หลักการ
+- **parse ฝั่ง client ล้วน** (JS อ่าน CSV ในเบราว์เซอร์) — ไม่เพิ่ม Cloud Function ไม่เป็นภาระ backend
+- รูปสินค้าใช้ URL จาก CSV ตรงๆ ก่อน (ไม่ re-upload)
+- ตอน import จับ tag จากหมวด/ชื่อ → พร้อม match กับ Smart Matching Engine ทันที
+- Shopee/Lazada CSV คนละ format → ต้องมี column mapping (จำ preset ได้)
+
+### พักไว้
+- Marketplace API sync (Shopee/Lazada Open API) — รอ demand
+- Affiliate / referral tracking — พักก่อน (เสา 2 ต่อยอดทีหลัง)
+
+### Next step (รออนุมัติ)
+รอ Roger เคาะ design CSV import (preset คอลัมน์ Shopee/Lazada, mapping UI) ก่อนเริ่ม
