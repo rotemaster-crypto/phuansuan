@@ -265,3 +265,40 @@ quick wins (LINE OA + PDPA/GA4) → เสา 1 เฟส 1 (matching engine cor
 
 ### Next step (รออนุมัติ)
 ยังไม่ build — รอ Roger เคาะ **data model ของ Smart Matching Engine** (สินค้าต้องมี tag/attribute อะไร, flow คำถาม, logic จับคู่) ก่อนเริ่มเฟส 1
+
+---
+
+## 13. Master Plan — เส้นทางสู่ "Bocean สมบูรณ์" (เป้าหมาย: สมบูรณ์ก่อน ค่อยหาลูกค้า)
+
+> เป้าหมาย 6 เดือน: **ทำให้สมบูรณ์ใช้งานจริง + ตอบทุกแบรนด์ ก่อนหาลูกค้า** · จัดลำดับแบบ **สลับฟันปลา** (รากฐาน 1 สลับของเด่น 1) · ทุกขั้น **เสนอ design ก่อน build** ตามกฎเดิม
+
+### หลักคิดการจัดลำดับ
+- "สมบูรณ์ก่อน" = รากฐาน (Tenant Admin, provisioning, generalize) **นำหน้าเล็กน้อย** เพราะไม่ต้องรีบมีของโชว์ลูกค้า
+- แต่สลับของเด่น (LINE OA, AI matching) คั่นไม่ให้ติดอยู่กับงานหลังบ้านล้วน
+- **insight สำคัญ:** AI เจ๋งแค่ไหน ถ้าแบรนด์ที่ 2 สมัครแล้วต้องแก้โค้ดทุกครั้ง = ไม่ใช่ platform → Tenant Admin/provisioning สำคัญกว่าฟีเจอร์ AI
+
+### รอบ 1 — ปลดล็อกการเป็น platform (รากฐานหนัก)
+1. **Tenant Admin role** — เจ้าของแบรนด์จัดการร้านตัวเองได้ **ไม่เห็นข้อมูลแบรนด์อื่น** (ตอนนี้ Super Admin/Roger คนเดียว) · **เงื่อนไขก่อนรับลูกค้าจริง** · ค้างใน PROGRESS อยู่แล้ว
+2. **ปุ่มลอย LINE OA + CTA polish** — quick win คั่น (~ครึ่งวัน) เด้งเข้า `lineOaId`
+3. **Provisioning อัตโนมัติ** — สมัคร→ได้ร้าน+ชุมชน+AI โดยไม่ต้องแก้โค้ด (self-serve, ต่อจาก Phase 5.1d) · เปลี่ยน Bocean จาก "เว็บ DemeterRich" เป็น "ธุรกิจ"
+
+### รอบ 2 — ตอบทุกแบรนด์ + ของเด่น
+4. **Generalize terminology/onboarding** — ถอดคำเกษตร (โพส/พืช/สวน/หมอพืช) ออกเป็นค่าที่แบรนด์ตั้งเอง + onboarding flow ปรับได้ + community structure ยืดหยุ่น · **= ตอบทุกแบรนด์จริง**
+5. **Smart Matching Engine เฟส 1** — generic core (`analyzePlant`→`runAssistant`) + matching เป็นแกน + BYOK Gemini + `settings/ai` (ของเดิมหมอพืชยังทำงาน) · ของเด่นคั่น
+6. **PDPA cookie consent + GA4/GTM/Meta Pixel/TikTok Pixel** — pixel ยิงหลัง consent · module ต่อ tenant
+7. **Matching Engine เฟส 2** — UI ลูกค้าเลือกการ์ด assistant (มีคำอธิบายความสามารถ) + ปิดวงจรสินค้า (ผล→ปุ่มซื้อ match) · ของเด่น
+
+### รอบ 3 — ขัดเงา + เก็บงานค้าง (ความสมบูรณ์)
+8. **เก็บงานค้างเดิม** — feature key mismatch (`productLink` vs `commerce`), reaction persist on reload, Node 20→22 (มี `apply_node22.js` — เช็ครัน/push), cleanup collection เก่า top-level + legacy rules, rotate `sa.json`
+9. **Error/empty/loading states + ความปลอดภัยเชิงลึก** — rate limiting (กัน abuse), server-side input validation, กันยิง function รัว · ทำให้ดูโปรเวลาแบรนด์มาดู
+10. **LINE push ครบวงจร** (retention: ยืนยันออเดอร์ + abandoned cart) + **Billing/subscription** จำกัดสิทธิ์ตาม plan (`free/pro/enterprise` มีในโครงแล้ว)
+
+### เลื่อน/พักไว้ (ตามเดิม)
+- Unified Inbox / Omnichannel / API Connection / webhook — พัก (รอ demand)
+- Email/SMS — ตัด (ใช้ LINE push แทน)
+- WordPress/Webflow CMS — ตัด (พัฒนา admin.html แทน)
+- Full payment gateway (Omise/2C2P/KBANK) — เลื่อน (PromptPay QR พอ)
+- Facebook login — พัก (โค้ดพร้อม, `facebook:false`, รอ Meta App + App Review)
+
+### Next step (รออนุมัติ)
+เริ่ม **ขั้น 1: Tenant Admin role** — รอ Roger เคาะ แล้ว Claude เสนอ design (สิทธิ์เห็นอะไร/แก้อะไรได้, claim/rules ที่ต้องเพิ่ม, UI ใน admin.html) ก่อน build
