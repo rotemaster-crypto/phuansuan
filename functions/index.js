@@ -67,12 +67,28 @@ exports.lineAuth = onCall(async (req) => {
   }
   const profile = await profileRes.json();
 
-  // 3) ออก custom token — uid = LINE userId + claim admin + tenants
+  // 3) ออก custom token — uid = LINE userId + claim admin + tenants + tadmin/towner
   const isAdmin = profile.userId === ADMIN_LINE_ID;
   const tid = await resolveTid(req.data?.tid);
+
+  // หา tenant ที่ user เป็น owner/admin → claim tadmin (จัดการได้) + towner (เจ้าของ)
+  const tadmin = {};
+  const towner = {};
+  try {
+    const fdb = admin.firestore();
+    const [ownSnap, admSnap] = await Promise.all([
+      fdb.collection("tenants").where("ownerLineId", "==", profile.userId).get(),
+      fdb.collection("tenants").where("adminLineIds", "array-contains", profile.userId).get(),
+    ]);
+    ownSnap.forEach((d) => { tadmin[d.id] = true; towner[d.id] = true; });
+    admSnap.forEach((d) => { tadmin[d.id] = true; });
+  } catch (e) {
+    console.warn("tadmin lookup failed:", e && e.message);
+  }
+
   const token = await admin
     .auth()
-    .createCustomToken(profile.userId, { admin: isAdmin, tenants: { [tid]: true } });
+    .createCustomToken(profile.userId, { admin: isAdmin, tenants: { [tid]: true }, tadmin: tadmin, towner: towner });
 
   return {
     token,
@@ -82,6 +98,9 @@ exports.lineAuth = onCall(async (req) => {
       pictureUrl: profile.pictureUrl || "",
     },
     isAdmin,
+    isTenantAdmin: Object.keys(tadmin).length > 0,
+    adminTenants: tadmin,
+    ownerTenants: towner,
     tid,
   };
 });

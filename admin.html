@@ -153,7 +153,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
   <div class="sb-admin">
     <div class="sb-admin-av" id="admin-av">A</div>
-    <div><div class="sb-admin-name" id="admin-name">Admin</div><div class="sb-admin-role">🔑 Super Admin</div></div>
+    <div><div class="sb-admin-name" id="admin-name">Admin</div><div class="sb-admin-role" id="admin-role">🔑 Super Admin</div></div>
   </div>
   <div class="sb-menu">
     <div class="sb-section">ภาพรวม</div>
@@ -170,7 +170,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน</div>
     <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
     <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
-    <div class="sb-section">Bocean</div>
+    <div class="sb-section" id="sb-sec-bocean">Bocean</div>
     <div class="sb-item" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
     <div class="sb-item" onclick="showScreen('tenants',this)"><span class="si">🏢</span> จัดการ Tenant</div>
     <div class="sb-item" style="pointer-events:none;opacity:.7;font-size:13px"><span class="si">📍</span> ดูแล: <b id="cur-tenant-label" style="margin-left:3px">phuansuan</b></div>
@@ -193,6 +193,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div><label style="font-size:13px;font-weight:700">แพ็กเกจ</label><select id="nt-plan" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"><option value="free">free</option><option value="pro">pro</option><option value="enterprise">enterprise</option></select></div>
       <div><label style="font-size:13px;font-weight:700">โดเมน</label><input id="nt-domain" placeholder="mybrand.web.app" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
       <div><label style="font-size:13px;font-weight:700">Owner LINE ID</label><input id="nt-owner" placeholder="Uxxxxxxxx (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:13px;font-weight:700">แอดมินร่วม LINE IDs (คั่น ,)</label><input id="nt-admins" placeholder="Uaaa,Ubbb (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
     </div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="createTenant()">สร้าง Tenant</button>
   </div>
@@ -601,6 +602,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 const ADMIN_LINE_ID = 'U03582167674331d9005dfb42728c7151';
 let db = null, storage = null, adminUser = null;
 let allUsers = [], allPosts = [];
+let IS_SUPER = false, ADMIN_TENANTS = {}, OWNER_TENANTS = {};
 
 window.addEventListener('load', async () => {
   if (typeof FIREBASE_CONFIG === 'undefined') { showDeny(); return; }
@@ -611,20 +613,25 @@ window.addEventListener('load', async () => {
     await liff.init({ liffId: LIFF_ID });
     if (!liff.isLoggedIn()) { liff.login(); return; }
     const profile = await liff.getProfile();
-    if (profile.userId !== ADMIN_LINE_ID) { showDeny(); return; }
-    // ยืนยันสิทธิ์ admin ฝั่ง server — รับ custom token ที่มี claim admin
+    // ยืนยันสิทธิ์ฝั่ง server — รับ custom token + flags (super / tenant admin)
+    let res;
     try {
       const lineAuth = firebase.app().functions('asia-southeast1').httpsCallable('lineAuth');
-      const res = await lineAuth({ accessToken: liff.getAccessToken() });
-      if (!res.data.isAdmin) { showDeny(); return; }
+      res = await lineAuth({ accessToken: liff.getAccessToken(), tid: aTid() });
+      if (!res.data.isAdmin && !res.data.isTenantAdmin) { showDeny(); return; }
       await firebase.auth().signInWithCustomToken(res.data.token);
     } catch (authErr) {
       console.error('lineAuth error:', authErr);
       showDeny(); return;
     }
     adminUser = profile;
+    IS_SUPER = !!res.data.isAdmin;
+    ADMIN_TENANTS = res.data.adminTenants || {};
+    OWNER_TENANTS = res.data.ownerTenants || {};
+    applyRole();
     showApp();
-    await Promise.all([loadDashboard(), loadSidebarBranding(), loadBoceanRequests()]);
+    if (IS_SUPER) await Promise.all([loadDashboard(), loadSidebarBranding(), loadBoceanRequests()]);
+    else await Promise.all([loadDashboard(), loadSidebarBranding()]);
   } catch(err) { console.error(err); showDeny(); }
 });
 
@@ -635,6 +642,21 @@ function showApp() {
   if (adminUser.pictureUrl) { av.style.backgroundImage = `url(${adminUser.pictureUrl})`; av.textContent = ''; }
   else { av.textContent = adminUser.displayName?.charAt(0) || 'A'; }
   document.getElementById('admin-name').textContent = adminUser.displayName || 'Admin';
+}
+// ── บทบาท: Super Admin (Bocean) vs Tenant Admin (แบรนด์) ──
+function applyRole() {
+  if (IS_SUPER) return;
+  var mine = Object.keys(ADMIN_TENANTS);
+  if (mine.length) setCurrentTenant(mine[0]);
+  var isOwner = !!OWNER_TENANTS[currentTenant];
+  var roleEl = document.getElementById('admin-role');
+  if (roleEl) roleEl.textContent = (isOwner ? '👑 Owner: ' : '🏪 Tenant Admin: ') + currentTenant;
+  ['bocean', 'tenants'].forEach(function (n) {
+    var el = document.querySelector('.sb-item[onclick*="' + n + '"]');
+    if (el) el.style.display = 'none';
+  });
+  var sec = document.getElementById('sb-sec-bocean');
+  if (sec) sec.style.display = 'none';
 }
 function showDeny() {
   document.getElementById('loading-screen').style.display = 'none';
@@ -1252,6 +1274,7 @@ async function createTenant(){
   const plan = document.getElementById('nt-plan').value;
   const domain = (document.getElementById('nt-domain').value||'').trim();
   const owner = (document.getElementById('nt-owner').value||'').trim();
+  const admins = (document.getElementById('nt-admins').value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
   if (!/^[a-z0-9-]{2,40}$/.test(tid)) { toast('Tenant ID ต้องเป็น a-z 0-9 - (2-40 ตัว)','error'); return; }
   if (!name) { toast('ใส่ชื่อแบรนด์','error'); return; }
   try {
@@ -1259,13 +1282,13 @@ async function createTenant(){
     if (ex.exists) { toast('Tenant ID นี้มีอยู่แล้ว','error'); return; }
     await db.collection('tenants').doc(tid).set({
       name: name, plan: plan, status: 'active',
-      domains: domain ? [domain] : [], ownerLineId: owner || '',
+      domains: domain ? [domain] : [], ownerLineId: owner || '', adminLineIds: admins,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     await db.collection('tenants').doc(tid).collection('settings').doc('app').set({ appName: name }, { merge: true });
     toast('สร้าง tenant '+tid+' แล้ว 🎉','success');
-    ['nt-tid','nt-name','nt-domain','nt-owner'].forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
+    ['nt-tid','nt-name','nt-domain','nt-owner','nt-admins'].forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
     loadTenants();
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
