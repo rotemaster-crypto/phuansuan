@@ -207,6 +207,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div><label style="font-size:13px;font-weight:700">โดเมน</label><input id="nt-domain" placeholder="mybrand.web.app" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
       <div><label style="font-size:13px;font-weight:700">Owner LINE ID</label><input id="nt-owner" placeholder="Uxxxxxxxx (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
       <div><label style="font-size:13px;font-weight:700">แอดมินร่วม LINE IDs (คั่น ,)</label><input id="nt-admins" placeholder="Uaaa,Ubbb (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:13px;font-weight:700">ประเภทร้าน</label><select id="nt-mode" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"><option value="native">ร้านปกติ (ขายเอง + ตะกร้า)</option><option value="affiliate">Affiliate (ลิงก์ภายนอก)</option></select></div>
     </div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="createTenant()">สร้าง Tenant</button>
   </div>
@@ -1322,6 +1323,27 @@ async function toggleTenantStatus(tid, status){
     loadTenants();
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
+const TENANT_DEFAULTS = {
+  points: { perPost:10, perPostWithImg:15, perComment:3, perHelp:5, perLike:1, perPurchase:50, perAlert:5, perVerified:20, dailyLoginBonus:5, tierSilver:1000, tierGold:3000, tierPlatinum:8000, discSilver:5, discGold:10, discPlatinum:15 }
+};
+async function seedTenant(tid, o){
+  o = o || {};
+  const ref = db.collection('tenants').doc(tid);
+  const SV = firebase.firestore.FieldValue.serverTimestamp();
+  const name = o.name || tid;
+  const mode = o.mode || 'native';
+  await ref.set({
+    name: name, plan: o.plan || 'free', status: 'active',
+    domains: o.domain ? [o.domain] : [], ownerLineId: o.owner || '',
+    adminLineIds: o.admins || [], shopMode: mode,
+    createdAt: SV, updatedAt: SV,
+  });
+  await ref.collection('settings').doc('app').set({
+    appName: name, logoEmoji: '🌿', subtitle: 'ชุมชน ' + name, primaryColor: '#1877f2'
+  }, { merge: true });
+  await ref.collection('settings').doc('points').set(TENANT_DEFAULTS.points, { merge: true });
+  await ref.collection('settings').doc('features').set({ shopMode: mode }, { merge: true });
+}
 async function createTenant(){
   if (!db) return;
   const tid = (document.getElementById('nt-tid').value||'').trim().toLowerCase();
@@ -1330,35 +1352,38 @@ async function createTenant(){
   const domain = (document.getElementById('nt-domain').value||'').trim();
   const owner = (document.getElementById('nt-owner').value||'').trim();
   const admins = (document.getElementById('nt-admins').value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
+  const mode = (document.getElementById('nt-mode')||{}).value || 'native';
   if (!/^[a-z0-9-]{2,40}$/.test(tid)) { toast('Tenant ID ต้องเป็น a-z 0-9 - (2-40 ตัว)','error'); return; }
   if (!name) { toast('ใส่ชื่อแบรนด์','error'); return; }
   try {
     const ex = await db.collection('tenants').doc(tid).get();
     if (ex.exists) { toast('Tenant ID นี้มีอยู่แล้ว','error'); return; }
-    await db.collection('tenants').doc(tid).set({
-      name: name, plan: plan, status: 'active',
-      domains: domain ? [domain] : [], ownerLineId: owner || '', adminLineIds: admins,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    await db.collection('tenants').doc(tid).collection('settings').doc('app').set({ appName: name }, { merge: true });
-    toast('สร้าง tenant '+tid+' แล้ว 🎉','success');
+    await seedTenant(tid, { name, plan, domain, owner, admins, mode });
+    toast('สร้าง + ตั้งค่าเริ่มต้น tenant '+tid+' แล้ว 🎉','success');
     ['nt-tid','nt-name','nt-domain','nt-owner','nt-admins'].forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
     loadTenants();
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
-function provisionFromRequest(reqId){
+async function provisionFromRequest(reqId){
   const r = (typeof boceanReqs!=='undefined' ? boceanReqs : []).find(function(x){ return x.id===reqId; });
   if (!r) { toast('ไม่พบคำขอ','error'); return; }
-  const navEl = document.querySelector('.sb-item[onclick*="tenants"]');
-  showScreen('tenants', navEl);
-  const setv=function(id,v){ const el=document.getElementById(id); if(el&&v) el.value=v; };
-  setv('nt-name', r.brandName);
-  setv('nt-tid', (r.desiredDomain||'').toLowerCase().replace(/[^a-z0-9-]/g,''));
-  setv('nt-domain', r.desiredDomain ? r.desiredDomain+'.web.app' : '');
-  setv('nt-owner', r.lineId);
-  setBoceanStatus(reqId, 'approved');
-  toast('เติมข้อมูลจากคำขอแล้ว — ตรวจสอบและกดสร้าง','success');
+  const tid = (r.desiredDomain||r.brandName||'').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,40);
+  if (!/^[a-z0-9-]{2,40}$/.test(tid)) {
+    const navEl = document.querySelector('.sb-item[onclick*="tenants"]');
+    showScreen('tenants', navEl);
+    const setv=function(id,v){ const el=document.getElementById(id); if(el&&v) el.value=v; };
+    setv('nt-name', r.brandName); setv('nt-owner', r.lineId||'');
+    toast('Tenant ID จากคำขอไม่ชัด — กรอกเองแล้วกดสร้าง','error'); return;
+  }
+  if (!confirm('สร้างร้านให้ "'+r.brandName+'"\nTenant ID: '+tid+'\nOwner: '+(r.lineId||'(ไม่ระบุ)')+'\n\nระบบจะสร้าง + ตั้งค่าเริ่มต้นให้อัตโนมัติ')) return;
+  try {
+    const ex = await db.collection('tenants').doc(tid).get();
+    if (ex.exists) { toast('Tenant ID '+tid+' มีอยู่แล้ว','error'); return; }
+    await seedTenant(tid, { name: r.brandName, plan: 'free', domain: r.desiredDomain||tid, owner: r.lineId||'', admins: [], mode: 'native' });
+    await setBoceanStatus(reqId, 'provisioned');
+    toast('✅ สร้างร้าน '+tid+' แล้ว → https://'+tid+'.web.app','success');
+    loadTenants();
+  } catch(e){ toast('❌ '+e.message,'error'); }
 }
 
 async function loadOrders(){
