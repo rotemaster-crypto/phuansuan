@@ -490,7 +490,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div class="create-post">
     <div class="cp-row">
       <div class="cp-me" id="cp-me-avatar">ฉ</div>
-      <button class="cp-box" onclick="openPostModal()">คุณพบปัญหาอะไรในสวนวันนี้?</button>
+      <button class="cp-box" onclick="openPostModal()" id="t-cp-box">คุณพบปัญหาอะไรในสวนวันนี้?</button>
     </div>
     <div class="cp-divider"></div>
     <div class="cp-btns">
@@ -1472,7 +1472,7 @@ async function loadLeaderboard() {
       var t = tiers[u.tier] || {};
       var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : String(rank);
       var isMe = currentUser && d.id === currentUser.uid;
-      var nm = escapeHtml(u.displayName || 'ชาวสวน');
+      var nm = escapeHtml(u.displayName || T('people'));
       var av = u.photoUrl
         ? '<div style="width:40px;height:40px;border-radius:50%;background-image:url(' + u.photoUrl + ');background-size:cover;background-position:center;flex-shrink:0"></div>'
         : '<div style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">' + (nm.charAt(0) || 'ช') + '</div>';
@@ -1760,7 +1760,7 @@ async function loadMyPosts() {
     let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
     docs.sort((a, b) => (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0));
     if (docs.length === 0) {
-      box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">ยังไม่มีโพส — ลองแชร์เรื่องราวในสวนของคุณดูสิ! 🌱</div>';
+      box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">ยังไม่มีโพส — ลองแชร์เรื่องราวใน'+T('itemPlace')+'ของคุณดูสิ! 🌱</div>';
       return;
     }
     box.innerHTML = docs.map((d, i) => renderPost(d.id, d.data, i)).join('');
@@ -1986,6 +1986,7 @@ function applyConfig() {
   setT('t-ai-cp', '🔬 ' + T('expert') + ' AI');
   setT('t-ai-big', '🔬 ' + T('expert') + ' AI — วิเคราะห์' + T('problem') + 'จากรูป');
   setT('t-ai-ob', '🔬 ' + T('expert') + ' AI');
+  setT('t-cp-box', 'คุณพบปัญหาอะไรใน' + T('itemPlace') + 'วันนี้?');
 }
 
 // ── UI Functions ─────────────────────────────────────────
@@ -2161,7 +2162,7 @@ async function loadFeed(mode) {
         <div style="text-align:center;padding:60px 20px;color:var(--muted)">
           <div style="font-size:48px;margin-bottom:12px">🌱</div>
           <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสเลย</div>
-          <div style="font-size:14px">เป็นคนแรกที่แชร์ปัญหาในสวน!</div>
+          <div style="font-size:14px">เป็นคนแรกที่แชร์ปัญหาใน${T('itemPlace')}!</div>
         </div>`;
       return;
     }
