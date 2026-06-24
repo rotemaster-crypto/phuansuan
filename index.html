@@ -2682,7 +2682,7 @@ function renderProducts(){
         sold+
         '<div class="prod-foot">'+
           '<div class="prod-pricewrap">'+oldp+'<span class="prod-price">'+(p.price ? baht(p.price) : '—')+'</span></div>'+
-          '<button class="prod-add" onclick="event.stopPropagation();addToCart(\''+p.id+'\')">+</button>'+
+          ((p.affiliate && p.url) ? '<a class="prod-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>' : '<button class="prod-add" onclick="event.stopPropagation();addToCart(\''+p.id+'\')">+</button>')+
         '</div>'+
       '</div>'+
     '</div>';
@@ -2707,7 +2707,7 @@ function openProduct(id){
       '<div class="pd-sec"><div class="pd-sec-h">หมวดหมู่</div><div class="pd-chips"><span class="pd-chip">'+escapeHtml(catName(p.category))+'</span></div></div>'+
       desc + dis + crp +
     '</div>'+
-    '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()">🛒 ใส่ตะกร้า</button>'+
+    ((p.affiliate && p.url) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()">↗ ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()">🛒 ใส่ตะกร้า</button>')+
     '<div style="height:14px"></div>';
   var body = document.getElementById('pd-body'); if (body) body.innerHTML = html;
   var m = document.getElementById('prodDetailModal'); if (m) m.classList.add('open');

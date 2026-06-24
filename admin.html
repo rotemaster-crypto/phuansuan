@@ -556,7 +556,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
           <option value="equipment">🔧 อุปกรณ์</option>
         </select>
       </div>
-      <div class="fg"><label>LINE Shop URL</label><input id="new-prod-url" value="https://line.me/R/ti/p/@demeterrich"></div>
+      <div class="fg"><label>ลิงก์สินค้า / LINE Shop URL</label><input id="new-prod-url" value="https://line.me/R/ti/p/@demeterrich"></div>
+      <div class="fg"><label>🔗 สินค้า Affiliate (กดแล้วเปิดลิงก์ด้านบน แทนใส่ตะกร้า)</label><label class="toggle"><input type="checkbox" id="new-prod-affiliate"><span class="toggle-slider"></span></label></div>
       <div class="fg"><label>โรคที่ใช้รักษา (คั่นด้วยจุลภาค)</label><input id="new-prod-diseases" placeholder="เช่น แอนแทรคโนส, ราสนิม"></div>
       <div class="fg"><label>พืชที่ใช้ได้ (คั่นด้วยจุลภาค)</label><input id="new-prod-crops" placeholder="เช่น mango, chili"></div>
       <div class="fg"><label>ราคาเดิม (ก่อนลด — เว้นว่างได้)</label><input id="new-prod-oldprice" placeholder="เช่น 220 บาท"></div>
@@ -585,6 +586,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ยอดขาย</label><input type="number" id="prodb-sold"></div>
       <div class="fg"><label>ป้าย Badge</label><input id="prodb-badge"></div>
       <div class="fg"><label>⭐ สินค้าแนะนำ</label><label class="toggle"><input type="checkbox" id="prodb-featured"><span class="toggle-slider"></span></label></div>
+      <div class="fg" style="grid-column:1/-1"><label>ลิงก์สินค้า / Shop URL</label><input id="prodb-url"></div>
+      <div class="fg"><label>🔗 สินค้า Affiliate</label><label class="toggle"><input type="checkbox" id="prodb-affiliate"><span class="toggle-slider"></span></label></div>
       <div class="fg" style="grid-column:1/-1"><label>รายละเอียดสินค้า</label><textarea id="prodb-desc" rows="3"></textarea></div>
     </div>
     <div class="save-row"><button class="btn btn-ghost" onclick="closeProdB()">ยกเลิก</button><button class="btn btn-primary" onclick="saveProdB()">💾 บันทึก</button></div>
@@ -1089,6 +1092,8 @@ async function editProductB(id){
     document.getElementById('prodb-sold').value = p.soldCount || 0;
     document.getElementById('prodb-badge').value = p.badge || '';
     document.getElementById('prodb-featured').checked = p.featured === true;
+    document.getElementById('prodb-url').value = p.url || '';
+    document.getElementById('prodb-affiliate').checked = p.affiliate === true;
     document.getElementById('prodb-desc').value = p.description || '';
     document.getElementById('prodb-modal').style.display = 'flex';
   } catch(e){ toast('❌ '+e.message,'error'); }
@@ -1103,7 +1108,9 @@ async function saveProdB(){
       soldCount: +document.getElementById('prodb-sold').value || 0,
       badge: document.getElementById('prodb-badge').value.trim(),
       featured: document.getElementById('prodb-featured').checked,
-      description: document.getElementById('prodb-desc').value.trim()
+      description: document.getElementById('prodb-desc').value.trim(),
+      url: document.getElementById('prodb-url').value,
+      affiliate: document.getElementById('prodb-affiliate').checked
     });
     toast('✅ บันทึกแล้ว','success'); closeProdB(); loadProducts();
   } catch(e){ toast('❌ '+e.message,'error'); }
@@ -1128,6 +1135,7 @@ async function addProduct() {
       name, price: document.getElementById('new-prod-price').value,
       category: document.getElementById('new-prod-cat').value,
       url: document.getElementById('new-prod-url').value,
+      affiliate: document.getElementById('new-prod-affiliate').checked,
       diseases: document.getElementById('new-prod-diseases').value.split(',').map(s=>s.trim()).filter(Boolean),
       crops: document.getElementById('new-prod-crops').value.split(',').map(s=>s.trim()).filter(Boolean),
       oldPrice: document.getElementById('new-prod-oldprice').value,
