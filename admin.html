@@ -161,6 +161,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-section">จัดการ</div>
     <div class="sb-item" onclick="showScreen('users',this)"><span class="si">👥</span> Users <span class="sb-badge" id="badge-users">0</span></div>
     <div class="sb-item" onclick="showScreen('posts',this)"><span class="si">📝</span> โพส <span class="sb-badge" id="badge-posts">0</span></div>
+    <div class="sb-item" id="sb-item-team" style="display:none" onclick="showScreen('team',this)"><span class="si">👥</span> ทีมแอดมิน</div>
     <div class="sb-section">ตั้งค่า</div>
     <div class="sb-item" onclick="showScreen('appearance',this)"><span class="si">🎨</span> หน้าตา & โลโก้</div>
     <div class="sb-item" onclick="showScreen('icons',this)"><span class="si">🖼️</span> ไอคอน & รูปภาพ</div>
@@ -183,6 +184,18 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <div class="main">
 
 <!-- TENANTS (Bocean Super Admin) -->
+<div class="screen" id="screen-team">
+  <div class="page-header"><div class="page-title">👥 ทีมแอดมิน</div><div class="page-sub">เพิ่ม/ลบแอดมินร่วมของร้าน · เฉพาะเจ้าของร้าน (Owner) จัดการได้</div></div>
+  <div class="card">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:10px">เจ้าของร้าน (Owner): <b id="team-owner">-</b></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="team-newid" placeholder="LINE User ID (Uxxxx...)" style="flex:1;padding:9px;border:1px solid var(--border);border-radius:8px">
+      <button class="btn btn-primary" onclick="addTeamAdmin()">เพิ่ม</button>
+    </div>
+    <div id="team-list"><div class="empty-state">กำลังโหลด...</div></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">💡 คนที่เพิ่มใหม่ต้องเข้าสู่ระบบด้วย LINE 1 ครั้งให้สิทธิ์มีผล · หา LINE User ID ได้จากโปรไฟล์ในแอป</div>
+  </div>
+</div>
 <div class="screen" id="screen-tenants">
   <div class="page-header"><div class="page-title">🏢 จัดการ Tenant (Bocean)</div><div class="page-sub">บริหารทุกแบรนด์บนแพลตฟอร์ม · สลับ tenant ที่กำลังดูแล · สร้าง/ระงับ</div></div>
   <div class="card">
@@ -645,9 +658,14 @@ function showApp() {
 }
 // ── บทบาท: Super Admin (Bocean) vs Tenant Admin (แบรนด์) ──
 function applyRole() {
+  if (!IS_SUPER) {
+    var mineT = Object.keys(ADMIN_TENANTS);
+    if (mineT.length) setCurrentTenant(mineT[0]);
+  }
+  // เมนูทีมแอดมิน: super เห็นเสมอ / owner เห็นของ tenant ตัวเอง
+  var teamEl = document.getElementById('sb-item-team');
+  if (teamEl) teamEl.style.display = (IS_SUPER || !!OWNER_TENANTS[currentTenant]) ? 'flex' : 'none';
   if (IS_SUPER) return;
-  var mine = Object.keys(ADMIN_TENANTS);
-  if (mine.length) setCurrentTenant(mine[0]);
   var isOwner = !!OWNER_TENANTS[currentTenant];
   var roleEl = document.getElementById('admin-role');
   if (roleEl) roleEl.textContent = (isOwner ? '👑 Owner: ' : '🏪 Tenant Admin: ') + currentTenant;
@@ -667,7 +685,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants };
+  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -1146,6 +1164,43 @@ function fmtDate(ts) {
 //  ORDERS ADMIN (3.3) — ตรวจสลิป / ยืนยัน / จัดส่ง
 // ══════════════════════════════════════════════════════════
 function adminTenant(){ return /office/.test(location.hostname) ? 'office' : 'phuansuan'; }
+async function loadTeam(){
+  if (!db) return;
+  try {
+    const snap = await aDb().get();
+    const t = snap.data() || {};
+    document.getElementById('team-owner').textContent = t.ownerLineId || '(ยังไม่กำหนด)';
+    const admins = t.adminLineIds || [];
+    const box = document.getElementById('team-list');
+    if (!admins.length){ box.innerHTML = '<div class="empty-state">ยังไม่มีแอดมินร่วม</div>'; return; }
+    box.innerHTML = admins.map(function(uid){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">'
+        + '<span style="font-family:monospace;font-size:13px;word-break:break-all">'+uid+'</span>'
+        + '<button class="btn" style="background:#fee;color:#c00;flex-shrink:0;margin-left:8px" onclick="removeTeamAdmin(\''+uid+'\')">ลบ</button></div>';
+    }).join('');
+  } catch(e){ toast('โหลดทีมไม่สำเร็จ: '+e.message,'error'); }
+}
+async function addTeamAdmin(){
+  const id = (document.getElementById('team-newid').value||'').trim();
+  if (!/^U[0-9a-f]{32}$/i.test(id)) { toast('LINE User ID ไม่ถูกต้อง (ขึ้นต้น U ตามด้วย 32 ตัว)','error'); return; }
+  try {
+    const snap = await aDb().get(); const t = snap.data()||{};
+    const admins = t.adminLineIds || [];
+    if (admins.indexOf(id) >= 0) { toast('มีอยู่แล้ว','error'); return; }
+    admins.push(id);
+    await aDb().update({ adminLineIds: admins, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    document.getElementById('team-newid').value='';
+    toast('เพิ่มแอดมินแล้ว','success'); loadTeam();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function removeTeamAdmin(uid){
+  try {
+    const snap = await aDb().get(); const t = snap.data()||{};
+    const admins = (t.adminLineIds||[]).filter(function(x){return x!==uid;});
+    await aDb().update({ adminLineIds: admins, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast('ลบแล้ว','success'); loadTeam();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
 function aTid(){ const t = adminTenant(); return t === 'office' ? 'phuansuan' : t; }
 let currentTenant = aTid();
 function aDb(){ return db.collection('tenants').doc(currentTenant); }
