@@ -1999,6 +1999,42 @@ function applyTerms(t){
   applyTermsText();
 }
 
+var __feedMode = { feedPublic: true, postMode: 'public' };
+function applyFeedMode(){
+  var cp = document.querySelector('.create-post');
+  if (!cp) return;
+  var isMgr = !!(currentUser && currentUser.isManager);
+  var broadcast = (__feedMode.postMode === 'broadcast');
+  var note = document.getElementById('broadcast-note');
+  if (broadcast && !isMgr){
+    cp.style.display = 'none';
+    if (!note){
+      note = document.createElement('div');
+      note.id = 'broadcast-note';
+      note.style.cssText = 'text-align:center;color:var(--muted);font-size:13px;padding:14px;background:#fff;border-radius:12px;margin-bottom:10px';
+      note.textContent = '📢 เฉพาะแบรนด์โพสต์ได้ — คุณคอมเมนต์/รีแอคได้';
+      cp.parentNode.insertBefore(note, cp);
+    }
+    note.style.display = 'block';
+  } else {
+    cp.style.display = '';
+    if (note) note.style.display = 'none';
+  }
+}
+async function refreshManagerFlag(){
+  try {
+    var u = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!u){ if (currentUser){ currentUser.isManager = false; currentUser.isMember = false; } applyFeedMode(); return; }
+    var r = await u.getIdTokenResult();
+    var c = r.claims || {};
+    var tid = tenantId();
+    var mgr = (c.admin === true) || (c.tadmin && c.tadmin[tid] === true) || (c.towner && c.towner[tid] === true);
+    var mem = (c.tenants && c.tenants[tid] === true) || mgr;
+    if (currentUser){ currentUser.isManager = !!mgr; currentUser.isMember = !!mem; }
+    applyFeedMode();
+  } catch(e){ if (currentUser){ currentUser.isManager = false; } applyFeedMode(); }
+}
+
 // ── UI Functions ─────────────────────────────────────────
 function switchScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -2158,6 +2194,7 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 async function loadFeed(mode) {
   const container = document.getElementById('feed-container');
   if (!container || !db) return;
+  try { refreshManagerFlag(); } catch(e){}
 
   container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
 
@@ -2219,7 +2256,10 @@ async function loadFeed(mode) {
 
   } catch (err) {
     console.error('loadFeed error:', err);
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">โหลด Feed ไม่ได้ กรุณาลองใหม่</div>';
+    var _msg = (err && err.code === 'permission-denied' && !__feedMode.feedPublic)
+      ? 'เข้าสู่ระบบหรือเข้าร่วมชุมชนนี้เพื่อดูฟีด'
+      : 'โหลด Feed ไม่ได้ กรุณาลองใหม่';
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">' + _msg + '</div>';
   }
 }
 
@@ -2278,6 +2318,9 @@ function initFeatureFlags() {
         primaryColor: d.primary, accentColor: d.accent,
       });
       if (d.terms) applyTerms(d.terms);
+      __feedMode.feedPublic = (d.feedPublic !== false);
+      __feedMode.postMode = (d.postMode === 'broadcast') ? 'broadcast' : 'public';
+      applyFeedMode();
       if (d.grad1 || d.grad2) {
         const cov = document.getElementById('prof-cover');
         if (cov) cov.style.background = 'linear-gradient(160deg,' + (d.grad1 || '#1877f2') + ' 0%,' + (d.grad2 || '#42b883') + ' 100%)';
@@ -2366,7 +2409,7 @@ function applyShop(d) {
 
 // ---- Admin Panel ----
 const FEATURE_LABELS = {
-  aiDiagnosis: 'หมอพืช AI', proximityAlert: 'แจ้งเตือนพื้นที่', productLink: 'ลิงก์สินค้า', commerce: 'ร้านค้า',
+  aiDiagnosis: 'AI วิเคราะห์รูป', proximityAlert: 'แจ้งเตือนพื้นที่', productLink: 'ลิงก์สินค้า', commerce: 'ร้านค้า',
   stories: 'สตอรี', pointSystem: 'ระบบแต้ม', communityGroups: 'กลุ่ม/ชุมชน', weatherAlert: 'แจ้งเตือนอากาศ'
 };
 function ensureAdminPanel() {

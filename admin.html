@@ -11,6 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1c1e21}
@@ -279,6 +280,20 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
     <button class="btn btn-primary" onclick="saveTerms()" style="margin-top:8px">💾 บันทึกคำศัพท์</button>
   </div>
+  <div class="card"><div class="card-title">📢 โหมดฟีด</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">กำหนดว่าใครเห็น/โพสต์ในฟีดได้ — ปรับได้ตามธรรมชาติของแบรนด์</div>
+    <div class="fg" style="margin-bottom:10px">
+      <label><input type="checkbox" id="fm-feedPublic" checked> ฟีดสาธารณะ (ให้คนนอก/ยังไม่ล็อกอิน อ่านได้)</label>
+    </div>
+    <div class="fg">
+      <label>โหมดการโพสต์</label>
+      <select id="fm-postMode">
+        <option value="public">ทุกคน — สมาชิกโพสต์คุยกันได้</option>
+        <option value="broadcast">เฉพาะแบรนด์ (Broadcast) — ลูกค้าคอมเมนต์/รีแอคเท่านั้น</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="saveFeedMode()" style="margin-top:10px">💾 บันทึกโหมดฟีด</button>
+  </div>
   <div class="card"><div class="card-title">🎨 สี</div>
     <div class="form-grid">
       <div class="fg"><label>สีหลัก (Primary)</label>
@@ -439,7 +454,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="page-header"><div class="page-title">⚙️ Features Toggle</div><div class="page-sub">เปิด/ปิดฟีเจอร์ต่างๆ ในแอป</div></div>
   <div class="card">
     <div id="features-list">
-      <div class="toggle-row"><div><div class="toggle-label">🤖 AI วิเคราะห์โรคพืช</div><div class="toggle-sub">วิเคราะห์ภาพด้วย Gemini Vision</div></div><label class="toggle"><input type="checkbox" id="feat-ai" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🤖 AI วิเคราะห์รูป (Gemini)</div><div class="toggle-sub">ปิดไว้ default · เปิดเฉพาะแบรนด์ที่ต้องการ (มีค่าใช้จ่ายต่อครั้ง)</div></div><label class="toggle"><input type="checkbox" id="feat-ai" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">📍 Proximity Alert</div><div class="toggle-sub">แจ้งเตือนโรคระบาดในพื้นที่</div></div><label class="toggle"><input type="checkbox" id="feat-proximity" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🛒 ร้านค้า (Commerce)</div><div class="toggle-sub">เปิด-ปิดระบบร้านค้า + ตะกร้า</div></div><label class="toggle"><input type="checkbox" id="feat-product" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">📖 Stories</div><div class="toggle-sub">Stories bar บนสุด Feed</div></div><label class="toggle"><input type="checkbox" id="feat-stories" checked><span class="toggle-slider"></span></label></div>
@@ -578,6 +593,28 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>⭐ สินค้าแนะนำ (โชว์ใน carousel)</label><label class="toggle"><input type="checkbox" id="new-prod-featured"><span class="toggle-slider"></span></label></div>
     </div>
     <div class="save-row"><button class="btn btn-primary" onclick="addProduct()">➕ เพิ่มสินค้า</button></div>
+  </div>
+  <div class="card"><div class="card-title">📥 นำเข้าสินค้าจาก CSV</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">อัปโหลดไฟล์ CSV (export จาก Shopee/Lazada หรือไฟล์ทั่วไป) → จับคู่คอลัมน์ → ดูตัวอย่าง → นำเข้าเข้าแบรนด์ที่กำลังดูแล · แท็กในเซลล์ใช้ <b>;</b> คั่น</div>
+    <input type="file" id="csv-file" accept=".csv,text/csv" onchange="csvOnFile(this)">
+    <div id="csv-config" style="display:none;margin-top:14px">
+      <div class="card-title" style="font-size:14px">จับคู่คอลัมน์</div>
+      <div class="form-grid" id="csv-map"></div>
+      <div class="form-grid" style="margin-top:10px">
+        <div class="fg"><label>หมวด default (ถ้าไม่ได้ map)</label>
+          <select id="csv-defcat">
+            <option value="pesticide">🧴 ยาฆ่าแมลง</option>
+            <option value="fertilizer">💊 ปุ๋ย</option>
+            <option value="hormone">💧 ฮอร์โมน</option>
+            <option value="organic">🌱 อินทรีย์</option>
+            <option value="equipment">🔧 อุปกรณ์</option>
+          </select>
+        </div>
+        <div class="fg"><label>ข้ามถ้าชื่อซ้ำ</label><label class="toggle"><input type="checkbox" id="csv-dedup" checked><span class="toggle-slider"></span></label></div>
+      </div>
+      <div id="csv-preview" style="margin-top:10px"></div>
+      <div class="save-row"><button class="btn btn-primary" id="csv-import-btn" onclick="csvImport()">📥 นำเข้า</button></div>
+    </div>
   </div>
   <div class="card"><div class="card-title">📋 สินค้าทั้งหมด</div>
     <div class="table-wrap"><table>
@@ -835,6 +872,7 @@ async function loadAppearance() {
     if (d.grad2)   { document.getElementById('cfg-grad2').value   = d.grad2;   document.getElementById('cfg-grad2-hex').value   = d.grad2;   }
     updateColorPreview();
     loadTerms();
+    loadFeedMode();
   } catch(e) {}
 }
 async function saveAppearance() {
@@ -856,6 +894,23 @@ async function saveAppearance() {
     document.documentElement.style.setProperty('--primary', document.getElementById('cfg-primary').value);
     loadSidebarBranding();
   } catch(e) { toast('❌ '+e.message,'error'); }
+}
+async function saveFeedMode() {
+  try {
+    var pub = document.getElementById('fm-feedPublic').checked;
+    var mode = document.getElementById('fm-postMode').value;
+    await aDb().collection('settings').doc('app').set({ feedPublic: pub, postMode: mode, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    toast('✅ บันทึกโหมดฟีดแล้ว','success');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+async function loadFeedMode() {
+  try {
+    var doc = await aDb().collection('settings').doc('app').get();
+    if (!doc.exists) return;
+    var d = doc.data() || {};
+    var pub = document.getElementById('fm-feedPublic'); if (pub) pub.checked = (d.feedPublic !== false);
+    var pm = document.getElementById('fm-postMode'); if (pm) pm.value = (d.postMode === 'broadcast') ? 'broadcast' : 'public';
+  } catch(e) {}
 }
 async function saveTerms() {
   try {
@@ -1158,6 +1213,123 @@ async function loadProducts() {
           <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editProductB('${doc.id}')">✏️ แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteProduct('${doc.id}')">🗑️ ลบ</button></td></tr>`;
         }).join('');
   } catch(e) { document.getElementById('products-table').innerHTML = `<tr><td colspan="4" class="empty-state">Error: ${e.message}</td></tr>`; }
+}
+/* ===== CSV Import ===== */
+var __csvRows = [], __csvHeaders = [];
+var __csvFields = [
+  ['name','ชื่อสินค้า *'], ['price','ราคา'], ['oldPrice','ราคาเดิม'],
+  ['category','หมวดหมู่'], ['url','ลิงก์'], ['image','รูป (URL)'],
+  ['diseases','แท็กปัญหา (; คั่น)'], ['crops','แท็กใช้กับ (; คั่น)'],
+  ['description','รายละเอียด'], ['badge','ป้าย'], ['soldCount','ยอดขาย']
+];
+function csvEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function csvGuess(field, headers){
+  var kw = {
+    name:['name','ชื่อ','product','title','สินค้า'],
+    price:['price','ราคา','sale','ขาย'],
+    oldPrice:['original','เดิม','ก่อนลด','list price','ปกติ'],
+    category:['category','หมวด','type','ประเภท'],
+    url:['url','link','ลิงก์','web','href'],
+    image:['image','รูป','photo','img','picture','ภาพ'],
+    diseases:['disease','ปัญหา','แก้','problem','tag','แท็ก'],
+    crops:['crop','ใช้กับ','สำหรับ','suitable','พืช'],
+    description:['desc','รายละเอียด','detail','คำอธิบาย'],
+    badge:['badge','ป้าย','label'],
+    soldCount:['sold','ยอดขาย','sale count','จำนวนขาย']
+  };
+  var list = kw[field] || [];
+  for (var i=0;i<headers.length;i++){
+    var h = String(headers[i]).toLowerCase();
+    for (var j=0;j<list.length;j++){ if (h.indexOf(list[j].toLowerCase()) > -1) return headers[i]; }
+  }
+  return '';
+}
+function csvOnFile(input){
+  var f = input.files && input.files[0];
+  if (!f) return;
+  if (typeof Papa === 'undefined'){ toast('❌ CSV parser ยังโหลดไม่เสร็จ ลองใหม่','error'); return; }
+  Papa.parse(f, {
+    header: true, skipEmptyLines: true,
+    complete: function(res){
+      __csvRows = (res.data || []).filter(function(r){ return r && Object.keys(r).length; });
+      __csvHeaders = (res.meta && res.meta.fields) ? res.meta.fields : [];
+      if (!__csvRows.length){ toast('❌ ไฟล์ว่างหรืออ่านไม่ได้','error'); return; }
+      csvRenderMapping(); csvRenderPreview();
+      document.getElementById('csv-config').style.display = 'block';
+    },
+    error: function(){ toast('❌ อ่าน CSV ไม่สำเร็จ','error'); }
+  });
+}
+function csvRenderMapping(){
+  var opts = function(sel){
+    var o = '<option value="">— ไม่ใช้ —</option>';
+    __csvHeaders.forEach(function(h){ o += '<option value="'+csvEsc(h)+'"'+(h===sel?' selected':'')+'>'+csvEsc(h)+'</option>'; });
+    return o;
+  };
+  document.getElementById('csv-map').innerHTML = __csvFields.map(function(f){
+    var g = csvGuess(f[0], __csvHeaders);
+    return '<div class="fg"><label>'+csvEsc(f[1])+'</label><select id="csvmap-'+f[0]+'" onchange="csvRenderPreview()">'+opts(g)+'</select></div>';
+  }).join('');
+}
+function csvVal(row, field){
+  var sel = document.getElementById('csvmap-'+field);
+  var col = sel ? sel.value : '';
+  return col ? String(row[col]==null?'':row[col]).trim() : '';
+}
+function csvRenderPreview(){
+  var rows = __csvRows.slice(0, 8);
+  var th = __csvFields.map(function(f){ return '<th>'+csvEsc(f[1])+'</th>'; }).join('');
+  var trs = rows.map(function(r){
+    return '<tr>'+__csvFields.map(function(f){ return '<td>'+csvEsc(csvVal(r,f[0]))+'</td>'; }).join('')+'</tr>';
+  }).join('');
+  document.getElementById('csv-preview').innerHTML =
+    '<div style="font-size:12px;color:var(--muted);margin:6px 0">ตัวอย่าง '+rows.length+' / ทั้งหมด '+__csvRows.length+' แถว</div>'+
+    '<div class="table-wrap"><table><thead><tr>'+th+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
+  document.getElementById('csv-import-btn').textContent = '📥 นำเข้า '+__csvRows.length+' รายการ';
+}
+function csvSplit(v){ return String(v||'').split(/[;|]/).map(function(s){ return s.trim(); }).filter(Boolean); }
+async function csvImport(){
+  if (!__csvRows.length){ toast('❌ ยังไม่มีข้อมูล','error'); return; }
+  var defCat = document.getElementById('csv-defcat').value;
+  var dedup = document.getElementById('csv-dedup').checked;
+  var btn = document.getElementById('csv-import-btn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังนำเข้า...';
+  try {
+    var existing = {};
+    if (dedup){
+      var snap = await aDb().collection('products').get();
+      snap.forEach(function(d){ var n=((d.data().name)||'').trim().toLowerCase(); if(n) existing[n]=1; });
+    }
+    var items = [], seen = {};
+    __csvRows.forEach(function(r){
+      var name = csvVal(r,'name'); if (!name) return;
+      var key = name.toLowerCase();
+      if (dedup && (existing[key] || seen[key])) return;
+      seen[key] = 1;
+      items.push({
+        name: name, price: csvVal(r,'price'), oldPrice: csvVal(r,'oldPrice'),
+        category: csvVal(r,'category') || defCat, url: csvVal(r,'url'), image: csvVal(r,'image'),
+        affiliate: false, featured: false,
+        diseases: csvSplit(csvVal(r,'diseases')), crops: csvSplit(csvVal(r,'crops')),
+        description: csvVal(r,'description'), badge: csvVal(r,'badge'),
+        soldCount: parseInt(csvVal(r,'soldCount'),10) || 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    if (!items.length){ toast('ℹ️ ไม่มีรายการใหม่ให้เพิ่ม','success'); btn.disabled=false; csvRenderPreview(); return; }
+    var col = aDb().collection('products'), n = 0;
+    for (var i=0;i<items.length;i+=450){
+      var batch = db.batch();
+      items.slice(i,i+450).forEach(function(it){ batch.set(col.doc(), it); });
+      await batch.commit(); n += Math.min(450, items.length - i);
+    }
+    toast('✅ นำเข้า '+n+' รายการแล้ว','success');
+    document.getElementById('csv-config').style.display = 'none';
+    document.getElementById('csv-file').value = '';
+    __csvRows = []; __csvHeaders = [];
+    loadProducts();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+  btn.disabled = false;
 }
 async function addProduct() {
   const name = document.getElementById('new-prod-name').value.trim();

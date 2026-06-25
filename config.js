@@ -80,7 +80,7 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
 
   // ── เปิด/ปิด Features ────────────────────────────────────
   features: {
-    aiDiagnosis:     true,   // AI วิเคราะห์โรคพืช
+    aiDiagnosis:     false,  // AI วิเคราะห์รูป (ปิด default — เปิดเฉพาะแบรนด์ที่ต้องการ, มีค่าใช้จ่าย)
     proximityAlert:  true,   // แจ้งเตือนโรคระบาดในพื้นที่
     productLink:     true,   // ลิงก์สินค้าร้าน
     stories:         true,   // Stories บนสุด Feed
