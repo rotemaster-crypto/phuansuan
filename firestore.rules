@@ -29,7 +29,7 @@ service cloud.firestore {
       match /settings/{doc} { allow read: if true; allow write: if canManage(t); }
       match /products/{productId} { allow read: if true; allow write: if canManage(t); }
       match /users/{uid} {
-        allow read: if signedIn();
+        allow read: if isOwner(uid) || memberOf(t) || canManage(t);
         allow create: if isOwner(uid) && memberOf(t)
           && request.resource.data.get('banned', false) == false
           && request.resource.data.get('tier', 'bronze') == 'bronze'

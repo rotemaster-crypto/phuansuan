@@ -451,7 +451,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div class="login-appname">เพื่อนสวน</div>
   <div class="login-tagline">ชุมชนชาวสวนออนไลน์<br>แชร์ปัญหา รับคำแนะนำ สะสมแต้ม</div>
   <div class="login-features">
-    <div class="lf-item"><div class="lf-icon">🦠</div><div class="lf-text">AI วิเคราะห์โรคพืชจากภาพถ่าย</div></div>
+    <div class="lf-item"><div class="lf-icon">🦠</div><div class="lf-text" id="t-ai-feat">AI วิเคราะห์โรคพืชจากภาพถ่าย</div></div>
     <div class="lf-item"><div class="lf-icon">📍</div><div class="lf-text">ดูปัญหาสวนในพื้นที่ใกล้บ้าน</div></div>
     <div class="lf-item"><div class="lf-icon">🏅</div><div class="lf-text">สะสมแต้ม รับส่วนลดร้าน DemeterRich</div></div>
   </div>
@@ -732,7 +732,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div style="padding:24px 22px 30px;text-align:center">
       <div style="font-size:42px">🔒</div>
       <div style="font-size:18px;font-weight:800;margin-top:8px">เข้าสู่ระบบก่อนนะครับ</div>
-      <div style="font-size:14px;color:var(--muted);margin-top:8px;line-height:1.6">เข้าดูได้ทุกอย่างฟรี แต่ถ้าจะโพส คอมเมนต์ กดไลก์ ใช้ AI หมอพืช หรือสั่งซื้อสินค้า ต้องเข้าสู่ระบบก่อนนะครับ</div>
+      <div style="font-size:14px;color:var(--muted);margin-top:8px;line-height:1.6" id="t-gate-msg">เข้าดูได้ทุกอย่างฟรี แต่ถ้าจะโพส คอมเมนต์ กดไลก์ ใช้ AI หมอพืช หรือสั่งซื้อสินค้า ต้องเข้าสู่ระบบก่อนนะครับ</div>
       <button onclick="loginWithLine()" style="margin-top:18px;width:100%;background:#06c755;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer">เข้าสู่ระบบด้วย LINE</button>
       <div class="login-or" id="gate-or-divider">หรือ</div>
       <button class="btn-oauth btn-google" id="btn-google-gate" onclick="loginWithGoogle()" style="display:none;margin-top:0">
@@ -1950,8 +1950,9 @@ function initLineOaFab(){
 }
 function T(k){
   var d = { item:'พืช', itemPlace:'สวน', people:'ชาวสวน', expert:'หมอพืช', problem:'โรคพืช' };
+  var live = (typeof window.__TERMS === 'object' && window.__TERMS) || {};
   var t = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.terms) || {};
-  return t[k] || d[k] || '';
+  return live[k] || t[k] || d[k] || '';
 }
 function applyConfig() {
   if (typeof APP_CONFIG === 'undefined') return;
@@ -1982,11 +1983,20 @@ function applyConfig() {
   document.getElementById('pts-hint').textContent =
     `✨ คุณจะได้รับ +${C.points.perPost} แต้มสะสมจากการโพสนี้`;
   initLineOaFab(); // LINE OA FAB
+  applyTermsText();
+}
+function applyTermsText(){
   var setT = function(id, txt){ var el = document.getElementById(id); if (el) el.textContent = txt; };
   setT('t-ai-cp', '🔬 ' + T('expert') + ' AI');
   setT('t-ai-big', '🔬 ' + T('expert') + ' AI — วิเคราะห์' + T('problem') + 'จากรูป');
   setT('t-ai-ob', '🔬 ' + T('expert') + ' AI');
   setT('t-cp-box', 'คุณพบปัญหาอะไรใน' + T('itemPlace') + 'วันนี้?');
+  setT('t-ai-feat', 'AI วิเคราะห์' + T('problem') + 'จากภาพถ่าย');
+  setT('t-gate-msg', 'เข้าดูได้ทุกอย่างฟรี แต่ถ้าจะโพส คอมเมนต์ กดไลก์ ใช้ AI ' + T('expert') + ' หรือสั่งซื้อสินค้า ต้องเข้าสู่ระบบก่อนนะครับ');
+}
+function applyTerms(t){
+  if (t && typeof t === 'object') window.__TERMS = Object.assign({}, window.__TERMS || {}, t);
+  applyTermsText();
 }
 
 // ── UI Functions ─────────────────────────────────────────
@@ -2216,6 +2226,7 @@ async function loadFeed(mode) {
 function tdb(){ return db.collection('tenants').doc(tenantId()); }
 function tenantId() {
   const t = APP_CONFIG.tenant || {};
+  try { const qp = new URLSearchParams(location.search).get('t'); if (qp) return qp; } catch(e){}
   const host = (typeof location !== 'undefined' && location.hostname) || '';
   return (t.domains && t.domains[host]) || t.id || 'phuansuan';
 }
@@ -2266,6 +2277,7 @@ function initFeatureFlags() {
         appName: d.appName, subtitle: d.subtitle, logoEmoji: d.logoEmoji,
         primaryColor: d.primary, accentColor: d.accent,
       });
+      if (d.terms) applyTerms(d.terms);
       if (d.grad1 || d.grad2) {
         const cov = document.getElementById('prof-cover');
         if (cov) cov.style.background = 'linear-gradient(160deg,' + (d.grad1 || '#1877f2') + ' 0%,' + (d.grad2 || '#42b883') + ' 100%)';

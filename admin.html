@@ -268,6 +268,17 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>เบอร์โทร</label><input id="cfg-phone" value="099-999-9999"></div>
     </div>
   </div>
+  <div class="card"><div class="card-title">🔤 คำศัพท์ร้าน (Terminology)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ปรับคำให้เข้ากับธุรกิจคุณ — จะเปลี่ยนข้อความ AI/ปุ่ม/กล่องโพสต์ในแอปอัตโนมัติ</div>
+    <div class="form-grid">
+      <div class="fg"><label>สิ่งของหลัก (เช่น พืช)</label><input id="term-item" placeholder="พืช"></div>
+      <div class="fg"><label>สถานที่ (เช่น สวน)</label><input id="term-place" placeholder="สวน"></div>
+      <div class="fg"><label>กลุ่มคน (เช่น ชาวสวน)</label><input id="term-people" placeholder="ชาวสวน"></div>
+      <div class="fg"><label>ผู้เชี่ยวชาญ AI (เช่น หมอพืช)</label><input id="term-expert" placeholder="หมอพืช"></div>
+      <div class="fg"><label>ปัญหา (เช่น โรคพืช)</label><input id="term-problem" placeholder="โรคพืช"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveTerms()" style="margin-top:8px">💾 บันทึกคำศัพท์</button>
+  </div>
   <div class="card"><div class="card-title">🎨 สี</div>
     <div class="form-grid">
       <div class="fg"><label>สีหลัก (Primary)</label>
@@ -558,8 +569,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       </div>
       <div class="fg"><label>ลิงก์สินค้า / LINE Shop URL</label><input id="new-prod-url" value="https://line.me/R/ti/p/@demeterrich"></div>
       <div class="fg"><label>🔗 สินค้า Affiliate (กดแล้วเปิดลิงก์ด้านบน แทนใส่ตะกร้า)</label><label class="toggle"><input type="checkbox" id="new-prod-affiliate"><span class="toggle-slider"></span></label></div>
-      <div class="fg"><label>โรคที่ใช้รักษา (คั่นด้วยจุลภาค)</label><input id="new-prod-diseases" placeholder="เช่น แอนแทรคโนส, ราสนิม"></div>
-      <div class="fg"><label>พืชที่ใช้ได้ (คั่นด้วยจุลภาค)</label><input id="new-prod-crops" placeholder="เช่น mango, chili"></div>
+      <div class="fg"><label>ปัญหาที่แก้ได้ / แท็ก (คั่นด้วยจุลภาค)</label><input id="new-prod-diseases" placeholder="เช่น แอนแทรคโนส, ราสนิม"></div>
+      <div class="fg"><label>ใช้กับอะไรได้ / แท็ก (คั่นด้วยจุลภาค)</label><input id="new-prod-crops" placeholder="เช่น mango, chili"></div>
       <div class="fg"><label>ราคาเดิม (ก่อนลด — เว้นว่างได้)</label><input id="new-prod-oldprice" placeholder="เช่น 220 บาท"></div>
       <div class="fg"><label>ยอดขาย (จำนวนที่ขายแล้ว)</label><input type="number" id="new-prod-sold" placeholder="0"></div>
       <div class="fg"><label>ป้าย Badge (เช่น ขายดี / ใหม่)</label><input id="new-prod-badge" placeholder="เว้นว่าง = ไม่มีป้าย"></div>
@@ -823,6 +834,7 @@ async function loadAppearance() {
     if (d.grad1)   { document.getElementById('cfg-grad1').value   = d.grad1;   document.getElementById('cfg-grad1-hex').value   = d.grad1;   }
     if (d.grad2)   { document.getElementById('cfg-grad2').value   = d.grad2;   document.getElementById('cfg-grad2-hex').value   = d.grad2;   }
     updateColorPreview();
+    loadTerms();
   } catch(e) {}
 }
 async function saveAppearance() {
@@ -844,6 +856,26 @@ async function saveAppearance() {
     document.documentElement.style.setProperty('--primary', document.getElementById('cfg-primary').value);
     loadSidebarBranding();
   } catch(e) { toast('❌ '+e.message,'error'); }
+}
+async function saveTerms() {
+  try {
+    var g = function(id){ var el=document.getElementById(id); return el ? el.value.trim() : ""; };
+    var terms = {};
+    [['item','term-item'],['itemPlace','term-place'],['people','term-people'],['expert','term-expert'],['problem','term-problem']]
+      .forEach(function(p){ if (g(p[1])) terms[p[0]] = g(p[1]); });
+    await aDb().collection('settings').doc('app').set({ terms: terms, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    toast('✅ บันทึกคำศัพท์แล้ว','success');
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+async function loadTerms() {
+  try {
+    var doc = await aDb().collection('settings').doc('app').get();
+    if (!doc.exists) return;
+    var t = (doc.data() || {}).terms || {};
+    var set = function(id, val){ if (val && document.getElementById(id)) document.getElementById(id).value = val; };
+    set('term-item', t.item); set('term-place', t.itemPlace); set('term-people', t.people);
+    set('term-expert', t.expert); set('term-problem', t.problem);
+  } catch(e) {}
 }
 function syncColor(key) {
   const hex = document.getElementById(`cfg-${key}-hex`).value;
@@ -1302,6 +1334,8 @@ function tenantCardHtml(t){
   const stColor = suspended ? '#888' : '#16a34a';
   const stText = suspended ? 'ระงับ' : 'ใช้งาน';
   function row(label,val){ return val ? '<div class="oa-line"><b>'+label+':</b> '+escapeHtml(String(val))+'</div>' : ''; }
+  var base = (typeof location !== 'undefined' && location.origin) ? location.origin : 'https://phuansuan.web.app';
+  var liveUrl = (t.id === 'phuansuan') ? base : (base + '/?t=' + encodeURIComponent(t.id));
   let acts = '';
   if (!cur) acts += '<button class="oa-btn oa-ship" onclick="switchToTenant(\''+t.id+'\')">🔁 ดูแลแบรนด์นี้</button>';
   else acts += '<span class="oa-btn" style="background:#1877f2;color:#fff;cursor:default">📍 กำลังดูแล</span>';
@@ -1313,9 +1347,16 @@ function tenantCardHtml(t){
       '<span class="oa-badge" style="background:'+stColor+'">'+stText+'</span></div>'+
     '<div class="oa-box" style="margin-top:8px">'+
       row('แพ็กเกจ', t.plan)+ row('โดเมน', (t.domains||[]).join(', '))+ row('Owner LINE', t.ownerLineId)+
+      '<div class="oa-line"><b>ลิงก์ใช้งาน:</b> <a href="'+liveUrl+'" target="_blank" rel="noopener" style="color:#1877f2;word-break:break-all">'+escapeHtml(liveUrl)+'</a> <button class="oa-btn" style="padding:2px 8px;font-size:12px;margin-left:6px" onclick="copyTenantLink(\''+t.id+'\')">📋 คัดลอก</button></div>'+
     '</div>'+
     '<div class="oa-actions">'+acts+'</div>'+
   '</div>';
+}
+function copyTenantLink(tid){
+  var base = (typeof location !== 'undefined' && location.origin) ? location.origin : 'https://phuansuan.web.app';
+  var u = (tid === 'phuansuan') ? base : (base + '/?t=' + encodeURIComponent(tid));
+  try { navigator.clipboard.writeText(u).then(function(){ toast('คัดลอกลิงก์แล้ว','success'); }, function(){ toast(u,'success'); }); }
+  catch(e){ toast(u,'success'); }
 }
 function switchToTenant(tid){
   setCurrentTenant(tid);
