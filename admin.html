@@ -269,6 +269,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>เบอร์โทร</label><input id="cfg-phone" value="099-999-9999"></div>
     </div>
   </div>
+  <div class="card"><div class="card-title">🔒 นโยบายความเป็นส่วนตัว (PDPA)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">URL นโยบายของแบรนด์นี้ — จะแสดงเป็นลิงก์ตอนผู้ใช้ให้ความยินยอม (consent) · เว้นว่าง = ไม่มีลิงก์</div>
+    <div class="fg"><label>Privacy Policy URL</label><input id="app-privacyurl" placeholder="https://brand.com/privacy"></div>
+    <button class="btn btn-primary" onclick="saveAppPrivacy()" style="margin-top:8px">💾 บันทึก URL นโยบาย</button>
+  </div>
   <div class="card"><div class="card-title">🔤 คำศัพท์ร้าน (Terminology)</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ปรับคำให้เข้ากับธุรกิจคุณ — จะเปลี่ยนข้อความ AI/ปุ่ม/กล่องโพสต์ในแอปอัตโนมัติ</div>
     <div class="form-grid">
@@ -803,7 +808,7 @@ function renderUsers(users) {
     <tr><td><div style="display:flex;align-items:center;gap:10px">
       <div class="user-av" style="${u.photoUrl?`background-image:url(${u.photoUrl})`:''}">
         ${u.photoUrl?'':(u.displayName?.charAt(0)||'?')}</div>
-      <div><div style="font-weight:700">${u.displayName||'ไม่ระบุ'}</div>
+      <div><div style="font-weight:700">${u.deletionRequested?'🗑️ ':''}${u.displayName||'ไม่ระบุ'}</div>
       <div style="font-size:11px;color:var(--muted)">${u.lineUserId?.slice(0,20)||''}</div></div></div></td>
       <td><input type="number" value="${u.points||0}" style="width:80px;border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px" onchange="updateUserPoints('${u.id}',this.value)"></td>
       <td><select onchange="updateUserTier('${u.id}',this.value)" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px">
@@ -872,6 +877,7 @@ async function loadAppearance() {
     if (d.grad2)   { document.getElementById('cfg-grad2').value   = d.grad2;   document.getElementById('cfg-grad2-hex').value   = d.grad2;   }
     updateColorPreview();
     loadTerms();
+    loadAppPrivacy();
     loadFeedMode();
   } catch(e) {}
 }
@@ -910,6 +916,21 @@ async function loadFeedMode() {
     var d = doc.data() || {};
     var pub = document.getElementById('fm-feedPublic'); if (pub) pub.checked = (d.feedPublic !== false);
     var pm = document.getElementById('fm-postMode'); if (pm) pm.value = (d.postMode === 'broadcast') ? 'broadcast' : 'public';
+  } catch(e) {}
+}
+async function saveAppPrivacy() {
+  try {
+    var url = document.getElementById("app-privacyurl").value.trim();
+    await aDb().collection("settings").doc("app").set({ privacyUrl: url, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    toast("✅ บันทึก URL นโยบายแล้ว","success");
+  } catch(e) { toast("❌ "+e.message,"error"); }
+}
+async function loadAppPrivacy() {
+  try {
+    var doc = await aDb().collection("settings").doc("app").get();
+    if (!doc.exists) return;
+    var url = (doc.data() || {}).privacyUrl || "";
+    var el = document.getElementById("app-privacyurl"); if (el) el.value = url;
   } catch(e) {}
 }
 async function saveTerms() {

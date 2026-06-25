@@ -469,7 +469,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     เข้าสู่ระบบด้วย Facebook
   </button>
   <div class="login-browser-hint" id="login-browser-hint" style="display:none">💡 เปิดเว็บนี้ในเบราว์เซอร์ (Chrome/Safari) เพื่อใช้ Google หรือ Facebook ได้</div>
-  <div class="login-terms">การเข้าสู่ระบบถือว่าคุณยอมรับ<br>เงื่อนไขการใช้งานของเพื่อนสวน</div>
+  <div class="login-terms">การเข้าสู่ระบบถือว่าคุณยอมรับเงื่อนไขการใช้งาน<br>และนโยบายความเป็นส่วนตัว</div>
 </div>
 
 <!-- TOPBAR -->
@@ -697,7 +697,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         </span>
       </button>
 
-      <button class="submit-btn" id="ob-save-btn" onclick="saveOnboarding()" style="margin-top:10px">✅ เริ่มใช้เพื่อนสวน</button>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;margin-top:6px;text-align:left">
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="ob-consent-chk" style="margin-top:3px;flex-shrink:0">
+          <span>ฉันยอมรับ <a id="ob-privacy-link" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;text-decoration:underline">นโยบายความเป็นส่วนตัว</a> และยินยอมให้เก็บ/ใช้ข้อมูลส่วนบุคคล</span>
+        </label>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer;margin-top:8px;color:var(--muted)">
+          <input type="checkbox" id="ob-mkt-chk" style="margin-top:3px;flex-shrink:0">
+          <span>ยินยอมรับข่าวสาร/โปรโมชันผ่าน LINE (ไม่บังคับ)</span>
+        </label>
+      </div>
+      <button class="submit-btn" id="ob-save-btn" onclick="saveOnboarding()" style="margin-top:10px">✅ เริ่มใช้งาน</button>
       <button class="ob-skip" onclick="skipOnboarding()">ข้ามไปก่อน ตั้งค่าทีหลังได้</button>
     </div>
   </div>
@@ -856,6 +866,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       </div>
       <div onclick="window.open('/bocean.html','_blank')" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text);border-top:1px solid var(--border)">
         <span style="font-size:20px">🚀</span> เปิดร้านแบรนด์คุณกับ Bocean
+      </div>
+      <div onclick="openMyData()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text);border-top:1px solid var(--border)">
+        <span style="font-size:20px">📋</span> ดูข้อมูลของฉัน
+      </div>
+      <div onclick="requestDeletion()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text);border-top:1px solid var(--border)">
+        <span style="font-size:20px">🗑️</span> ขอลบบัญชี/ข้อมูล
       </div>
       <div onclick="doLogout()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:#e41e3f;border-top:1px solid var(--border)">
         <span style="font-size:20px">🚪</span> ออกจากระบบ
@@ -1449,6 +1465,51 @@ function contactShop() {
   closeMoreMenu();
   if (url) window.open(url, '_blank');
 }
+function showInfoSheet(title, html){
+  var ov = document.getElementById('info-sheet');
+  if (!ov){
+    ov = document.createElement('div');
+    ov.id = 'info-sheet';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+    ov.addEventListener('click', function(e){ if (e.target===ov) ov.style.display='none'; });
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = '<div style="background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;max-height:85vh;overflow-y:auto;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:17px;font-weight:800">'+title+'</div><button id="info-sheet-x" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted)">\u00d7</button></div>'+html+'</div>';
+  document.getElementById('info-sheet-x').addEventListener('click', function(){ ov.style.display='none'; });
+  ov.style.display = 'flex';
+}
+function openMyData(){
+  if (!currentUser || currentUser.isGuest){ alert('\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e14\u0e39\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13'); return; }
+  var u = currentUser, c = u.consent || {};
+  var rows = [
+    ['\u0e0a\u0e37\u0e48\u0e2d', u.displayName || '-'],
+    ['LINE ID', u.lineUserId || '-'],
+    ['\u0e41\u0e15\u0e49\u0e21\u0e2a\u0e30\u0e2a\u0e21', (u.points!=null?u.points:0)],
+    ['\u0e23\u0e30\u0e14\u0e31\u0e1a', u.tier || '-'],
+    ['\u0e1e\u0e37\u0e0a/\u0e41\u0e17\u0e47\u0e01', (u.crops||[]).join(', ') || '-'],
+    ['\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e31\u0e14', u.province || '-'],
+    ['\u0e22\u0e34\u0e19\u0e22\u0e2d\u0e21\u0e19\u0e42\u0e22\u0e1a\u0e32\u0e22', c.accepted ? ('\u0e22\u0e34\u0e19\u0e22\u0e2d\u0e21 (v'+(c.version||1)+')') : '\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e23\u0e30\u0e1a\u0e38'],
+    ['\u0e23\u0e31\u0e1a\u0e02\u0e48\u0e32\u0e27\u0e2a\u0e32\u0e23\u0e01\u0e32\u0e23\u0e15\u0e25\u0e32\u0e14', c.marketing ? '\u0e22\u0e34\u0e19\u0e22\u0e2d\u0e21' : '\u0e44\u0e21\u0e48']
+  ];
+  var body = rows.map(function(r){
+    return '<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px"><span style="color:var(--muted)">'+escapeHtml(r[0])+'</span><span style="font-weight:700;text-align:right;word-break:break-all">'+escapeHtml(String(r[1]))+'</span></div>';
+  }).join('');
+  body += '<div style="font-size:12px;color:var(--muted);margin-top:12px">\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e17\u0e35\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e01\u0e47\u0e1a\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e04\u0e38\u0e13 \u00b7 \u0e41\u0e01\u0e49\u0e44\u0e02\u0e44\u0e14\u0e49\u0e17\u0e35\u0e48 "\u0e41\u0e01\u0e49\u0e44\u0e02\u0e42\u0e1b\u0e23\u0e44\u0e1f\u0e25\u0e4c"</div>';
+  showInfoSheet('\ud83d\udccb \u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19', body);
+}
+async function requestDeletion(){
+  if (!currentUser || currentUser.isGuest || !db){ alert('\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e01\u0e48\u0e2d\u0e19\u0e04\u0e23\u0e31\u0e1a'); return; }
+  if (!confirm('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13?\n\n\u0e17\u0e35\u0e21\u0e07\u0e32\u0e19\u0e08\u0e30\u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a\u0e41\u0e25\u0e30\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23\u0e25\u0e1a \u0e41\u0e25\u0e30\u0e04\u0e38\u0e13\u0e08\u0e30\u0e16\u0e39\u0e01\u0e2d\u0e2d\u0e01\u0e08\u0e32\u0e01\u0e23\u0e30\u0e1a\u0e1a\u0e2b\u0e25\u0e31\u0e07\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d')) return;
+  try {
+    await tdb().collection('users').doc(currentUser.uid).update({
+      deletionRequested: { status: 'pending', at: firebase.firestore.FieldValue.serverTimestamp() }
+    });
+    alert('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e41\u0e25\u0e49\u0e27 \u0e17\u0e35\u0e21\u0e07\u0e32\u0e19\u0e08\u0e30\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23\u0e25\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e02\u0e2d\u0e1a\u0e04\u0e38\u0e13\u0e04\u0e23\u0e31\u0e1a \ud83d\ude4f');
+    try { if (typeof liff !== 'undefined' && liff.logout && liff.isLoggedIn && liff.isLoggedIn()) liff.logout(); } catch(e){}
+    try { await firebase.auth().signOut(); } catch(e){}
+    location.reload();
+  } catch(e){ alert('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08: ' + e.message); }
+}
 async function doLogout() {
   if (!confirm('ออกจากระบบ?')) return;
   try { if (typeof liff !== 'undefined' && liff.logout && liff.isLoggedIn && liff.isLoggedIn()) liff.logout(); } catch (e) {}
@@ -1831,10 +1892,12 @@ function requestGps() {
 async function saveOnboarding() {
   if (!currentUser || !db) return;
   if (obSelectedCrops.length === 0) { alert('เลือกพืชอย่างน้อย 1 อย่างครับ 🌱'); return; }
+  var _cc = document.getElementById('ob-consent-chk');
+  if (_cc && !_cc.checked) { alert('กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนครับ'); return; }
   const btn = document.getElementById('ob-save-btn');
   btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
   try {
-    const updates = { crops: obSelectedCrops, onboarded: true };
+    const updates = { crops: obSelectedCrops, onboarded: true, consent: { accepted: true, version: 1, at: firebase.firestore.FieldValue.serverTimestamp(), marketing: !!(document.getElementById('ob-mkt-chk') && document.getElementById('ob-mkt-chk').checked) } };
     if (obLocation) updates.location = obLocation;
     await tdb().collection('users').doc(currentUser.uid).update(updates);
     currentUser = { ...currentUser, ...updates };
@@ -1843,7 +1906,7 @@ async function saveOnboarding() {
   } catch (err) {
     alert('บันทึกไม่สำเร็จ: ' + err.message);
   } finally {
-    btn.disabled = false; btn.textContent = '✅ เริ่มใช้เพื่อนสวน';
+    btn.disabled = false; btn.textContent = '✅ เริ่มใช้งาน';
   }
 }
 
@@ -1997,6 +2060,13 @@ function applyTermsText(){
 function applyTerms(t){
   if (t && typeof t === 'object') window.__TERMS = Object.assign({}, window.__TERMS || {}, t);
   applyTermsText();
+}
+function applyPrivacyLink(){
+  var u = window.__privacyUrl || "";
+  var a = document.getElementById("ob-privacy-link");
+  if (!a) return;
+  if (u){ a.setAttribute("href", u); a.style.opacity=""; }
+  else { a.removeAttribute("href"); a.style.opacity="0.6"; }
 }
 
 var __feedMode = { feedPublic: true, postMode: 'public' };
@@ -2318,6 +2388,7 @@ function initFeatureFlags() {
         primaryColor: d.primary, accentColor: d.accent,
       });
       if (d.terms) applyTerms(d.terms);
+      if (d.privacyUrl !== undefined) { window.__privacyUrl = d.privacyUrl || ''; applyPrivacyLink(); }
       __feedMode.feedPublic = (d.feedPublic !== false);
       __feedMode.postMode = (d.postMode === 'broadcast') ? 'broadcast' : 'public';
       applyFeedMode();
