@@ -6,6 +6,7 @@
 <title>Admin — เพื่อนสวน</title>
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="themes.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
@@ -299,6 +300,10 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       </select>
     </div>
     <button class="btn btn-primary" onclick="saveFeedMode()" style="margin-top:10px">💾 บันทึกโหมดฟีด</button>
+  </div>
+  <div class="card" id="theme-picker"><div class="card-title">🎨 ธีมแอป (เลือกได้)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">เลือกธีมสำเร็จรูป — เปลี่ยนสี/พื้นทั้งแอปของแบรนด์นี้ · กดดูพรีวิวสด แล้วกดบันทึกด้านล่าง</div>
+    <div id="theme-opts" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
   </div>
   <div class="card"><div class="card-title">🎨 สี</div>
     <div class="form-grid">
@@ -760,6 +765,7 @@ async function loadSidebarBranding() {
     const d = doc.data();
     if (d.appName) document.getElementById('sb-app-name').textContent = d.appName;
     if (d.logoUrl) { document.getElementById('sb-logo-img').src = d.logoUrl; document.getElementById('sb-logo-img').style.display = 'block'; }
+    if (window.applyTheme) applyTheme(d.theme);
     if (d.primary) { document.documentElement.style.setProperty('--primary', d.primary); document.documentElement.style.setProperty('--on-primary', __onColor(d.primary)); }
   } catch(e) {}
 }
@@ -879,6 +885,7 @@ async function loadAppearance() {
     set('cfg-appname', d.appName); set('cfg-subtitle', d.subtitle); set('cfg-logo', d.logoEmoji);
     set('cfg-shopname', d.shopName); set('cfg-lineoa', d.lineOaId); set('cfg-phone', d.phone);
     if (d.primary) { document.getElementById('cfg-primary').value = d.primary; document.getElementById('cfg-primary-hex').value = d.primary; }
+    window.__selectedTheme = d.theme || 'classic'; renderThemeOpts();
     if (d.accent)  { document.getElementById('cfg-accent').value  = d.accent;  document.getElementById('cfg-accent-hex').value  = d.accent;  }
     if (d.grad1)   { document.getElementById('cfg-grad1').value   = d.grad1;   document.getElementById('cfg-grad1-hex').value   = d.grad1;   }
     if (d.grad2)   { document.getElementById('cfg-grad2').value   = d.grad2;   document.getElementById('cfg-grad2-hex').value   = d.grad2;   }
@@ -897,6 +904,7 @@ async function saveAppearance() {
       shopName: document.getElementById('cfg-shopname').value,
       lineOaId: document.getElementById('cfg-lineoa').value,
       phone: document.getElementById('cfg-phone').value,
+      theme: window.__selectedTheme || 'classic',
       primary: document.getElementById('cfg-primary').value,
       accent: document.getElementById('cfg-accent').value,
       grad1: document.getElementById('cfg-grad1').value,
@@ -959,6 +967,28 @@ async function loadTerms() {
     set('term-item', t.item); set('term-place', t.itemPlace); set('term-people', t.people);
     set('term-expert', t.expert); set('term-problem', t.problem);
   } catch(e) {}
+}
+window.__selectedTheme = window.__selectedTheme || 'classic';
+function renderThemeOpts(){
+  var box = document.getElementById('theme-opts'); if (!box || !window.THEME_PRESETS) return;
+  box.innerHTML = Object.keys(window.THEME_PRESETS).map(function(id){
+    var t = window.THEME_PRESETS[id];
+    var sel = (id === window.__selectedTheme);
+    return '<div onclick="pickTheme(\'' + id + '\')" style="cursor:pointer;border:2px solid ' + (sel?'var(--primary)':'var(--border)') + ';border-radius:10px;padding:12px;background:' + t.bg + '">'
+      + '<div style="display:flex;gap:6px;margin-bottom:8px">'
+      + '<span style="width:22px;height:22px;border-radius:50%;background:' + t.primary + ';display:inline-block"></span>'
+      + '<span style="width:22px;height:22px;border-radius:50%;background:' + t.accent + ';display:inline-block"></span>'
+      + '<span style="width:22px;height:22px;border-radius:6px;background:' + t.card + ';border:1px solid ' + t.border + ';display:inline-block"></span>'
+      + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:' + t.text + '">' + t.label + (sel?' \u2713':'') + '</div>'
+      + '</div>';
+  }).join('');
+}
+function pickTheme(id){
+  if (!window.THEME_PRESETS || !window.THEME_PRESETS[id]) return;
+  window.__selectedTheme = id;
+  if (window.applyTheme) window.applyTheme(id);
+  renderThemeOpts();
 }
 function syncColor(key) {
   const hex = document.getElementById(`cfg-${key}-hex`).value;

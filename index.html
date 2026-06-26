@@ -6,6 +6,7 @@
 <title>เพื่อนสวน</title>
 <script src="config.js"></script>
 <script src="firebase-config.js"></script>
+<script src="themes.js"></script>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -2383,6 +2384,7 @@ function initFeatureFlags() {
     snap => {
       const d = snap.exists ? snap.data() : null;
       if (!d) return;
+      if (window.applyTheme) applyTheme(d.theme);
       applyBranding({
         appName: d.appName, subtitle: d.subtitle, logoEmoji: d.logoEmoji,
         primaryColor: d.primary, accentColor: d.accent,
