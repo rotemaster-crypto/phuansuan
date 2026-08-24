@@ -6,8 +6,9 @@
 
 ## 0. อยู่ตรงไหนแล้ว (resume pointer)
 
-- ✅ **Phase 0 ปิดครบ (2026-08-24)** — isolation แน่น: แก้บั๊ก settings, ลบ legacy rules, rules-test 15/15 เขียวใน CI, push ขึ้น GitHub, + bocean.web.app landing
-- ▶️ **ถัดไป = Phase 1** (ปิดงานค้างน่านน้ำ): ตัดสินใจ Badges/Community groups แบบ "ทำให้จบ หรือลบ" + ทดสอบ e2e (ร้าน→เช็คเอาท์→สลิป→ออเดอร์) + ขัดเงา tenant onboarding
+- ✅ **Phase 0 ปิดครบ (2026-08-24)** — isolation แน่น: rules-test 15/15 เขียวใน CI, + bocean.web.app landing
+- ✅ **Phase 1 ปิดครบ (2026-08-24)** — Community Groups (มี join, คุมต่อแบรนด์) + Badges (ตราสะสม แจกจริง server-side) + จุดไฟชุมชน (seed กลุ่ม/โพสต์ต้อนรับ/ตรา + checklist onboarding) + e2e ร้านผ่าน + toast แทน alert/confirm · rules-test 22/22 · deploy + push ครบ
+- ▶️ **ถัดไป = Phase 2** (ตัวต่าง): แปลงราคาสินค้าเป็นตัวเลข → เครื่องมือต้นทุน-ราคา-margin v1 → ผู้ช่วยการตลาด AI (text-gen จาก product data)
 - รายละเอียดงานย่อย → ROADMAP.md · สถานะฟีเจอร์จริง → STATUS.md
 
 ---
