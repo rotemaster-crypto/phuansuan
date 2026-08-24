@@ -293,12 +293,46 @@ function calcTier(pts, tiers) {
   for (const t of list) { if (pts >= t.min) return t.key; }
   return "bronze";
 }
+// ── Badges (ตราสะสม) — data-driven ต่อ tenant จาก settings/badges ──
+let _bdgCache = {}, _bdgAt = {};
+async function getBadges(tid) {
+  const now = Date.now();
+  if (_bdgCache[tid] && (now - (_bdgAt[tid] || 0)) < 60000) return _bdgCache[tid];
+  let list = [];
+  try {
+    const s = await troot(tid).collection("settings").doc("badges").get();
+    if (s.exists && Array.isArray(s.data().list)) list = s.data().list;
+  } catch (e) { /* fallback [] */ }
+  _bdgCache[tid] = list; _bdgAt[tid] = now; return list;
+}
+function metricValue(metric, d) {
+  if (metric === "helps")  return _num(d.helpCount, 0);
+  if (metric === "points") return _num(d.points, 0);
+  return _num(d.postCount, 0); // default = posts
+}
+async function earnedBadges(tid, d) {
+  const list = await getBadges(tid);
+  const out = [];
+  for (const b of list) {
+    if (!b || !b.id) continue;
+    if (metricValue(b.metric, d) >= _num(b.threshold, 0)) out.push(b.id);
+  }
+  return out;
+}
+
 async function updateTier(userRef, tid) {
   const P = await getPts(tid);
   const snap = await userRef.get();
-  const pts = snap.data()?.points || 0;
-  const newTier = calcTier(pts, P.tiers);
-  if (snap.data()?.tier !== newTier) await userRef.update({ tier: newTier });
+  const d = snap.data() || {};
+  const newTier = calcTier(d.points || 0, P.tiers);
+  const updates = {};
+  if (d.tier !== newTier) updates.tier = newTier;
+  // award badges ที่ถึงเกณฑ์ (idempotent ด้วย arrayUnion)
+  const earned = await earnedBadges(tid, d);
+  const have = Array.isArray(d.badges) ? d.badges : [];
+  const fresh = earned.filter((x) => have.indexOf(x) === -1);
+  if (fresh.length) updates.badges = admin.firestore.FieldValue.arrayUnion(...fresh);
+  if (Object.keys(updates).length) await userRef.update(updates);
 }
 
 exports.onPostCreated = onDocumentCreated(

@@ -1992,7 +1992,14 @@ function renderProfileInfo() {
     const tiersObj = APP_CONFIG.tiers || {};
     let tier = null;
     Object.keys(tiersObj).forEach(k => { if (pts >= tiersObj[k].min) tier = tiersObj[k]; });
-    bEl.innerHTML = tier ? `<span class="pb pb-blue">${tier.emoji || '🏅'} ${escapeHtml(tier.label)} Member</span>` : '';
+    let html = tier ? `<span class="pb pb-blue">${tier.emoji || '🏅'} ${escapeHtml(tier.label)} Member</span>` : '';
+    // ตราสะสมที่ได้รับ (มอบโดย Cloud Function — โชว์ตาม meta ใน settings/badges)
+    const earned = (currentUser.badges || []);
+    earned.forEach(function(bid){
+      const b = __badgesMeta[bid];
+      if (b) html += `<span class="pb" style="background:#fff4e0;color:#c77d00">${b.emoji || '🎖️'} ${escapeHtml(b.name || '')}</span>`;
+    });
+    bEl.innerHTML = html;
   }
 }
 
@@ -2607,7 +2614,18 @@ function initFeatureFlags() {
     snap => { applyShop(snap.exists ? snap.data() : {}); },
     err => { console.warn('shopSettings:', err.message); }
   );
+  // Badges: settings/badges → meta ตราสะสม (real-time)
+  tdb().collection('settings').doc('badges').onSnapshot(
+    snap => {
+      var list = (snap.exists && Array.isArray(snap.data().list)) ? snap.data().list : [];
+      __badgesMeta = {};
+      list.forEach(function(b){ if (b && b.id) __badgesMeta[b.id] = b; });
+      if (document.getElementById('screen-profile') && document.getElementById('screen-profile').classList.contains('active')) renderProfileInfo();
+    },
+    err => { console.warn('badgesSettings:', err.message); }
+  );
 }
+var __badgesMeta = {};
 function _pnum(v, fb) {
   if (typeof v === 'number' && !isNaN(v)) return v;
   if (typeof v === 'string' && v.trim() !== '' && !isNaN(Number(v))) return Number(v);
