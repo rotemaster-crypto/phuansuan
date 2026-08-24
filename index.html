@@ -1578,7 +1578,19 @@ async function loadLeaderboard() {
     box.innerHTML = rows.length ? rows.join('') : '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">ยังไม่มีสมาชิก</div>';
   } catch (e) {
     console.error('leaderboard:', e);
-    box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">โหลดอันดับไม่สำเร็จ</div>';
+    if (e && e.code === 'permission-denied') {
+      var _loginBtn = isGuest()
+        ? '<button onclick="showLoginPrompt()" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">เข้าสู่ระบบ</button>'
+        : '';
+      box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px 20px">'
+        + '<div style="font-size:34px;margin-bottom:10px">🔒</div>'
+        + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">อันดับปราชญ์แสดงสำหรับสมาชิก</div>'
+        + '<div style="font-size:13px;margin-bottom:14px">เข้าสู่ระบบเพื่อดูว่าใครแบ่งปันความรู้มากที่สุดในชุมชน</div>'
+        + _loginBtn
+        + '</div>';
+    } else {
+      box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">โหลดอันดับไม่สำเร็จ</div>';
+    }
   }
 }
 
