@@ -13,7 +13,10 @@
 - [x] **แก้บั๊ก settings — รวม 2 คลังให้เหลือคลังเดียว** (`settings/app`+`settings/features`) : เปลี่ยน `saveBranding`/`setFeature` ให้เขียนคลัง canonical + ลบ listener phantom + ขยาย listener `settings/app` ให้รับ tierLabels/navLabels — ✅ deploy + เทสต์ 3 ข้อผ่าน (2026-08-24)
 - [x] ลบ legacy rules top-level ที่ `firestore.rules:102-150` — ✅ deploy + ตรวจ 3 ข้อผ่าน (2026-08-24) · เหลือ top-level แค่ `/tenants`, `/tenantRequests`, catch-all deny
 - [x] เขียน **rules-test** (`tests/rules.test.js`, 15 เคส): อ่าน/เขียนข้ามแบรนด์=denied · guest เขียนไม่ได้ · แก้ points/tier เอง=denied · tenant admin ไม่ข้ามแบรนด์ · root path ปิด — ✅ **รันจริงผ่าน 15/15** (emulator, 2026-08-24)
-- [~] ต่อ rules-test เข้า CI — เพิ่ม `.github/workflows/rules-test.yml` แล้ว (รันทุก push/PR) · 🟡 รอ push ขึ้น GitHub เพื่อยืนยัน job เขียว
+- [x] ต่อ rules-test เข้า CI — `.github/workflows/rules-test.yml` รันทุก push/PR · ✅ **CI เขียวบน GitHub** (Java 21, 15/15, 2026-08-24)
+- [x] push ขึ้น GitHub (deployed == repo) — ✅ commit `2456475`+`ef9d4b9` บน main (แก้ R4 divergence)
+
+> ✅ **Phase 0 ปิดครบ (2026-08-24)** · งานเก็บที่ยังค้าง (ไม่บล็อก): workflow `firebase-deploy.yml` fail มาตั้งแต่ มิ.ย. (secret ไม่ครบ — deploy มือแทน), orphan cleanup (`public/`, root `index.js`)
 - [ ] Snapshot baseline สะอาด + ยืนยัน deployed == repo — **S**
 - [ ] เปลี่ยนวิธีทำงาน: เลิก `apply_*.js` → แก้ไฟล์ตรงๆ — **S**
 
