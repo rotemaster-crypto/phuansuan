@@ -1,0 +1,13 @@
+{
+  "name": "bocean-rules-tests",
+  "description": "Firestore security-rules tests (tenant isolation) for Bocean",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.12.0"
+  }
+}

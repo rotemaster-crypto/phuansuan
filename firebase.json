@@ -9,9 +9,20 @@
       "target": "office",
       "public": ".",
       "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**","firestore.rules","storage.rules","*.md"]
+    },
+    {
+      "target": "bocean",
+      "public": ".",
+      "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**","firestore.rules","storage.rules","*.md","index.html","admin.html","apply_*.js","seed_tenant.js","tests/**","*.sh"],
+      "rewrites": [ { "source": "**", "destination": "/bocean.html" } ]
     }
   ],
   "firestore": { "rules": "firestore.rules" },
   "storage": { "rules": "storage.rules" },
-  "functions": [ { "source": "functions", "runtime": "nodejs22" } ]
+  "functions": [ { "source": "functions", "runtime": "nodejs22" } ],
+  "emulators": {
+    "firestore": { "port": 8080 },
+    "singleProjectMode": true,
+    "ui": { "enabled": false }
+  }
 }

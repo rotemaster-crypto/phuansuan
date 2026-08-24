@@ -1646,7 +1646,14 @@ async function saveBranding() {
   };
   applyBranding(b);
   try {
-    await tdb().collection('settings').doc(tenantId()).set({ branding: b }, { merge: true });
+    // เขียนลงคลัง canonical settings/app (คลังเดียวกับ admin) — flat + ฟิลด์เสริม
+    await tdb().collection('settings').doc('app').set({
+      appName: b.appName, subtitle: b.subtitle, logoEmoji: b.logoEmoji,
+      leaderboardTitle: b.leaderboardTitle,
+      primary: b.primaryColor, accent: b.accentColor,
+      tierLabels: b.tierLabels, navLabels: b.navLabels,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
     alert('บันทึกแบรนด์แล้ว ✓');
   } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
 }
@@ -2370,16 +2377,6 @@ function initFeatureFlags() {
     snap => { const d = snap.exists ? snap.data() : null; if (d) { APP_CONFIG.features = Object.assign({}, APP_CONFIG.features, d); applyFeatureFlags(); renderAdminToggles(); } },
     err => { console.warn('featuresDoc:', err.message); }
   );
-  tdb().collection('settings').doc(tenantId()).onSnapshot(
-    snap => {
-      const d = snap.exists ? snap.data() : null;
-      if (d && d.features) APP_CONFIG.features = Object.assign({}, APP_CONFIG.features, d.features);
-      if (d && d.branding) applyBranding(d.branding);
-      applyFeatureFlags();
-      renderAdminToggles();
-    },
-    err => { console.warn('featureFlags:', err.message); }
-  );
   tdb().collection('settings').doc('app').onSnapshot(
     snap => {
       const d = snap.exists ? snap.data() : null;
@@ -2388,6 +2385,7 @@ function initFeatureFlags() {
       applyBranding({
         appName: d.appName, subtitle: d.subtitle, logoEmoji: d.logoEmoji,
         primaryColor: d.primary, accentColor: d.accent,
+        leaderboardTitle: d.leaderboardTitle, tierLabels: d.tierLabels, navLabels: d.navLabels,
       });
       if (d.terms) applyTerms(d.terms);
       if (d.privacyUrl !== undefined) { window.__privacyUrl = d.privacyUrl || ''; applyPrivacyLink(); }
@@ -2524,7 +2522,7 @@ async function setFeature(key, val) {
   APP_CONFIG.features[key] = val;
   applyFeatureFlags();
   try {
-    await tdb().collection('settings').doc(tenantId()).set({ features: { [key]: val } }, { merge: true });
+    await tdb().collection('settings').doc('features').set({ [key]: val }, { merge: true });
   } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
 }
 

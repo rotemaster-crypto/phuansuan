@@ -9,3 +9,10 @@ apply_*.js
 patch_*.js
 migrate*.js
 *.gz.b64
+
+# firebase emulator (rules-test)
+*-debug.log
+.firebase/
+
+# windows / local junk
+*.lnk
