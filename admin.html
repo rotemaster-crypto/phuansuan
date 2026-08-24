@@ -234,6 +234,15 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-val" id="ds-points">—</div><div class="stat-label">แต้มรวมทั้งระบบ</div></div>
     <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="ds-today">—</div><div class="stat-label">Login วันนี้</div></div>
   </div>
+  <div class="card"><div class="card-title">🔥 จุดไฟชุมชน</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ชุมชนที่มีคนคุยกันตั้งแต่วันแรก จะไม่ร้าง · ทำ checklist ให้ครบ + โพสต์เริ่มบทสนทนาได้ในคลิกเดียว (โพสต์ในนามแบรนด์)</div>
+    <div id="kickstart-checklist" style="margin-bottom:14px"><div class="empty-state" style="padding:10px">กำลังโหลด...</div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('intro')">👋 โพสต์ชวนแนะนำตัว</button>
+      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('question')">❓ โพสต์ถามปัญหายอดฮิต</button>
+      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('promo')">🎉 โพสต์โปรโมชันแรก</button>
+    </div>
+  </div>
   <div class="card"><div class="card-title">👥 Users ล่าสุด</div>
     <div class="table-wrap"><table><thead><tr><th>User</th><th>แต้ม</th><th>Tier</th><th>เข้าล่าสุด</th></tr></thead>
     <tbody id="recent-users-table"><tr><td colspan="4" class="empty-state">กำลังโหลด...</td></tr></tbody></table></div>
@@ -862,6 +871,55 @@ async function loadDashboard() {
         <td style="color:var(--muted);font-size:13px">${fmtDate(u.lastLoginAt)}</td></tr>
     `).join('') || '<tr><td colspan="4" class="empty-state">ไม่มีข้อมูล</td></tr>';
   } catch(err) { console.error(err); }
+  loadKickstart();
+}
+// 🔥 จุดไฟชุมชน — checklist ตั้งค่า + quick post
+async function loadKickstart(){
+  const box = document.getElementById('kickstart-checklist');
+  if (!box) return;
+  try {
+    const [grp, post, prod, bdg] = await Promise.all([
+      aDb().collection('groups').limit(1).get().then(s=>!s.empty).catch(()=>false),
+      aDb().collection('posts').limit(1).get().then(s=>!s.empty).catch(()=>false),
+      aDb().collection('products').limit(1).get().then(s=>!s.empty).catch(()=>false),
+      aDb().collection('settings').doc('badges').get().then(d=>d.exists && Array.isArray(d.data().list) && d.data().list.length>0).catch(()=>false)
+    ]);
+    const row = (ok, label, screen) =>
+      `<div onclick="showScreen('${screen}', document.querySelector('.sb-item[onclick*=&quot;${screen}&quot;]'))" style="display:flex;align-items:center;gap:10px;padding:7px 4px;cursor:pointer">
+        <span style="font-size:18px">${ok?'✅':'⬜'}</span>
+        <span style="font-weight:${ok?'400':'700'};color:${ok?'var(--muted)':'var(--text)'}">${label}</span>
+        ${ok?'':'<span style="margin-left:auto;color:var(--primary);font-size:13px;font-weight:700">ตั้งค่า →</span>'}
+      </div>`;
+    box.innerHTML =
+      row(grp, 'สร้างกลุ่มชุมชนแรก', 'groups') +
+      row(post, 'มีโพสต์ต้อนรับในฟีด', 'posts') +
+      row(prod, 'เพิ่มสินค้าในร้าน', 'products') +
+      row(bdg, 'ตั้งตราสะสม (Badges)', 'badges');
+  } catch(e) {
+    box.innerHTML = '<div class="empty-state" style="padding:10px">โหลด checklist ไม่ได้</div>';
+  }
+}
+async function quickPost(kind){
+  const TPL = {
+    intro:    { type:'ประกาศ',      text:'👋 มาแนะนำตัวกันหน่อย!\n\nคุณชื่ออะไร ทำสวน/ธุรกิจอะไรอยู่ และสนใจเรื่องไหนเป็นพิเศษ? คอมเมนต์ทักทายกันได้เลย 😊' },
+    question: { type:'แชร์ความรู้', text:'❓ อยากรู้จากทุกคน — ตอนนี้เจอปัญหาอะไรที่กวนใจที่สุด?\n\nคอมเมนต์บอกกันได้เลย เดี๋ยวมาช่วยกันหาทางออก 💪' },
+    promo:    { type:'รีวิวสินค้า',  text:'🎉 โปรโมชันพิเศษต้อนรับสมาชิก!\n\n(แก้ข้อความนี้ให้เป็นโปรของร้านคุณ — เช่น ส่วนลด/ของแถม/สินค้าใหม่) แล้วกดโพสต์อีกครั้งได้เลย' }
+  };
+  const tpl = TPL[kind]; if (!tpl) return;
+  if (!confirm('โพสต์ข้อความนี้ในนามแบรนด์ (ปักหมุดบนสุด)?\n\n"'+tpl.text.slice(0,80)+'..."')) return;
+  try {
+    let brand = currentTenant;
+    try { const a = await aDb().collection('settings').doc('app').get(); if (a.exists && a.data().appName) brand = a.data().appName; } catch(e){}
+    const uid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || 'system';
+    await aDb().collection('posts').add({
+      text: tpl.text, type: tpl.type, crop: '', groupId: null, imageUrl: null,
+      authorId: uid, authorName: brand, authorPhoto: '',
+      likes: 0, helps: 0, comments: 0, pinned: true, location: null,
+      tenantId: currentTenant, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('✅ โพสต์แล้ว — เปิดแอปดูได้เลย','success');
+    loadKickstart();
+  } catch(e){ toast('❌ '+e.message,'error'); }
 }
 
 // ── Users ─────────────────────────────────────────────────
@@ -1832,6 +1890,33 @@ async function seedTenant(tid, o){
   }, { merge: true });
   await ref.collection('settings').doc('points').set(TENANT_DEFAULTS.points, { merge: true });
   await ref.collection('settings').doc('features').set({ shopMode: mode }, { merge: true });
+  // 🔥 จุดไฟชุมชน: เพาะกลุ่ม + โพสต์ต้อนรับ + ชุดตรา ให้แบรนด์ไม่เปิดมาแล้วร้าง
+  try { await seedKickstart(ref, tid, name); } catch(e) { console.warn('seedKickstart:', e.message); }
+}
+async function seedKickstart(ref, tid, name){
+  const SV = firebase.firestore.FieldValue.serverTimestamp();
+  const uid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || 'system';
+  // 1) กลุ่ม default
+  await ref.collection('groups').add({
+    name: 'พูดคุยทั่วไป', emoji: '💬', color: '#42b883', order: 0,
+    description: 'ห้องพูดคุยรวมของชุมชน ' + name, memberCount: 0, postCount: 0, createdAt: SV
+  });
+  // 2) โพสต์ต้อนรับ (ปักหมุด) — แสดงในนามแบรนด์
+  await ref.collection('posts').add({
+    text: '👋 ยินดีต้อนรับสู่ชุมชน ' + name + '!\n\nที่นี่คือพื้นที่แบ่งปันความรู้ ถาม-ตอบ และพูดคุยกัน — แนะนำตัวกันหน่อย คุณสนใจเรื่องอะไรเป็นพิเศษ? 😊',
+    type: 'ประกาศ', crop: '', groupId: null, imageUrl: null,
+    authorId: uid, authorName: name, authorPhoto: '',
+    likes: 0, helps: 0, comments: 0, pinned: true, location: null,
+    tenantId: tid, createdAt: SV
+  });
+  // 3) ชุดตราเริ่มต้น
+  const t = Date.now();
+  await ref.collection('settings').doc('badges').set({ list: [
+    { id:'b'+(t+1), name:'โพสต์แรก',    emoji:'🌱', metric:'posts',  threshold:1 },
+    { id:'b'+(t+2), name:'นักแบ่งปัน',  emoji:'✍️', metric:'posts',  threshold:10 },
+    { id:'b'+(t+3), name:'เพื่อนที่ดี', emoji:'🤝', metric:'helps',  threshold:5 },
+    { id:'b'+(t+4), name:'ปราชญ์ชุมชน', emoji:'⭐', metric:'points', threshold:1000 }
+  ]}, { merge: true });
 }
 async function createTenant(){
   if (!db) return;
