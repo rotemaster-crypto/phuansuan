@@ -42,6 +42,9 @@ beforeEach(async () => {
     await setDoc(doc(db, 'tenants/brandB/settings/app'), { feedPublic: false, postMode: 'public' });
     await setDoc(doc(db, 'tenants/brandB/posts/pB'), { authorId: 'uB' });
     await setDoc(doc(db, 'tenants/brandB/orders/o1'), { userId: 'uB', status: 'pending_payment' });
+    // กลุ่มชุมชน: brandA public (settings/app ไม่มี = feedPublic default true), brandB private
+    await setDoc(doc(db, 'tenants/brandA/groups/gA'), { name: 'Group A', memberCount: 0 });
+    await setDoc(doc(db, 'tenants/brandB/groups/gB'), { name: 'Group B', memberCount: 0 });
   });
 });
 
@@ -104,4 +107,27 @@ test('root /users ระดับบนสุด = อ่าน DENIED (ไม�
 });
 test('root /products ระดับบนสุด = อ่าน DENIED', async () => {
   await assertFails(getDoc(doc(guest(), 'products/p1')));
+});
+
+// ── 9. กลุ่มชุมชน (Community Groups) ───────────────────────
+test('member ธรรมดาสร้างกลุ่ม = DENIED (แอดมินเท่านั้น)', async () => {
+  await assertFails(setDoc(doc(memberA(), 'tenants/brandA/groups/gX'), { name: 'X' }));
+});
+test('tenant admin ของ A สร้างกลุ่มใน A = OK', async () => {
+  await assertSucceeds(setDoc(doc(tAdminA(), 'tenants/brandA/groups/gX'), { name: 'X' }));
+});
+test('tenant admin ของ A สร้างกลุ่มใน B = DENIED (ไม่ข้ามแบรนด์)', async () => {
+  await assertFails(setDoc(doc(tAdminA(), 'tenants/brandB/groups/gX'), { name: 'X' }));
+});
+test('member A เข้าร่วมกลุ่มในแบรนด์ตัวเอง (สมาชิกภาพตัวเอง) = OK', async () => {
+  await assertSucceeds(setDoc(doc(memberA(), 'tenants/brandA/groups/gA/members/uA'), { joinedAt: 1 }));
+});
+test('member A เข้าร่วมกลุ่มใน brand B = DENIED (ข้ามแบรนด์)', async () => {
+  await assertFails(setDoc(doc(memberA(), 'tenants/brandB/groups/gB/members/uA'), { joinedAt: 1 }));
+});
+test('member A เขียนสมาชิกภาพแทน uid อื่น = DENIED', async () => {
+  await assertFails(setDoc(doc(memberA(), 'tenants/brandA/groups/gA/members/uB'), { joinedAt: 1 }));
+});
+test('member A อ่านกลุ่ม private ของ brand B = DENIED', async () => {
+  await assertFails(getDoc(doc(memberA(), 'tenants/brandB/groups/gB')));
 });

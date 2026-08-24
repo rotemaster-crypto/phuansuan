@@ -13,7 +13,7 @@
 | Multi-tenant isolation | ✅ BUILT (แต่ **ไม่มีเทสต์** + มีบั๊ก) | `firestore.rules:31-87`, `index.html:2337`, `functions/index.js:21-38` |
 | Rules test / emulator | 🔴 ABSENT | — (ไม่มี test file, ไม่มี emulator config) |
 | Community: feed/โพสต์/คอมเมนต์/รีแอคชัน | ✅ BUILT | `index.html:2210-2312, 2604-2635`; `functions/index.js:304-406` |
-| Community groups (กลุ่ม) | 🔴 ABSENT (มีแค่ feature flag) | `config.js:88` |
+| Community groups (กลุ่ม + join) | ✅ BUILT (คุมต่อแบรนด์) | `index.html` (screen-community/screen-group), `admin.html` (screen-groups), `functions/index.js` (onGroupMemberWrite), `firestore.rules:69-77` |
 | Points / Tiers / Leaderboard | ✅ BUILT (ให้แต้มฝั่ง server) | `functions/index.js:256-457`; `index.html:1522` |
 | Badges | 🟡 STUB (นิยามไว้ แต่ไม่เคยแจกจริง) | `config.js:219`, `index.html:1804` |
 | Shop/ตะกร้า/เช็คเอาท์/ออเดอร์ (B2C) | ✅ BUILT | `index.html:2746-3213`; `admin.html:656` |
@@ -43,6 +43,6 @@
 
 ## หมายเหตุความเข้าใจผิดที่พบบ่อย
 
-- **"แท็บ Community" จริงๆ แสดง Leaderboard** ไม่ใช่กลุ่ม/ฟอรัม (`index.html:570-578`)
+- **"แท็บ Community" = ศูนย์รวมชุมชน** (กลุ่ม + Leaderboard) — แต่ละส่วนเปิด/ปิดต่อแบรนด์ผ่าน `settings/features` (`communityGroups`, `leaderboard`) · ปิดทั้งคู่ = ซ่อน nav ชุมชน
 - **Multi-tenant สร้างจริงแล้ว** (PROGRESS_4.md เก่าเขียนว่ายัง single-tenant — ไม่จริงแล้ว) แต่ "จริง" ในระดับโครงสร้าง ยังต้อง **ลบ legacy rules #3 + เขียนเทสต์ #1** (isolation) และ **แก้บั๊ก settings #2** (consistency) ก่อนวางใจ — #3+#1 คือเรื่อง leak, #2 เป็นคนละเรื่อง (fail-silent)
 - **ราคาสินค้าเป็นข้อความ ไม่ใช่ตัวเลข** → ต้องแปลงเป็นตัวเลขก่อน ถึงจะทำเครื่องมือต้นทุน-ราคาได้

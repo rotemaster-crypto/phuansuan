@@ -85,7 +85,8 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     productLink:     true,   // ลิงก์สินค้าร้าน
     stories:         true,   // Stories บนสุด Feed
     pointSystem:     true,   // ระบบแต้มสะสม
-    communityGroups: true,   // กลุ่ม/ชุมชน
+    communityGroups: true,   // กลุ่ม/ชุมชน (มี join — คุมต่อแบรนด์)
+    leaderboard:     true,   // ตารางอันดับ (ปราชญ์) — คุมต่อแบรนด์
     weatherAlert:    false,  // แจ้งเตือนสภาพอากาศ (เปิดทีหลัง)
     commerce:        true,   // ระบบร้านค้า + ตะกร้า (Phase 3)
   },

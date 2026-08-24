@@ -315,6 +315,11 @@ exports.onPostCreated = onDocumentCreated(
       postCount: admin.firestore.FieldValue.increment(1),
     });
     await updateTier(ref, tid);
+    // group post counter (โพสต์ในกลุ่ม → นับให้กลุ่ม)
+    if (post.groupId) {
+      await troot(tid).collection("groups").doc(post.groupId)
+        .update({ postCount: admin.firestore.FieldValue.increment(1) }).catch(() => {});
+    }
   }
 );
 
@@ -402,6 +407,30 @@ exports.onHelpWrite = onDocumentWritten(
       const p = await postRef.get(); if (!p.exists) return;
       await postRef.update({ helps: admin.firestore.FieldValue.increment(-1) });
     }
+  }
+);
+
+// ── กลุ่มชุมชน (Community Groups) counters ──
+// นับโพสต์ในกลุ่มลดเมื่อโพสต์ถูกลบ (keep postCount แม่นยำ)
+exports.onPostDeleted = onDocumentDeleted(
+  { document: "tenants/{tid}/posts/{postId}", region: "asia-southeast1" },
+  async (event) => {
+    const post = event.data?.data();
+    if (!post?.groupId) return;
+    await troot(event.params.tid).collection("groups").doc(post.groupId)
+      .update({ postCount: admin.firestore.FieldValue.increment(-1) }).catch(() => {});
+  }
+);
+
+// นับสมาชิกกลุ่ม (join/leave) → memberCount (ตาม pattern onLikeWrite)
+exports.onGroupMemberWrite = onDocumentWritten(
+  { document: "tenants/{tid}/groups/{gid}/members/{uid}", region: "asia-southeast1" },
+  async (event) => {
+    const had = event.data?.before?.exists, has = event.data?.after?.exists;
+    if (had === has) return;
+    const inc = has ? 1 : -1;
+    await troot(event.params.tid).collection("groups").doc(event.params.gid)
+      .update({ memberCount: admin.firestore.FieldValue.increment(inc) }).catch(() => {});
   }
 );
 

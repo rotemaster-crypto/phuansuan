@@ -66,6 +66,15 @@ service cloud.firestore {
         match /likes/{uid} { allow read: if feedPublic(t) || memberOf(t) || canManage(t); allow create, update, delete: if isOwner(uid) && memberOf(t); }
         match /helps/{uid} { allow read: if feedPublic(t) || memberOf(t) || canManage(t); allow create, delete: if isOwner(uid) && memberOf(t); allow update: if false; }
       }
+      match /groups/{gid} {
+        allow read: if feedPublic(t) || memberOf(t) || canManage(t);
+        allow create, update, delete: if canManage(t);
+        match /members/{uid} {
+          allow read: if feedPublic(t) || memberOf(t) || canManage(t);
+          allow create, delete: if isOwner(uid) && memberOf(t);
+          allow update: if false;
+        }
+      }
       match /orders/{orderId} {
         allow read: if canManage(t) || (signedIn() && resource.data.userId == request.auth.uid);
         allow create: if signedIn() && memberOf(t)

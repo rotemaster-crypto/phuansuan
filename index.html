@@ -569,10 +569,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 <!-- ══ COMMUNITY SCREEN ══ -->
 <div class="screen" id="screen-community">
   <div style="padding:14px 16px 84px">
-    <div id="lb-title" style="font-size:20px;font-weight:800;color:var(--text)">🏆 ปราชญ์ชาวสวน</div>
-    <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">อันดับผู้สะสมแต้มสูงสุด — ยิ่งแบ่งปัน ยิ่งไต่อันดับ</div>
-    <div id="leaderboard-list">
-      <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
+    <!-- ── กลุ่มชุมชน ── -->
+    <div id="community-groups-section" style="display:none;margin-bottom:22px">
+      <div style="font-size:20px;font-weight:800;color:var(--text)">👥 กลุ่มชุมชน</div>
+      <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">เข้าร่วมกลุ่มที่คุณสนใจ แล้วโพสต์คุยกันในกลุ่ม</div>
+      <div id="groups-list">
+        <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
+      </div>
+    </div>
+    <!-- ── ตารางอันดับ (ปราชญ์) ── -->
+    <div id="community-lb-section">
+      <div id="lb-title" style="font-size:20px;font-weight:800;color:var(--text)">🏆 ปราชญ์ชาวสวน</div>
+      <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">อันดับผู้สะสมแต้มสูงสุด — ยิ่งแบ่งปัน ยิ่งไต่อันดับ</div>
+      <div id="leaderboard-list">
+        <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── หน้ากลุ่ม (รายละเอียด + ฟีดในกลุ่ม) ── -->
+<div class="screen" id="screen-group">
+  <div style="padding:0 0 84px">
+    <div id="group-header" style="padding:16px"></div>
+    <div style="padding:0 16px">
+      <div id="group-feed">
+        <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
+      </div>
     </div>
   </div>
 </div>
@@ -598,6 +621,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         <button class="type-chip" onclick="selType(this)">💡 แชร์ความรู้</button>
         <button class="type-chip" onclick="selType(this)">⚠️ แจ้งเตือนพื้นที่</button>
         <button class="type-chip" onclick="selType(this)">📦 รีวิวสินค้า</button>
+      </div>
+      <div class="fg" id="modal-group-wrap" style="display:none">
+        <label>โพสต์ลงกลุ่ม</label>
+        <select id="modal-group"><option value="">— ฟีดทั่วไป (ไม่ลงกลุ่ม) —</option></select>
       </div>
       <div class="photo-area" onclick="document.getElementById('post-img-input').click()" id="photo-area-box">
         <input type="file" id="post-img-input" accept="image/*" style="display:none" onchange="previewPostImage(this)">
@@ -1555,6 +1582,145 @@ async function loadLeaderboard() {
   }
 }
 
+// ── กลุ่มชุมชน (Community Groups) ─────────────────────────
+var __groups = [];
+var __currentGroup = null;
+function myGroups(){ return (currentUser && currentUser.groups) || []; }
+function isInGroup(gid){ return myGroups().indexOf(gid) !== -1; }
+
+async function loadCommunityGroups() {
+  var box = document.getElementById('groups-list');
+  if (!box || !db) return;
+  try {
+    var snap = await tdb().collection('groups').orderBy('order').get();
+    __groups = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
+    if (!__groups.length) {
+      box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:14px">ยังไม่มีกลุ่มในชุมชนนี้</div>';
+      return;
+    }
+    box.innerHTML = __groups.map(function(g){ return groupCardHtml(g.id, g.data); }).join('');
+  } catch (e) {
+    console.error('loadCommunityGroups:', e);
+    box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:14px">โหลดกลุ่มไม่สำเร็จ</div>';
+  }
+}
+
+function groupCardHtml(gid, g) {
+  var joined = isInGroup(gid);
+  var color = g.color || 'var(--primary)';
+  return '<div onclick="openGroup(\'' + gid + '\')" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:10px;background:var(--card);border:1px solid var(--border);cursor:pointer">'
+    + '<div style="width:46px;height:46px;border-radius:12px;background:' + color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">' + (g.emoji || '👥') + '</div>'
+    + '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(g.name || '') + (joined ? ' <span style="color:var(--primary);font-size:12px">· เข้าร่วมแล้ว</span>' : '') + '</div>'
+    + '<div style="font-size:12px;color:var(--muted)">👤 ' + (g.memberCount || 0) + ' · 📝 ' + (g.postCount || 0) + '</div></div>'
+    + '<div style="color:var(--muted);font-size:18px">›</div>'
+    + '</div>';
+}
+
+function openGroup(gid) {
+  var g = __groups.find(function(x){ return x.id === gid; });
+  if (!g) return;
+  __currentGroup = gid;
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-group').classList.add('active');
+  try { window.scrollTo(0, 0); } catch(e){}
+  renderGroupHeader(gid, g.data);
+  loadGroupFeed(gid);
+}
+
+function backToCommunity() { __currentGroup = null; switchScreen('community'); }
+
+function renderGroupHeader(gid, g) {
+  var el = document.getElementById('group-header');
+  if (!el) return;
+  var joined = isInGroup(gid);
+  var color = g.color || 'var(--primary)';
+  el.innerHTML =
+    '<button onclick="backToCommunity()" style="background:none;border:none;color:var(--primary);font-size:14px;font-weight:700;cursor:pointer;padding:0;margin-bottom:10px">← กลับชุมชน</button>'
+    + '<div style="background:' + color + ';color:#fff;border-radius:14px;padding:16px">'
+    + '<div style="font-size:26px">' + (g.emoji || '👥') + '</div>'
+    + '<div style="font-size:20px;font-weight:800;margin-top:4px">' + escapeHtml(g.name || '') + '</div>'
+    + (g.description ? '<div style="font-size:13px;opacity:.9;margin-top:4px">' + escapeHtml(g.description) + '</div>' : '')
+    + '<div style="font-size:12px;opacity:.85;margin-top:8px">👤 ' + (g.memberCount || 0) + ' สมาชิก · 📝 ' + (g.postCount || 0) + ' โพสต์</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;margin-top:12px">'
+    + '<button onclick="toggleJoinGroup(\'' + gid + '\')" style="flex:1;background:' + (joined ? '#eaf3ff' : 'var(--primary)') + ';color:' + (joined ? 'var(--primary)' : '#fff') + ';border:1px solid var(--primary);border-radius:10px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' + (joined ? '✓ เข้าร่วมแล้ว (แตะเพื่อออก)' : '+ เข้าร่วมกลุ่ม') + '</button>'
+    + (joined ? '<button onclick="openPostModalForGroup(\'' + gid + '\')" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✏️ โพสต์ในกลุ่ม</button>' : '')
+    + '</div>';
+}
+
+async function loadGroupFeed(gid) {
+  var container = document.getElementById('group-feed');
+  if (!container || !db) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
+  try {
+    var snap = await tdb().collection('posts').where('groupId', '==', gid).limit(50).get();
+    var docs = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
+    docs = docs.filter(function(d){ return d.data.tenantId === tenantId(); });
+    docs.sort(function(a, b){
+      var ta = (a.data.createdAt && a.data.createdAt.seconds) || 0;
+      var tb = (b.data.createdAt && b.data.createdAt.seconds) || 0;
+      return tb - ta;
+    });
+    if (!docs.length) {
+      container.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">ยังไม่มีโพสต์ในกลุ่มนี้</div><div style="font-size:13px">เข้าร่วมแล้วเป็นคนแรกที่เริ่มบทสนทนา</div></div>';
+      return;
+    }
+    container.innerHTML = docs.map(function(d, i){ return renderPost(d.id, d.data, i); }).join('');
+    populateRelatedProducts(docs);
+    var ids = docs.map(function(d){ return d.id; });
+    hydrateMyReactions(ids);
+    subscribePostStats(ids);
+  } catch (e) {
+    console.error('loadGroupFeed:', e);
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">โหลดโพสต์ไม่สำเร็จ</div>';
+  }
+}
+
+async function toggleJoinGroup(gid) {
+  if (!requireLogin()) return;
+  var mref = tdb().collection('groups').doc(gid).collection('members').doc(currentUser.uid);
+  var uref = tdb().collection('users').doc(currentUser.uid);
+  var joined = isInGroup(gid);
+  try {
+    if (joined) {
+      await mref.delete();
+      await uref.update({ groups: firebase.firestore.FieldValue.arrayRemove(gid) });
+      currentUser.groups = myGroups().filter(function(x){ return x !== gid; });
+    } else {
+      await mref.set({ joinedAt: firebase.firestore.FieldValue.serverTimestamp(), displayName: currentUser.displayName || '', photo: currentUser.photoUrl || '' });
+      await uref.update({ groups: firebase.firestore.FieldValue.arrayUnion(gid) });
+      currentUser.groups = myGroups().concat([gid]);
+    }
+    // memberCount แก้ฝั่ง server (function) — optimistic ปรับให้เห็นทันที
+    var g = __groups.find(function(x){ return x.id === gid; });
+    if (g) g.data.memberCount = Math.max(0, (g.data.memberCount || 0) + (joined ? -1 : 1));
+    if (__currentGroup === gid && g) renderGroupHeader(gid, g.data);
+    loadCommunityGroups();
+  } catch (e) { alert('ไม่สำเร็จ: ' + e.message); }
+}
+
+async function populateGroupSelect(presetGid) {
+  var sel = document.getElementById('modal-group');
+  var wrap = document.getElementById('modal-group-wrap');
+  if (!sel || !wrap) return;
+  var f = (APP_CONFIG && APP_CONFIG.features) || {};
+  if (f.communityGroups === false) { wrap.style.display = 'none'; return; }
+  if (!__groups.length) {
+    try { var snap = await tdb().collection('groups').orderBy('order').get(); __groups = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; }); } catch (e) {}
+  }
+  if (!__groups.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  sel.innerHTML = '<option value="">— ฟีดทั่วไป (ไม่ลงกลุ่ม) —</option>'
+    + __groups.map(function(g){ return '<option value="' + g.id + '">' + escapeHtml((g.data.emoji || '👥') + ' ' + (g.data.name || '')) + '</option>'; }).join('');
+  sel.value = presetGid || '';
+}
+
+function openPostModalForGroup(gid) {
+  if (!requireLogin()) return;
+  populateGroupSelect(gid);
+  document.getElementById('postModal').classList.add('open');
+}
+
 // ── Share ────────────────────────────────────────────────
 async function sharePost() {
   var url = (location && location.origin) || 'https://phuansuan.web.app';
@@ -2121,7 +2287,11 @@ function switchScreen(name){
   const nav=document.getElementById('nav-'+name);
   if(nav) nav.classList.add('active');
   if(name === 'profile'){ renderProfileInfo(); loadMyPosts(); }
-  if(name === 'community'){ loadLeaderboard(); }
+  if(name === 'community'){
+    const f = (APP_CONFIG && APP_CONFIG.features) || {};
+    if (f.communityGroups !== false) loadCommunityGroups();
+    if (f.leaderboard !== false) loadLeaderboard();
+  }
 }
 function switchFeedTab(el){
   document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
@@ -2135,6 +2305,7 @@ function toggleComments(id){
 }
 function openPostModal(){
   if (!requireLogin()) return; // guard-post
+  populateGroupSelect(__currentGroup || '');
   document.getElementById('postModal').classList.add('open');
 }
 function closeModal(){
@@ -2192,6 +2363,7 @@ async function submitPost() {
   const crop   = document.getElementById('modal-crop')?.value;
   const typeEl = document.querySelector('.type-chip.sel');
   const type   = typeEl ? typeEl.textContent.trim() : 'โพส';
+  const groupId = document.getElementById('modal-group')?.value || null;
   const imgFile = document.getElementById('post-img-input')?.files[0];
 
   if (!text && !imgFile) { alert('กรุณาเขียนข้อความหรือเพิ่มรูปภาพ'); return; }
@@ -2219,6 +2391,7 @@ async function submitPost() {
         text,
         type,
         crop:        crop || '',
+        groupId:     groupId || null,
         imageUrl:    imageUrl || null,
         authorId:    currentUser.uid,
         authorName:  currentUser.displayName || 'ผู้ใช้',
@@ -2240,7 +2413,8 @@ async function submitPost() {
     closeModal();
     resetPostModal();
     alert(`โพสสำเร็จ! 🎉\n+${APP_CONFIG.points[imageUrl?'perPostWithImg':'perPost']} แต้มเข้าบัญชีแล้ว`);
-    loadFeed(); // รีโหลด feed
+    if (groupId && __currentGroup === groupId) loadGroupFeed(groupId); // อยู่ในกลุ่ม → รีโหลดฟีดกลุ่ม
+    loadFeed(); // รีโหลด feed หลัก
 
   } catch (err) {
     console.error('submitPost error:', err);
@@ -2254,6 +2428,7 @@ async function submitPost() {
 function resetPostModal() {
   document.getElementById('modal-text').value = '';
   document.getElementById('modal-crop').value = '';
+  var _mg = document.getElementById('modal-group'); if (_mg) _mg.value = '';
   document.getElementById('post-img-input').value = '';
   document.getElementById('post-img-preview').style.display = 'none';
   document.getElementById('photo-area-ico').style.display = 'block';
@@ -2368,6 +2543,17 @@ function applyFeatureFlags() {
   show('#alert-banner', f.proximityAlert !== false);
   document.querySelectorAll('[onclick="openAiDoctor()"]').forEach(el => { el.style.display = f.aiDiagnosis !== false ? '' : 'none'; });
   document.querySelectorAll('.commerce-entry').forEach(el => { el.style.display = f.commerce !== false ? '' : 'none'; });
+  // ── ชุมชน: กลุ่ม + leaderboard (คุมต่อแบรนด์) ──
+  const grpOn = f.communityGroups !== false;
+  const lbOn  = f.leaderboard    !== false;
+  const grpSec = document.getElementById('community-groups-section');
+  const lbSec  = document.getElementById('community-lb-section');
+  if (grpSec) grpSec.style.display = grpOn ? '' : 'none';
+  if (lbSec)  lbSec.style.display  = lbOn  ? '' : 'none';
+  const navCom = document.getElementById('nav-community');
+  if (navCom) navCom.style.display = (grpOn || lbOn) ? '' : 'none';
+  const mgWrap = document.getElementById('modal-group-wrap');
+  if (mgWrap && !grpOn) mgWrap.style.display = 'none';
 }
 function initFeatureFlags() {
   applyFeatureFlags();

@@ -171,6 +171,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('content',this)"><span class="si">📢</span> Content & ข้อความ</div>
     <div class="sb-item" onclick="showScreen('features',this)"><span class="si">⚙️</span> Features Toggle</div>
     <div class="sb-item" onclick="showScreen('points',this)"><span class="si">🏅</span> แต้ม & Tier</div>
+    <div class="sb-item" onclick="showScreen('groups',this)"><span class="si">👥</span> กลุ่มชุมชน</div>
     <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน</div>
     <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
     <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
@@ -460,6 +461,41 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<!-- COMMUNITY GROUPS -->
+<div class="screen" id="screen-groups">
+  <div class="page-header"><div class="page-title">👥 กลุ่มชุมชน</div><div class="page-sub">สร้างห้อง/หัวข้อชุมชนให้สมาชิกเข้าร่วม · เปิด/ปิดฟีเจอร์ที่เมนู Features Toggle</div></div>
+  <div class="card"><div class="card-title">➕ สร้างกลุ่มใหม่</div>
+    <div class="form-grid">
+      <div class="fg"><label>ชื่อกลุ่ม</label><input id="new-grp-name" placeholder="เช่น คนรักมะม่วง"></div>
+      <div class="fg"><label>อีโมจิ</label><input id="new-grp-emoji" placeholder="🥭" maxlength="4"></div>
+      <div class="fg"><label>สี (แถบหัวกลุ่ม)</label><input type="color" id="new-grp-color" value="#42b883"></div>
+      <div class="fg"><label>ลำดับการแสดง (น้อย = บนสุด)</label><input type="number" id="new-grp-order" placeholder="0"></div>
+      <div class="fg" style="grid-column:1/-1"><label>คำอธิบายกลุ่ม</label><textarea id="new-grp-desc" rows="2" placeholder="กลุ่มนี้เกี่ยวกับอะไร"></textarea></div>
+    </div>
+    <div class="save-row"><button class="btn btn-primary" onclick="addGroup()">➕ สร้างกลุ่ม</button></div>
+  </div>
+  <div class="card"><div class="card-title">📋 กลุ่มทั้งหมด</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>กลุ่ม</th><th>สมาชิก</th><th>โพสต์</th><th>Action</th></tr></thead>
+      <tbody id="groups-table"><tr><td colspan="4" class="empty-state">กำลังโหลด...</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<div id="grp-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeGrpEdit()">
+  <div style="background:var(--card);border-radius:14px;max-width:420px;width:92%;max-height:86vh;overflow:auto;padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:17px;font-weight:800">✏️ แก้ไขกลุ่ม</div><div onclick="closeGrpEdit()" style="cursor:pointer;font-size:20px;color:#888">✕</div></div>
+    <div class="form-grid">
+      <div class="fg"><label>ชื่อกลุ่ม</label><input id="grp-e-name"></div>
+      <div class="fg"><label>อีโมจิ</label><input id="grp-e-emoji" maxlength="4"></div>
+      <div class="fg"><label>สี</label><input type="color" id="grp-e-color"></div>
+      <div class="fg"><label>ลำดับ</label><input type="number" id="grp-e-order"></div>
+      <div class="fg" style="grid-column:1/-1"><label>คำอธิบาย</label><textarea id="grp-e-desc" rows="2"></textarea></div>
+    </div>
+    <div class="save-row"><button class="btn btn-ghost" onclick="closeGrpEdit()">ยกเลิก</button><button class="btn btn-primary" onclick="saveGrpEdit()">💾 บันทึก</button></div>
+  </div>
+</div>
+
 <!-- FEATURES -->
 <div class="screen" id="screen-features">
   <div class="page-header"><div class="page-title">⚙️ Features Toggle</div><div class="page-sub">เปิด/ปิดฟีเจอร์ต่างๆ ในแอป</div></div>
@@ -470,7 +506,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="toggle-row"><div><div class="toggle-label">🛒 ร้านค้า (Commerce)</div><div class="toggle-sub">เปิด-ปิดระบบร้านค้า + ตะกร้า</div></div><label class="toggle"><input type="checkbox" id="feat-product" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">📖 Stories</div><div class="toggle-sub">Stories bar บนสุด Feed</div></div><label class="toggle"><input type="checkbox" id="feat-stories" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🏅 Point System</div><div class="toggle-sub">ระบบแต้มสะสม</div></div><label class="toggle"><input type="checkbox" id="feat-points" checked><span class="toggle-slider"></span></label></div>
-      <div class="toggle-row"><div><div class="toggle-label">👥 Community Groups</div><div class="toggle-sub">กลุ่ม/ชุมชน</div></div><label class="toggle"><input type="checkbox" id="feat-community" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">👥 Community Groups</div><div class="toggle-sub">กลุ่มชุมชน (มีปุ่มเข้าร่วม) — จัดการกลุ่มที่เมนู "กลุ่มชุมชน"</div></div><label class="toggle"><input type="checkbox" id="feat-community" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🏆 Leaderboard</div><div class="toggle-sub">ตารางอันดับ (ปราชญ์) ในแท็บชุมชน</div></div><label class="toggle"><input type="checkbox" id="feat-leaderboard" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🌤️ Weather Alert</div><div class="toggle-sub">แจ้งเตือนสภาพอากาศ</div></div><label class="toggle"><input type="checkbox" id="feat-weather"><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🔔 Notification: โพสใกล้บ้าน</div></div><label class="toggle"><input type="checkbox" id="notif-nearby" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🔔 Notification: โรคระบาด</div></div><label class="toggle"><input type="checkbox" id="notif-disease" checked><span class="toggle-slider"></span></label></div>
@@ -748,7 +785,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
+  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -1107,13 +1144,13 @@ async function loadFeatures() {
     const doc = await aDb().collection('settings').doc('features').get();
     if (!doc.exists) return;
     const d = doc.data();
-    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
+    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', leaderboard:'feat-leaderboard', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
     Object.entries(map).forEach(([key, id]) => { if (document.getElementById(id)) document.getElementById(id).checked = d[key] !== false; });
   } catch(e) {}
 }
 async function saveFeatures() {
   try {
-    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
+    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', leaderboard:'feat-leaderboard', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
     const data = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
     Object.entries(map).forEach(([key, id]) => { data[key] = document.getElementById(id)?.checked ?? true; });
     await aDb().collection('settings').doc('features').set(data, { merge: true });
@@ -1271,6 +1308,84 @@ async function loadProducts() {
           <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editProductB('${doc.id}')">✏️ แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteProduct('${doc.id}')">🗑️ ลบ</button></td></tr>`;
         }).join('');
   } catch(e) { document.getElementById('products-table').innerHTML = `<tr><td colspan="4" class="empty-state">Error: ${e.message}</td></tr>`; }
+}
+/* ===== Community Groups ===== */
+async function loadGroups() {
+  const tb = document.getElementById('groups-table');
+  if (!tb) return;
+  try {
+    const snap = await aDb().collection('groups').orderBy('order').get();
+    tb.innerHTML = snap.empty
+      ? '<tr><td colspan="4" class="empty-state">ยังไม่มีกลุ่ม — สร้างกลุ่มแรกด้านบน</td></tr>'
+      : snap.docs.map(doc => {
+          const g = doc.data();
+          return `<tr><td style="font-weight:700">${escapeHtml(g.emoji||'👥')} ${escapeHtml(g.name||'—')}</td><td>${g.memberCount||0}</td><td>${g.postCount||0}</td>
+          <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editGroup('${doc.id}')">✏️ แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteGroup('${doc.id}')">🗑️ ลบ</button></td></tr>`;
+        }).join('');
+  } catch(e) { tb.innerHTML = `<tr><td colspan="4" class="empty-state">Error: ${e.message}</td></tr>`; }
+}
+async function addGroup() {
+  const name = document.getElementById('new-grp-name').value.trim();
+  if (!name) { toast('❌ กรอกชื่อกลุ่ม','error'); return; }
+  try {
+    await aDb().collection('groups').add({
+      name,
+      emoji: document.getElementById('new-grp-emoji').value.trim() || '👥',
+      color: document.getElementById('new-grp-color').value || '#42b883',
+      order: +document.getElementById('new-grp-order').value || 0,
+      description: document.getElementById('new-grp-desc').value.trim(),
+      memberCount: 0, postCount: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('✅ สร้างกลุ่มแล้ว','success');
+    document.getElementById('new-grp-name').value = '';
+    document.getElementById('new-grp-emoji').value = '';
+    document.getElementById('new-grp-desc').value = '';
+    document.getElementById('new-grp-order').value = '';
+    loadGroups();
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+let _grpEditId = null;
+async function editGroup(id) {
+  try {
+    const doc = await aDb().collection('groups').doc(id).get();
+    if (!doc.exists) { toast('❌ ไม่พบกลุ่ม','error'); return; }
+    const g = doc.data();
+    _grpEditId = id;
+    document.getElementById('grp-e-name').value = g.name || '';
+    document.getElementById('grp-e-emoji').value = g.emoji || '';
+    document.getElementById('grp-e-color').value = g.color || '#42b883';
+    document.getElementById('grp-e-order').value = g.order || 0;
+    document.getElementById('grp-e-desc').value = g.description || '';
+    document.getElementById('grp-modal').style.display = 'flex';
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+function closeGrpEdit() { document.getElementById('grp-modal').style.display = 'none'; _grpEditId = null; }
+async function saveGrpEdit() {
+  if (!_grpEditId) return;
+  const name = document.getElementById('grp-e-name').value.trim();
+  if (!name) { toast('❌ กรอกชื่อกลุ่ม','error'); return; }
+  try {
+    await aDb().collection('groups').doc(_grpEditId).update({
+      name,
+      emoji: document.getElementById('grp-e-emoji').value.trim() || '👥',
+      color: document.getElementById('grp-e-color').value || '#42b883',
+      order: +document.getElementById('grp-e-order').value || 0,
+      description: document.getElementById('grp-e-desc').value.trim(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('✅ บันทึกแล้ว','success');
+    closeGrpEdit();
+    loadGroups();
+  } catch(e) { toast('❌ '+e.message,'error'); }
+}
+async function deleteGroup(id) {
+  if (!confirm('ลบกลุ่มนี้? (โพสต์ในกลุ่มจะยังอยู่ แต่ไม่ถูกจัดกลุ่ม)')) return;
+  try {
+    await aDb().collection('groups').doc(id).delete();
+    toast('🗑️ ลบกลุ่มแล้ว','success');
+    loadGroups();
+  } catch(e) { toast('❌ '+e.message,'error'); }
 }
 /* ===== CSV Import ===== */
 var __csvRows = [], __csvHeaders = [];
