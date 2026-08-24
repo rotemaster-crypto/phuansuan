@@ -1045,7 +1045,7 @@ async function signInAnonTenant() {
 
 function loginWithLine() {
   if (typeof liff === 'undefined') {
-    alert('ไม่พบ LIFF SDK');
+    toast('ไม่พบ LIFF SDK');
     return;
   }
   liff.login();
@@ -1077,7 +1077,7 @@ async function _oauthLogin(provider) {
     if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
       try { await firebase.auth().signInWithRedirect(provider); return; } catch (e2) { e = e2; }
     }
-    alert('เข้าสู่ระบบไม่สำเร็จ: ' + ((e && e.code) || (e && e.message) || 'unknown'));
+    toast('เข้าสู่ระบบไม่สำเร็จ: ' + ((e && e.code) || (e && e.message) || 'unknown'));
     console.error('oauth login error:', e);
   }
 }
@@ -1266,7 +1266,7 @@ let aiSelectedFile = null;
 
 function openAiDoctor() {
   if (!requireLogin()) return; // guard-ai
-  if (!currentUser) { alert('กรุณาเข้าสู่ระบบก่อนครับ'); return; }
+  if (!currentUser) { toast('กรุณาเข้าสู่ระบบก่อนครับ'); return; }
   // เติม dropdown พืช
   const sel = document.getElementById('ai-crop');
   if (sel && sel.options.length === 0 && typeof APP_CONFIG !== 'undefined') {
@@ -1313,7 +1313,7 @@ function aiPreview(input) {
 }
 
 async function runAiDoctor() {
-  if (!aiSelectedFile) { alert('เลือกรูปก่อนนะครับ 📷'); return; }
+  if (!aiSelectedFile) { toast('เลือกรูปก่อนนะครับ 📷'); return; }
   if (!currentUser) return;
   document.getElementById('ai-input-area').style.display = 'none';
   document.getElementById('ai-loading').style.display = 'block';
@@ -1331,7 +1331,7 @@ async function runAiDoctor() {
     document.getElementById('ai-loading').style.display = 'none';
     document.getElementById('ai-input-area').style.display = 'block';
     const msg = (err && err.message) ? err.message : 'เกิดข้อผิดพลาด';
-    alert('วิเคราะห์ไม่สำเร็จ: ' + msg);
+    toast('วิเคราะห์ไม่สำเร็จ: ' + msg);
   }
 }
 
@@ -1507,7 +1507,7 @@ function showInfoSheet(title, html){
   ov.style.display = 'flex';
 }
 function openMyData(){
-  if (!currentUser || currentUser.isGuest){ alert('\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e14\u0e39\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13'); return; }
+  if (!currentUser || currentUser.isGuest){ toast('\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e14\u0e39\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13'); return; }
   var u = currentUser, c = u.consent || {};
   var rows = [
     ['\u0e0a\u0e37\u0e48\u0e2d', u.displayName || '-'],
@@ -1526,20 +1526,20 @@ function openMyData(){
   showInfoSheet('\ud83d\udccb \u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19', body);
 }
 async function requestDeletion(){
-  if (!currentUser || currentUser.isGuest || !db){ alert('\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e01\u0e48\u0e2d\u0e19\u0e04\u0e23\u0e31\u0e1a'); return; }
-  if (!confirm('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13?\n\n\u0e17\u0e35\u0e21\u0e07\u0e32\u0e19\u0e08\u0e30\u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a\u0e41\u0e25\u0e30\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23\u0e25\u0e1a \u0e41\u0e25\u0e30\u0e04\u0e38\u0e13\u0e08\u0e30\u0e16\u0e39\u0e01\u0e2d\u0e2d\u0e01\u0e08\u0e32\u0e01\u0e23\u0e30\u0e1a\u0e1a\u0e2b\u0e25\u0e31\u0e07\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d')) return;
+  if (!currentUser || currentUser.isGuest || !db){ toast('\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e01\u0e48\u0e2d\u0e19\u0e04\u0e23\u0e31\u0e1a'); return; }
+  if (!(await confirmModal('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e25\u0e1a\u0e1a\u0e31\u0e0d\u0e0a\u0e35\u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13?\n\n\u0e17\u0e35\u0e21\u0e07\u0e32\u0e19\u0e08\u0e30\u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a\u0e41\u0e25\u0e30\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23\u0e25\u0e1a \u0e41\u0e25\u0e30\u0e04\u0e38\u0e13\u0e08\u0e30\u0e16\u0e39\u0e01\u0e2d\u0e2d\u0e01\u0e08\u0e32\u0e01\u0e23\u0e30\u0e1a\u0e1a\u0e2b\u0e25\u0e31\u0e07\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d'))) return;
   try {
     await tdb().collection('users').doc(currentUser.uid).update({
       deletionRequested: { status: 'pending', at: firebase.firestore.FieldValue.serverTimestamp() }
     });
-    alert('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e41\u0e25\u0e49\u0e27 \u0e17\u0e35\u0e21\u0e07\u0e32\u0e19\u0e08\u0e30\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23\u0e25\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e02\u0e2d\u0e1a\u0e04\u0e38\u0e13\u0e04\u0e23\u0e31\u0e1a \ud83d\ude4f');
+    toast('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e41\u0e25\u0e49\u0e27 \u0e17\u0e35\u0e21\u0e07\u0e32\u0e19\u0e08\u0e30\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23\u0e25\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 \u0e02\u0e2d\u0e1a\u0e04\u0e38\u0e13\u0e04\u0e23\u0e31\u0e1a \ud83d\ude4f');
     try { if (typeof liff !== 'undefined' && liff.logout && liff.isLoggedIn && liff.isLoggedIn()) liff.logout(); } catch(e){}
     try { await firebase.auth().signOut(); } catch(e){}
     location.reload();
-  } catch(e){ alert('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08: ' + e.message); }
+  } catch(e){ toast('\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e02\u0e2d\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08: ' + e.message); }
 }
 async function doLogout() {
-  if (!confirm('ออกจากระบบ?')) return;
+  if (!(await confirmModal('ออกจากระบบ?'))) return;
   try { if (typeof liff !== 'undefined' && liff.logout && liff.isLoggedIn && liff.isLoggedIn()) liff.logout(); } catch (e) {}
   try { await firebase.auth().signOut(); } catch (e) {}
   location.reload();
@@ -1708,7 +1708,7 @@ async function toggleJoinGroup(gid) {
     if (g) g.data.memberCount = Math.max(0, (g.data.memberCount || 0) + (joined ? -1 : 1));
     if (__currentGroup === gid && g) renderGroupHeader(gid, g.data);
     loadCommunityGroups();
-  } catch (e) { alert('ไม่สำเร็จ: ' + e.message); }
+  } catch (e) { toast('ไม่สำเร็จ: ' + e.message); }
 }
 
 async function populateGroupSelect(presetGid) {
@@ -1738,7 +1738,7 @@ async function sharePost() {
   var url = (location && location.origin) || 'https://phuansuan.web.app';
   var text = 'มาเข้าชุมชนเพื่อนสวน — แชร์ปัญหาและความรู้การเกษตร 🌿';
   try { if (navigator.share) { await navigator.share({ title: 'เพื่อนสวน', text: text, url: url }); return; } } catch (e) { return; }
-  try { await navigator.clipboard.writeText(url); alert('คัดลอกลิงก์แล้ว 📋'); }
+  try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว 📋'); }
   catch (e) { try { prompt('คัดลอกลิงก์นี้:', url); } catch (e2) {} }
 }
 
@@ -1832,8 +1832,8 @@ async function saveBranding() {
       tierLabels: b.tierLabels, navLabels: b.navLabels,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-    alert('บันทึกแบรนด์แล้ว ✓');
-  } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
+    toast('บันทึกแบรนด์แล้ว ✓');
+  } catch (e) { toast('บันทึกไม่ได้: ' + e.message); }
 }
 
 // ── Reactions (หลายอีโมจิ) ───────────────────────────────
@@ -1971,7 +1971,7 @@ async function saveProfileEdit() {
     renderProfileInfo();
     document.getElementById('editProfileModal').classList.remove('open');
   } catch (err) {
-    alert('บันทึกไม่สำเร็จ: ' + err.message);
+    toast('บันทึกไม่สำเร็จ: ' + err.message);
   } finally {
     btn.disabled = false; btn.textContent = '💾 บันทึก';
   }
@@ -2084,9 +2084,9 @@ function requestGps() {
 
 async function saveOnboarding() {
   if (!currentUser || !db) return;
-  if (obSelectedCrops.length === 0) { alert('เลือกพืชอย่างน้อย 1 อย่างครับ 🌱'); return; }
+  if (obSelectedCrops.length === 0) { toast('เลือกพืชอย่างน้อย 1 อย่างครับ 🌱'); return; }
   var _cc = document.getElementById('ob-consent-chk');
-  if (_cc && !_cc.checked) { alert('กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนครับ'); return; }
+  if (_cc && !_cc.checked) { toast('กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนครับ'); return; }
   const btn = document.getElementById('ob-save-btn');
   btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
   try {
@@ -2097,7 +2097,7 @@ async function saveOnboarding() {
     document.getElementById('onboardModal').classList.remove('open');
     renderMyCrops();
   } catch (err) {
-    alert('บันทึกไม่สำเร็จ: ' + err.message);
+    toast('บันทึกไม่สำเร็จ: ' + err.message);
   } finally {
     btn.disabled = false; btn.textContent = '✅ เริ่มใช้งาน';
   }
@@ -2376,7 +2376,7 @@ function compressImage(file, maxSize, quality) {
 // ── Submit Post ───────────────────────────────────────────
 async function submitPost() {
   if (!requireLogin()) return; // guard-post2
-  if (!currentUser) { alert('กรุณา Login ก่อนโพส'); return; }
+  if (!currentUser) { toast('กรุณา Login ก่อนโพส'); return; }
 
   const text   = document.getElementById('modal-text')?.value?.trim();
   const crop   = document.getElementById('modal-crop')?.value;
@@ -2385,7 +2385,7 @@ async function submitPost() {
   const groupId = document.getElementById('modal-group')?.value || null;
   const imgFile = document.getElementById('post-img-input')?.files[0];
 
-  if (!text && !imgFile) { alert('กรุณาเขียนข้อความหรือเพิ่มรูปภาพ'); return; }
+  if (!text && !imgFile) { toast('กรุณาเขียนข้อความหรือเพิ่มรูปภาพ'); return; }
 
   // UI: loading state
   document.getElementById('submit-btn').disabled = true;
@@ -2431,13 +2431,13 @@ async function submitPost() {
 
     closeModal();
     resetPostModal();
-    alert(`โพสสำเร็จ! 🎉\n+${APP_CONFIG.points[imageUrl?'perPostWithImg':'perPost']} แต้มเข้าบัญชีแล้ว`);
+    toast(`โพสสำเร็จ! 🎉\n+${APP_CONFIG.points[imageUrl?'perPostWithImg':'perPost']} แต้มเข้าบัญชีแล้ว`);
     if (groupId && __currentGroup === groupId) loadGroupFeed(groupId); // อยู่ในกลุ่ม → รีโหลดฟีดกลุ่ม
     loadFeed(); // รีโหลด feed หลัก
 
   } catch (err) {
     console.error('submitPost error:', err);
-    alert('เกิดข้อผิดพลาด: ' + err.message);
+    toast('เกิดข้อผิดพลาด: ' + err.message);
   } finally {
     document.getElementById('submit-btn').disabled = false;
     document.getElementById('post-uploading').style.display = 'none';
@@ -2739,7 +2739,7 @@ async function setFeature(key, val) {
   applyFeatureFlags();
   try {
     await tdb().collection('settings').doc('features').set({ [key]: val }, { merge: true });
-  } catch (e) { alert('บันทึกไม่ได้: ' + e.message); }
+  } catch (e) { toast('บันทึกไม่ได้: ' + e.message); }
 }
 
 function renderPost(id, p, i) {
@@ -2871,11 +2871,11 @@ async function addComment(postId) {
 }
 
 async function deletePost(id) {
-  if (!confirm('ลบโพสนี้?')) return;
+  if (!(await confirmModal('ลบโพสนี้?'))) return;
   try {
     await tdb().collection('posts').doc(id).delete();
     document.getElementById('post-' + id)?.remove();
-  } catch(e) { alert('ลบไม่ได้: ' + e.message); }
+  } catch(e) { toast('ลบไม่ได้: ' + e.message); }
 }
 
 async function togglePin(id, current) {
@@ -2883,7 +2883,7 @@ async function togglePin(id, current) {
   try {
     await tdb().collection('posts').doc(id).update({ pinned: !current });
     loadFeed('feed');
-  } catch(e) { alert('ปักหมุดไม่ได้: ' + e.message); }
+  } catch(e) { toast('ปักหมุดไม่ได้: ' + e.message); }
 }
 
 // Upload Cover Photo
@@ -2901,7 +2901,7 @@ async function uploadCoverPhoto(input) {
     currentUser.coverUrl = url;
     const cv = document.getElementById('prof-cover');
     if (cv) cv.style.backgroundImage = 'url(' + url + ')';
-  } catch (e) { alert('อัพโหลดไม่สำเร็จ: ' + e.message); }
+  } catch (e) { toast('อัพโหลดไม่สำเร็จ: ' + e.message); }
   if (btn) { btn.textContent = '📷 แก้ไขรูปหน้าปก'; btn.disabled = false; }
 }
 
@@ -3193,6 +3193,45 @@ function toastCart(msg){
   _toastT = setTimeout(function(){ t.style.opacity = '0'; }, 1800);
 }
 
+// ── Toast + Confirm (แทน alert/confirm — ไม่บล็อกหน้าจอ) ──
+var _gToastT;
+function toast(msg, type){
+  var t = document.getElementById('app-toast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'app-toast';
+    t.style.cssText = 'position:fixed;bottom:130px;left:50%;transform:translateX(-50%);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;z-index:9000;opacity:0;transition:opacity .2s;max-width:90%;text-align:center;white-space:pre-line;box-shadow:0 4px 16px rgba(0,0,0,.25)';
+    document.body.appendChild(t);
+  }
+  var s = String(msg == null ? '' : msg);
+  if (!type){
+    if (/✅|สำเร็จ|เรียบร้อย|✓|📋/.test(s)) type = 'success';
+    else if (/❌|⚠️|ไม่สำเร็จ|ไม่ได้|ผิดพลาด|กรุณา|ไม่ถูกต้อง|ยังว่าง|ไม่พบ|ยังไม่พร้อม/.test(s)) type = 'error';
+  }
+  t.style.background = type === 'success' ? '#1f8a4c' : type === 'error' ? '#c0392b' : '#1c1e21';
+  t.textContent = s;
+  t.style.opacity = '1';
+  clearTimeout(_gToastT);
+  _gToastT = setTimeout(function(){ t.style.opacity = '0'; }, type === 'error' ? 3400 : 2400);
+}
+function confirmModal(msg){
+  return new Promise(function(resolve){
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:14px;max-width:340px;width:100%;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.3)';
+    box.innerHTML = '<div id="_cm-msg" style="font-size:15px;color:#1c1e21;line-height:1.5;margin-bottom:18px;white-space:pre-line"></div>'
+      + '<div style="display:flex;gap:10px"><button id="_cm-no" style="flex:1;background:#e4e6eb;color:#1c1e21;border:none;border-radius:9px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>'
+      + '<button id="_cm-yes" style="flex:1;background:var(--primary,#1877f2);color:#fff;border:none;border-radius:9px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">ยืนยัน</button></div>';
+    box.querySelector('#_cm-msg').textContent = String(msg == null ? '' : msg);
+    ov.appendChild(box); document.body.appendChild(ov);
+    function done(v){ try { document.body.removeChild(ov); } catch(e){} resolve(v); }
+    box.querySelector('#_cm-yes').onclick = function(){ done(true); };
+    box.querySelector('#_cm-no').onclick = function(){ done(false); };
+    ov.onclick = function(e){ if (e.target === ov) done(false); };
+  });
+}
+
 (function(){
   if (typeof window.switchScreen === 'function'){
     const _orig = window.switchScreen;
@@ -3266,8 +3305,8 @@ function prefillAddress(){
 
 function goCheckout(){
   if (!requireLogin()) return; // guard-checkout
-  if (!cart.length){ alert('ตะกร้ายังว่างอยู่ครับ'); return; }
-  if (!currentUser){ alert('กรุณาเข้าสู่ระบบก่อนสั่งซื้อครับ'); return; }
+  if (!cart.length){ toast('ตะกร้ายังว่างอยู่ครับ'); return; }
+  if (!currentUser){ toast('กรุณาเข้าสู่ระบบก่อนสั่งซื้อครับ'); return; }
   fillProvinces();
   prefillAddress();
   renderCheckoutSummary();
@@ -3289,11 +3328,11 @@ async function submitCheckout(){
   const v = function(id){ const e=document.getElementById(id); return e?e.value.trim():''; };
   const name=v('co-name'), phone=v('co-phone'), addr=v('co-addr'), province=v('co-province'),
         district=v('co-district'), sub=v('co-subdistrict'), postcode=v('co-postcode'), note=v('co-note');
-  if (!name || !phone || !addr || !province){ alert('กรุณากรอก ชื่อผู้รับ / เบอร์โทร / ที่อยู่ / จังหวัด ให้ครบครับ'); return; }
-  if (!/^[0-9]{9,10}$/.test(ppSan(phone))){ alert('เบอร์โทรไม่ถูกต้องครับ'); return; }
+  if (!name || !phone || !addr || !province){ toast('กรุณากรอก ชื่อผู้รับ / เบอร์โทร / ที่อยู่ / จังหวัด ให้ครบครับ'); return; }
+  if (!/^[0-9]{9,10}$/.test(ppSan(phone))){ toast('เบอร์โทรไม่ถูกต้องครับ'); return; }
   const cfg = commerceCfg();
-  if (!cfg.promptpayId || cfg.promptpayId === '0000000000'){ alert('⚠️ ร้านยังไม่ได้ตั้งค่าพร้อมเพย์ (promptpayId ใน config.js) — แจ้งแอดมินครับ'); return; }
-  if (!db || !currentUser){ alert('ระบบยังไม่พร้อม ลองใหม่อีกครั้งครับ'); return; }
+  if (!cfg.promptpayId || cfg.promptpayId === '0000000000'){ toast('⚠️ ร้านยังไม่ได้ตั้งค่าพร้อมเพย์ (promptpayId ใน config.js) — แจ้งแอดมินครับ'); return; }
+  if (!db || !currentUser){ toast('ระบบยังไม่พร้อม ลองใหม่อีกครั้งครับ'); return; }
   const btn = document.getElementById('co-submit'); if(btn){ btn.disabled=true; btn.textContent='กำลังสร้างออเดอร์...'; }
   const shipping = { name:name, phone:phone, addressLine:addr, province:province, district:district, subdistrict:sub, postcode:postcode, note:note };
   const total = cartTotal();
@@ -3313,7 +3352,7 @@ async function submitCheckout(){
     pendingOrder = Object.assign({ id: ref.id }, order, { total: total });
     closeCheckout();
     openPayment(pendingOrder);
-  } catch(e){ alert('สร้างออเดอร์ไม่สำเร็จ: '+e.message); }
+  } catch(e){ toast('สร้างออเดอร์ไม่สำเร็จ: '+e.message); }
   if(btn){ btn.disabled=false; btn.textContent='ยืนยันสั่งซื้อ → ชำระเงิน'; }
 }
 
@@ -3356,7 +3395,7 @@ async function onSlipPicked(input){
     if(st) st.textContent = '';
     closePayment();
     const oid = pendingOrder.id; pendingOrder = null;
-    alert('✅ ส่งสลิปเรียบร้อย!\nออเดอร์ #'+oid.slice(-6).toUpperCase()+'\nร้านกำลังตรวจสอบการชำระเงิน จะอัปเดตสถานะให้ครับ');
+    toast('✅ ส่งสลิปเรียบร้อย!\nออเดอร์ #'+oid.slice(-6).toUpperCase()+'\nร้านกำลังตรวจสอบการชำระเงิน จะอัปเดตสถานะให้ครับ');
     openMyOrders();
   } catch(e){ if(st) st.textContent = 'อัปโหลดไม่สำเร็จ: '+e.message; }
   input.value = '';
@@ -3409,7 +3448,7 @@ async function resumePayment(orderId){
     pendingOrder = Object.assign({id:doc.id}, doc.data());
     closeMyOrders();
     openPayment(pendingOrder);
-  } catch(e){ alert(e.message); }
+  } catch(e){ toast(e.message); }
 }
 
 // ══════════════════════════════════════════════════════════

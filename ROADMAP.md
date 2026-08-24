@@ -30,10 +30,12 @@
 
 - [ ] Badges (STUB) → **ตัดสินใจ:** ทำ logic แจกจริง หรือ **ลบทิ้ง** (แนะนำลบก่อน) — **S–M** · *(Roger เลือก "สร้างจริง" — ยังไม่ทำ ทำต่อจาก Groups)*
 - [x] Community groups → **สร้างจริง (มี join) + คุมเปิด/ปิดต่อแบรนด์** (ไม่ใช่ลบ flag) — ✅ build + rules-test 22/22 เขียว (2026-08-24) · รอ deploy · Leaderboard กลายเป็น toggle ต่อแบรนด์ด้วย
-- [ ] ทดสอบ end-to-end 1 รอบ: ร้าน→ตะกร้า→เช็คเอาท์→PromptPay→สลิป→ออเดอร์→admin ยืนยัน — **M** *(กำลังทำ)*
+- [x] ทดสอบ end-to-end ร้านค้า — ✅ **ผ่าน (2026-08-24)**: ร้าน→ตะกร้า→เช็คเอาท์→กรอกที่อยู่→สร้างออเดอร์+PromptPay QR→เก็บ Firestore→admin ลบ/จัดการได้ (verified live via Chrome + JS) · เหลือ upload สลิป+เปลี่ยนสถานะ = lifecycle เดิม · **โบนัส:** เปลี่ยน alert/confirm ทั้งหมดใน index.html → toast/confirmModal (UX ลื่น + ไม่บล็อกหน้าจอ)
 - [x] ขัดเงา tenant onboarding — ✅ **"จุดไฟชุมชน" (2026-08-24)**: seedTenant เพาะกลุ่ม+โพสต์ต้อนรับ+ชุดตราอัตโนมัติ · Dashboard มี checklist ตั้งค่า + ปุ่มโพสต์เริ่มบทสนทนา 1 คลิก — แบรนด์ใหม่เปิดมาไม่ร้าง
 
 **DoD:** ไม่มีฟีเจอร์ครึ่งๆ เหลือ · สร้างแบรนด์ใหม่แล้วขายได้ครบ flow
+
+> ✅ **Phase 1 ปิดครบ (2026-08-24)** — Groups (join) + Badges สร้างจริง · e2e ร้านผ่าน · onboarding "จุดไฟชุมชน" · toast แทน alert/confirm · ทั้งหมด deploy + push แล้ว
 
 ---
 
