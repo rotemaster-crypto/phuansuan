@@ -232,6 +232,20 @@ function couponDiscountAmount(coupon, base) {
   if (coupon.discountType === "percent") return Math.min(b, Math.floor(b * Math.min(val, 100) / 100));
   return 0;
 }
+// คิดค่าจัดส่งจากการตั้งค่าร้าน (settings/commerce) — โหมด free/flat/weight + ส่งฟรีเมื่อซื้อครบ
+function computeShipping(cfg, weightKg, subtotal) {
+  cfg = cfg || {};
+  if (cfg.shipMode === "free") return 0;
+  const freeMin = Math.max(0, Math.floor(Number(cfg.freeOverMin) || 0));
+  if (cfg.freeOver === true && freeMin > 0 && subtotal >= freeMin) return 0;
+  if (cfg.shipMode === "weight") {
+    const base = Math.max(0, Math.floor(Number(cfg.weightBase) || 0));
+    const per = Math.max(0, Math.floor(Number(cfg.weightPerKg) || 0));
+    const extra = Math.max(0, Math.ceil(Number(weightKg) || 0) - 1);
+    return base + extra * per;
+  }
+  return Math.max(0, Math.floor(Number(cfg.flatFee) || 0));   // flat (ค่าเริ่มต้น)
+}
 
 // สร้างออเดอร์ทุกกรณีผ่านฟังก์ชันนี้ (server-authoritative):
 //  - ตรวจสินค้า active + สต็อกพอ · คิด subtotal จากราคาจริงใน DB (ไม่เชื่อ client)
@@ -257,19 +271,22 @@ exports.placeOrder = onCall(async (req) => {
   if (ids.length === 0) throw new HttpsError("invalid-argument", "สินค้าไม่ถูกต้อง");
 
   const tierPct = Math.min(90, Math.max(0, Math.floor(Number(cli.discountPct) || 0)));
-  const shippingFee = Math.max(0, Math.floor(Number(cli.shippingFee) || 0));
 
   const db = admin.firestore();
   const prodRefs = ids.map((id) => troot(tid).collection("products").doc(id));
   const couponRef = couponId ? troot(tid).collection("users").doc(uid).collection("coupons").doc(couponId) : null;
   const orderRef = troot(tid).collection("orders").doc();
 
+  // อ่านการตั้งค่าค่าจัดส่ง (นอก transaction — config เปลี่ยนน้อย) · ถ้าไม่มี doc = เชื่อค่าส่งจาก client (legacy config.js)
+  const commSnap = await troot(tid).collection("settings").doc("commerce").get();
+  const commCfg = commSnap.exists ? commSnap.data() : null;
+
   return db.runTransaction(async (tx) => {
     // อ่านทั้งหมดก่อน (transaction ต้อง read ก่อน write)
     const prodSnaps = await Promise.all(prodRefs.map((r) => tx.get(r)));
     const couponSnap = couponRef ? await tx.get(couponRef) : null;
 
-    let subtotal = 0;
+    let subtotal = 0, weight = 0;
     const items = [];
     const stockUpdates = [];
     prodSnaps.forEach((snap, i) => {
@@ -287,10 +304,15 @@ exports.placeOrder = onCall(async (req) => {
         }
       }
       const price = Math.max(0, Math.round(Number(p.price) || 0));
+      const wkg = Number(p.weightKg) || 1;
       subtotal += price * qty;
-      items.push({ id: id, name: nm, price: price, qty: qty, weightKg: Number(p.weightKg) || 1, category: p.category || "", image: p.image || "" });
+      weight += wkg * qty;
+      items.push({ id: id, name: nm, price: price, qty: qty, weightKg: wkg, category: p.category || "", image: p.image || "" });
       stockUpdates.push({ ref: prodRefs[i], tracked: tracked, qty: qty });
     });
+
+    // ค่าจัดส่ง: มี settings/commerce → คิดฝั่ง server · ไม่มี → เชื่อ client (legacy)
+    const shippingFee = commCfg ? computeShipping(commCfg, weight, subtotal) : Math.max(0, Math.floor(Number(cli.shippingFee) || 0));
 
     const tierDiscount = Math.floor(subtotal * tierPct / 100);
     const base = Math.max(0, subtotal - tierDiscount);   // คูปองลดจากยอดหลังส่วนลดสมาชิก (ไม่ลดค่าส่ง)
@@ -323,12 +345,13 @@ exports.placeOrder = onCall(async (req) => {
       couponLabel: couponLabel,
       couponDiscount: couponDiscount,
       shippingFee: shippingFee,
-      weight: Math.max(0, Number(cli.weight) || 0),
+      weight: weight,
       total: total,
       shipping: cli.shipping || {},
       status: "pending_payment",
       paymentMethod: "promptpay",
       promptpayAmount: total,
+      stockApplied: true,     // ตัดสต็อกแล้ว (ให้ adminCancelOrder รู้ว่าต้องคืนสต็อกตอนยกเลิก)
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     };
@@ -341,7 +364,63 @@ exports.placeOrder = onCall(async (req) => {
     });
     if (couponRef) tx.update(couponRef, { used: true, usedAt: FieldValue.serverTimestamp(), orderId: orderRef.id });
 
-    return { orderId: orderRef.id, total: total, subtotal: subtotal, discount: tierDiscount, couponDiscount: couponDiscount, couponCode: couponCode };
+    return { orderId: orderRef.id, total: total, subtotal: subtotal, discount: tierDiscount, shippingFee: shippingFee, couponDiscount: couponDiscount, couponCode: couponCode };
+  });
+});
+
+// ============================================================
+//  adminCancelOrder — แอดมินยกเลิกออเดอร์ + คืนสต็อก (atomic, idempotent)
+//  คืนสต็อกเฉพาะออเดอร์ที่ stockApplied และยังไม่เคยคืน (restocked!=true)
+// ============================================================
+exports.adminCancelOrder = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  const token = (req.auth && req.auth.token) || {};
+  const tid = await resolveTid(req.data && req.data.tid);
+  const isAdmin = token.admin === true || (token.tadmin && token.tadmin[tid] === true);
+  if (!uid || !isAdmin) throw new HttpsError("permission-denied", "เฉพาะแอดมินเท่านั้น");
+  const orderId = ((req.data && req.data.orderId) || "").toString();
+  if (!orderId) throw new HttpsError("invalid-argument", "ต้องระบุ orderId");
+
+  const db = admin.firestore();
+  const orderRef = troot(tid).collection("orders").doc(orderId);
+
+  return db.runTransaction(async (tx) => {
+    const oSnap = await tx.get(orderRef);
+    if (!oSnap.exists) throw new HttpsError("not-found", "ไม่พบออเดอร์");
+    const o = oSnap.data();
+    if (o.status === "cancelled") return { ok: true, alreadyCancelled: true, restocked: false };
+    if (o.status === "completed") throw new HttpsError("failed-precondition", "ออเดอร์ปิดสำเร็จแล้ว ยกเลิกไม่ได้");
+
+    // คืนสต็อกเฉพาะออเดอร์ที่ตัดสต็อกไว้จริง และยังไม่เคยคืน
+    const doRestock = o.stockApplied === true && o.restocked !== true;
+    let restockRefs = [];
+    if (doRestock) {
+      const items = Array.isArray(o.items) ? o.items : [];
+      const agg = {};
+      items.forEach((it) => {
+        const id = ((it && it.id) || "").toString();
+        const q = Math.max(0, Math.floor(Number(it && it.qty) || 0));
+        if (id && q) agg[id] = (agg[id] || 0) + q;
+      });
+      const ids = Object.keys(agg);
+      const refs = ids.map((id) => troot(tid).collection("products").doc(id));
+      const snaps = await Promise.all(refs.map((r) => tx.get(r)));   // อ่านสินค้าก่อนเขียน
+      snaps.forEach((s, i) => { if (s.exists) restockRefs.push({ ref: refs[i], qty: agg[ids[i]], tracked: !(s.data().stock === null || s.data().stock === undefined) }); });
+    }
+
+    tx.update(orderRef, {
+      status: "cancelled",
+      cancelledAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+      restocked: doRestock ? true : (o.restocked === true),
+    });
+    restockRefs.forEach((r) => {
+      const upd = { soldCount: FieldValue.increment(-r.qty) };
+      if (r.tracked) upd.stock = FieldValue.increment(r.qty);
+      tx.update(r.ref, upd);
+    });
+
+    return { ok: true, restocked: doRestock, items: restockRefs.length };
   });
 });
 

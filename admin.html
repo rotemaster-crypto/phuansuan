@@ -694,6 +694,28 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <button class="btn btn-ghost" onclick="loadShopDecor()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
     <button class="btn btn-primary" onclick="saveShopDecor()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
   </div>
+
+  <div class="card"><div class="card-title">🚚 ค่าจัดส่ง</div>
+    <div class="form-grid">
+      <div class="fg" style="grid-column:1/-1"><label>รูปแบบค่าจัดส่ง</label>
+        <select id="ship-mode" onchange="shipModeUI()">
+          <option value="flat">💵 เหมาจ่าย (คิดเท่ากันทุกออเดอร์)</option>
+          <option value="free">🎁 ส่งฟรีทุกออเดอร์</option>
+          <option value="weight">⚖️ คิดตามน้ำหนัก</option>
+        </select>
+      </div>
+      <div class="fg ship-flat"><label>ค่าจัดส่งเหมาจ่าย (บาท)</label><input type="number" id="ship-flat" min="0" placeholder="เช่น 40"></div>
+      <div class="fg ship-weight"><label>ค่าส่ง กก.แรก (บาท)</label><input type="number" id="ship-wbase" min="0" placeholder="เช่น 40"></div>
+      <div class="fg ship-weight"><label>เพิ่มต่อ กก.ถัดไป (บาท)</label><input type="number" id="ship-wper" min="0" placeholder="เช่น 20"></div>
+      <div class="fg"><label>✅ จัดส่งฟรีเมื่อซื้อครบยอด</label><label class="toggle"><input type="checkbox" id="ship-freeover" onchange="shipModeUI()"><span class="toggle-slider"></span></label></div>
+      <div class="fg ship-freeover"><label>ซื้อครบกี่บาทถึงส่งฟรี</label><input type="number" id="ship-freemin" min="0" placeholder="เช่น 500"></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">คิดค่าส่งฝั่งเซิร์ฟเวอร์อัตโนมัติตอนสั่งซื้อ · น้ำหนักดึงจากน้ำหนักสินค้าจริง</div>
+    <div class="save-row">
+      <button class="btn btn-ghost" onclick="loadShipping()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
+      <button class="btn btn-primary" onclick="saveShipping()"><svg class="ic"><use href="#i-save"/></svg> บันทึกค่าจัดส่ง</button>
+    </div>
+  </div>
 </div>
 
 <!-- PRODUCTS -->
@@ -1458,6 +1480,45 @@ async function loadShopDecor() {
     sv("shop-sub-in", d.shopSub || "");
     sc("shop-catbar-on", d.catBarOn !== false);
   } catch(e) {}
+  loadShipping();
+}
+// ── ค่าจัดส่ง (settings/commerce) ──────────────────────────
+function shipModeUI(){
+  const mode = document.getElementById('ship-mode').value;
+  document.querySelectorAll('.ship-flat').forEach(function(el){ el.style.display = mode==='flat' ? '' : 'none'; });
+  document.querySelectorAll('.ship-weight').forEach(function(el){ el.style.display = mode==='weight' ? '' : 'none'; });
+  const fo = document.getElementById('ship-freeover').checked;
+  document.querySelectorAll('.ship-freeover').forEach(function(el){ el.style.display = fo ? '' : 'none'; });
+}
+async function loadShipping(){
+  try {
+    const doc = await aDb().collection('settings').doc('commerce').get();
+    const d = doc.exists ? doc.data() : {};
+    const sv=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v; };
+    const sc=(id,v)=>{ const e=document.getElementById(id); if(e) e.checked=v; };
+    sv('ship-mode', d.shipMode || 'flat');
+    sv('ship-flat', d.flatFee!=null ? d.flatFee : '');
+    sv('ship-wbase', d.weightBase!=null ? d.weightBase : '');
+    sv('ship-wper', d.weightPerKg!=null ? d.weightPerKg : '');
+    sc('ship-freeover', d.freeOver === true);
+    sv('ship-freemin', d.freeOverMin!=null ? d.freeOverMin : '');
+  } catch(e){}
+  shipModeUI();
+}
+async function saveShipping(){
+  try {
+    const gn = id => Math.max(0, Math.floor(Number(document.getElementById(id).value)||0));
+    await aDb().collection('settings').doc('commerce').set({
+      shipMode: document.getElementById('ship-mode').value,
+      flatFee: gn('ship-flat'),
+      weightBase: gn('ship-wbase'),
+      weightPerKg: gn('ship-wper'),
+      freeOver: document.getElementById('ship-freeover').checked,
+      freeOverMin: gn('ship-freemin'),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    toast('✅ บันทึกค่าจัดส่งแล้ว','success');
+  } catch(e){ toast('❌ '+e.message,'error'); }
 }
 async function saveShopDecor() {
   try {
@@ -2510,9 +2571,16 @@ function completeOrder(id){
   if (!confirm('ปิดออเดอร์นี้เป็น "สำเร็จ"?')) return;
   updateOrder(id, { status:'completed', completedAt: firebase.firestore.FieldValue.serverTimestamp() }, '🏁 ปิดออเดอร์แล้ว');
 }
-function cancelOrder(id){
-  if (!confirm('ยกเลิกออเดอร์นี้?')) return;
-  updateOrder(id, { status:'cancelled', cancelledAt: firebase.firestore.FieldValue.serverTimestamp() }, 'ยกเลิกออเดอร์แล้ว');
+async function cancelOrder(id){
+  if (!confirm('ยกเลิกออเดอร์นี้? ระบบจะคืนสต็อกสินค้าให้อัตโนมัติ')) return;
+  try {
+    const fn = firebase.app().functions('asia-southeast1').httpsCallable('adminCancelOrder');
+    const res = await fn({ tid: currentTenant, orderId: id });
+    const d = (res && res.data) || {};
+    toast(d.restocked ? ('ยกเลิกแล้ว + คืนสต็อก '+(d.items||0)+' รายการ') : 'ยกเลิกออเดอร์แล้ว','success');
+    loadOrders();
+    if (typeof loadProducts==='function') loadProducts();   // สต็อกเปลี่ยน
+  } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
 }
 function viewSlip(url){
   const lb = document.getElementById('slipLightbox');

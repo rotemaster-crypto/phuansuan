@@ -31,8 +31,8 @@ before(async () => {
 });
 after(async () => { await env.cleanup(); });
 
-// seed สินค้า (+ คูปอง) ข้าม rules
-async function seed(products, coupon) {
+// seed สินค้า (+ คูปอง + ค่าจัดส่ง) ข้าม rules
+async function seed(products, coupon, commerce) {
   await env.clearFirestore();
   await env.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
@@ -40,6 +40,7 @@ async function seed(products, coupon) {
     await setDoc(doc(db, `tenants/${TID}/users/${uid}`), { points: 0 });
     for (const p of products) await setDoc(doc(db, `tenants/${TID}/products/${p.id}`), p);
     if (coupon) await setDoc(doc(db, `tenants/${TID}/users/${uid}/coupons/${coupon.id}`), coupon);
+    if (commerce) await setDoc(doc(db, `tenants/${TID}/settings/commerce`), commerce);
   });
 }
 async function read(path) {
@@ -62,11 +63,12 @@ test('สั่ง P1 x2 → order total 230, stock 10→8, soldCount +2', async
   await seed([P1]);
   const res = await place({ tid: TID, order: order([{ id: 'p1', qty: 2 }]) });
   assert.equal(res.subtotal, 200);         // 100 x 2 (ราคาจาก DB)
-  assert.equal(res.total, 230);            // 200 + 30
+  assert.equal(res.total, 230);            // 200 + 30 (ไม่มี settings/commerce → เชื่อค่าส่ง client)
   const o = await read(`tenants/${TID}/orders/${res.orderId}`);
   assert.equal(o.status, 'pending_payment');
   assert.equal(o.userId, uid);
   assert.equal(o.items[0].qty, 2);
+  assert.equal(o.stockApplied, true);      // มี flag ให้ adminCancelOrder คืนสต็อก
   const p = await read(`tenants/${TID}/products/p1`);
   assert.equal(p.stock, 8);
   assert.equal(p.soldCount, 2);
@@ -147,4 +149,35 @@ test('คูปอง used แล้ว → failed-precondition, stock ไม่
 test('ตะกร้าว่าง → invalid-argument', async () => {
   await seed([P1]);
   await expectFail({ tid: TID, order: order([]) }, 'invalid-argument');
+});
+
+// ── ค่าจัดส่ง server-side (settings/commerce) ───────────────
+// P1 x1 = subtotal 100, weight 1 kg (weightKg default 1). client ส่ง shippingFee 30 มาแต่ server คิดเอง
+test('flat: ค่าส่งเหมา 40 (ไม่สนค่าส่ง client)', async () => {
+  await seed([P1], null, { shipMode: 'flat', flatFee: 40 });
+  const res = await place({ tid: TID, order: order([{ id: 'p1', qty: 1 }]) });
+  assert.equal(res.shippingFee, 40);
+  assert.equal(res.total, 140);            // 100 + 40
+});
+test('free: ส่งฟรีทุกออเดอร์', async () => {
+  await seed([P1], null, { shipMode: 'free', flatFee: 40 });
+  const res = await place({ tid: TID, order: order([{ id: 'p1', qty: 1 }]) });
+  assert.equal(res.shippingFee, 0);
+  assert.equal(res.total, 100);
+});
+test('freeOver: ซื้อครบ 200 ส่งฟรี — ถึงยอด', async () => {
+  await seed([P1], null, { shipMode: 'flat', flatFee: 40, freeOver: true, freeOverMin: 200 });
+  const res = await place({ tid: TID, order: order([{ id: 'p1', qty: 2 }]) });   // subtotal 200
+  assert.equal(res.shippingFee, 0);
+  assert.equal(res.total, 200);
+});
+test('freeOver: ไม่ถึงยอด → คิดค่าส่งเหมา', async () => {
+  await seed([P1], null, { shipMode: 'flat', flatFee: 40, freeOver: true, freeOverMin: 200 });
+  const res = await place({ tid: TID, order: order([{ id: 'p1', qty: 1 }]) });   // subtotal 100 < 200
+  assert.equal(res.shippingFee, 40);
+});
+test('weight: กก.แรก 40 + กก.ถัดไป 20 (P1 x3 = 3kg → 40+2*20=80)', async () => {
+  await seed([P1], null, { shipMode: 'weight', weightBase: 40, weightPerKg: 20 });
+  const res = await place({ tid: TID, order: order([{ id: 'p1', qty: 3 }]) });   // weight 3kg
+  assert.equal(res.shippingFee, 80);
 });

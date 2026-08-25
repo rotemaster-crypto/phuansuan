@@ -42,9 +42,9 @@ npm install --prefix functions   # emulator ต้องโหลดโค้ด
 ### รัน (จาก repo root)
 ```bash
 firebase emulators:exec --only functions,firestore,auth --project demo-bocean \
-  "node --test --test-concurrency=1 tests/spin.test.js tests/place.test.js"
+  "node --test --test-concurrency=1 tests/spin.test.js tests/place.test.js tests/cancel.test.js"
 ```
-> ⚠️ ต้องมี `--test-concurrency=1` — สองไฟล์ share emulator เดียวกันและใช้ `clearFirestore()` ถ้ารัน parallel จะล้างข้อมูลของกันกลางคัน
+> ⚠️ ต้องมี `--test-concurrency=1` — ไฟล์เทสต์ share emulator เดียวกันและใช้ `clearFirestore()` ถ้ารัน parallel จะล้างข้อมูลของกันกลางคัน
 
 ### เคสที่คุม
 **`spin.test.js` (8) — spinLuckyDraw:**
@@ -53,11 +53,17 @@ firebase emulators:exec --only functions,firestore,auth --project demo-bocean \
 - **สต็อกจำกัด** → `awarded`++ แล้วรอบถัดไป "รางวัลหมด" (ไม่หักแต้มซ้ำ)
 - guard: แต้มไม่พอ / กิจกรรมปิด / pool ว่าง → `failed-precondition` · ไม่ส่ง/ผิด `drawId` → `invalid-argument`/`not-found`
 
-**`place.test.js` (10) — placeOrder (สร้างออเดอร์ + ตัดสต็อก + คูปอง server-side):**
-- **สั่งปกติ** → order + ตัดสต็อก + `soldCount`++ · **subtotal คิดจากราคาจริงใน DB** (ไม่เชื่อ client)
+**`place.test.js` (15) — placeOrder (สร้างออเดอร์ + ตัดสต็อก + ค่าส่ง + คูปอง server-side):**
+- **สั่งปกติ** → order + ตัดสต็อก + `soldCount`++ + `stockApplied` · **subtotal คิดจากราคาจริงใน DB** (ไม่เชื่อ client)
 - **กันขายเกิน**: สั่งเกินสต็อก / stock 0 / `active:false` → `failed-precondition` (สต็อกไม่ขยับ)
 - **สต็อก null (ไม่จำกัด)** → ไม่ตัดสต็อก แต่ soldCount++ · **tier discount** คิดจาก `discountPct` ฝั่ง server
+- **ค่าจัดส่ง server-side** (settings/commerce): flat / free / freeOver (ถึง-ไม่ถึงยอด) / weight (กก.แรก+ถัดไป)
 - **คูปอง + ตัดสต็อก atomic** · **กันคูปองซ้ำ**: คูปอง `used` แล้ว → ทั้ง tx roll back (สต็อกไม่ถูกตัด) · ตะกร้าว่าง → `invalid-argument`
+
+**`cancel.test.js` (5) — adminCancelOrder (คืนสต็อกตอนยกเลิก):**
+- **สิทธิ์**: ไม่ใช่แอดมิน → `permission-denied` (ตั้ง custom claim ผ่าน auth emulator REST)
+- **คืนสต็อก**: ยกเลิก → `stock += qty`, `soldCount -= qty`, order = cancelled + `restocked`
+- **idempotent**: ยกเลิกซ้ำ → ไม่คืนสต็อกซ้ำ · order เก่า (ไม่ `stockApplied`) → ยกเลิกได้แต่ไม่คืน · stock null → คืนแค่ soldCount
 
 > รันอัตโนมัติทุก push/PR ผ่าน `.github/workflows/functions-e2e.yml`
 > หมายเหตุ: โค้ดใช้ modular `require("firebase-admin/firestore").FieldValue` (ไม่ใช่ `admin.firestore.FieldValue` แบบ compat) เพราะ namespaced static หายใต้ functions emulator

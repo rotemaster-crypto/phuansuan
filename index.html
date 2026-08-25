@@ -2817,6 +2817,18 @@ function initFeatureFlags() {
     snap => { applyShop(snap.exists ? snap.data() : {}); },
     err => { console.warn('shopSettings:', err.message); }
   );
+  // ค่าจัดส่ง: settings/commerce → APP_CONFIG.shop.commerce (real-time)
+  tdb().collection('settings').doc('commerce').onSnapshot(
+    snap => {
+      if (!snap.exists) return;
+      if (!APP_CONFIG.shop) APP_CONFIG.shop = {};
+      APP_CONFIG.shop.commerce = Object.assign({}, APP_CONFIG.shop.commerce || {}, snap.data(), { _live: true });
+      try { if (typeof renderCart==='function') renderCart(); renderCartFab();
+        if (document.getElementById('checkoutModal') && document.getElementById('checkoutModal').classList.contains('open')) renderCheckoutSummary();
+      } catch(e){}
+    },
+    err => { console.warn('commerceSettings:', err.message); }
+  );
   // Badges: settings/badges → meta ตราสะสม (real-time)
   tdb().collection('settings').doc('badges').onSnapshot(
     snap => {
@@ -3132,8 +3144,11 @@ function cartKey(){ return 'phuansuan_cart_' + ((typeof tenantId === 'function')
 function commerceCfg(){
   const C = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.shop && APP_CONFIG.shop.commerce) || {};
   return Object.assign({
-    promptpayId:'', promptpayName:'', shippingTiers:[{maxKg:999,fee:0}],
-    freeShippingMin:0, defaultWeightKg:1, currency:'บาท', useTierDiscount:true
+    promptpayId:'', promptpayName:'', defaultWeightKg:1, currency:'บาท', useTierDiscount:true,
+    // ค่าจัดส่ง (ตั้งในแอดมิน → settings/commerce) · _live=true เมื่อโหลดจาก Firestore แล้ว
+    shipMode:'flat', flatFee:0, weightBase:0, weightPerKg:0, freeOver:false, freeOverMin:0,
+    // legacy (config.js) — ใช้ต่อเมื่อยังไม่ได้ตั้งค่าจัดส่งในแอดมิน
+    shippingTiers:[{maxKg:999,fee:0}], freeShippingMin:0
   }, C);
 }
 function parsePrice(v){
@@ -3330,11 +3345,29 @@ function cartWeight(){ return cart.reduce((s,r)=>s+(r.weightKg||1)*r.qty,0); }
 function shippingFee(){
   const cfg = commerceCfg();
   if (!cart.length) return 0;
-  if (cfg.freeShippingMin && cartSubtotal() >= cfg.freeShippingMin) return 0;
+  const sub = cartSubtotal();
+  if (cfg._live){   // ตั้งค่าจัดส่งจากแอดมิน (settings/commerce)
+    if (cfg.shipMode === 'free') return 0;
+    if (cfg.freeOver === true && Number(cfg.freeOverMin)>0 && sub >= Number(cfg.freeOverMin)) return 0;
+    if (cfg.shipMode === 'weight'){
+      const extra = Math.max(0, Math.ceil(cartWeight()) - 1);
+      return Math.max(0, (Number(cfg.weightBase)||0) + extra*(Number(cfg.weightPerKg)||0));
+    }
+    return Math.max(0, Number(cfg.flatFee)||0);   // flat
+  }
+  // legacy (config.js): ส่งฟรีเมื่อครบ + ตามน้ำหนักแบบ tiers
+  if (cfg.freeShippingMin && sub >= cfg.freeShippingMin) return 0;
   const w = cartWeight();
   const tiers = (cfg.shippingTiers||[]).slice().sort((a,b)=>a.maxKg-b.maxKg);
   for (const t of tiers){ if (w <= t.maxKg) return t.fee; }
   return tiers.length ? tiers[tiers.length-1].fee : 0;
+}
+function freeShipHint(){   // ข้อความเชิญชวน "ซื้ออีก X ได้ส่งฟรี"
+  const cfg = commerceCfg();
+  if (!cfg._live || cfg.shipMode==='free' || cfg.freeOver!==true || !(Number(cfg.freeOverMin)>0)) return '';
+  const gap = Number(cfg.freeOverMin) - cartSubtotal();
+  if (gap > 0) return 'ซื้ออีก '+baht(gap)+' ส่งฟรี! 🚚';
+  return 'ได้รับส่งฟรีแล้ว 🎉';
 }
 function tierDiscountPct(){
   const cfg = commerceCfg();
@@ -3585,7 +3618,9 @@ function renderCheckoutSummary(){
   if (pct) h += '<div class="sum-row"><span>ส่วนลดสมาชิก '+pct+'%</span><span>− '+baht(cartDiscount())+'</span></div>';
   const cd = couponDiscountPreview();
   if (selectedCoupon && cd>0) h += '<div class="sum-row"><span>🎟️ คูปอง '+escapeHtml(selectedCoupon.discountText||'')+'</span><span>− '+baht(cd)+'</span></div>';
-  h += '<div class="sum-row"><span>ค่าจัดส่ง</span><span>'+(shippingFee()===0?'ฟรี':baht(shippingFee()))+'</span></div>';
+  h += '<div class="sum-row"><span>ค่าจัดส่ง</span><span>'+(shippingFee()===0?'<b style="color:#16a34a">ฟรี</b>':baht(shippingFee()))+'</span></div>';
+  const fh = freeShipHint();
+  if (fh) h += '<div style="font-size:12px;color:#16a34a;font-weight:600;text-align:right;margin:-2px 0 4px">'+fh+'</div>';
   h += '<div class="sum-row total"><span>ยอดสุทธิ</span><span>'+baht(checkoutTotal())+'</span></div>';
   el.innerHTML = h;
 }
