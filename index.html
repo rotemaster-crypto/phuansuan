@@ -3605,6 +3605,39 @@ function renderCouponPicker(){
     }).join('')+'</div>';
 }
 
+// ── แคมเปญแต้ม (purchase) — พรีวิวแต้มที่จะได้ตอน checkout ─────
+// ใช้สูตรเดียวกับ server (onOrderConfirmed) เป๊ะ เพื่อให้เลขตรงกัน
+let checkoutEarnCampaigns = [];
+async function loadCheckoutEarnCampaigns(){
+  checkoutEarnCampaigns = [];
+  if (!db) return;
+  try {
+    // query แค่ trigger== (เลี่ยง composite index) แล้วกรอง active/เวลาใน memory
+    const snap = await tdb().collection('earnCampaigns').where('trigger','==','purchase').get();
+    const now = Date.now();
+    checkoutEarnCampaigns = snap.docs.map(function(d){ return d.data(); }).filter(function(c){
+      if (c.active === false) return false;
+      const s = c.startAt && c.startAt.seconds ? c.startAt.seconds*1000 : null;
+      const e = c.endAt   && c.endAt.seconds   ? c.endAt.seconds*1000   : null;
+      if (s!==null && now<s) return false;
+      if (e!==null && now>e) return false;
+      return true;
+    });
+  } catch(e){ checkoutEarnCampaigns = []; }
+}
+function earnPointsPreview(subtotal){
+  let pts = 0;
+  checkoutEarnCampaigns.forEach(function(c){
+    const per  = Math.max(1, Math.floor(Number(c.ratePerBaht)||0));
+    const rp   = Math.max(0, Math.floor(Number(c.ratePoints)||0));
+    const min  = Math.max(0, Math.floor(Number(c.minSpend)||0));
+    const mult = Math.max(1, Number(c.multiplier)||1);
+    if (!rp || subtotal < min) return;
+    pts += Math.floor(Math.floor(subtotal/per)*rp*mult);
+  });
+  return Math.floor(pts);
+}
+
 function renderCartBadge(){
   const b = document.getElementById('cart-badge');
   if (!b) return;
@@ -3787,6 +3820,7 @@ function goCheckout(){
   fillProvinces();
   prefillAddress();
   loadCheckoutCoupons().then(function(){ renderCouponPicker(); renderCheckoutSummary(); });
+  loadCheckoutEarnCampaigns().then(function(){ renderCheckoutSummary(); });
   renderCouponPicker();
   renderCheckoutSummary();
   closeCart();
@@ -3804,6 +3838,8 @@ function renderCheckoutSummary(){
   const fh = freeShipHint();
   if (fh) h += '<div style="font-size:12px;color:#16a34a;font-weight:600;text-align:right;margin:-2px 0 4px">'+fh+'</div>';
   h += '<div class="sum-row total"><span>ยอดสุทธิ</span><span>'+baht(checkoutTotal())+'</span></div>';
+  const ep = earnPointsPreview(cartSubtotal());
+  if (ep > 0) h += '<div style="font-size:12.5px;color:#92400e;background:#fef3c7;border-radius:8px;padding:7px 10px;text-align:center;margin-top:8px;font-weight:700">⭐ ออเดอร์นี้จะได้รับ '+ep+' แต้ม เมื่อร้านยืนยันรับเงิน</div>';
   el.innerHTML = h;
 }
 
