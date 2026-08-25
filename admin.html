@@ -668,6 +668,13 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
   <div class="card"><div class="card-title">🏷️ การ์ดสินค้า</div>
     <div class="form-grid">
+      <div class="fg" style="grid-column:1/-1"><label>รูปแบบการ์ด (เลือกตามอัตลักษณ์แบรนด์)</label>
+        <select id="shop-card-style">
+          <option value="brand">🌿 อบอุ่น — แบรนด์ (รูปใหญ่ โทนแบรนด์ ป้ายออร์แกนิก)</option>
+          <option value="premium">✨ สะอาด — พรีเมียม (เงานุ่ม เรียบหรู)</option>
+          <option value="market">🔥 คึกคัก — ตลาดสด (เน้นส่วนลด/ยอดขาย สีแรง)</option>
+        </select>
+      </div>
       <div class="fg"><label>สีตัวเลขป้ายลด %</label><input type="color" id="shop-disc-color" value="#ee4d2d"></div>
       <div class="fg"><label>สีพื้นป้ายลด %</label><input type="color" id="shop-disc-bg" value="#ffde00"></div>
       <div class="fg"><label>ใช้สีราคาเอง (ปิด = ใช้สีแบรนด์)</label><label class="toggle"><input type="checkbox" id="shop-price-on"><span class="toggle-slider"></span></label></div>
@@ -1351,6 +1358,7 @@ async function loadShopDecor() {
     sv("shop-disc-bg", d.discBg || "#ffde00");
     sc("shop-price-on", d.priceColorOn === true);
     sv("shop-price-color", d.priceColor || "#ee4d2d");
+    sv("shop-card-style", d.cardStyle || "brand");
     sc("shop-show-sold", d.showSold !== false);
     sv("shop-title-in", d.shopTitle || "");
     sv("shop-sub-in", d.shopSub || "");
@@ -1384,6 +1392,7 @@ async function saveShopDecor() {
       discBg: gv('shop-disc-bg'),
       priceColorOn: gc('shop-price-on'),
       priceColor: gv('shop-price-color'),
+      cardStyle: gv('shop-card-style'),
       showSold: gc('shop-show-sold'),
       shopTitle: gv('shop-title-in'),
       shopSub: gv('shop-sub-in'),

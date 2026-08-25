@@ -244,6 +244,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .prod-oldprice{font-size:11px;color:var(--muted);text-decoration:line-through}
 .disc-badge{position:absolute;top:7px;right:7px;background:var(--shop-disc,#ee4d2d);color:#fff;font-size:11px;font-weight:800;line-height:1.1;padding:3px 7px;border-radius:999px;z-index:2;box-shadow:0 2px 6px -1px rgba(0,0,0,.25)}
 .prod-badge{position:absolute;top:8px;left:0;background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:2px 8px 2px 7px;border-radius:0 999px 999px 0;z-index:2}
+/* ===== รูปแบบการ์ด (preset เลือกต่อแบรนด์ที่ "ตกแต่งร้าน") — ค่าเริ่มต้น = อบอุ่น(brand) ด้านบน ===== */
+/* สะอาด พรีเมียม */
+#screen-shop[data-cardstyle="premium"] .prod-card{border:none;border-radius:14px;box-shadow:0 9px 26px -13px rgba(0,0,0,.30)}
+#screen-shop[data-cardstyle="premium"] .prod-img{background:var(--bg)}
+#screen-shop[data-cardstyle="premium"] .prod-cat{color:var(--muted)}
+#screen-shop[data-cardstyle="premium"] .prod-add{background:var(--primary);border-color:var(--primary);color:#fff}
+/* ตลาดสด คึกคัก */
+#screen-shop[data-cardstyle="market"] .prod-card{border:1px solid var(--border);border-radius:10px;box-shadow:none}
+#screen-shop[data-cardstyle="market"] .prod-img{aspect-ratio:1/1;background:var(--bg)}
+#screen-shop[data-cardstyle="market"] .prod-body{padding:8px 9px 10px}
+#screen-shop[data-cardstyle="market"] .prod-cat{display:none}
+#screen-shop[data-cardstyle="market"] .prod-name{font-size:12.5px;font-weight:500}
+#screen-shop[data-cardstyle="market"] .prod-price{color:var(--shop-disc,#ee4d2d);font-size:16px}
+#screen-shop[data-cardstyle="market"] .prod-add{background:var(--shop-disc,#ee4d2d);border-color:var(--shop-disc,#ee4d2d);color:#fff;width:28px;height:28px;font-size:16px}
+#screen-shop[data-cardstyle="market"] .prod-add:active{opacity:.8}
+#screen-shop[data-cardstyle="market"] .disc-badge{top:0;right:0;border-radius:0 0 0 9px;box-shadow:none}
 .pd-img{width:100%;height:230px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:80px;overflow:hidden}
 .pd-img img{width:100%;height:100%;object-fit:cover}
 .pd-info{padding:14px 16px}
@@ -2697,6 +2713,7 @@ function applyShop(d) {
   R.setProperty("--feat-w", (d.featCardWidth ? d.featCardWidth : 134) + "px");
   // หัวข้อร้าน + แถบหมวดหมู่
   var st = document.querySelector("#screen-shop .shop-title"); if (st) st.textContent = d.shopTitle || "🛒 ร้านค้า";
+  var sscr = document.getElementById("screen-shop"); if (sscr) sscr.setAttribute("data-cardstyle", d.cardStyle || "brand");
   var cb = document.getElementById("cat-bar"); if (cb) cb.style.display = (d.catBarOn === false) ? "none" : "";
   // แบนเนอร์
   var bn = document.getElementById("shop-banner");
