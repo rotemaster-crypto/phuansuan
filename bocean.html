@@ -12,163 +12,208 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#ffffff; --soft:#f5f8fb; --soft2:#eef3f8; --card:#ffffff;
-    --ink:#0f1e2e; --body:#3f5063; --muted:#6b7c8f; --line:#e4ecf3;
-    --pri:#0891b2; --pri-deep:#0e7490; --pri-soft:#e6f6fb;
-    --com:#10b981; --act:#f59e0b; --mkt:#3b82f6;
+    --bg:#ffffff; --soft:#f4f8fb; --card:#ffffff;
+    --ink:#0c1a29; --body:#42586c; --muted:#728698; --line:#e6eef5;
+    --pri:#0e8ea8; --pri-deep:#0c7489; --pri-soft:#e4f5f9;
+    --com:#0d9488; --com-soft:#e2f6f2; --act:#e08a17; --act-soft:#fdf1df; --mkt:#2f6fed; --mkt-soft:#e8f0fe;
     --ok:#16a34a; --line-green:#06c755;
-    --shadow:0 1px 2px rgba(16,40,64,.04),0 12px 30px rgba(16,40,64,.06);
-    --shadow-lg:0 2px 6px rgba(16,40,64,.05),0 30px 60px rgba(16,40,64,.10);
+    --shadow:0 1px 2px rgba(12,26,41,.04),0 10px 26px rgba(12,26,41,.055);
+    --shadow-lg:0 2px 8px rgba(12,26,41,.05),0 28px 56px rgba(12,26,41,.09);
+    --r:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{font-family:'IBM Plex Sans Thai','Inter',system-ui,sans-serif;color:var(--body);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
-  h1,h2,h3{color:var(--ink);letter-spacing:-.02em}
-  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+  h1,h2,h3,h4{color:var(--ink);letter-spacing:-.02em}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 20px}
   a{color:inherit;text-decoration:none}
-  .en{font-family:'Inter','IBM Plex Sans Thai',sans-serif}
+
+  /* icons */
+  .ic{width:1em;height:1em;display:inline-block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
 
   /* nav */
-  .nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-  .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px;color:var(--ink)}
-  .brand .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--pri),#22c3e6);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 6px 16px rgba(8,145,178,.28)}
-  .nav-links{display:flex;align-items:center;gap:26px}
+  .nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:21px;color:var(--ink)}
+  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(140deg,#12a3bf,#0b7a91);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(14,142,168,.32)}
+  .logo .ic{width:22px;height:22px;stroke:#fff;stroke-width:2}
+  .nav-links{display:flex;align-items:center;gap:28px}
   .nav-links a.lnk{font-size:14.5px;font-weight:500;color:var(--body)}
   .nav-links a.lnk:hover{color:var(--pri)}
-  .nav-cta{background:var(--pri);color:#fff;padding:10px 18px;border-radius:9px;font-weight:600;font-size:14px;box-shadow:0 8px 18px rgba(8,145,178,.22)}
+  .nav-cta{background:var(--pri);color:#fff;padding:10px 18px;border-radius:10px;font-weight:600;font-size:14px;box-shadow:0 8px 18px rgba(14,142,168,.24);transition:background .15s}
   .nav-cta:hover{background:var(--pri-deep)}
   @media(max-width:720px){ .nav-links a.lnk{display:none} }
 
   /* buttons */
-  .btn{padding:13px 24px;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;border:0;display:inline-flex;align-items:center;gap:8px;font-family:inherit;transition:transform .06s ease}
-  .btn:active{transform:translateY(1px)}
-  .btn-pri{background:var(--pri);color:#fff;box-shadow:0 10px 24px rgba(8,145,178,.24)}
-  .btn-pri:hover{background:var(--pri-deep)}
+  .btn{padding:13px 24px;border-radius:11px;font-weight:600;font-size:15px;cursor:pointer;border:0;display:inline-flex;align-items:center;gap:9px;font-family:inherit;transition:transform .12s ease,background .15s,box-shadow .15s}
+  .btn .ic{width:17px;height:17px}
+  .btn-pri{background:var(--pri);color:#fff;box-shadow:0 10px 24px rgba(14,142,168,.26)}
+  .btn-pri:hover{background:var(--pri-deep);transform:translateY(-2px);box-shadow:0 14px 30px rgba(14,142,168,.32)}
   .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow)}
-  .btn-ghost:hover{border-color:#c9d8e6}
+  .btn-ghost:hover{border-color:#cfe0ec;transform:translateY(-2px)}
   .btn-line{background:var(--line-green);color:#fff}
 
   /* hero */
-  .hero{position:relative;overflow:hidden;background:radial-gradient(1100px 460px at 50% -160px,var(--pri-soft),transparent),linear-gradient(#fff,var(--soft))}
-  .hero .wrap{padding:74px 20px 60px;text-align:center;position:relative;z-index:1}
-  .pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);color:var(--pri-deep);font-size:13px;font-weight:600;padding:7px 15px;border-radius:999px;box-shadow:var(--shadow);margin-bottom:22px}
-  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--com)}
-  .hero h1{font-size:52px;line-height:1.08;font-weight:800;margin-bottom:18px}
-  .hero h1 .hl{background:linear-gradient(120deg,var(--pri),#22c3e6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero{position:relative;overflow:hidden;background:radial-gradient(1000px 440px at 50% -140px,var(--pri-soft),transparent),linear-gradient(#fff,var(--soft))}
+  .hero .wrap{padding:78px 20px 62px;text-align:center;position:relative;z-index:1}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);color:var(--pri-deep);font-size:13px;font-weight:600;padding:7px 15px 7px 12px;border-radius:999px;box-shadow:var(--shadow);margin-bottom:24px}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--com);box-shadow:0 0 0 4px rgba(13,148,136,.16)}
+  .hero h1{font-size:53px;line-height:1.08;font-weight:800;margin-bottom:18px}
+  .hero h1 .hl{background:linear-gradient(120deg,var(--pri),#22c3d6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .hero .lead{font-size:19px;color:var(--body);max-width:660px;margin:0 auto 30px}
   .hero-btns{display:flex;gap:13px;justify-content:center;flex-wrap:wrap}
   .hero-note{margin-top:20px;font-size:13.5px;color:var(--muted)}
   .hero-note b{color:var(--body)}
-
-  /* pillar chips in hero */
-  .chips{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:46px}
-  .chip{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);min-width:210px}
-  .chip .ci{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+  .chips{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:48px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:15px;padding:15px 20px;display:flex;align-items:center;gap:13px;box-shadow:var(--shadow);min-width:214px;transition:transform .14s ease}
+  .chip:hover{transform:translateY(-3px)}
   .chip .ct{text-align:left}
   .chip .ct b{display:block;color:var(--ink);font-size:15px;font-weight:700}
   .chip .ct span{font-size:12.5px;color:var(--muted)}
 
-  section{padding:70px 0}
-  .sec-head{text-align:center;max-width:640px;margin:0 auto 46px}
-  .eyebrow{color:var(--pri);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
-  .sec-head h2{font-size:34px;font-weight:800;margin-top:8px}
+  /* shared icon box */
+  .ibox{border-radius:13px;display:flex;align-items:center;justify-content:center;flex:none;transition:transform .16s ease}
+  .ibox .ic{width:56%;height:56%}
+  .ibox-40{width:40px;height:40px} .ibox-52{width:52px;height:52px} .ibox-56{width:56px;height:56px}
+  .t-pri{background:var(--pri-soft);color:var(--pri-deep)}
+  .t-com{background:var(--com-soft);color:var(--com)}
+  .t-act{background:var(--act-soft);color:var(--act)}
+  .t-mkt{background:var(--mkt-soft);color:var(--mkt)}
+
+  section{padding:72px 0}
+  .sec-head{text-align:center;max-width:660px;margin:0 auto 48px}
+  .eyebrow{color:var(--pri);font-weight:700;font-size:12px;letter-spacing:.13em;text-transform:uppercase}
+  .sec-head h2{font-size:35px;font-weight:800;margin-top:8px}
   .sec-head p{color:var(--muted);margin-top:10px;font-size:16px}
   .alt{background:var(--soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 
   /* 3 pillars */
-  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-  .pcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);position:relative;transition:transform .12s ease,box-shadow .12s ease}
-  .pcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
-  .pcard .top{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px}
-  .pcard h3{font-size:21px;font-weight:800;margin-bottom:8px}
-  .pcard .sub{color:var(--muted);font-size:14.5px;margin-bottom:16px}
-  .pcard ul{list-style:none;display:flex;flex-direction:column;gap:9px}
-  .pcard li{font-size:14px;color:var(--body);display:flex;gap:9px;align-items:flex-start}
-  .pcard li::before{content:"";width:16px;height:16px;border-radius:50%;flex:none;margin-top:3px;background:var(--tint) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/11px no-repeat}
-  .pcard .star{position:absolute;top:20px;right:20px;background:var(--act);color:#fff;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:999px}
-  .p-com .top{background:#e7faf2;color:var(--com)} .p-com{--tint:var(--com)}
-  .p-act .top{background:#fef4e2;color:var(--act)} .p-act{--tint:var(--act);border-color:#f7dcae}
-  .p-mkt .top{background:#e8f1fe;color:var(--mkt)} .p-mkt{--tint:var(--mkt)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .pcard{background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:var(--shadow);position:relative;transition:transform .16s ease,box-shadow .16s ease,border-color .16s}
+  .pcard:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+  .pcard:hover .ibox{transform:scale(1.08)}
+  .pcard h3{font-size:22px;font-weight:800;margin:16px 0 7px}
+  .pcard .sub{color:var(--muted);font-size:14.5px;margin-bottom:18px}
+  .pcard ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .pcard li{font-size:14px;color:var(--body);display:flex;gap:10px;align-items:flex-start;line-height:1.45}
+  .pcard li .ic{width:18px;height:18px;flex:none;margin-top:2px;stroke-width:2.4}
+  .p-act{border-color:#f2d9ac}
+  .p-act .li-c{color:var(--act)} .p-com .li-c{color:var(--com)} .p-mkt .li-c{color:var(--mkt)}
+  .star{position:absolute;top:22px;right:22px;background:var(--act);color:#fff;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:999px;display:inline-flex;align-items:center;gap:5px}
+  .star .ic{width:12px;height:12px;stroke-width:2.4}
 
-  /* activity spotlight */
-  .spot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
-  .tool{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);transition:transform .12s ease}
-  .tool:hover{transform:translateY(-3px)}
-  .tool .ti{font-size:28px}
-  .tool h4{font-size:16px;font-weight:700;margin:10px 0 5px;color:var(--ink)}
+  /* activity bento */
+  .spot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .tool{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow);transition:transform .16s ease,box-shadow .16s}
+  .tool:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+  .tool:hover .ibox{transform:scale(1.08)}
+  .tool h4{font-size:16.5px;font-weight:700;margin:14px 0 6px;color:var(--ink)}
   .tool p{font-size:13.5px;color:var(--muted)}
-  .spot-note{text-align:center;margin-top:26px;font-size:14px;color:var(--muted)}
+  .spot-note{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:30px;font-size:14px;color:var(--muted)}
+  .spot-note .ic{width:18px;height:18px;color:var(--ok);stroke:var(--ok)}
   .spot-note b{color:var(--pri-deep)}
 
   /* value row */
-  .vrow{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-  .vcard{text-align:center;padding:10px}
-  .vcard .vi{width:56px;height:56px;border-radius:16px;background:var(--pri-soft);color:var(--pri-deep);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
+  .vrow{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .vcard{text-align:center;padding:6px}
+  .vcard .ibox{margin:0 auto 15px}
   .vcard h4{font-size:16.5px;font-weight:700;margin-bottom:6px}
   .vcard p{font-size:13.5px;color:var(--muted)}
 
   /* case study */
-  .case{display:flex;gap:28px;align-items:center;background:linear-gradient(135deg,#fff,var(--soft));border:1px solid var(--line);border-radius:20px;padding:34px;box-shadow:var(--shadow-lg);flex-wrap:wrap}
-  .case .em{font-size:64px;flex:none}
+  .case{display:flex;gap:28px;align-items:center;background:linear-gradient(135deg,#fff,var(--soft));border:1px solid var(--line);border-radius:22px;padding:36px;box-shadow:var(--shadow-lg);flex-wrap:wrap}
+  .case .cbig{width:84px;height:84px;border-radius:20px;flex:none}
+  .case .cbig .ic{width:44%;height:44%}
   .case .body{flex:1;min-width:260px}
   .case .badge{display:inline-block;background:var(--pri-soft);color:var(--pri-deep);font-size:12px;font-weight:700;padding:5px 13px;border-radius:999px;letter-spacing:.06em;margin-bottom:12px}
   .case h3{font-size:24px;font-weight:800}
   .case p{color:var(--body);margin-top:8px;font-size:15px}
 
   /* pricing */
-  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
-  .plan{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
+  .plan{background:#fff;border:1px solid var(--line);border-radius:20px;padding:32px;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .16s ease}
+  .plan:hover{transform:translateY(-4px)}
   .plan.hot{border:2px solid var(--pri);box-shadow:var(--shadow-lg);position:relative}
-  .plan.hot .tag{position:absolute;top:-13px;left:30px;background:var(--pri);color:#fff;font-size:12px;font-weight:700;padding:4px 13px;border-radius:999px}
+  .plan.hot .tag{position:absolute;top:-13px;left:32px;background:var(--pri);color:#fff;font-size:12px;font-weight:700;padding:4px 13px;border-radius:999px}
   .plan h3{font-size:19px;font-weight:800}
-  .plan .price{font-size:38px;font-weight:900;margin:12px 0 2px;color:var(--ink)}
+  .plan .price{font-size:40px;font-weight:900;margin:12px 0 2px;color:var(--ink)}
   .plan .price small{font-size:15px;color:var(--muted);font-weight:600}
-  .plan ul{list-style:none;margin:18px 0;display:flex;flex-direction:column;gap:10px}
-  .plan li{font-size:14px;color:var(--body);display:flex;gap:9px}
-  .plan li::before{content:"\2713";color:var(--ok);font-weight:800}
+  .plan ul{list-style:none;margin:20px 0;display:flex;flex-direction:column;gap:11px}
+  .plan li{font-size:14px;color:var(--body);display:flex;gap:10px;align-items:flex-start}
+  .plan li .ic{width:18px;height:18px;flex:none;margin-top:2px;color:var(--ok);stroke:var(--ok);stroke-width:2.6}
   .plan .btn{margin-top:auto;justify-content:center}
 
   /* form */
-  .form-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:34px;max-width:660px;margin:0 auto;box-shadow:var(--shadow-lg)}
+  .form-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:36px;max-width:660px;margin:0 auto;box-shadow:var(--shadow-lg)}
   .fg{margin-bottom:15px}
   .fg label{display:block;font-size:13px;font-weight:600;margin-bottom:7px;color:var(--ink)}
   .fg label .req{color:#ef4444}
-  .fg input,.fg select,.fg textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:var(--soft);color:var(--ink);transition:border-color .12s,background .12s}
-  .fg input::placeholder,.fg textarea::placeholder{color:#9fb0c0}
-  .fg input:focus,.fg select:focus,.fg textarea:focus{outline:0;border-color:var(--pri);background:#fff;box-shadow:0 0 0 4px var(--pri-soft)}
+  .fg input,.fg textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:11px;font-size:15px;font-family:inherit;background:var(--soft);color:var(--ink);transition:border-color .14s,background .14s,box-shadow .14s}
+  .fg input::placeholder,.fg textarea::placeholder{color:#9fb4c4}
+  .fg input:focus,.fg textarea:focus{outline:0;border-color:var(--pri);background:#fff;box-shadow:0 0 0 4px var(--pri-soft)}
   .fg textarea{min-height:88px;resize:vertical}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .submit-btn{width:100%;background:var(--pri);color:#fff;border:0;padding:16px;border-radius:11px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 12px 26px rgba(8,145,178,.24)}
+  .submit-btn{width:100%;background:var(--pri);color:#fff;border:0;padding:16px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 12px 26px rgba(14,142,168,.26);transition:background .15s}
   .submit-btn:hover{background:var(--pri-deep)}
   .submit-btn:disabled{opacity:.6;cursor:default}
-  .f-err{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:13.5px;padding:11px 13px;border-radius:10px;margin-bottom:14px}
+  .f-err{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:13.5px;padding:11px 13px;border-radius:11px;margin-bottom:14px}
   .form-alt{text-align:center;margin-top:18px;font-size:14px;color:var(--muted)}
-  .form-ok{display:none;text-align:center;padding:22px}
-  .form-ok .big{font-size:52px}
-  .form-ok h3{font-size:23px;font-weight:800;margin:10px 0}
+  .form-ok{display:none;text-align:center;padding:24px}
+  .form-ok .okico{width:70px;height:70px;border-radius:50%;background:var(--com-soft);color:var(--com);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .form-ok .okico .ic{width:38px;height:38px;stroke-width:2.4}
+  .form-ok h3{font-size:23px;font-weight:800;margin:6px 0}
   .form-ok p{color:var(--muted)}
 
-  footer{background:var(--soft);border-top:1px solid var(--line);padding:38px 0;text-align:center;color:var(--muted);font-size:13.5px}
+  footer{background:var(--soft);border-top:1px solid var(--line);padding:40px 0;text-align:center;color:var(--muted);font-size:13.5px}
+  footer .brand{justify-content:center;font-size:18px;margin-bottom:10px}
+  footer .logo{width:30px;height:30px;border-radius:9px}
+  footer .logo .ic{width:18px;height:18px}
+
+  /* scroll reveal */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){ .reveal{opacity:1;transform:none;transition:none} }
 
   @media(max-width:860px){
     .pillars,.plans,.spot-grid{grid-template-columns:1fr}
     .vrow{grid-template-columns:1fr 1fr}
   }
   @media(max-width:600px){
-    .hero h1{font-size:36px}
+    .hero h1{font-size:37px}
     .hero .lead{font-size:17px}
-    .sec-head h2{font-size:27px}
+    .sec-head h2{font-size:28px}
     .row2{grid-template-columns:1fr}
     .vrow{grid-template-columns:1fr}
-    section{padding:52px 0}
+    section{padding:54px 0}
   }
 </style>
 </head>
 <body>
 
+<!-- ICON SPRITE (inline, self-contained) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M2 8.5c1.6 0 1.6-1.6 3.2-1.6S6.8 8.5 8.4 8.5 10 6.9 11.6 6.9 13.2 8.5 14.8 8.5 16.4 6.9 18 6.9 19.6 8.5 22 8.5"/><path d="M2 13c1.6 0 1.6-1.6 3.2-1.6S6.8 13 8.4 13 10 11.4 11.6 11.4 13.2 13 14.8 13 16.4 11.4 18 11.4 19.6 13 22 13"/><path d="M2 17.5c1.6 0 1.6-1.6 3.2-1.6S6.8 17.5 8.4 17.5 10 15.9 11.6 15.9 13.2 17.5 14.8 17.5 16.4 15.9 18 15.9 19.6 17.5 22 17.5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 21V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7Z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.9-2.8 2.8-2.8 2.8"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2.5 15 8.7 21.8 9.7 16.9 14.5 18 21.3 12 18.1 6 21.3 7.1 14.5 2.2 9.7 9 8.7"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3.5 13.5 12 13.5 11 22 20.5 10.5 12 10.5 13 2"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.83 0L2.5 12.5A2 2 0 0 1 2 11.2V4a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.3.5l7.8 7.8a2 2 0 0 1 0 2.9z"/><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1 0 1.6-.8 1.6-1.6 0-.4-.2-.8-.5-1.1-.3-.3-.5-.6-.5-1 0-.9.7-1.6 1.6-1.6H16c3.3 0 6-2.7 6-6 0-4.9-4.5-8.7-10-8.7Z"/><circle cx="8.5" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="13" cy="6.3" r="1.2" fill="currentColor" stroke="none"/><circle cx="17" cy="9" r="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1.5" y1="14" x2="6.5" y2="14"/><line x1="9.5" y1="8" x2="14.5" y2="8"/><line x1="17.5" y1="16" x2="22.5" y2="16"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5.5l-8-3-8 3V12c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20.5A7.5 7.5 0 0 1 9.4 5.9C15.6 4.7 17.2 4.1 19.5 1.5c1.1 2.2 2 4.5 2 8.5 0 5.8-4.9 10.5-10.5 10.5Z"/><path d="M2 22c0-3.2 2-5.7 5.4-6.4"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5.5l-8-3-8 3V12c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></symbol>
+</defs></svg>
+
 <div class="nav"><div class="wrap">
-  <div class="brand"><span class="logo">🌊</span> Bocean</div>
+  <div class="brand"><span class="logo"><svg class="ic"><use href="#i-wave"/></svg></span> Bocean</div>
   <div class="nav-links">
     <a class="lnk" href="#pillars">ระบบ</a>
     <a class="lnk" href="#activity">กิจกรรม</a>
@@ -183,57 +228,57 @@
   <p class="lead">Bocean ให้แบรนด์สินค้าใดก็ได้ มีระบบนิเวศเป็นของตัวเอง — พื้นที่ชุมชนของลูกค้า เครื่องมือกิจกรรม–ลอยัลตี้ไว้เล่นกับลูกค้า และร้านค้าออนไลน์ครบวงจร โดยไม่ต้องเขียนโค้ดเอง</p>
   <div class="hero-btns">
     <a class="btn btn-pri" href="#signup">เริ่มเปิดร้านฟรี</a>
-    <a class="btn btn-ghost" href="https://phuansuan.web.app" target="_blank" rel="noopener">ดูตัวอย่างจริง →</a>
+    <a class="btn btn-ghost" href="https://phuansuan.web.app" target="_blank" rel="noopener">ดูตัวอย่างจริง <svg class="ic"><use href="#i-arrow"/></svg></a>
   </div>
   <div class="hero-note">ตัวอย่างจริงที่ใช้งานอยู่: <b>เพื่อนสวน</b> — ชุมชนคนรักสวนของแบรนด์ DemeterRich สร้างด้วย Bocean</div>
 
   <div class="chips">
-    <div class="chip"><div class="ci" style="background:#e7faf2;color:var(--com)">💬</div><div class="ct"><b>Community</b><span>ชุมชนของลูกค้า</span></div></div>
-    <div class="chip"><div class="ci" style="background:#fef4e2;color:var(--act)">🎯</div><div class="ct"><b>Activity</b><span>กิจกรรม–ลอยัลตี้</span></div></div>
-    <div class="chip"><div class="ci" style="background:#e8f1fe;color:var(--mkt)">🛒</div><div class="ct"><b>Market</b><span>ร้านค้าออนไลน์</span></div></div>
+    <div class="chip"><div class="ibox ibox-40 t-com"><svg class="ic"><use href="#i-users"/></svg></div><div class="ct"><b>Community</b><span>ชุมชนของลูกค้า</span></div></div>
+    <div class="chip"><div class="ibox ibox-40 t-act"><svg class="ic"><use href="#i-target"/></svg></div><div class="ct"><b>Activity</b><span>กิจกรรม–ลอยัลตี้</span></div></div>
+    <div class="chip"><div class="ibox ibox-40 t-mkt"><svg class="ic"><use href="#i-bag"/></svg></div><div class="ct"><b>Market</b><span>ร้านค้าออนไลน์</span></div></div>
   </div>
 </div></header>
 
 <!-- 3 PILLARS -->
 <section id="pillars"><div class="wrap">
-  <div class="sec-head">
+  <div class="sec-head reveal">
     <div class="eyebrow">ระบบนิเวศ 3 เสา</div>
     <h2>ทุกอย่างที่แบรนด์ต้องมี ครบในที่เดียว</h2>
     <p>ไม่ใช่แค่ร้านค้า — แต่เป็นบ้านของลูกค้ารอบแบรนด์คุณ</p>
   </div>
   <div class="pillars">
-    <div class="pcard p-com">
-      <div class="top">💬</div>
+    <div class="pcard p-com reveal">
+      <div class="ibox ibox-52 t-com"><svg class="ic"><use href="#i-users"/></svg></div>
       <h3>Community</h3>
       <div class="sub">ชุมชนคนใช้สินค้าของแบรนด์คุณ</div>
       <ul>
-        <li>ฟีดโซเชียล — โพสต์ รูป คอมเมนต์ ไลก์ รีแอกชั่น</li>
-        <li>กลุ่มชุมชนย่อย เข้าร่วม–พูดคุยตามความสนใจ</li>
-        <li>อันดับสมาชิก (Leaderboard) สร้างการมีส่วนร่วม</li>
-        <li>เปิดแบรนด์ใหม่มาไม่ร้าง — ระบบจุดไฟชุมชนให้อัตโนมัติ</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>ฟีดโซเชียล — โพสต์ รูป คอมเมนต์ ไลก์ รีแอกชั่น</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>กลุ่มชุมชนย่อย เข้าร่วม–พูดคุยตามความสนใจ</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>อันดับสมาชิก สร้างการมีส่วนร่วม</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>เปิดแบรนด์ใหม่มาไม่ร้าง — ระบบจุดไฟชุมชนให้อัตโนมัติ</li>
       </ul>
     </div>
-    <div class="pcard p-act">
-      <span class="star">⭐ ตัวชูโรง</span>
-      <div class="top">🎯</div>
+    <div class="pcard p-act reveal">
+      <span class="star"><svg class="ic"><use href="#i-star"/></svg> ตัวชูโรง</span>
+      <div class="ibox ibox-52 t-act"><svg class="ic"><use href="#i-target"/></svg></div>
       <h3>Activity</h3>
       <div class="sub">เครื่องมือกิจกรรม–ลอยัลตี้ ไว้เล่นกับลูกค้า</div>
       <ul>
-        <li>แต้ม + ระดับสมาชิก (Tier) + ตราสะสม (Badges)</li>
-        <li>เกมลุ้นรางวัล: สุ่มจับรางวัล · ภารกิจ · ทายผล</li>
-        <li>แคมเปญแต้ม — ตั้งกติกาให้แต้มจากซื้อ/โพสต์เอง</li>
-        <li>คูปองส่วนลด ใช้ได้จริงตอนเช็คเอาท์</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>แต้ม + ระดับสมาชิก (Tier) + ตราสะสม</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>เกมลุ้นรางวัล: สุ่มจับรางวัล · ภารกิจ · ทายผล</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>แคมเปญแต้ม — ตั้งกติกาให้แต้มจากซื้อ/โพสต์เอง</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>คูปองส่วนลด ใช้ได้จริงตอนเช็คเอาท์</li>
       </ul>
     </div>
-    <div class="pcard p-mkt">
-      <div class="top">🛒</div>
+    <div class="pcard p-mkt reveal">
+      <div class="ibox ibox-52 t-mkt"><svg class="ic"><use href="#i-bag"/></svg></div>
       <h3>Market</h3>
       <div class="sub">ร้านค้าออนไลน์ครบวงจรในแอป</div>
       <ul>
-        <li>สินค้า+รูป+สต็อก ตะกร้า เช็คเอาท์ PromptPay QR</li>
-        <li>ตัด/คืนสต็อกอัตโนมัติ · ค่าส่งยืดหยุ่น (ส่งฟรีเมื่อครบ)</li>
-        <li>เครื่องมือคิดต้นทุน–ราคา–กำไรต่อชั้นสมาชิก</li>
-        <li>ใบปะหน้า + เชื่อมระบบขนส่งออกเลขพัสดุ</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>สินค้า+รูป+สต็อก ตะกร้า เช็คเอาท์ PromptPay QR</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>ตัด/คืนสต็อกอัตโนมัติ · ค่าส่งยืดหยุ่น (ส่งฟรีเมื่อครบ)</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>เครื่องมือคิดต้นทุน–ราคา–กำไรต่อชั้นสมาชิก</li>
+        <li><svg class="ic li-c"><use href="#i-check"/></svg>ใบปะหน้า + เชื่อมระบบขนส่งออกเลขพัสดุ</li>
       </ul>
     </div>
   </div>
@@ -241,74 +286,74 @@
 
 <!-- ACTIVITY SPOTLIGHT -->
 <section id="activity" class="alt"><div class="wrap">
-  <div class="sec-head">
+  <div class="sec-head reveal">
     <div class="eyebrow">จุดต่างที่คู่แข่งไม่มี</div>
     <h2>เครื่องมือ “เล่นกับลูกค้า” ที่ร้านสร้างเองได้</h2>
     <p>เปลี่ยนคนซื้อครั้งเดียว ให้กลับมาซ้ำ — ด้วยกิจกรรมที่แบรนด์ตั้งค่าเองแบบยืดหยุ่น</p>
   </div>
   <div class="spot-grid">
-    <div class="tool"><div class="ti">🎡</div><h4>สุ่มจับรางวัล</h4><p>ลูกค้าใช้แต้มหมุนลุ้นของรางวัล/คูปอง — สุ่มยุติธรรมฝั่งเซิร์ฟเวอร์ ตัดสต็อกอัตโนมัติ</p></div>
-    <div class="tool"><div class="ti">🎯</div><h4>ภารกิจ</h4><p>ตั้งเป้า “โพสต์ครบ / ซื้อครบ / สะสมแต้มถึง” แล้วรับรางวัล ระบบนับความคืบหน้าให้เอง</p></div>
-    <div class="tool"><div class="ti">🔮</div><h4>ทายผล</h4><p>ให้ลูกค้าทายผลลุ้นรางวัล เฉลยแล้วจ่ายรางวัลผู้ชนะอัตโนมัติ เล่นได้หลายครั้ง</p></div>
-    <div class="tool"><div class="ti">⭐</div><h4>แคมเปญแต้ม</h4><p>ตั้งกติกาเอง “ซื้อครบ X บาท รับ Y แต้ม” หรือโบนัสจากการโพสต์ — ให้แต้มอัตโนมัติ</p></div>
-    <div class="tool"><div class="ti">🔥</div><h4>โปรฯ คูณแต้ม</h4><p>เปิดช่วงโปรฯ คูณแต้มทั้งร้าน (x2/x3) ตามวันเวลาที่ตั้ง คูณซ้อนกับแคมเปญได้</p></div>
-    <div class="tool"><div class="ti">🎟️</div><h4>คูปอง</h4><p>รางวัลออกเป็นคูปองส่วนลด ใช้ได้จริงตอนเช็คเอาท์ กันใช้ซ้ำอัตโนมัติ</p></div>
+    <div class="tool reveal"><div class="ibox ibox-52 t-act"><svg class="ic"><use href="#i-gift"/></svg></div><h4>สุ่มจับรางวัล</h4><p>ลูกค้าใช้แต้มหมุนลุ้นของรางวัล/คูปอง — สุ่มยุติธรรมฝั่งเซิร์ฟเวอร์ ตัดสต็อกอัตโนมัติ</p></div>
+    <div class="tool reveal"><div class="ibox ibox-52 t-com"><svg class="ic"><use href="#i-flag"/></svg></div><h4>ภารกิจ</h4><p>ตั้งเป้า “โพสต์ครบ / ซื้อครบ / สะสมแต้มถึง” แล้วรับรางวัล ระบบนับความคืบหน้าให้เอง</p></div>
+    <div class="tool reveal"><div class="ibox ibox-52 t-mkt"><svg class="ic"><use href="#i-help"/></svg></div><h4>ทายผล</h4><p>ให้ลูกค้าทายผลลุ้นรางวัล เฉลยแล้วจ่ายรางวัลผู้ชนะอัตโนมัติ เล่นได้หลายครั้ง</p></div>
+    <div class="tool reveal"><div class="ibox ibox-52 t-act"><svg class="ic"><use href="#i-star"/></svg></div><h4>แคมเปญแต้ม</h4><p>ตั้งกติกาเอง “ซื้อครบ X บาท รับ Y แต้ม” หรือโบนัสจากการโพสต์ — ให้แต้มอัตโนมัติ</p></div>
+    <div class="tool reveal"><div class="ibox ibox-52 t-act"><svg class="ic"><use href="#i-zap"/></svg></div><h4>โปรฯ คูณแต้ม</h4><p>เปิดช่วงโปรฯ คูณแต้มทั้งร้าน (x2/x3) ตามวันเวลาที่ตั้ง คูณซ้อนกับแคมเปญได้</p></div>
+    <div class="tool reveal"><div class="ibox ibox-52 t-mkt"><svg class="ic"><use href="#i-tag"/></svg></div><h4>คูปอง</h4><p>รางวัลออกเป็นคูปองส่วนลด ใช้ได้จริงตอนเช็คเอาท์ กันใช้ซ้ำอัตโนมัติ</p></div>
   </div>
-  <div class="spot-note">ทุกกิจกรรมทำงานฝั่งเซิร์ฟเวอร์ <b>โกงแต้มไม่ได้</b> — ปลอดภัย พร้อมใช้จริง</div>
+  <div class="spot-note"><svg class="ic"><use href="#i-shield-check"/></svg> ทุกกิจกรรมทำงานฝั่งเซิร์ฟเวอร์ <b>โกงแต้มไม่ได้</b> — ปลอดภัย พร้อมใช้จริง</div>
 </div></section>
 
 <!-- VALUE ROW -->
 <section><div class="wrap">
-  <div class="sec-head">
+  <div class="sec-head reveal">
     <div class="eyebrow">เบื้องหลังที่ทำให้ไว้ใจได้</div>
     <h2>ปรับเป็นแบรนด์คุณ 100% + หลังบ้านครบ</h2>
   </div>
   <div class="vrow">
-    <div class="vcard"><div class="vi">🎨</div><h4>เป็นแบรนด์คุณ</h4><p>โลโก้ สี ชื่อ ป้ายร้าน ข้อความ ปรับเองจากแดชบอร์ด ไม่ต้องแตะโค้ด</p></div>
-    <div class="vcard"><div class="vi">📊</div><h4>แดชบอร์ดครบ</h4><p>สมาชิก โพสต์ ออเดอร์ ยอดขาย และตั้งค่าทุกอย่างในที่เดียว</p></div>
-    <div class="vcard"><div class="vi">🧩</div><h4>เปิด–ปิดฟีเจอร์</h4><p>เลือกเปิดเฉพาะที่ต้องการต่อแบรนด์ ปรับได้ตลอด</p></div>
-    <div class="vcard"><div class="vi">🔒</div><h4>ข้อมูลแยกขาด</h4><p>แต่ละแบรนด์แยกข้อมูลกันสนิท ปลอดภัยระดับระบบ</p></div>
+    <div class="vcard reveal"><div class="ibox ibox-56 t-pri"><svg class="ic"><use href="#i-palette"/></svg></div><h4>เป็นแบรนด์คุณ</h4><p>โลโก้ สี ชื่อ ป้ายร้าน ข้อความ ปรับเองจากแดชบอร์ด ไม่ต้องแตะโค้ด</p></div>
+    <div class="vcard reveal"><div class="ibox ibox-56 t-pri"><svg class="ic"><use href="#i-chart"/></svg></div><h4>แดชบอร์ดครบ</h4><p>สมาชิก โพสต์ ออเดอร์ ยอดขาย และตั้งค่าทุกอย่างในที่เดียว</p></div>
+    <div class="vcard reveal"><div class="ibox ibox-56 t-pri"><svg class="ic"><use href="#i-sliders"/></svg></div><h4>เปิด–ปิดฟีเจอร์</h4><p>เลือกเปิดเฉพาะที่ต้องการต่อแบรนด์ ปรับได้ตลอด</p></div>
+    <div class="vcard reveal"><div class="ibox ibox-56 t-pri"><svg class="ic"><use href="#i-shield"/></svg></div><h4>ข้อมูลแยกขาด</h4><p>แต่ละแบรนด์แยกข้อมูลกันสนิท ปลอดภัยระดับระบบ</p></div>
   </div>
 </div></section>
 
 <!-- CASE STUDY -->
 <section class="alt"><div class="wrap">
-  <div class="case">
-    <div class="em">🌿</div>
+  <div class="case reveal">
+    <div class="cbig ibox t-com"><svg class="ic"><use href="#i-leaf"/></svg></div>
     <div class="body">
       <span class="badge">CASE STUDY</span>
       <h3>เพื่อนสวน × DemeterRich</h3>
       <p>ชุมชนคนรักสวนของแบรนด์ปุ๋ย — รวมฟีดชุมชนให้ลูกค้าคุยกัน ร้านค้าออนไลน์พร้อมค่าส่งอัตโนมัติ และระบบกิจกรรม–ลอยัลตี้ (แต้ม สุ่มรางวัล แคมเปญ) ไว้เล่นกับลูกค้า — ทั้งหมดสร้างบน Bocean แบรนด์เดียว เชื่อมทุกอย่างเข้าด้วยกัน</p>
     </div>
-    <a class="btn btn-pri" href="https://phuansuan.web.app" target="_blank" rel="noopener">เปิดดู →</a>
+    <a class="btn btn-pri" href="https://phuansuan.web.app" target="_blank" rel="noopener">เปิดดู <svg class="ic"><use href="#i-arrow"/></svg></a>
   </div>
 </div></section>
 
 <!-- PRICING -->
 <section id="pricing"><div class="wrap">
-  <div class="sec-head">
+  <div class="sec-head reveal">
     <div class="eyebrow">แพ็กเกจ</div>
     <h2>เริ่มฟรี ขยายเมื่อพร้อม</h2>
     <p>เลือกแพ็กเกจที่เหมาะกับขนาดแบรนด์ของคุณ</p>
   </div>
   <div class="plans">
-    <div class="plan">
+    <div class="plan reveal">
       <h3>Free</h3>
       <div class="price">฿0<small> /เดือน</small></div>
-      <ul><li>ชุมชน + ฟีด</li><li>ร้านค้าพื้นฐาน</li><li>ระบบแต้ม + กิจกรรมเริ่มต้น</li><li>สมาชิกไม่จำกัด</li><li>โดเมน .web.app</li></ul>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg>ชุมชน + ฟีด</li><li><svg class="ic"><use href="#i-check"/></svg>ร้านค้าพื้นฐาน</li><li><svg class="ic"><use href="#i-check"/></svg>ระบบแต้ม + กิจกรรมเริ่มต้น</li><li><svg class="ic"><use href="#i-check"/></svg>สมาชิกไม่จำกัด</li><li><svg class="ic"><use href="#i-check"/></svg>โดเมน .web.app</li></ul>
       <a class="btn btn-ghost" href="#signup">เริ่มเลย</a>
     </div>
-    <div class="plan hot">
+    <div class="plan hot reveal">
       <span class="tag">แนะนำ</span>
       <h3>Pro</h3>
       <div class="price">ติดต่อ<small> /เดือน</small></div>
-      <ul><li>ทุกอย่างใน Free</li><li>Activity Engine เต็มรูปแบบ</li><li>Tier + ส่วนลด + คูปอง</li><li>เครื่องมือคิดราคา–กำไร</li><li>โดเมนของคุณเอง</li></ul>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg>ทุกอย่างใน Free</li><li><svg class="ic"><use href="#i-check"/></svg>Activity Engine เต็มรูปแบบ</li><li><svg class="ic"><use href="#i-check"/></svg>Tier + ส่วนลด + คูปอง</li><li><svg class="ic"><use href="#i-check"/></svg>เครื่องมือคิดราคา–กำไร</li><li><svg class="ic"><use href="#i-check"/></svg>โดเมนของคุณเอง</li></ul>
       <a class="btn btn-pri" href="#signup">ขอใช้งาน</a>
     </div>
-    <div class="plan">
+    <div class="plan reveal">
       <h3>Enterprise</h3>
       <div class="price">ติดต่อ</div>
-      <ul><li>ทุกอย่างใน Pro</li><li>ปรับแต่งเฉพาะแบรนด์</li><li>เชื่อมระบบภายนอก</li><li>ดูแลแบบทีมงาน</li></ul>
+      <ul><li><svg class="ic"><use href="#i-check"/></svg>ทุกอย่างใน Pro</li><li><svg class="ic"><use href="#i-check"/></svg>ปรับแต่งเฉพาะแบรนด์</li><li><svg class="ic"><use href="#i-check"/></svg>เชื่อมระบบภายนอก</li><li><svg class="ic"><use href="#i-check"/></svg>ดูแลแบบทีมงาน</li></ul>
       <a class="btn btn-ghost" href="#signup">คุยกับเรา</a>
     </div>
   </div>
@@ -316,13 +361,13 @@
 
 <!-- SIGNUP -->
 <section id="signup" class="alt"><div class="wrap">
-  <div class="sec-head">
+  <div class="sec-head reveal">
     <div class="eyebrow">ลงทะเบียน</div>
     <h2>ขอเปิดร้านของแบรนด์คุณ</h2>
     <p>กรอกข้อมูลสั้น ๆ ทีมงานจะติดต่อกลับเพื่อตั้งค่าระบบให้</p>
   </div>
 
-  <div class="form-card">
+  <div class="form-card reveal">
     <div id="bo-form">
       <div class="f-err" id="f-err"></div>
       <div class="fg">
@@ -350,7 +395,7 @@
     </div>
 
     <div class="form-ok" id="bo-ok">
-      <div class="big">🎉</div>
+      <div class="okico"><svg class="ic"><use href="#i-check"/></svg></div>
       <h3>ส่งคำขอเรียบร้อย!</h3>
       <p>ทีมงาน Bocean จะติดต่อกลับโดยเร็วที่สุด ขอบคุณที่สนใจครับ</p>
     </div>
@@ -359,7 +404,7 @@
 
 <footer>
   <div class="wrap">
-    <div class="brand" style="justify-content:center;font-size:18px;margin-bottom:8px"><span class="logo" style="width:28px;height:28px;font-size:15px">🌊</span> Bocean</div>
+    <div class="brand"><span class="logo"><svg class="ic"><use href="#i-wave"/></svg></span> Bocean</div>
     แพลตฟอร์มสร้างชุมชน · กิจกรรม · ร้านค้า สำหรับแบรนด์ · © 2026
   </div>
 </footer>
@@ -416,6 +461,20 @@
         btn.disabled = false; btn.textContent = 'ส่งคำขอเปิดร้าน';
       });
   }
+
+  // scroll reveal (เคารพ prefers-reduced-motion)
+  try {
+    var rm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var els = document.querySelectorAll('.reveal');
+    if (rm || !('IntersectionObserver' in window)) {
+      els.forEach(function(el){ el.classList.add('in'); });
+    } else {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { threshold: .12, rootMargin: '0px 0px -40px 0px' });
+      els.forEach(function(el){ io.observe(el); });
+    }
+  } catch(e){ document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); }); }
 </script>
 
 </body>
