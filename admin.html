@@ -1036,6 +1036,18 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <div class="screen" id="screen-earn">
   <div class="page-header"><div class="page-title">⭐ แคมเปญแต้ม</div><div class="page-sub">ตั้งกติกาให้ลูกค้าได้แต้มอัตโนมัติ (ซื้อของ/โพสต์ในชุมชน) · ตั้งช่วงโปรฯ คูณแต้มได้ · ระบบให้แต้มฝั่งเซิร์ฟเวอร์อัตโนมัติ</div></div>
+  <div class="card" style="border:1.5px solid #f59e0b;background:#fffbeb">
+    <div class="card-title">🔥 โปรฯ คูณแต้มทั้งร้าน</div>
+    <div style="font-size:13px;color:var(--muted);margin:-4px 0 12px">เปิดช่วงโปรฯ แล้วแต้มที่ลูกค้าได้ <b>ทุกทาง (ซื้อ + โพสต์)</b> จะถูกคูณอัตโนมัติในช่วงเวลาที่ตั้ง · คูณซ้อนกับตัวคูณของแต่ละแคมเปญ</div>
+    <div class="form-grid">
+      <div class="fg" style="grid-column:1/-1"><label>ชื่อโปรฯ (โชว์ให้ลูกค้าเห็น)</label><input id="promo-label" placeholder="เช่น โปรฯ ปีใหม่ คูณแต้ม!"></div>
+      <div class="fg"><label>คูณกี่เท่า</label><input type="number" id="promo-mult" min="1" step="0.5" value="2"></div>
+      <div class="fg"><label>เริ่ม (เว้นว่าง=ทันที)</label><input type="datetime-local" id="promo-start"></div>
+      <div class="fg"><label>สิ้นสุด (เว้นว่าง=ไม่จำกัด)</label><input type="datetime-local" id="promo-end"></div>
+      <div class="fg"><label>เปิดโปรฯ</label><label class="toggle"><input type="checkbox" id="promo-active"><span class="toggle-slider"></span></label></div>
+    </div>
+    <div class="save-row"><button class="btn btn-primary" onclick="savePromo()"><svg class="ic"><use href="#i-check"/></svg> บันทึกโปรฯ</button> <span id="promo-status" style="font-size:12.5px;color:var(--muted);margin-left:8px"></span></div>
+  </div>
   <div class="card"><div class="card-title">➕ สร้างแคมเปญแต้มใหม่</div>
     <div class="form-grid">
       <div class="fg" style="grid-column:1/-1"><label>ชื่อแคมเปญ</label><input id="ec-name" placeholder="เช่น ซื้อครบ 100 รับ 1 แต้ม"></div>
@@ -2383,8 +2395,45 @@ function ecWindow(c){
   if (!s && !e) return '';
   return ' · ⏱ '+(s||'ตอนนี้')+'–'+(e||'ไม่จำกัด');
 }
+/* ===== โปรฯ คูณแต้มทั้งร้าน (settings/promo) ===== */
+function promoTs(id){
+  var v = (document.getElementById(id).value||'').trim();
+  if (!v) return null;
+  var d = new Date(v);
+  return isNaN(d.getTime()) ? null : firebase.firestore.Timestamp.fromDate(d);
+}
+async function savePromo(){
+  var doc = {
+    active: document.getElementById('promo-active').checked,
+    multiplier: Math.max(1, Number(document.getElementById('promo-mult').value)||1),
+    label: document.getElementById('promo-label').value.trim(),
+    startAt: promoTs('promo-start'), endAt: promoTs('promo-end'),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await aDb().collection('settings').doc('promo').set(doc, { merge: true });
+    toast('✅ บันทึกโปรฯ แล้ว','success');
+    var st = document.getElementById('promo-status');
+    if (st) st.textContent = doc.active ? ('เปิดอยู่ · คูณ x'+doc.multiplier) : 'ปิดอยู่';
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function loadPromo(){
+  try {
+    var s = await aDb().collection('settings').doc('promo').get();
+    var d = s.exists ? (s.data()||{}) : {};
+    document.getElementById('promo-active').checked = d.active === true;
+    document.getElementById('promo-mult').value = d.multiplier || 2;
+    document.getElementById('promo-label').value = d.label || '';
+    function toLocal(ts){ if(!ts||!ts.seconds) return ''; var dt=new Date(ts.seconds*1000); var p=function(n){return String(n).padStart(2,'0');}; return dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate())+'T'+p(dt.getHours())+':'+p(dt.getMinutes()); }
+    document.getElementById('promo-start').value = toLocal(d.startAt);
+    document.getElementById('promo-end').value = toLocal(d.endAt);
+    var st = document.getElementById('promo-status');
+    if (st) st.textContent = d.active===true ? ('เปิดอยู่ · คูณ x'+(d.multiplier||1)) : (s.exists?'ปิดอยู่':'ยังไม่ได้ตั้ง');
+  } catch(e){}
+}
 async function loadEarnCampaigns(){
   earnTriggerUI();
+  loadPromo();
   var box = document.getElementById('earn-list'); if (box) box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
   try {
     var snap = await aDb().collection('earnCampaigns').get();

@@ -122,3 +122,60 @@ test('post: โบนัส x3 → +25', async () => {
   const u = await waitUntil(`tenants/${TID}/users/${uid}`, (u) => (u.postCount || 0) >= 1);
   assert.equal(u.points, 25);
 });
+
+// ── โปรฯ คูณทั้งร้าน x2 คูณการซื้อ: ยอด 500 กติกา 1/100 = 5 → x2 = 10 ──
+test('promo: คูณทั้งร้าน x2 กับการซื้อ → 5 * 2 = 10', async () => {
+  await seedBase({ points: 0 });
+  await write(async (db) => {
+    await setDoc(doc(db, `tenants/${TID}/earnCampaigns/c1`), { trigger: 'purchase', active: true, ratePoints: 1, ratePerBaht: 100, minSpend: 0, multiplier: 1 });
+    await setDoc(doc(db, `tenants/${TID}/settings/promo`), { active: true, multiplier: 2 });
+  });
+  const o = await placeAndConfirm(500);
+  assert.equal(o.pointsEarned, 10);
+  assert.equal((await read(`tenants/${TID}/users/${uid}`)).points, 10);
+});
+
+// ── โปรฯ สแต็กกับตัวคูณแคมเปญ: ซื้อ 5 * campaignX2 * promoX2 = 20 ──
+test('promo: สแต็กกับตัวคูณแคมเปญ (campaign x2 × promo x2) → 20', async () => {
+  await seedBase({ points: 0 });
+  await write(async (db) => {
+    await setDoc(doc(db, `tenants/${TID}/earnCampaigns/c1`), { trigger: 'purchase', active: true, ratePoints: 1, ratePerBaht: 100, minSpend: 0, multiplier: 2 });
+    await setDoc(doc(db, `tenants/${TID}/settings/promo`), { active: true, multiplier: 2 });
+  });
+  const o = await placeAndConfirm(500);
+  assert.equal(o.pointsEarned, 20);   // floor(500/100)*1*2 = 10, * promo 2 = 20
+});
+
+// ── โปรฯ นอกช่วง (endAt อดีต) → ไม่คูณ (คงเดิม 5) ──────────────
+test('promo: endAt อดีต → ไม่คูณ (คง 5)', async () => {
+  await seedBase({ points: 0 });
+  await write(async (db) => {
+    await setDoc(doc(db, `tenants/${TID}/earnCampaigns/c1`), { trigger: 'purchase', active: true, ratePoints: 1, ratePerBaht: 100, minSpend: 0, multiplier: 1 });
+    await setDoc(doc(db, `tenants/${TID}/settings/promo`), { active: true, multiplier: 2, endAt: Timestamp.fromMillis(Date.now() - 60000) });
+  });
+  const o = await placeAndConfirm(500);
+  assert.equal(o.pointsEarned, 5);
+});
+
+// ── โปรฯ ปิด (active=false) → ไม่คูณ ─────────────────────────
+test('promo: active=false → ไม่คูณ (คง 5)', async () => {
+  await seedBase({ points: 0 });
+  await write(async (db) => {
+    await setDoc(doc(db, `tenants/${TID}/earnCampaigns/c1`), { trigger: 'purchase', active: true, ratePoints: 1, ratePerBaht: 100, minSpend: 0, multiplier: 1 });
+    await setDoc(doc(db, `tenants/${TID}/settings/promo`), { active: false, multiplier: 2 });
+  });
+  const o = await placeAndConfirm(500);
+  assert.equal(o.pointsEarned, 5);
+});
+
+// ── โปรฯ คูณโพสต์ด้วย: perPost(10)+โบนัส(5)=15 → x2 = 30 ──────
+test('promo: คูณโพสต์ด้วย (perPost+โบนัส) → 15 * 2 = 30', async () => {
+  await seedBase({ points: 0, postCount: 0 });
+  await write(async (db) => {
+    await setDoc(doc(db, `tenants/${TID}/earnCampaigns/c1`), { trigger: 'post', active: true, bonusPoints: 5, multiplier: 1 });
+    await setDoc(doc(db, `tenants/${TID}/settings/promo`), { active: true, multiplier: 2 });
+  });
+  await write(async (db) => { await setDoc(doc(db, `tenants/${TID}/posts/p1`), { authorId: uid, text: 'hello' }); });
+  const u = await waitUntil(`tenants/${TID}/users/${uid}`, (u) => (u.postCount || 0) >= 1);
+  assert.equal(u.points, 30);
+});

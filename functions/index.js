@@ -922,6 +922,24 @@ async function activeEarnCampaigns(tid, trigger, nowMs) {
   });
 }
 
+// โปรฯ คูณแต้มทั้งร้าน (settings/promo) — คูณแต้มทุกอย่าง (ซื้อ+โพสต์) ในช่วงเวลา
+// คืน 1 ถ้าไม่มี/ปิด/นอกช่วง · สแต็กกับตัวคูณราย campaign (คูณซ้อน)
+async function getPromoMultiplier(tid, nowMs) {
+  try {
+    const s = await troot(tid).collection("settings").doc("promo").get();
+    if (!s.exists) return 1;
+    const d = s.data() || {};
+    if (d.active === false) return 1;
+    const m = Math.max(1, _num(d.multiplier, 1));
+    if (m <= 1) return 1;
+    const st = d.startAt && typeof d.startAt.toMillis === "function" ? d.startAt.toMillis() : null;
+    const en = d.endAt && typeof d.endAt.toMillis === "function" ? d.endAt.toMillis() : null;
+    if (st !== null && nowMs < st) return 1;
+    if (en !== null && nowMs > en) return 1;
+    return m;
+  } catch (e) { return 1; }
+}
+
 exports.onPostCreated = onDocumentCreated(
   { document: "tenants/{tid}/posts/{postId}", region: "asia-southeast1" },
   async (event) => {
@@ -938,9 +956,12 @@ exports.onPostCreated = onDocumentCreated(
       const mult = Math.max(1, _num(c.multiplier, 1));
       bonus += Math.floor(bp * mult);
     }
+    // โปรฯ คูณทั้งร้าน คูณแต้มโพสต์ทั้งก้อน (perPost ปกติ + โบนัสแคมเปญ)
+    const promo = await getPromoMultiplier(tid, Date.now());
+    const total = Math.floor((pts + bonus) * promo);
     const ref = troot(tid).collection("users").doc(post.authorId);
     await ref.update({
-      points:    FieldValue.increment(pts + bonus),
+      points:    FieldValue.increment(total),
       postCount: FieldValue.increment(1),
     });
     await updateTier(ref, tid);
@@ -1087,7 +1108,9 @@ exports.onOrderConfirmed = onDocumentUpdated(
       if (!rp || subtotal < min) continue;
       pts += Math.floor(Math.floor(subtotal / per) * rp * mult);
     }
-    pts = Math.floor(pts);
+    // โปรฯ คูณทั้งร้าน คูณแต้มจากการซื้อทั้งหมด (สแต็กกับตัวคูณราย campaign)
+    const promo = await getPromoMultiplier(tid, Date.now());
+    pts = Math.floor(pts * promo);
 
     const orderRef = troot(tid).collection("orders").doc(event.params.orderId);
     if (pts <= 0) { await orderRef.update({ pointsAwarded: true, pointsEarned: 0 }).catch(() => {}); return; }

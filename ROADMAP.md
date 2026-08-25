@@ -99,6 +99,7 @@
 
 - [x] **สุ่มจับรางวัล / lucky draw v1** — ✅ **(2026-08-25)** `spinLuckyDraw` (server-authoritative: transaction หักแต้ม + สุ่ม crypto + ตัดสต็อก + คูปอง) · rules + rules-test 30/30 · admin สร้างกล่องสุ่ม · user แท็บกิจกรรมหมุน+คูปองของฉัน · deploy ครบ · **รอ Roger เทสต์ e2e (สร้าง draw ในแอดมิน → user หมุน)**
 - [x] **Campaign builder v1** — ✅ **(2026-08-25)** แคมเปญแต้มที่ร้านตั้งเอง ต่อ **trigger**: `purchase` (ซื้อครบ X บาท รับ Y แต้ม + ยอดขั้นต่ำ) · `post` (โบนัสแต้มต่อโพสต์) · **ตัวคูณแต้ม** (x2/x3/x5 โปรฯ) + **ช่วงเวลา** (startAt/endAt) · ให้แต้มฝั่ง server: trigger `onOrderConfirmed` (ยิงตอนออเดอร์→confirmed, idempotent flag `pointsAwarded`, คิดจาก subtotal) + เสริม `onPostCreated` (โบนัสบวกจากแต้มโพสต์ปกติ) · แอดมินหน้า "⭐ แคมเปญแต้ม" · user เห็นการ์ด "วิธีได้แต้ม" ในแท็บกิจกรรม · rules `earnCampaigns` · e2e `campaign.test.js` 8/8 (รวม 60/60) + rules 30/30 · deploy ครบ · **โครง trigger ต่อยอดง่าย (เพิ่ม referral ฯลฯ)**
+- [x] **โปรฯ คูณแต้มทั้งร้าน** — ✅ **(2026-08-25)** `settings/promo` แบรนด์ตั้งเอง (คูณ xN ช่วงเวลา) → คูณแต้มทุกทาง (ซื้อ+โพสต์) สแต็กกับตัวคูณราย campaign · server `getPromoMultiplier` ใน onOrderConfirmed+onPostCreated · user banner 🔥 + checkout preview คูณตาม · e2e +5 (campaign 13/13, รวม 65/65) · deploy ครบ · verified สด
 - [ ] ชาเลนจ์ / ภารกิจ + แสดงผลในเสา Activity — **M**
 - [ ] คูปองใช้จริงตอน checkout (ตอนนี้เก็บโค้ด+แจ้งร้านเอง) — **M**
 

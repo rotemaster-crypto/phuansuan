@@ -2317,8 +2317,14 @@ async function loadEarnCampaignsUser(){
       if (e !== null && now > e) return false;
       return true;
     });
-    if (!cs.length){ box.innerHTML=''; return; }
-    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">⭐ วิธีได้แต้ม</div>'+
+    var promo = await readActivePromo();
+    var promoBanner = '';
+    if (promo.mult > 1){
+      var until = promo.endAt ? (' · ถึง '+new Date(promo.endAt).toLocaleDateString('th-TH',{day:'numeric',month:'short'})) : '';
+      promoBanner = '<div style="background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;border-radius:12px;padding:11px 13px;margin-bottom:10px;font-weight:800;font-size:14px">🔥 '+escapeHtml(promo.label||'โปรฯ คูณแต้ม')+' — คูณแต้ม x'+promo.mult+' ทุกทาง!'+until+'</div>';
+    }
+    if (!cs.length && !promoBanner){ box.innerHTML=''; return; }
+    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">⭐ วิธีได้แต้ม</div>'+ promoBanner +
       cs.map(function(c){
         var mult = (Number(c.multiplier)||1) > 1 ? ' <span style="background:#fef3c7;color:#92400e;font-weight:800;border-radius:6px;padding:1px 6px;font-size:12px">x'+c.multiplier+'</span>' : '';
         var icon, title;
@@ -3605,13 +3611,32 @@ function renderCouponPicker(){
     }).join('')+'</div>';
 }
 
+// ── โปรฯ คูณแต้มทั้งร้าน (settings/promo) — อ่านตัวคูณที่ active ในช่วงเวลา ─────
+async function readActivePromo(){
+  try {
+    const s = await tdb().collection('settings').doc('promo').get();
+    if (!s.exists) return { mult:1, label:'' };
+    const d = s.data()||{};
+    if (d.active !== true) return { mult:1, label:d.label||'' };
+    const m = Math.max(1, Number(d.multiplier)||1);
+    if (m <= 1) return { mult:1, label:d.label||'' };
+    const now = Date.now();
+    const st = d.startAt && d.startAt.seconds ? d.startAt.seconds*1000 : null;
+    const en = d.endAt   && d.endAt.seconds   ? d.endAt.seconds*1000   : null;
+    if (st!==null && now<st) return { mult:1, label:d.label||'' };
+    if (en!==null && now>en) return { mult:1, label:d.label||'' };
+    return { mult:m, label:d.label||'', endAt:en };
+  } catch(e){ return { mult:1, label:'' }; }
+}
 // ── แคมเปญแต้ม (purchase) — พรีวิวแต้มที่จะได้ตอน checkout ─────
-// ใช้สูตรเดียวกับ server (onOrderConfirmed) เป๊ะ เพื่อให้เลขตรงกัน
+// ใช้สูตรเดียวกับ server (onOrderConfirmed) เป๊ะ เพื่อให้เลขตรงกัน (รวมโปรฯ คูณทั้งร้าน)
 let checkoutEarnCampaigns = [];
+let checkoutPromo = 1;
 async function loadCheckoutEarnCampaigns(){
-  checkoutEarnCampaigns = [];
+  checkoutEarnCampaigns = []; checkoutPromo = 1;
   if (!db) return;
   try {
+    checkoutPromo = (await readActivePromo()).mult;
     // query แค่ trigger== (เลี่ยง composite index) แล้วกรอง active/เวลาใน memory
     const snap = await tdb().collection('earnCampaigns').where('trigger','==','purchase').get();
     const now = Date.now();
@@ -3635,7 +3660,7 @@ function earnPointsPreview(subtotal){
     if (!rp || subtotal < min) return;
     pts += Math.floor(Math.floor(subtotal/per)*rp*mult);
   });
-  return Math.floor(pts);
+  return Math.floor(pts * checkoutPromo);   // คูณโปรฯ ทั้งร้าน (ตรงกับ server)
 }
 
 function renderCartBadge(){
