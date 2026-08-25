@@ -633,6 +633,8 @@ button .ic,a .ic{pointer-events:none}
       <div class="tier-lbs"><span id="tlb-bronze">มือใหม่</span><span id="tlb-silver">เงิน</span><span id="tier-label" class="tier-act">มือใหม่</span><span id="tlb-platinum">ปราชญ์</span></div>
       <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
     </div>
+    <!-- ── ทายผล ── -->
+    <div id="predictions-section" style="margin-bottom:20px"></div>
     <!-- ── ภารกิจ ── -->
     <div id="missions-section" style="margin-bottom:20px"></div>
     <!-- ── สุ่มจับรางวัล ── -->
@@ -2213,6 +2215,78 @@ function showSpinResult(r){
   var m = document.getElementById('spinModal'); if (m) m.classList.add('open');
 }
 function closeSpinModal(){ var m=document.getElementById('spinModal'); if(m) m.classList.remove('open'); }
+// ── ทายผล (Prediction) ──
+async function loadPredictionsUser(){
+  var box = document.getElementById('predictions-section'); if (!box) return;
+  if (!currentUser || !db){ box.innerHTML=''; return; }
+  try {
+    var snap = await tdb().collection('predictions').where('active','==',true).get();
+    var ps = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+    if (!ps.length){ box.innerHTML=''; return; }
+    // อ่านคำทายของเราแต่ละกิจกรรม
+    var entries = {};
+    await Promise.all(ps.map(async function(p){
+      try { var e = await tdb().collection('predictions').doc(p.id).collection('entries').doc(currentUser.uid).get(); if (e.exists) entries[p.id]=e.data(); } catch(err){}
+    }));
+    var now = Date.now();
+    ps.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
+    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">🔮 ทายผลลุ้นรางวัล</div>'+
+      ps.map(function(p){ return predictionCard(p, entries[p.id], now); }).join('');
+  } catch(e){ box.innerHTML=''; }
+}
+function predictionCard(p, entry, now){
+  var settled = p.status==='settled';
+  var closeMs = (p.closeAt && p.closeAt.seconds) ? p.closeAt.seconds*1000 : null;
+  var closed = settled || (closeMs && now > closeMs) || p.active===false;
+  var reward = p.rewardType==='coupon' ? ('🎟️ '+escapeHtml((p.coupon&&(p.coupon.discountText||p.coupon.label))||'คูปอง')) : ('🏅 '+(p.rewardPoints||0)+' แต้ม');
+  var head = '<div style="display:flex;justify-content:space-between;gap:8px;align-items:start">'+
+    '<div style="font-size:15px;font-weight:800;color:var(--text)">'+escapeHtml(p.name||'')+'</div>'+
+    (settled?'<span style="flex:none;font-size:11px;font-weight:700;color:#16a34a;border:1px solid #16a34a;border-radius:6px;padding:1px 7px">เฉลยแล้ว</span>':(closed?'<span style="flex:none;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:1px 7px">ปิดรับ</span>':''))+
+    '</div>';
+  var sub = (p.desc?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+escapeHtml(p.desc)+'</div>':'')+
+    '<div style="font-size:12px;color:var(--muted);margin-top:3px">รางวัล '+reward+(p.costPoints?(' · ค่าเข้าร่วม '+p.costPoints+' แต้ม'):' · เล่นฟรี')+'</div>';
+  var body = '';
+  if (settled){
+    var won = entry && String(entry.answer)===String(p.correctAnswer);
+    body = '<div style="margin-top:8px;font-size:13px">ผลที่ถูก: <b style="color:var(--primary)">'+escapeHtml(p.correctAnswer||'')+'</b></div>'+
+      (entry ? ('<div style="font-size:13px;margin-top:2px">คุณทาย: '+escapeHtml(entry.answer||'')+' → '+(won?'<b style="color:#16a34a">ถูก! ได้รับรางวัลแล้ว 🎉</b>':'<span style="color:var(--muted)">ยังไม่ถูกรอบนี้</span>')+'</div>') : '<div style="font-size:13px;color:var(--muted);margin-top:2px">คุณไม่ได้ร่วมทาย</div>');
+  } else if (entry){
+    body = '<div style="margin-top:8px;font-size:13px;color:var(--muted)">คุณทายไว้: <b style="color:var(--text)">'+escapeHtml(entry.answer||'')+'</b> · รอเฉลย</div>';
+  } else if (closed){
+    body = '<div style="margin-top:8px;font-size:13px;color:var(--muted)">ปิดรับคำทายแล้ว</div>';
+  } else {
+    // ยังเปิดรับ + ยังไม่ทาย → แสดง UI ทาย
+    if (p.mode==='choice'){
+      body = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+
+        (p.options||[]).map(function(o){ return '<button onclick="submitPredictionUser(\''+p.id+'\',\''+encodeURIComponent(o)+'\')" style="border:1.5px solid var(--primary);background:#fff;color:var(--primary);border-radius:9px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer">'+escapeHtml(o)+'</button>'; }).join('')+
+        '</div>';
+    } else {
+      body = '<div style="display:flex;gap:8px;margin-top:10px">'+
+        '<input id="pd-in-'+p.id+'" placeholder="กรอกคำทาย เช่น 2-1" style="flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:9px;font-size:14px">'+
+        '<button onclick="submitPredictionInput(\''+p.id+'\')" style="flex:none;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:8px 16px;font-weight:800;font-size:13px;cursor:pointer">ทาย</button>'+
+        '</div>';
+    }
+  }
+  return '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:8px">'+head+sub+body+'</div>';
+}
+function submitPredictionInput(id){
+  var el = document.getElementById('pd-in-'+id); if(!el) return;
+  var v = (el.value||'').trim();
+  if(!v){ toast('กรอกคำทายก่อนครับ'); return; }
+  submitPredictionUser(id, encodeURIComponent(v));
+}
+async function submitPredictionUser(id, ansEnc){
+  var answer = decodeURIComponent(ansEnc||'');
+  if (!answer){ toast('เลือก/กรอกคำทายก่อนครับ'); return; }
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('submitPrediction');
+    var res = await fn({ tid: (typeof tenantId==='function'?tenantId():'phuansuan'), eventId: id, answer: answer });
+    var d = (res && res.data) || {};
+    if (d.costPoints>0 && currentUser){ currentUser.points = Math.max(0,(currentUser.points||0)-d.costPoints); var pv=document.getElementById('pts-val-display'); if(pv) pv.textContent=((currentUser.points)||0).toLocaleString()+' แต้ม'; }
+    toast('✅ ส่งคำทาย "'+answer+'" แล้ว รอลุ้นผลนะครับ');
+    loadPredictionsUser();
+  } catch(e){ toast('❌ '+((e&&e.message)||'ส่งคำทายไม่สำเร็จ')); }
+}
 // ── ภารกิจ (Phase 4) ──
 var MS_TYPE_TXT = { posts:'โพสต์', purchases:'สั่งซื้อ', points:'สะสมแต้ม' };
 async function loadMissions(){
@@ -2565,7 +2639,7 @@ function switchScreen(name){
   if(name === 'profile'){ renderProfileInfo(); renderMyAddress(); renderProfileOrders(); loadMyPosts(); }
   if(name === 'community'){
     const f = (APP_CONFIG && APP_CONFIG.features) || {};
-    loadMissions(); loadLuckyDrawsUser(); loadMyCoupons();
+    loadPredictionsUser(); loadMissions(); loadLuckyDrawsUser(); loadMyCoupons();
     if (f.communityGroups !== false) loadCommunityGroups();
     if (f.leaderboard !== false) loadLeaderboard();
   }

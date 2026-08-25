@@ -40,6 +40,12 @@ service cloud.firestore {
       match /luckyDraws/{drawId} { allow read: if true; allow write: if canManage(t); }
       // ภารกิจ/แคมเปญ (Phase 4) — แอดมินสร้าง/แก้ · ผู้ใช้อ่านได้ · รับรางวัลผ่าน Cloud Function เท่านั้น
       match /missions/{mid} { allow read: if true; allow write: if canManage(t); }
+      // ทายผล (Prediction) — แอดมินสร้าง/เฉลย · ผู้ใช้อ่านได้ · ส่งคำทาย+จ่ายรางวัลผ่าน Cloud Function เท่านั้น
+      match /predictions/{pid} {
+        allow read: if true;
+        allow write: if canManage(t);
+        match /entries/{uid} { allow read: if isOwner(uid) || canManage(t); allow write: if false; }
+      }
       match /users/{uid} {
         allow read: if isOwner(uid) || memberOf(t) || canManage(t);
         allow create: if isOwner(uid) && memberOf(t)

@@ -500,6 +500,120 @@ exports.claimMission = onCall(async (req) => {
 });
 
 // ============================================================
+//  ทายผล (Prediction) — submitPrediction + settlePrediction
+//  ผู้ใช้ส่งคำทาย (ครั้งเดียว, ก่อนปิดรับ, หักค่าเข้าร่วมถ้ามี)
+//  แอดมินเฉลย → จ่ายรางวัลให้ผู้ชนะทุกคนอัตโนมัติ (idempotent)
+// ============================================================
+exports.submitPrediction = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  const tid = await resolveTid(req.data && req.data.tid);
+  const eventId = ((req.data && req.data.eventId) || "").toString();
+  const answer = ((req.data && req.data.answer) || "").toString().trim();
+  if (!eventId) throw new HttpsError("invalid-argument", "ต้องระบุ eventId");
+  if (!answer) throw new HttpsError("invalid-argument", "ต้องเลือก/กรอกคำทาย");
+
+  const db = admin.firestore();
+  const pRef = troot(tid).collection("predictions").doc(eventId);
+  const uRef = troot(tid).collection("users").doc(uid);
+  const eRef = pRef.collection("entries").doc(uid);
+
+  return db.runTransaction(async (tx) => {
+    const [pSnap, uSnap, eSnap] = await Promise.all([tx.get(pRef), tx.get(uRef), tx.get(eRef)]);
+    if (!pSnap.exists) throw new HttpsError("not-found", "ไม่พบกิจกรรมทายผล");
+    if (!uSnap.exists) throw new HttpsError("not-found", "ไม่พบผู้ใช้");
+    const p = pSnap.data(), u = uSnap.data();
+    if (p.active === false || p.status !== "open") throw new HttpsError("failed-precondition", "ปิดรับคำทายแล้ว");
+    const now = Date.now();
+    const closeMs = (p.closeAt && typeof p.closeAt.toMillis === "function") ? p.closeAt.toMillis() : null;
+    if (closeMs && now > closeMs) throw new HttpsError("failed-precondition", "หมดเวลาทายแล้ว");
+    // ตรวจคำทาย: โหมด choice ต้องอยู่ในตัวเลือก
+    if (p.mode === "choice") {
+      const opts = Array.isArray(p.options) ? p.options.map((x) => String(x)) : [];
+      if (opts.indexOf(answer) < 0) throw new HttpsError("invalid-argument", "ตัวเลือกไม่ถูกต้อง");
+    }
+    if (eSnap.exists) throw new HttpsError("failed-precondition", "คุณทายกิจกรรมนี้ไปแล้ว");
+
+    const cost = Math.max(0, Math.floor(Number(p.costPoints) || 0));
+    if (cost > 0) {
+      const points = Math.floor(Number(u.points) || 0);
+      if (points < cost) throw new HttpsError("failed-precondition", "แต้มไม่พอ (ใช้ " + cost + " แต้ม)");
+      tx.update(uRef, { points: FieldValue.increment(-cost) });
+    }
+    tx.set(eRef, { uid: uid, answer: answer, won: false, rewarded: false, at: FieldValue.serverTimestamp() });
+    tx.update(pRef, { entriesCount: FieldValue.increment(1) });
+    return { ok: true, answer: answer, costPoints: cost };
+  });
+});
+
+exports.settlePrediction = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  const token = (req.auth && req.auth.token) || {};
+  const tid = await resolveTid(req.data && req.data.tid);
+  const isAdmin = token.admin === true || (token.tadmin && token.tadmin[tid] === true);
+  if (!uid || !isAdmin) throw new HttpsError("permission-denied", "เฉพาะแอดมินเท่านั้น");
+  const eventId = ((req.data && req.data.eventId) || "").toString();
+  const inAnswer = ((req.data && req.data.correctAnswer) || "").toString().trim();
+  if (!eventId) throw new HttpsError("invalid-argument", "ต้องระบุ eventId");
+
+  const db = admin.firestore();
+  const pRef = troot(tid).collection("predictions").doc(eventId);
+
+  // 1) ล็อกผลเฉลย (idempotent) — ครั้งแรกตั้ง correctAnswer, ครั้งถัดไปใช้ค่าเดิม
+  const p = await db.runTransaction(async (tx) => {
+    const s = await tx.get(pRef);
+    if (!s.exists) throw new HttpsError("not-found", "ไม่พบกิจกรรมทายผล");
+    const d = s.data();
+    if (d.status !== "settled") {
+      if (!inAnswer) throw new HttpsError("invalid-argument", "ต้องระบุผลที่ถูกต้อง");
+      tx.update(pRef, { status: "settled", correctAnswer: inAnswer, settledAt: FieldValue.serverTimestamp() });
+      d.correctAnswer = inAnswer;
+    }
+    return d;
+  });
+  const correct = p.correctAnswer;
+
+  // 2) จ่ายรางวัลผู้ชนะที่ยังไม่ได้รับ (batched, idempotent ด้วย entry.rewarded)
+  const entriesSnap = await pRef.collection("entries").get();
+  const winners = entriesSnap.docs.filter((d) => String((d.data() || {}).answer) === String(correct));
+  const rewardType = p.rewardType === "coupon" ? "coupon" : "points";
+  const rewardPoints = Math.max(0, Math.floor(Number(p.rewardPoints) || 0));
+  const c = p.coupon || {};
+
+  let granted = 0;
+  for (let i = 0; i < winners.length; i += 200) {
+    const chunk = winners.slice(i, i + 200);
+    const batch = db.batch();
+    let ops = 0;
+    chunk.forEach((d) => {
+      const e = d.data() || {};
+      if (e.rewarded === true) { batch.update(d.ref, { won: true }); ops++; return; }
+      const wUid = e.uid || d.id;
+      const uRef = troot(tid).collection("users").doc(wUid);
+      if (rewardType === "coupon") {
+        const couponRef = uRef.collection("coupons").doc();
+        batch.set(couponRef, {
+          drawId: "prediction:" + eventId, drawName: p.name || "",
+          prizeLabel: c.label || p.name || "คูปอง", code: c.code || genCouponCode(),
+          discountText: c.discountText || "",
+          discountType: (c.discountType === "percent" || c.discountType === "fixed") ? c.discountType : null,
+          discountValue: Math.max(0, Math.floor(Number(c.discountValue) || 0)),
+          used: false, at: FieldValue.serverTimestamp(),
+        });
+      } else if (rewardPoints > 0) {
+        batch.update(uRef, { points: FieldValue.increment(rewardPoints) });
+      }
+      batch.update(d.ref, { won: true, rewarded: true });
+      granted++;
+    });
+    if (ops > 0 || granted > 0) await batch.commit();
+  }
+
+  await pRef.update({ winnersCount: winners.length });
+  return { ok: true, correctAnswer: correct, winners: winners.length, granted: granted };
+});
+
+// ============================================================
 //  analyzePlant — วิเคราะห์โรคพืชจากรูปด้วย Gemini Vision
 // ============================================================
 const { defineSecret } = require("firebase-functions/params");
