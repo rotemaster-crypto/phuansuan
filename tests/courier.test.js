@@ -38,18 +38,25 @@ before(async () => {
 });
 after(async () => { await env.cleanup(); });
 
-async function seed(courierCfg, order, secret) {
+// ข้อมูลผู้รับ/ผู้ส่งครบ (สำหรับทดสอบโหมดจริงผ่าน preflight)
+const FULL_SHIP  = { name:'สมชาย', phone:'0812345678', addressLine:'123 ม.4', subdistrict:'บางรัก', district:'บางรัก', province:'กรุงเทพ', postcode:'10500' };
+const FULL_STORE = { name:'ร้านเพื่อนสวน', phone:'0898765432', addressLine:'99 ถ.สุขุมวิท', subdistrict:'คลองเตย', district:'คลองเตย', province:'กรุงเทพ', postcode:'10110' };
+const REAL_ORDER = { userId: 'x', status:'confirmed', total:300, weight:1.5, shipping: FULL_SHIP };
+
+async function seed(courierCfg, order, secret, store) {
   await env.clearFirestore();
   await env.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
     await setDoc(doc(db, `tenants/${TID}`), { status: 'active' });
     if (courierCfg) await setDoc(doc(db, `tenants/${TID}/settings/courier`), courierCfg);
     if (secret) await setDoc(doc(db, `tenants/${TID}/private/courier`), secret);
+    if (store) await setDoc(doc(db, `tenants/${TID}/settings/store`), store);
     await setDoc(doc(db, `tenants/${TID}/orders/o1`), order || { userId: uid, status: 'confirmed', total: 300 });
   });
 }
 async function read(path) { let o; await env.withSecurityRulesDisabled(async (ctx) => { o = await getDoc(doc(ctx.firestore(), path)); }); return o.exists ? o.data() : null; }
 async function expectFail(fn, data, code) { await assert.rejects(() => fn(data), (e) => { assert.match(String(e.code||''), new RegExp(code+'$')); return true; }); }
+async function expectFailMsg(fn, data, code, msgRe) { await assert.rejects(() => fn(data), (e) => { assert.match(String(e.code||''), new RegExp(code+'$')); assert.match(String(e.message||''), msgRe); return true; }); }
 
 // ── setCourierCredential เก็บ key (client อ่านไม่ได้ผ่าน rules แต่ function เขียนได้) ──
 test('setCourierCredential → เก็บ private/courier', async () => {
@@ -88,11 +95,51 @@ test('มีเลขพัสดุแล้ว → failed-precondition', async
   await expectFail(ship, { tid: TID, orderId: 'o1' }, 'failed-precondition');
 });
 
-// ── โหมดจริง (มี key, ปิด mock) → unimplemented (รอเสียบ API) ──
-test('โหมดจริง (มี key, ปิด mock) → unimplemented', async () => {
+// ── โหมดจริง + ข้อมูลครบ → ผ่าน preflight ถึง unimplemented (รอเสียบ API) ──
+test('โหมดจริง + ข้อมูลครบ → unimplemented (ผ่าน preflight)', async () => {
   await setAdminClaim(true);
-  await seed({ active: true, mock: false, provider: 'shippop' }, { userId: uid, status: 'confirmed', total: 300 }, { provider:'shippop', apiKey:'REALKEY' });
+  await seed({ active: true, mock: false, provider: 'shippop' }, REAL_ORDER, { provider:'shippop', apiKey:'REALKEY' }, FULL_STORE);
   await expectFail(ship, { tid: TID, orderId: 'o1' }, 'unimplemented');
+});
+
+// ── preflight: โหมดจริง + ผู้รับไม่ครบ → failed-precondition + บอกว่าขาดอะไร ──
+test('preflight: ผู้รับไม่ครบ → failed-precondition (ระบุที่ขาด)', async () => {
+  await setAdminClaim(true);
+  const noShip = { userId: uid, status:'confirmed', total:300, weight:1.5 };  // ไม่มี shipping
+  await seed({ active: true, mock: false, provider: 'shippop' }, noShip, { provider:'shippop', apiKey:'REALKEY' }, FULL_STORE);
+  await expectFailMsg(ship, { tid: TID, orderId: 'o1' }, 'failed-precondition', /ผู้รับ/);
+});
+
+// ── preflight: ไม่มีข้อมูลร้าน (ผู้ส่ง) → failed-precondition ──
+test('preflight: ไม่มีข้อมูลร้าน → failed-precondition (ระบุผู้ส่ง)', async () => {
+  await setAdminClaim(true);
+  await seed({ active: true, mock: false, provider: 'shippop' }, REAL_ORDER, { provider:'shippop', apiKey:'REALKEY' });  // ไม่ seed store
+  await expectFailMsg(ship, { tid: TID, orderId: 'o1' }, 'failed-precondition', /ร้าน|ผู้ส่ง/);
+});
+
+// ── preflight: ไม่มีน้ำหนัก → failed-precondition ──
+test('preflight: ไม่มีน้ำหนัก → failed-precondition', async () => {
+  await setAdminClaim(true);
+  const noWeight = { userId: uid, status:'confirmed', total:300, shipping: FULL_SHIP };  // weight ไม่มี
+  await seed({ active: true, mock: false, provider: 'shippop' }, noWeight, { provider:'shippop', apiKey:'REALKEY' }, FULL_STORE);
+  await expectFailMsg(ship, { tid: TID, orderId: 'o1' }, 'failed-precondition', /น้ำหนัก/);
+});
+
+// ── preflight: รหัสไปรษณีย์ผิดรูป (ไม่ใช่ 5 หลัก) → failed-precondition ──
+test('preflight: รหัสไปรษณีย์ผู้รับผิดรูป → failed-precondition', async () => {
+  await setAdminClaim(true);
+  const badZip = { userId: uid, status:'confirmed', total:300, weight:1.5, shipping: Object.assign({}, FULL_SHIP, { postcode:'105' }) };
+  await seed({ active: true, mock: false, provider: 'shippop' }, badZip, { provider:'shippop', apiKey:'REALKEY' }, FULL_STORE);
+  await expectFailMsg(ship, { tid: TID, orderId: 'o1' }, 'failed-precondition', /รหัสไปรษณีย์/);
+});
+
+// ── โหมดทดสอบ ข้าม preflight ได้ (ข้อมูลไม่ครบก็ยัง MOCK สำเร็จ) ──
+test('mock mode → ข้าม preflight (ข้อมูลไม่ครบก็สร้าง MOCK ได้)', async () => {
+  await setAdminClaim(true);
+  await seed({ active: true, mock: true }, { userId: uid, status:'confirmed', total:300 });  // ไม่มี shipping/store/weight
+  const res = await ship({ tid: TID, orderId: 'o1', courier: 'flash' });
+  assert.equal(res.mock, true);
+  assert.match(res.trackingNumber, /^MOCK-/);
 });
 
 // ── สิทธิ์: ไม่ใช่แอดมิน → permission-denied ──

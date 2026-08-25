@@ -648,6 +648,31 @@ exports.setCourierCredential = onCall(async (req) => {
   return { ok: true, hasKey: apiKey.length > 0 };
 });
 
+// preflight: เช็กว่ามีข้อมูลครบพอสร้างพัสดุจริง (provider-agnostic) — คืน list ที่ขาด (ว่าง=ครบ)
+function isPostcode(v) { return /^\d{5}$/.test(String(v || "").trim()); }
+function shipmentPreflight(order, store) {
+  const miss = [];
+  const s = (order && order.shipping) || {};
+  if (!s.name)        miss.push("ชื่อผู้รับ");
+  if (!s.phone)       miss.push("เบอร์ผู้รับ");
+  if (!s.addressLine) miss.push("ที่อยู่ผู้รับ");
+  if (!s.subdistrict) miss.push("ตำบล/แขวงผู้รับ");
+  if (!s.district)    miss.push("อำเภอ/เขตผู้รับ");
+  if (!s.province)    miss.push("จังหวัดผู้รับ");
+  if (!isPostcode(s.postcode)) miss.push("รหัสไปรษณีย์ผู้รับ (5 หลัก)");
+  const st = store || {};
+  if (!st.name)        miss.push("ชื่อร้าน (ผู้ส่ง)");
+  if (!st.phone)       miss.push("เบอร์ร้าน (ผู้ส่ง)");
+  if (!st.addressLine) miss.push("ที่อยู่ร้าน (ผู้ส่ง)");
+  if (!st.subdistrict) miss.push("ตำบล/แขวงร้าน");
+  if (!st.district)    miss.push("อำเภอ/เขตร้าน");
+  if (!st.province)    miss.push("จังหวัดร้าน");
+  if (!isPostcode(st.postcode)) miss.push("รหัสไปรษณีย์ร้าน (5 หลัก)");
+  if (!(Number(order && order.weight) > 0)) miss.push("น้ำหนักพัสดุ (ตั้งน้ำหนักสินค้าในระบบ)");
+  return miss;
+}
+exports._shipmentPreflight = shipmentPreflight;   // export ไว้เผื่อ unit test
+
 exports.createShipment = onCall(async (req) => {
   const tid = await resolveTid(req.data && req.data.tid);
   requireAdmin(req, tid);
@@ -656,13 +681,15 @@ exports.createShipment = onCall(async (req) => {
   if (!orderId) throw new HttpsError("invalid-argument", "ต้องระบุ orderId");
 
   const orderRef = troot(tid).collection("orders").doc(orderId);
-  const [oSnap, cfgSnap, secSnap] = await Promise.all([
+  const [oSnap, cfgSnap, secSnap, storeSnap] = await Promise.all([
     orderRef.get(),
     troot(tid).collection("settings").doc("courier").get(),
     troot(tid).collection("private").doc("courier").get(),
+    troot(tid).collection("settings").doc("store").get(),
   ]);
   if (!oSnap.exists) throw new HttpsError("not-found", "ไม่พบออเดอร์");
   const order = oSnap.data();
+  const store = storeSnap.exists ? storeSnap.data() : {};
   if (order.trackingNumber) throw new HttpsError("failed-precondition", "ออเดอร์นี้มีเลขพัสดุแล้ว");
   const cfg = cfgSnap.exists ? cfgSnap.data() : {};
   if (cfg.active !== true) throw new HttpsError("failed-precondition", "ยังไม่ได้เปิดใช้ระบบขนส่งอัตโนมัติ (ตั้งค่าในแอดมิน)");
@@ -675,6 +702,11 @@ exports.createShipment = onCall(async (req) => {
     const suffix = (Date.now().toString(36) + Math.floor(order.total || 0).toString(36)).toUpperCase().slice(-8);
     trackingNumber = "MOCK-" + (courier || "TH").toUpperCase().slice(0, 3) + "-" + suffix;
   } else {
+    // preflight: ข้อมูลต้องครบก่อนยิง API จริง (ไม่งั้นไปพังที่ฝั่ง provider)
+    const miss = shipmentPreflight(order, store);
+    if (miss.length) {
+      throw new HttpsError("failed-precondition", "ข้อมูลไม่ครบสำหรับสร้างพัสดุ: " + miss.join(", "));
+    }
     // ────────────────────────────────────────────────────────
     // TODO(เชื่อม API จริง): provider = cfg.provider (shippop/flash/kerry/...)
     //   ใช้ sec.apiKey / sec.apiSecret เรียก REST สร้าง shipment ของ `courier`
