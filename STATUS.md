@@ -45,5 +45,6 @@
 ## หมายเหตุความเข้าใจผิดที่พบบ่อย
 
 - **"แท็บ Community" = ศูนย์รวมชุมชน** (กลุ่ม + Leaderboard) — แต่ละส่วนเปิด/ปิดต่อแบรนด์ผ่าน `settings/features` (`communityGroups`, `leaderboard`) · ปิดทั้งคู่ = ซ่อน nav ชุมชน
+- **Feature flag ต่อแบรนด์** = `settings/features` (per-tenant) · admin หน้า Features toggle เขียน, index listen สด · ของใหม่ default ปิด (`FEAT_DEFAULT_OFF`) เปิดทีละแบรนด์ — ตอนนี้ `pricingTool` (เครื่องมือคิดราคา) คุมเมนู/หน้า/ปุ่มใน admin
 - **Multi-tenant สร้างจริงแล้ว** (PROGRESS_4.md เก่าเขียนว่ายัง single-tenant — ไม่จริงแล้ว) แต่ "จริง" ในระดับโครงสร้าง ยังต้อง **ลบ legacy rules #3 + เขียนเทสต์ #1** (isolation) และ **แก้บั๊ก settings #2** (consistency) ก่อนวางใจ — #3+#1 คือเรื่อง leak, #2 เป็นคนละเรื่อง (fail-silent)
 - ~~**ราคาสินค้าเป็นข้อความ**~~ ✅ แก้แล้ว (2026-08-25) — admin เก็บ `price`/`oldPrice`/`cost` เป็น number, มีปุ่ม migrate ของเก่า · เครื่องมือต้นทุน–ราคา–margin สร้างแล้ว

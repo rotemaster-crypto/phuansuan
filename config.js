@@ -89,6 +89,7 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     leaderboard:     true,   // ตารางอันดับ (ปราชญ์) — คุมต่อแบรนด์
     weatherAlert:    false,  // แจ้งเตือนสภาพอากาศ (เปิดทีหลัง)
     commerce:        true,   // ระบบร้านค้า + ตะกร้า (Phase 3)
+    pricingTool:     false,  // เครื่องมือคิดราคา–กำไร (แอดมิน) — default ปิด เปิดทีละแบรนด์ (pilot)
   },
 
   // ── ระบบแต้มสะสม ─────────────────────────────────────────

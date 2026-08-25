@@ -211,7 +211,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('groups',this)"><span class="si">👥</span> กลุ่มชุมชน</div>
     <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน</div>
     <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
-    <div class="sb-item" onclick="showScreen('pricing',this)"><span class="si">🧮</span> คิดราคา–กำไร</div>
+    <div class="sb-item" id="sb-item-pricing" style="display:none" onclick="showScreen('pricing',this)"><span class="si">🧮</span> คิดราคา–กำไร</div>
     <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
     <div class="sb-section" id="sb-sec-bocean">Bocean</div>
     <div class="sb-item" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
@@ -577,6 +577,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="toggle-row"><div><div class="toggle-label">🤖 AI วิเคราะห์รูป (Gemini)</div><div class="toggle-sub">ปิดไว้ default · เปิดเฉพาะแบรนด์ที่ต้องการ (มีค่าใช้จ่ายต่อครั้ง)</div></div><label class="toggle"><input type="checkbox" id="feat-ai" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">📍 Proximity Alert</div><div class="toggle-sub">แจ้งเตือนโรคระบาดในพื้นที่</div></div><label class="toggle"><input type="checkbox" id="feat-proximity" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🛒 ร้านค้า (Commerce)</div><div class="toggle-sub">เปิด-ปิดระบบร้านค้า + ตะกร้า</div></div><label class="toggle"><input type="checkbox" id="feat-product" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🧮 เครื่องมือคิดราคา–กำไร <span style="font-size:11px;color:var(--primary);font-weight:700">ใหม่</span></div><div class="toggle-sub">คิดต้นทุน–ราคา–margin (แอดมิน) · default ปิด — เปิดทีละแบรนด์</div></div><label class="toggle"><input type="checkbox" id="feat-pricing"><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">📖 Stories</div><div class="toggle-sub">Stories bar บนสุด Feed</div></div><label class="toggle"><input type="checkbox" id="feat-stories" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🏅 Point System</div><div class="toggle-sub">ระบบแต้มสะสม</div></div><label class="toggle"><input type="checkbox" id="feat-points" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">👥 Community Groups</div><div class="toggle-sub">กลุ่มชุมชน (มีปุ่มเข้าร่วม) — จัดการกลุ่มที่เมนู "กลุ่มชุมชน"</div></div><label class="toggle"><input type="checkbox" id="feat-community" checked><span class="toggle-slider"></span></label></div>
@@ -758,7 +759,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ราคา</label><input id="prodb-price"></div>
       <div class="fg"><label>ราคาเดิม (ก่อนลด)</label><input id="prodb-oldprice"></div>
       <div class="fg"><label>ต้นทุนโรงงาน / ชิ้น</label><input id="prodb-cost" type="number" step="0.01" placeholder="เว้นว่าง = ไม่คิดกำไร"></div>
-      <div class="fg" style="grid-column:1/-1"><button class="btn btn-ghost" style="width:100%" onclick="pricingFromProduct()"><svg class="ic"><use href="#i-hash"/></svg> คิดราคา–กำไร จากต้นทุนนี้</button></div>
+      <div class="fg" id="prodb-pricing-btn" style="grid-column:1/-1;display:none"><button class="btn btn-ghost" style="width:100%" onclick="pricingFromProduct()"><svg class="ic"><use href="#i-hash"/></svg> คิดราคา–กำไร จากต้นทุนนี้</button></div>
       <div class="fg"><label>ยอดขาย</label><input type="number" id="prodb-sold"></div>
       <div class="fg"><label>ป้าย Badge</label><input id="prodb-badge"></div>
       <div class="fg"><label>⭐ สินค้าแนะนำ</label><label class="toggle"><input type="checkbox" id="prodb-featured"><span class="toggle-slider"></span></label></div>
@@ -839,6 +840,7 @@ window.addEventListener('load', async () => {
     showApp();
     if (IS_SUPER) await Promise.all([loadDashboard(), loadSidebarBranding(), loadBoceanRequests()]);
     else await Promise.all([loadDashboard(), loadSidebarBranding()]);
+    applyAdminFeatureFlags();
   } catch(err) { console.error(err); showDeny(); }
 });
 
@@ -875,6 +877,7 @@ function showDeny() {
   document.getElementById('deny-screen').style.display = 'flex';
 }
 function showScreen(name, el) {
+  if (name === 'pricing' && window.__pricingOn !== true) { toast('ℹ️ เครื่องมือคิดราคาปิดอยู่ — เปิดที่หน้า Features Toggle','' ); return; }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
@@ -1282,23 +1285,42 @@ async function saveContent() {
 }
 
 // ── Features ──────────────────────────────────────────────
+// feature ที่ default "ปิด" เมื่อยังไม่เคยตั้งค่า (ของใหม่ = ค่อยเปิดทีละแบรนด์)
+const FEAT_DEFAULT_OFF = { pricingTool: true };
+const FEAT_MAP = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', pricingTool:'feat-pricing', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', leaderboard:'feat-leaderboard', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
 async function loadFeatures() {
   try {
     const doc = await aDb().collection('settings').doc('features').get();
     if (!doc.exists) return;
     const d = doc.data();
-    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', leaderboard:'feat-leaderboard', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
-    Object.entries(map).forEach(([key, id]) => { if (document.getElementById(id)) document.getElementById(id).checked = d[key] !== false; });
+    Object.entries(FEAT_MAP).forEach(([key, id]) => {
+      const el = document.getElementById(id); if (!el) return;
+      el.checked = FEAT_DEFAULT_OFF[key] ? (d[key] === true) : (d[key] !== false);
+    });
   } catch(e) {}
 }
 async function saveFeatures() {
   try {
-    const map = { aiDiagnosis:'feat-ai', proximityAlert:'feat-proximity', commerce:'feat-product', stories:'feat-stories', pointSystem:'feat-points', communityGroups:'feat-community', leaderboard:'feat-leaderboard', weatherAlert:'feat-weather', notifNearby:'notif-nearby', notifDisease:'notif-disease', notifComment:'notif-comment', notifPoints:'notif-points', notifPromo:'notif-promo' };
     const data = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-    Object.entries(map).forEach(([key, id]) => { data[key] = document.getElementById(id)?.checked ?? true; });
+    Object.entries(FEAT_MAP).forEach(([key, id]) => { data[key] = document.getElementById(id)?.checked ?? true; });
     await aDb().collection('settings').doc('features').set(data, { merge: true });
     toast('✅ บันทึกแล้ว','success');
+    applyAdminFeatureFlags();   // เปิด/ปิดเมนูคิดราคาให้เห็นผลทันที
   } catch(e) { toast('❌ '+e.message,'error'); }
+}
+// แสดง/ซ่อนเมนู+ปุ่มของ feature ที่คุมต่อแบรนด์ (ตอนนี้: เครื่องมือคิดราคา)
+async function applyAdminFeatureFlags() {
+  let on = false;
+  try {
+    const d = await aDb().collection('settings').doc('features').get();
+    on = d.exists && d.data().pricingTool === true;
+  } catch(e) {}
+  window.__pricingOn = on;
+  const item = document.getElementById('sb-item-pricing');
+  if (item) item.style.display = on ? 'flex' : 'none';
+  const btn = document.getElementById('prodb-pricing-btn');
+  if (btn) btn.style.display = on ? 'block' : 'none';
+  if (!on) { const scr = document.getElementById('screen-pricing'); if (scr && scr.classList.contains('active')) showScreen('products', document.querySelector('.sb-item[onclick*="products"]')); }
 }
 
 // ── Points ────────────────────────────────────────────────
@@ -2033,6 +2055,7 @@ function switchToTenant(tid){
   toast('สลับมาดูแล '+tid+' แล้ว','success');
   renderTenants();
   if (typeof loadDashboard === 'function') loadDashboard();
+  applyAdminFeatureFlags();   // flag คิดราคาเป็นรายแบรนด์
 }
 async function toggleTenantStatus(tid, status){
   if (!db) return;
