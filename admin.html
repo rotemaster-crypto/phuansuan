@@ -212,6 +212,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน</div>
     <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
     <div class="sb-item" id="sb-item-pricing" style="display:none" onclick="showScreen('pricing',this)"><span class="si">🧮</span> คิดราคา–กำไร</div>
+    <div class="sb-item" onclick="showScreen('luckydraw',this)"><span class="si">🎯</span> สุ่มจับรางวัล</div>
     <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
     <div class="sb-section" id="sb-sec-bocean">Bocean</div>
     <div class="sb-item" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
@@ -792,6 +793,28 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="card" id="pc-result" style="display:none"></div>
 </div>
 
+<div class="screen" id="screen-luckydraw">
+  <div class="page-header"><div class="page-title">🎯 สุ่มจับรางวัล</div><div class="page-sub">ลูกค้าใช้แต้มลุ้นคูปอง · สุ่มฝั่ง server กันโกง ตรวจสอบได้</div></div>
+  <div class="card"><div class="card-title">➕ สร้างกล่องสุ่มใหม่</div>
+    <div class="form-grid">
+      <div class="fg"><label>ชื่อกิจกรรม</label><input id="ld-name" placeholder="เช่น สุ่มคูปองประจำเดือน"></div>
+      <div class="fg"><label>ใช้แต้มต่อครั้ง</label><input type="number" id="ld-cost" value="20" min="0"></div>
+      <div class="fg"><label>เปิดใช้งาน</label><label class="toggle"><input type="checkbox" id="ld-active" checked><span class="toggle-slider"></span></label></div>
+      <div class="fg" style="grid-column:1/-1"><label>รางวัล (บรรทัดละ 1: ชื่อ | ข้อความส่วนลด | โค้ด | น้ำหนักโอกาส | สต็อก(ว่าง=ไม่จำกัด))</label>
+        <textarea id="ld-prizes" rows="6" placeholder="ลด 50 บาท | ส่วนลด 50 บาท | SAVE50 | 10 | 100&#10;ลด 10% | ส่วนลด 10% | TEN | 5 | 50&#10;ไม่ถูกรางวัล | | | 85 |"></textarea>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">รางวัลที่ไม่ใส่โค้ด+ส่วนลด = ช่อง "ไม่ถูกรางวัล" · น้ำหนักยิ่งมาก โอกาสยิ่งสูง · สต็อกว่าง = ไม่จำกัด</div>
+      </div>
+    </div>
+    <div class="save-row"><button class="btn btn-primary" onclick="addLuckyDraw()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกล่องสุ่ม</button></div>
+  </div>
+  <div class="card"><div class="card-title">📋 กล่องสุ่มทั้งหมด</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ชื่อ</th><th>ค่าแต้ม</th><th>รางวัล</th><th>หมุน</th><th>สถานะ</th><th>Action</th></tr></thead>
+      <tbody id="luckydraw-table"><tr><td colspan="6" class="empty-state">กำลังโหลด...</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
 <div class="screen" id="screen-orders">
   <div class="page-header"><div class="page-title">🛒 ออเดอร์</div><div class="page-sub">ตรวจสลิป ยืนยันรับเงิน และจัดส่ง</div></div>
   <div class="ord-filter" id="ord-filter">
@@ -889,7 +912,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
+  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -1587,6 +1610,60 @@ function pricingCalc(){
       + '<div>🛡️ <b>ราคาขั้นต่ำที่ปลอดภัย</b>: <b>'+baht(beMaxDisc)+'</b> — ต่ำกว่านี้ สมาชิกชั้นสูงสุด (ลด '+maxDisc+'%) จะทำให้ขาดทุน</div>'
     + '</div>'
     + '<div style="margin-top:8px;font-size:12px;color:var(--muted)">* ส่วนลดต่อชั้นใช้ค่ามาตรฐานระบบ 0 / 5 / 10 / 15%</div>';
+}
+/* ===== สุ่มจับรางวัล (Activity Engine) — admin ===== */
+function ldParsePrizes(text){
+  return String(text||'').split('\n').map(function(line){
+    var parts = line.split('|').map(function(s){ return s.trim(); });
+    if (!parts[0]) return null;
+    var discountText = parts[1]||'', code = parts[2]||'';
+    return {
+      label: parts[0], discountText: discountText, couponCode: code,
+      weight: Math.max(0, Math.floor(Number(parts[3])||0)),
+      stock: (parts[4]===undefined||parts[4]==='') ? null : Math.max(0, Math.floor(Number(parts[4])||0)),
+      awarded: 0, type: (!discountText && !code) ? 'nothing' : 'coupon'
+    };
+  }).filter(Boolean).filter(function(p){ return p.weight > 0; });
+}
+async function addLuckyDraw(){
+  var name = document.getElementById('ld-name').value.trim();
+  if (!name){ toast('❌ กรอกชื่อกิจกรรม','error'); return; }
+  var prizes = ldParsePrizes(document.getElementById('ld-prizes').value);
+  if (!prizes.length){ toast('❌ ใส่รางวัลอย่างน้อย 1 รายการ (น้ำหนัก > 0)','error'); return; }
+  try {
+    await aDb().collection('luckyDraws').add({
+      name: name, costPoints: Math.max(0, Math.floor(Number(document.getElementById('ld-cost').value)||0)),
+      active: document.getElementById('ld-active').checked, prizes: prizes, spins: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('✅ สร้างกล่องสุ่มแล้ว','success');
+    document.getElementById('ld-name').value=''; document.getElementById('ld-prizes').value='';
+    loadLuckyDraws();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function loadLuckyDraws(){
+  try {
+    var snap = await aDb().collection('luckyDraws').get();
+    var box = document.getElementById('luckydraw-table');
+    if (snap.empty){ box.innerHTML = '<tr><td colspan="6" class="empty-state">ยังไม่มีกล่องสุ่ม</td></tr>'; return; }
+    box.innerHTML = snap.docs.map(function(d){
+      var v = d.data(); var prizes = Array.isArray(v.prizes)?v.prizes:[];
+      var pz = prizes.filter(function(p){return p.type!=='nothing';}).map(function(p){ return escapeHtml(p.label)+(p.stock!=null?(' ('+(p.stock-(p.awarded||0))+' เหลือ)'):''); }).join(', ') || '—';
+      var st = v.active!==false ? '<span style="color:#16a34a;font-weight:700">เปิด</span>' : '<span style="color:#dc2626;font-weight:700">ปิด</span>';
+      return '<tr><td style="font-weight:700">'+escapeHtml(v.name||'')+'</td><td>'+(v.costPoints||0)+' แต้ม</td><td style="font-size:12px">'+pz+'</td><td>'+(v.spins||0)+'</td><td>'+st+'</td>'+
+        '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="toggleLuckyDraw(\''+d.id+'\','+(v.active!==false)+')">'+(v.active!==false?'ปิด':'เปิด')+'</button> '+
+        '<button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteLuckyDraw(\''+d.id+'\')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>';
+    }).join('');
+  } catch(e){ document.getElementById('luckydraw-table').innerHTML = '<tr><td colspan="6" class="empty-state">Error: '+escapeHtml(e.message)+'</td></tr>'; }
+}
+async function toggleLuckyDraw(id, cur){
+  try { await aDb().collection('luckyDraws').doc(id).update({ active: !cur }); loadLuckyDraws(); }
+  catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function deleteLuckyDraw(id){
+  if (!confirm('ลบกล่องสุ่มนี้? (คูปองที่แจกไปแล้วยังอยู่)')) return;
+  try { await aDb().collection('luckyDraws').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadLuckyDraws(); }
+  catch(e){ toast('❌ '+e.message,'error'); }
 }
 /* ===== Community Groups ===== */
 async function loadGroups() {
