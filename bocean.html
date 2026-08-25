@@ -3,84 +3,165 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bocean — สร้างชุมชน + ร้านค้าของแบรนด์คุณ</title>
+<title>Bocean — ชุมชน · กิจกรรม · ร้านค้า ของแบรนด์คุณ ในแอปเดียว</title>
+<meta name="description" content="Bocean คือแพลตฟอร์มที่ให้แบรนด์สินค้าใดก็ได้ มีระบบนิเวศของตัวเอง — ชุมชน กิจกรรม–ลอยัลตี้ และร้านค้าออนไลน์ ครบในแอปเดียว ไม่ต้องเขียนโค้ด">
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --pri:#faff69; --pri2:#e6eb52; --ink:#ffffff; --muted:#888888; --line:#2a2a2a; --bg:#0a0a0a; --card:#1a1a1a; --ok:#22c55e; --on-pri:#0a0a0a; }
+  :root{
+    --bg:#ffffff; --soft:#f5f8fb; --soft2:#eef3f8; --card:#ffffff;
+    --ink:#0f1e2e; --body:#3f5063; --muted:#6b7c8f; --line:#e4ecf3;
+    --pri:#0891b2; --pri-deep:#0e7490; --pri-soft:#e6f6fb;
+    --com:#10b981; --act:#f59e0b; --mkt:#3b82f6;
+    --ok:#16a34a; --line-green:#06c755;
+    --shadow:0 1px 2px rgba(16,40,64,.04),0 12px 30px rgba(16,40,64,.06);
+    --shadow-lg:0 2px 6px rgba(16,40,64,.05),0 30px 60px rgba(16,40,64,.10);
+  }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter','Sarabun',system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased;letter-spacing:-.2px}
-  .wrap{max-width:1040px;margin:0 auto;padding:0 18px}
+  html{scroll-behavior:smooth}
+  body{font-family:'IBM Plex Sans Thai','Inter',system-ui,sans-serif;color:var(--body);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{color:var(--ink);letter-spacing:-.02em}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
   a{color:inherit;text-decoration:none}
-  .nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-  .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px;letter-spacing:-.5px}
-  .brand .logo{width:34px;height:34px;border-radius:8px;background:var(--pri);display:flex;align-items:center;justify-content:center;color:var(--on-pri);font-size:18px}
-  .nav-cta{background:var(--pri);color:var(--on-pri);padding:9px 18px;border-radius:8px;font-weight:700;font-size:14px}
-  .hero{background:radial-gradient(1200px 500px at 50% -120px,#1c1c0f,transparent),var(--bg);border-bottom:1px solid var(--line);padding:64px 0 56px;text-align:center}
-  .hero h1{font-size:48px;line-height:1.05;font-weight:800;letter-spacing:-2px;margin-bottom:16px}
-  .hero h1 .hl{color:var(--pri)}
-  .hero p{font-size:18px;color:#cccccc;max-width:640px;margin:0 auto 28px}
-  .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .btn{padding:13px 26px;border-radius:8px;font-weight:600;font-size:15px;cursor:pointer;border:0;display:inline-flex;align-items:center;gap:8px}
-  .btn-pri{background:var(--pri);color:var(--on-pri);box-shadow:0 8px 22px rgba(250,255,105,.18)}
-  .btn-line{background:#06c755;color:#fff}
-  .btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
-  .hero-note{margin-top:18px;font-size:13px;color:var(--muted)}
-  section{padding:56px 0}
-  .sec-head{text-align:center;margin-bottom:38px}
-  .sec-head .eyebrow{color:var(--pri);font-weight:600;font-size:12px;letter-spacing:1.5px;text-transform:uppercase}
-  .sec-head h2{font-size:32px;font-weight:700;letter-spacing:-1px;margin-top:6px}
-  .sec-head p{color:var(--muted);margin-top:8px}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  .feat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px}
-  .feat .ico{font-size:30px;margin-bottom:12px}
-  .feat h3{font-size:18px;font-weight:700;margin-bottom:6px}
-  .feat p{color:var(--muted);font-size:14px}
-  .showcase{background:#121212;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .show-card{display:flex;gap:22px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:26px;flex-wrap:wrap}
-  .show-card .badge{background:var(--pri);color:var(--on-pri);font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;display:inline-block;margin-bottom:8px}
-  .show-card .em{font-size:54px}
-  .show-card .body{flex:1;min-width:240px}
-  .show-card h3{font-size:22px;font-weight:700}
-  .show-card p{color:var(--muted);margin-top:6px}
-  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  .plan{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:26px;display:flex;flex-direction:column}
-  .plan.feat-plan{border:2px solid var(--pri);box-shadow:0 14px 34px rgba(250,255,105,.10);position:relative}
-  .plan.feat-plan .tag{position:absolute;top:-12px;left:26px;background:var(--pri);color:var(--on-pri);font-size:12px;font-weight:700;padding:3px 12px;border-radius:999px}
-  .plan h3{font-size:18px;font-weight:700}
-  .plan .price{font-size:32px;font-weight:800;margin:10px 0 2px}
-  .plan .price small{font-size:14px;color:var(--muted);font-weight:600}
-  .plan ul{list-style:none;margin:16px 0;display:flex;flex-direction:column;gap:9px}
-  .plan li{font-size:14px;color:#cccccc;display:flex;gap:8px}
+  .en{font-family:'Inter','IBM Plex Sans Thai',sans-serif}
+
+  /* nav */
+  .nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px;color:var(--ink)}
+  .brand .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--pri),#22c3e6);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 6px 16px rgba(8,145,178,.28)}
+  .nav-links{display:flex;align-items:center;gap:26px}
+  .nav-links a.lnk{font-size:14.5px;font-weight:500;color:var(--body)}
+  .nav-links a.lnk:hover{color:var(--pri)}
+  .nav-cta{background:var(--pri);color:#fff;padding:10px 18px;border-radius:9px;font-weight:600;font-size:14px;box-shadow:0 8px 18px rgba(8,145,178,.22)}
+  .nav-cta:hover{background:var(--pri-deep)}
+  @media(max-width:720px){ .nav-links a.lnk{display:none} }
+
+  /* buttons */
+  .btn{padding:13px 24px;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;border:0;display:inline-flex;align-items:center;gap:8px;font-family:inherit;transition:transform .06s ease}
+  .btn:active{transform:translateY(1px)}
+  .btn-pri{background:var(--pri);color:#fff;box-shadow:0 10px 24px rgba(8,145,178,.24)}
+  .btn-pri:hover{background:var(--pri-deep)}
+  .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow)}
+  .btn-ghost:hover{border-color:#c9d8e6}
+  .btn-line{background:var(--line-green);color:#fff}
+
+  /* hero */
+  .hero{position:relative;overflow:hidden;background:radial-gradient(1100px 460px at 50% -160px,var(--pri-soft),transparent),linear-gradient(#fff,var(--soft))}
+  .hero .wrap{padding:74px 20px 60px;text-align:center;position:relative;z-index:1}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);color:var(--pri-deep);font-size:13px;font-weight:600;padding:7px 15px;border-radius:999px;box-shadow:var(--shadow);margin-bottom:22px}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--com)}
+  .hero h1{font-size:52px;line-height:1.08;font-weight:800;margin-bottom:18px}
+  .hero h1 .hl{background:linear-gradient(120deg,var(--pri),#22c3e6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero .lead{font-size:19px;color:var(--body);max-width:660px;margin:0 auto 30px}
+  .hero-btns{display:flex;gap:13px;justify-content:center;flex-wrap:wrap}
+  .hero-note{margin-top:20px;font-size:13.5px;color:var(--muted)}
+  .hero-note b{color:var(--body)}
+
+  /* pillar chips in hero */
+  .chips{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:46px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);min-width:210px}
+  .chip .ci{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+  .chip .ct{text-align:left}
+  .chip .ct b{display:block;color:var(--ink);font-size:15px;font-weight:700}
+  .chip .ct span{font-size:12.5px;color:var(--muted)}
+
+  section{padding:70px 0}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 46px}
+  .eyebrow{color:var(--pri);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+  .sec-head h2{font-size:34px;font-weight:800;margin-top:8px}
+  .sec-head p{color:var(--muted);margin-top:10px;font-size:16px}
+  .alt{background:var(--soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+
+  /* 3 pillars */
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .pcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);position:relative;transition:transform .12s ease,box-shadow .12s ease}
+  .pcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+  .pcard .top{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px}
+  .pcard h3{font-size:21px;font-weight:800;margin-bottom:8px}
+  .pcard .sub{color:var(--muted);font-size:14.5px;margin-bottom:16px}
+  .pcard ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .pcard li{font-size:14px;color:var(--body);display:flex;gap:9px;align-items:flex-start}
+  .pcard li::before{content:"";width:16px;height:16px;border-radius:50%;flex:none;margin-top:3px;background:var(--tint) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/11px no-repeat}
+  .pcard .star{position:absolute;top:20px;right:20px;background:var(--act);color:#fff;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:999px}
+  .p-com .top{background:#e7faf2;color:var(--com)} .p-com{--tint:var(--com)}
+  .p-act .top{background:#fef4e2;color:var(--act)} .p-act{--tint:var(--act);border-color:#f7dcae}
+  .p-mkt .top{background:#e8f1fe;color:var(--mkt)} .p-mkt{--tint:var(--mkt)}
+
+  /* activity spotlight */
+  .spot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
+  .tool{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);transition:transform .12s ease}
+  .tool:hover{transform:translateY(-3px)}
+  .tool .ti{font-size:28px}
+  .tool h4{font-size:16px;font-weight:700;margin:10px 0 5px;color:var(--ink)}
+  .tool p{font-size:13.5px;color:var(--muted)}
+  .spot-note{text-align:center;margin-top:26px;font-size:14px;color:var(--muted)}
+  .spot-note b{color:var(--pri-deep)}
+
+  /* value row */
+  .vrow{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .vcard{text-align:center;padding:10px}
+  .vcard .vi{width:56px;height:56px;border-radius:16px;background:var(--pri-soft);color:var(--pri-deep);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
+  .vcard h4{font-size:16.5px;font-weight:700;margin-bottom:6px}
+  .vcard p{font-size:13.5px;color:var(--muted)}
+
+  /* case study */
+  .case{display:flex;gap:28px;align-items:center;background:linear-gradient(135deg,#fff,var(--soft));border:1px solid var(--line);border-radius:20px;padding:34px;box-shadow:var(--shadow-lg);flex-wrap:wrap}
+  .case .em{font-size:64px;flex:none}
+  .case .body{flex:1;min-width:260px}
+  .case .badge{display:inline-block;background:var(--pri-soft);color:var(--pri-deep);font-size:12px;font-weight:700;padding:5px 13px;border-radius:999px;letter-spacing:.06em;margin-bottom:12px}
+  .case h3{font-size:24px;font-weight:800}
+  .case p{color:var(--body);margin-top:8px;font-size:15px}
+
+  /* pricing */
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+  .plan{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+  .plan.hot{border:2px solid var(--pri);box-shadow:var(--shadow-lg);position:relative}
+  .plan.hot .tag{position:absolute;top:-13px;left:30px;background:var(--pri);color:#fff;font-size:12px;font-weight:700;padding:4px 13px;border-radius:999px}
+  .plan h3{font-size:19px;font-weight:800}
+  .plan .price{font-size:38px;font-weight:900;margin:12px 0 2px;color:var(--ink)}
+  .plan .price small{font-size:15px;color:var(--muted);font-weight:600}
+  .plan ul{list-style:none;margin:18px 0;display:flex;flex-direction:column;gap:10px}
+  .plan li{font-size:14px;color:var(--body);display:flex;gap:9px}
   .plan li::before{content:"\2713";color:var(--ok);font-weight:800}
-  .plan .btn{margin-top:auto;justify-content:center;text-align:center}
-  .form-sec{background:#121212;color:var(--ink)}
-  .form-sec .sec-head h2{color:var(--ink)}
-  .form-sec .sec-head p{color:var(--muted)}
-  .form-card{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:30px;max-width:640px;margin:0 auto;box-shadow:0 24px 60px rgba(0,0,0,.5)}
-  .fg{margin-bottom:14px}
-  .fg label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  .plan .btn{margin-top:auto;justify-content:center}
+
+  /* form */
+  .form-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:34px;max-width:660px;margin:0 auto;box-shadow:var(--shadow-lg)}
+  .fg{margin-bottom:15px}
+  .fg label{display:block;font-size:13px;font-weight:600;margin-bottom:7px;color:var(--ink)}
   .fg label .req{color:#ef4444}
-  .fg input,.fg select,.fg textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:#0a0a0a;color:var(--ink)}
-  .fg input:focus,.fg select:focus,.fg textarea:focus{outline:0;border-color:var(--pri);background:#0a0a0a}
-  .fg textarea{min-height:84px;resize:vertical}
+  .fg input,.fg select,.fg textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:var(--soft);color:var(--ink);transition:border-color .12s,background .12s}
+  .fg input::placeholder,.fg textarea::placeholder{color:#9fb0c0}
+  .fg input:focus,.fg select:focus,.fg textarea:focus{outline:0;border-color:var(--pri);background:#fff;box-shadow:0 0 0 4px var(--pri-soft)}
+  .fg textarea{min-height:88px;resize:vertical}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .submit-btn{width:100%;background:var(--pri);color:var(--on-pri);border:0;padding:15px;border-radius:8px;font-size:16px;font-weight:800;cursor:pointer;margin-top:6px}
+  .submit-btn{width:100%;background:var(--pri);color:#fff;border:0;padding:16px;border-radius:11px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 12px 26px rgba(8,145,178,.24)}
+  .submit-btn:hover{background:var(--pri-deep)}
   .submit-btn:disabled{opacity:.6;cursor:default}
-  .form-ok{display:none;text-align:center;padding:18px}
-  .form-ok .big{font-size:48px}
-  .form-ok h3{font-size:22px;font-weight:800;margin:8px 0}
+  .f-err{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:13.5px;padding:11px 13px;border-radius:10px;margin-bottom:14px}
+  .form-alt{text-align:center;margin-top:18px;font-size:14px;color:var(--muted)}
+  .form-ok{display:none;text-align:center;padding:22px}
+  .form-ok .big{font-size:52px}
+  .form-ok h3{font-size:23px;font-weight:800;margin:10px 0}
   .form-ok p{color:var(--muted)}
-  .form-alt{text-align:center;margin-top:16px;font-size:14px;color:var(--muted)}
-  footer{background:#121212;border-top:1px solid var(--line);padding:30px 0;text-align:center;color:var(--muted);font-size:13px}
-  @media(max-width:760px){
-    .hero h1{font-size:34px;letter-spacing:-1px}
-    .grid,.plans{grid-template-columns:1fr}
+
+  footer{background:var(--soft);border-top:1px solid var(--line);padding:38px 0;text-align:center;color:var(--muted);font-size:13.5px}
+
+  @media(max-width:860px){
+    .pillars,.plans,.spot-grid{grid-template-columns:1fr}
+    .vrow{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:600px){
+    .hero h1{font-size:36px}
+    .hero .lead{font-size:17px}
+    .sec-head h2{font-size:27px}
     .row2{grid-template-columns:1fr}
-    .sec-head h2{font-size:24px}
+    .vrow{grid-template-columns:1fr}
+    section{padding:52px 0}
   }
 </style>
 </head>
@@ -88,48 +169,123 @@
 
 <div class="nav"><div class="wrap">
   <div class="brand"><span class="logo">🌊</span> Bocean</div>
-  <a class="nav-cta" href="#signup">เปิดร้านของคุณ</a>
+  <div class="nav-links">
+    <a class="lnk" href="#pillars">ระบบ</a>
+    <a class="lnk" href="#activity">กิจกรรม</a>
+    <a class="lnk" href="#pricing">แพ็กเกจ</a>
+    <a class="nav-cta" href="#signup">เปิดร้านของคุณ</a>
+  </div>
 </div></div>
 
 <header class="hero"><div class="wrap">
-  <h1>สร้าง<span class="hl">ชุมชน + ร้านค้า</span><br>ของแบรนด์คุณ ในแอปเดียว</h1>
-  <p>Bocean คือแพลตฟอร์มที่ให้แบรนด์สินค้าใดก็ได้ มีระบบนิเวศของตัวเอง — ชุมชนคนใช้สินค้า ร้านค้าออนไลน์ ระบบสะสมแต้ม และ AI ผู้ช่วย โดยไม่ต้องเขียนโค้ดเอง</p>
+  <div class="pill"><span class="dot"></span> แพลตฟอร์มครบวงจรสำหรับแบรนด์ยุคใหม่</div>
+  <h1>ชุมชน · กิจกรรม · ร้านค้า<br>ของแบรนด์คุณ <span class="hl">ในแอปเดียว</span></h1>
+  <p class="lead">Bocean ให้แบรนด์สินค้าใดก็ได้ มีระบบนิเวศเป็นของตัวเอง — พื้นที่ชุมชนของลูกค้า เครื่องมือกิจกรรม–ลอยัลตี้ไว้เล่นกับลูกค้า และร้านค้าออนไลน์ครบวงจร โดยไม่ต้องเขียนโค้ดเอง</p>
   <div class="hero-btns">
-    <a class="btn btn-pri" href="#signup">🚀 เริ่มเปิดร้านฟรี</a>
-    <a class="btn btn-ghost" href="https://phuansuan.web.app" target="_blank">👀 ดูตัวอย่างจริง</a>
+    <a class="btn btn-pri" href="#signup">เริ่มเปิดร้านฟรี</a>
+    <a class="btn btn-ghost" href="https://phuansuan.web.app" target="_blank" rel="noopener">ดูตัวอย่างจริง →</a>
   </div>
-  <div class="hero-note">ตัวอย่างจริง: <b>เพื่อนสวน</b> — ชุมชนเกษตรกรของแบรนด์ DemeterRich สร้างด้วย Bocean</div>
+  <div class="hero-note">ตัวอย่างจริงที่ใช้งานอยู่: <b>เพื่อนสวน</b> — ชุมชนคนรักสวนของแบรนด์ DemeterRich สร้างด้วย Bocean</div>
+
+  <div class="chips">
+    <div class="chip"><div class="ci" style="background:#e7faf2;color:var(--com)">💬</div><div class="ct"><b>Community</b><span>ชุมชนของลูกค้า</span></div></div>
+    <div class="chip"><div class="ci" style="background:#fef4e2;color:var(--act)">🎯</div><div class="ct"><b>Activity</b><span>กิจกรรม–ลอยัลตี้</span></div></div>
+    <div class="chip"><div class="ci" style="background:#e8f1fe;color:var(--mkt)">🛒</div><div class="ct"><b>Market</b><span>ร้านค้าออนไลน์</span></div></div>
+  </div>
 </div></header>
 
-<section><div class="wrap">
+<!-- 3 PILLARS -->
+<section id="pillars"><div class="wrap">
   <div class="sec-head">
-    <div class="eyebrow">ทุกอย่างในที่เดียว</div>
-    <h2>แบรนด์คุณได้อะไรบ้าง</h2>
-    <p>ระบบครบที่แบรนด์ยุคใหม่ต้องมี เปิดใช้ได้ทันที</p>
+    <div class="eyebrow">ระบบนิเวศ 3 เสา</div>
+    <h2>ทุกอย่างที่แบรนด์ต้องมี ครบในที่เดียว</h2>
+    <p>ไม่ใช่แค่ร้านค้า — แต่เป็นบ้านของลูกค้ารอบแบรนด์คุณ</p>
   </div>
-  <div class="grid">
-    <div class="feat"><div class="ico">💬</div><h3>ชุมชนของลูกค้า</h3><p>ฟีดแบบโซเชียล ให้ลูกค้าแชร์ปัญหา ภาพ ความรู้ และพูดคุยกันรอบ ๆ แบรนด์ของคุณ</p></div>
-    <div class="feat"><div class="ico">🛒</div><h3>ร้านค้า + ตะกร้า</h3><p>ขายสินค้าในแอป มีตะกร้า เช็คเอาท์ ค่าส่งอัตโนมัติ และจัดการออเดอร์จากแดชบอร์ด</p></div>
-    <div class="feat"><div class="ico">🏅</div><h3>แต้ม &amp; Tier</h3><p>ระบบสะสมแต้มและระดับสมาชิก ให้ส่วนลด สร้างความผูกพันและการกลับมาซื้อซ้ำ</p></div>
-    <div class="feat"><div class="ico">🤖</div><h3>AI ผู้ช่วย</h3><p>ผู้ช่วยอัจฉริยะเฉพาะทางสำหรับแบรนด์คุณ (เช่น วิเคราะห์ภาพ ตอบคำถามสินค้า)</p></div>
-    <div class="feat"><div class="ico">🎨</div><h3>ปรับแต่งเป็นแบรนด์คุณ</h3><p>โลโก้ สี ชื่อ ป้ายร้าน ข้อความ ปรับได้เองทั้งหมดจากแดชบอร์ด ไม่ต้องแตะโค้ด</p></div>
-    <div class="feat"><div class="ico">📊</div><h3>แดชบอร์ดแอดมิน</h3><p>ดูสมาชิก โพส ออเดอร์ ยอดขาย และตั้งค่าทุกอย่างของร้านในที่เดียว</p></div>
+  <div class="pillars">
+    <div class="pcard p-com">
+      <div class="top">💬</div>
+      <h3>Community</h3>
+      <div class="sub">ชุมชนคนใช้สินค้าของแบรนด์คุณ</div>
+      <ul>
+        <li>ฟีดโซเชียล — โพสต์ รูป คอมเมนต์ ไลก์ รีแอกชั่น</li>
+        <li>กลุ่มชุมชนย่อย เข้าร่วม–พูดคุยตามความสนใจ</li>
+        <li>อันดับสมาชิก (Leaderboard) สร้างการมีส่วนร่วม</li>
+        <li>เปิดแบรนด์ใหม่มาไม่ร้าง — ระบบจุดไฟชุมชนให้อัตโนมัติ</li>
+      </ul>
+    </div>
+    <div class="pcard p-act">
+      <span class="star">⭐ ตัวชูโรง</span>
+      <div class="top">🎯</div>
+      <h3>Activity</h3>
+      <div class="sub">เครื่องมือกิจกรรม–ลอยัลตี้ ไว้เล่นกับลูกค้า</div>
+      <ul>
+        <li>แต้ม + ระดับสมาชิก (Tier) + ตราสะสม (Badges)</li>
+        <li>เกมลุ้นรางวัล: สุ่มจับรางวัล · ภารกิจ · ทายผล</li>
+        <li>แคมเปญแต้ม — ตั้งกติกาให้แต้มจากซื้อ/โพสต์เอง</li>
+        <li>คูปองส่วนลด ใช้ได้จริงตอนเช็คเอาท์</li>
+      </ul>
+    </div>
+    <div class="pcard p-mkt">
+      <div class="top">🛒</div>
+      <h3>Market</h3>
+      <div class="sub">ร้านค้าออนไลน์ครบวงจรในแอป</div>
+      <ul>
+        <li>สินค้า+รูป+สต็อก ตะกร้า เช็คเอาท์ PromptPay QR</li>
+        <li>ตัด/คืนสต็อกอัตโนมัติ · ค่าส่งยืดหยุ่น (ส่งฟรีเมื่อครบ)</li>
+        <li>เครื่องมือคิดต้นทุน–ราคา–กำไรต่อชั้นสมาชิก</li>
+        <li>ใบปะหน้า + เชื่อมระบบขนส่งออกเลขพัสดุ</li>
+      </ul>
+    </div>
   </div>
 </div></section>
 
-<section class="showcase"><div class="wrap">
-  <div class="show-card">
+<!-- ACTIVITY SPOTLIGHT -->
+<section id="activity" class="alt"><div class="wrap">
+  <div class="sec-head">
+    <div class="eyebrow">จุดต่างที่คู่แข่งไม่มี</div>
+    <h2>เครื่องมือ “เล่นกับลูกค้า” ที่ร้านสร้างเองได้</h2>
+    <p>เปลี่ยนคนซื้อครั้งเดียว ให้กลับมาซ้ำ — ด้วยกิจกรรมที่แบรนด์ตั้งค่าเองแบบยืดหยุ่น</p>
+  </div>
+  <div class="spot-grid">
+    <div class="tool"><div class="ti">🎡</div><h4>สุ่มจับรางวัล</h4><p>ลูกค้าใช้แต้มหมุนลุ้นของรางวัล/คูปอง — สุ่มยุติธรรมฝั่งเซิร์ฟเวอร์ ตัดสต็อกอัตโนมัติ</p></div>
+    <div class="tool"><div class="ti">🎯</div><h4>ภารกิจ</h4><p>ตั้งเป้า “โพสต์ครบ / ซื้อครบ / สะสมแต้มถึง” แล้วรับรางวัล ระบบนับความคืบหน้าให้เอง</p></div>
+    <div class="tool"><div class="ti">🔮</div><h4>ทายผล</h4><p>ให้ลูกค้าทายผลลุ้นรางวัล เฉลยแล้วจ่ายรางวัลผู้ชนะอัตโนมัติ เล่นได้หลายครั้ง</p></div>
+    <div class="tool"><div class="ti">⭐</div><h4>แคมเปญแต้ม</h4><p>ตั้งกติกาเอง “ซื้อครบ X บาท รับ Y แต้ม” หรือโบนัสจากการโพสต์ — ให้แต้มอัตโนมัติ</p></div>
+    <div class="tool"><div class="ti">🔥</div><h4>โปรฯ คูณแต้ม</h4><p>เปิดช่วงโปรฯ คูณแต้มทั้งร้าน (x2/x3) ตามวันเวลาที่ตั้ง คูณซ้อนกับแคมเปญได้</p></div>
+    <div class="tool"><div class="ti">🎟️</div><h4>คูปอง</h4><p>รางวัลออกเป็นคูปองส่วนลด ใช้ได้จริงตอนเช็คเอาท์ กันใช้ซ้ำอัตโนมัติ</p></div>
+  </div>
+  <div class="spot-note">ทุกกิจกรรมทำงานฝั่งเซิร์ฟเวอร์ <b>โกงแต้มไม่ได้</b> — ปลอดภัย พร้อมใช้จริง</div>
+</div></section>
+
+<!-- VALUE ROW -->
+<section><div class="wrap">
+  <div class="sec-head">
+    <div class="eyebrow">เบื้องหลังที่ทำให้ไว้ใจได้</div>
+    <h2>ปรับเป็นแบรนด์คุณ 100% + หลังบ้านครบ</h2>
+  </div>
+  <div class="vrow">
+    <div class="vcard"><div class="vi">🎨</div><h4>เป็นแบรนด์คุณ</h4><p>โลโก้ สี ชื่อ ป้ายร้าน ข้อความ ปรับเองจากแดชบอร์ด ไม่ต้องแตะโค้ด</p></div>
+    <div class="vcard"><div class="vi">📊</div><h4>แดชบอร์ดครบ</h4><p>สมาชิก โพสต์ ออเดอร์ ยอดขาย และตั้งค่าทุกอย่างในที่เดียว</p></div>
+    <div class="vcard"><div class="vi">🧩</div><h4>เปิด–ปิดฟีเจอร์</h4><p>เลือกเปิดเฉพาะที่ต้องการต่อแบรนด์ ปรับได้ตลอด</p></div>
+    <div class="vcard"><div class="vi">🔒</div><h4>ข้อมูลแยกขาด</h4><p>แต่ละแบรนด์แยกข้อมูลกันสนิท ปลอดภัยระดับระบบ</p></div>
+  </div>
+</div></section>
+
+<!-- CASE STUDY -->
+<section class="alt"><div class="wrap">
+  <div class="case">
     <div class="em">🌿</div>
     <div class="body">
       <span class="badge">CASE STUDY</span>
       <h3>เพื่อนสวน × DemeterRich</h3>
-      <p>ชุมชนเกษตรกรไทยสำหรับชาวสวน 35–60 ปี ที่รวมฟีดชุมชน ร้านปุ๋ยเหลว ระบบแต้ม และ AI หมอพืชวิเคราะห์โรคจากภาพ — ทั้งหมดสร้างบน Bocean</p>
+      <p>ชุมชนคนรักสวนของแบรนด์ปุ๋ย — รวมฟีดชุมชนให้ลูกค้าคุยกัน ร้านค้าออนไลน์พร้อมค่าส่งอัตโนมัติ และระบบกิจกรรม–ลอยัลตี้ (แต้ม สุ่มรางวัล แคมเปญ) ไว้เล่นกับลูกค้า — ทั้งหมดสร้างบน Bocean แบรนด์เดียว เชื่อมทุกอย่างเข้าด้วยกัน</p>
     </div>
-    <a class="btn btn-pri" href="https://phuansuan.web.app" target="_blank">เปิดดู →</a>
+    <a class="btn btn-pri" href="https://phuansuan.web.app" target="_blank" rel="noopener">เปิดดู →</a>
   </div>
 </div></section>
 
-<section><div class="wrap">
+<!-- PRICING -->
+<section id="pricing"><div class="wrap">
   <div class="sec-head">
     <div class="eyebrow">แพ็กเกจ</div>
     <h2>เริ่มฟรี ขยายเมื่อพร้อม</h2>
@@ -139,14 +295,14 @@
     <div class="plan">
       <h3>Free</h3>
       <div class="price">฿0<small> /เดือน</small></div>
-      <ul><li>ชุมชน + ฟีด</li><li>ร้านค้าพื้นฐาน</li><li>สมาชิกไม่จำกัด</li><li>โดเมน .web.app</li></ul>
+      <ul><li>ชุมชน + ฟีด</li><li>ร้านค้าพื้นฐาน</li><li>ระบบแต้ม + กิจกรรมเริ่มต้น</li><li>สมาชิกไม่จำกัด</li><li>โดเมน .web.app</li></ul>
       <a class="btn btn-ghost" href="#signup">เริ่มเลย</a>
     </div>
-    <div class="plan feat-plan">
+    <div class="plan hot">
       <span class="tag">แนะนำ</span>
       <h3>Pro</h3>
       <div class="price">ติดต่อ<small> /เดือน</small></div>
-      <ul><li>ทุกอย่างใน Free</li><li>แต้ม &amp; Tier + ส่วนลด</li><li>AI ผู้ช่วย</li><li>โดเมนของคุณเอง</li><li>แดชบอร์ดเต็มรูปแบบ</li></ul>
+      <ul><li>ทุกอย่างใน Free</li><li>Activity Engine เต็มรูปแบบ</li><li>Tier + ส่วนลด + คูปอง</li><li>เครื่องมือคิดราคา–กำไร</li><li>โดเมนของคุณเอง</li></ul>
       <a class="btn btn-pri" href="#signup">ขอใช้งาน</a>
     </div>
     <div class="plan">
@@ -158,57 +314,39 @@
   </div>
 </div></section>
 
-<section class="form-sec" id="signup"><div class="wrap">
+<!-- SIGNUP -->
+<section id="signup" class="alt"><div class="wrap">
   <div class="sec-head">
-    <div class="eyebrow" style="color:var(--pri)">ลงทะเบียน</div>
+    <div class="eyebrow">ลงทะเบียน</div>
     <h2>ขอเปิดร้านของแบรนด์คุณ</h2>
     <p>กรอกข้อมูลสั้น ๆ ทีมงานจะติดต่อกลับเพื่อตั้งค่าระบบให้</p>
   </div>
 
   <div class="form-card">
     <div id="bo-form">
+      <div class="f-err" id="f-err"></div>
       <div class="fg">
         <label>ชื่อแบรนด์ / ธุรกิจ <span class="req">*</span></label>
         <input id="f-brand" placeholder="เช่น DemeterRich" maxlength="100">
       </div>
       <div class="row2">
-        <div class="fg">
-          <label>ชื่อผู้ติดต่อ <span class="req">*</span></label>
-          <input id="f-name" placeholder="ชื่อ-นามสกุล" maxlength="100">
-        </div>
-        <div class="fg">
-          <label>เบอร์โทร <span class="req">*</span></label>
-          <input id="f-phone" placeholder="08x-xxx-xxxx" maxlength="30">
-        </div>
+        <div class="fg"><label>ชื่อผู้ติดต่อ <span class="req">*</span></label><input id="f-name" placeholder="ชื่อ-นามสกุล" maxlength="100"></div>
+        <div class="fg"><label>เบอร์โทร <span class="req">*</span></label><input id="f-phone" placeholder="08x-xxx-xxxx" maxlength="30"></div>
       </div>
       <div class="row2">
-        <div class="fg">
-          <label>อีเมล</label>
-          <input id="f-email" type="email" placeholder="you@email.com" maxlength="120">
-        </div>
-        <div class="fg">
-          <label>LINE ID</label>
-          <input id="f-line" placeholder="@yourbrand" maxlength="80">
-        </div>
+        <div class="fg"><label>อีเมล</label><input id="f-email" type="email" placeholder="you@email.com" maxlength="120"></div>
+        <div class="fg"><label>LINE ID</label><input id="f-line" placeholder="@yourbrand" maxlength="80"></div>
       </div>
       <div class="row2">
-        <div class="fg">
-          <label>ประเภทสินค้า</label>
-          <input id="f-product" placeholder="เช่น ปุ๋ย, เครื่องสำอาง, อาหารเสริม" maxlength="120">
-        </div>
-        <div class="fg">
-          <label>โดเมนที่อยากได้</label>
-          <input id="f-domain" placeholder="เช่น mybrand" maxlength="80">
-        </div>
+        <div class="fg"><label>ประเภทสินค้า</label><input id="f-product" placeholder="เช่น ปุ๋ย, เครื่องสำอาง, อาหารเสริม" maxlength="120"></div>
+        <div class="fg"><label>โดเมนที่อยากได้</label><input id="f-domain" placeholder="เช่น mybrand" maxlength="80"></div>
       </div>
       <div class="fg">
         <label>เล่าเกี่ยวกับแบรนด์ของคุณ</label>
         <textarea id="f-msg" placeholder="อยากได้ชุมชน + ร้านแบบไหน มีลูกค้าประมาณกี่คน ฯลฯ" maxlength="800"></textarea>
       </div>
       <button class="submit-btn" id="f-submit" onclick="submitRequest()">ส่งคำขอเปิดร้าน</button>
-      <div class="form-alt">
-        หรือคุยกับเราทาง <a href="https://line.me/R/ti/p/@demeterrich" target="_blank" style="color:#06c755;font-weight:700">LINE</a>
-      </div>
+      <div class="form-alt">หรือคุยกับเราทาง <a href="https://line.me/R/ti/p/@demeterrich" target="_blank" rel="noopener" style="color:var(--line-green);font-weight:700">LINE</a></div>
     </div>
 
     <div class="form-ok" id="bo-ok">
@@ -222,7 +360,7 @@
 <footer>
   <div class="wrap">
     <div class="brand" style="justify-content:center;font-size:18px;margin-bottom:8px"><span class="logo" style="width:28px;height:28px;font-size:15px">🌊</span> Bocean</div>
-    แพลตฟอร์มสร้างชุมชน + ร้านค้าสำหรับแบรนด์ · © 2026
+    แพลตฟอร์มสร้างชุมชน · กิจกรรม · ร้านค้า สำหรับแบรนด์ · © 2026
   </div>
 </footer>
 
@@ -235,15 +373,19 @@
     }
   } catch (e) { console.warn('Bocean firebase init:', e); }
 
+  function showErr(msg){
+    var el = document.getElementById('f-err');
+    el.textContent = msg; el.style.display = 'block';
+    el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+
   function submitRequest() {
     var brand = (document.getElementById('f-brand').value || '').trim();
     var name  = (document.getElementById('f-name').value  || '').trim();
     var phone = (document.getElementById('f-phone').value || '').trim();
-    if (!brand || !name || !phone) {
-      alert('กรุณากรอก ชื่อแบรนด์ / ชื่อผู้ติดต่อ / เบอร์โทร ให้ครบ');
-      return;
-    }
-    if (!BO_DB) { alert('ระบบยังไม่พร้อม กรุณาลองใหม่อีกครั้ง'); return; }
+    document.getElementById('f-err').style.display = 'none';
+    if (!brand || !name || !phone) { showErr('กรุณากรอก ชื่อแบรนด์ / ชื่อผู้ติดต่อ / เบอร์โทร ให้ครบ'); return; }
+    if (!BO_DB) { showErr('ระบบยังไม่พร้อม กรุณาลองใหม่อีกครั้ง'); return; }
 
     var btn = document.getElementById('f-submit');
     btn.disabled = true; btn.textContent = 'กำลังส่ง...';
@@ -270,7 +412,7 @@
       })
       .catch(function (err) {
         console.error('submit error:', err);
-        alert('ส่งไม่สำเร็จ: ' + (err && err.message ? err.message : 'ลองใหม่อีกครั้ง'));
+        showErr('ส่งไม่สำเร็จ: ' + (err && err.message ? err.message : 'ลองใหม่อีกครั้ง'));
         btn.disabled = false; btn.textContent = 'ส่งคำขอเปิดร้าน';
       });
   }
