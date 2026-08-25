@@ -10,8 +10,11 @@
 - ✅ **Phase 1 ปิดครบ (2026-08-24)** — Community Groups (มี join, คุมต่อแบรนด์) + Badges (ตราสะสม แจกจริง server-side) + จุดไฟชุมชน (seed กลุ่ม/โพสต์ต้อนรับ/ตรา + checklist onboarding) + e2e ร้านผ่าน + toast แทน alert/confirm · rules-test 22/22 · deploy + push ครบ
 - ✅ **Phase 2 ปิด (2026-08-25 ตาม scope ที่ตัด):** แปลงราคาเป็นตัวเลข + เครื่องมือต้นทุน–ราคา–margin + icon minimal social ทั้ง 2 แอป · **ผู้ช่วยการตลาด AI = Roger ตัดออก เลื่อนไป Phase 4**
 - ✅ **Phase 3 + 3.5 (2026-08-25):** feature flag ต่อแบรนด์ (pricingTool) · ตัดกลุ่ม/ใกล้ฉัน/หมอพืช/crops · **จัดโครง 3 เสา Community/Activity/Market/Profile** · การ์ดร้าน 3 preset · รื้อ Profile (ที่อยู่+ประวัติซื้อ) · de-agri เบา — deploy + verified ครบ
-- ▶️ **ถัดไป = Phase 4 Activity Engine** (campaign builder + สุ่มจับรางวัล) · หรือ dogfood/pilot
-- ⚠️ ค้าง (ข้อมูล): DemeterRich uncheck "Community Groups" ในแอดมิน (เขียน Firestore เองไม่ได้)
+- ✅ **Activity Engine v1 = สุ่มจับรางวัล (2026-08-25):** spinLuckyDraw (server-authoritative) + rules + rules-test 30/30 + admin สร้างกล่องสุ่ม + user แท็บกิจกรรมหมุน+คูปอง — deploy ครบ · **รอ Roger เทสต์ e2e** (สร้าง draw ในแอดมิน → user หมุน)
+- ▶️ **ถัดไป (เลือกได้):** เทสต์ e2e สุ่มรางวัล · คูปองใช้จริงตอน checkout · Campaign/ภารกิจ (Phase 4 ต่อ) · dogfood/pilot
+- ⚠️ **ค้าง — ปิด communityGroups ให้ phuansuan (=DemeterRich/"เพื่อนสวน"/"เพชรพญา"):** ยังเป็น `true` · วิธีที่เหลือ = **Firebase Console** (console.firebase.google.com/project/phuansuan/firestore → tenants/phuansuan/settings/features → communityGroups=false)
+- 🐞 **บั๊กต้องเช็ค:** แอดมินแอปเซฟ Features **ไม่ลง phuansuan** (features doc updatedAt ค้าง 18 มิ.ย. · กดบันทึก 4 ครั้งไม่แตะ) — สงสัยบัญชี LINE ที่ล็อกอินแอดมินไม่ใช่ super-admin ใน config หรือ currentTenant เพี้ยน · gcloud ในเครื่องพัง (Windows App-alias จับ `python`)
+- 🗺️ tenants ทั้งหมด: `phuansuan`(=DemeterRich, ชื่อระบบ "เพื่อนสวน"/appName "เพชรพญา", phuansuan.web.app) · `ecofora` · `phetpaya`
 - ⚠️ ค้าง verify: เครื่องมือคิดราคาฝั่งแอดมิน ยัง test สดไม่ได้ (ต้อง login) — Roger ช่วยกดลองในแอดมินจริงเมื่อสะดวก
 - รายละเอียดงานย่อย → ROADMAP.md · สถานะฟีเจอร์จริง → STATUS.md
 
