@@ -9,7 +9,9 @@
 - ✅ **Phase 0 ปิดครบ (2026-08-24)** — isolation แน่น: rules-test 15/15 เขียวใน CI, + bocean.web.app landing
 - ✅ **Phase 1 ปิดครบ (2026-08-24)** — Community Groups (มี join, คุมต่อแบรนด์) + Badges (ตราสะสม แจกจริง server-side) + จุดไฟชุมชน (seed กลุ่ม/โพสต์ต้อนรับ/ตรา + checklist onboarding) + e2e ร้านผ่าน + toast แทน alert/confirm · rules-test 22/22 · deploy + push ครบ
 - ✅ **Phase 2 ปิด (2026-08-25 ตาม scope ที่ตัด):** แปลงราคาเป็นตัวเลข + เครื่องมือต้นทุน–ราคา–margin + icon minimal social ทั้ง 2 แอป · **ผู้ช่วยการตลาด AI = Roger ตัดออก เลื่อนไป Phase 4**
-- ▶️ **Phase 3 กำลังทำ:** ✅ feature flag ต่อแบรนด์ (`pricingTool` default ปิด, gate เมนู/หน้า/ปุ่มคิดราคา, toggle ที่ Features — deploy 2026-08-25) · **ถัดไป = dogfood DemeterRich → ลูกค้านำร่อง 1 ราย + วัดผลใช้จริง**
+- ✅ **Phase 3 + 3.5 (2026-08-25):** feature flag ต่อแบรนด์ (pricingTool) · ตัดกลุ่ม/ใกล้ฉัน/หมอพืช/crops · **จัดโครง 3 เสา Community/Activity/Market/Profile** · การ์ดร้าน 3 preset · รื้อ Profile (ที่อยู่+ประวัติซื้อ) · de-agri เบา — deploy + verified ครบ
+- ▶️ **ถัดไป = Phase 4 Activity Engine** (campaign builder + สุ่มจับรางวัล) · หรือ dogfood/pilot
+- ⚠️ ค้าง (ข้อมูล): DemeterRich uncheck "Community Groups" ในแอดมิน (เขียน Firestore เองไม่ได้)
 - ⚠️ ค้าง verify: เครื่องมือคิดราคาฝั่งแอดมิน ยัง test สดไม่ได้ (ต้อง login) — Roger ช่วยกดลองในแอดมินจริงเมื่อสะดวก
 - รายละเอียดงานย่อย → ROADMAP.md · สถานะฟีเจอร์จริง → STATUS.md
 

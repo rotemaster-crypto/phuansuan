@@ -84,9 +84,12 @@
 
 - [x] ปิดกลุ่มย่อย — config default `communityGroups:false` (opt-in) · ⚠️ DemeterRich ตั้ง true ไว้ใน Firestore → ต้อง uncheck ในแอดมิน หรือเซ็ตผ่าน ADC
 - [x] ปิด "ใกล้ฉัน" — config default `proximityAlert:false` คุมรวม (แท็บใกล้ฉัน + step GPS onboarding + แถบแจ้งเตือน + bullet landing) เก็บโค้ด · ⚠️ DemeterRich ต้องเซ็ต false เหมือนกัน
-- [ ] **de-agri**: กวาดคำ hardcode "สวน/พืช/หมอพืช" → route ผ่าน `terms` · หมวดสินค้า default เป็นกลาง · หมอพืช AI = optional ต่อแบรนด์ — **M**
-- [ ] **จัดโครงเมนูหน้าบ้าน → Community / Activity / Market** (+ โปรไฟล์) — **M**
-- [ ] โฉมใหม่การ์ดร้าน (Market) — เลือกแนว A/B/C จาก artifact — **M**
+- [x] **de-agri (เบา)** — ✅ ตัดหมอพืช AI (ทุก entry) + crops (โปรไฟล์/onboarding) + bullet/tagline/ป้ายเมนู เป็นกลาง (2026-08-25) · หมอพืช AI backend เก็บโค้ดไว้ (dormant)
+- [x] **จัดโครงเมนู 3 เสา** — ✅ **(2026-08-25)** Community(ชุมชน/feed) · Activity(กิจกรรม/แต้ม+อันดับ) · Market(ร้านค้า) · Profile · icon เส้น · verified สด
+- [x] **รื้อ Profile** — ✅ ตัด crops/หมอพืช + การ์ดที่อยู่จัดส่ง (→checkout auto-fill) + ประวัติการสั่งซื้อ
+- [x] **โฉมใหม่การ์ดร้าน (Market)** — ✅ 3 preset เลือกต่อแบรนด์ (อบอุ่น/สะอาด/คึกคัก) ที่ตกแต่งร้าน
+
+> ✅ **Phase 3.5 ปิดครบ (2026-08-25)** — เหลือ: DemeterRich uncheck communityGroups ในแอดมิน (ข้อมูล)
 
 ---
 
