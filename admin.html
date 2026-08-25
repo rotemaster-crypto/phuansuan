@@ -800,9 +800,9 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ชื่อกิจกรรม</label><input id="ld-name" placeholder="เช่น สุ่มคูปองประจำเดือน"></div>
       <div class="fg"><label>ใช้แต้มต่อครั้ง</label><input type="number" id="ld-cost" value="20" min="0"></div>
       <div class="fg"><label>เปิดใช้งาน</label><label class="toggle"><input type="checkbox" id="ld-active" checked><span class="toggle-slider"></span></label></div>
-      <div class="fg" style="grid-column:1/-1"><label>รางวัล (บรรทัดละ 1: ชื่อ | ข้อความส่วนลด | โค้ด | น้ำหนักโอกาส | สต็อก(ว่าง=ไม่จำกัด))</label>
-        <textarea id="ld-prizes" rows="6" placeholder="ลด 50 บาท | ส่วนลด 50 บาท | SAVE50 | 10 | 100&#10;ลด 10% | ส่วนลด 10% | TEN | 5 | 50&#10;ไม่ถูกรางวัล | | | 85 |"></textarea>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">รางวัลที่ไม่ใส่โค้ด+ส่วนลด = ช่อง "ไม่ถูกรางวัล" · น้ำหนักยิ่งมาก โอกาสยิ่งสูง · สต็อกว่าง = ไม่จำกัด</div>
+      <div class="fg" style="grid-column:1/-1"><label>รางวัล (บรรทัดละ 1: ชื่อ | ส่วนลด | โค้ด | น้ำหนักโอกาส | สต็อก(ว่าง=ไม่จำกัด))</label>
+        <textarea id="ld-prizes" rows="6" placeholder="ลด 50 บาท | 50 | SAVE50 | 10 | 100&#10;ลด 10% | 10% | TEN | 5 | 50&#10;ไม่ถูกรางวัล | | | 85 |"></textarea>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px"><b>ช่องส่วนลด:</b> ใส่ตัวเลข <code>50</code> = ลด ฿50 · <code>10%</code> = ลด 10% (ใช้ลดราคาจริงตอน checkout ได้) · ใส่ข้อความล้วนหรือเว้นว่าง = คูปองโชว์เฉยๆ ลดราคาไม่ได้ · ไม่ใส่ทั้งส่วนลด+โค้ด = ช่อง "ไม่ถูกรางวัล" · น้ำหนักยิ่งมากโอกาสยิ่งสูง · สต็อกว่าง = ไม่จำกัด</div>
       </div>
     </div>
     <div class="save-row"><button class="btn btn-primary" onclick="addLuckyDraw()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกล่องสุ่ม</button></div>
@@ -1623,16 +1623,28 @@ function pricingCalc(){
     + '<div style="margin-top:8px;font-size:12px;color:var(--muted)">* ส่วนลดต่อชั้นใช้ค่ามาตรฐานระบบ 0 / 5 / 10 / 15%</div>';
 }
 /* ===== สุ่มจับรางวัล (Activity Engine) — admin ===== */
+// แปลงช่องส่วนลด: "50" = ลด ฿50 · "10%" = ลด 10% · ว่าง = คูปองโชว์อย่างเดียว (ใช้ลดราคาไม่ได้)
+function ldParseDiscount(raw){
+  var s = String(raw||'').trim();
+  if (!s) return { type:null, value:0, text:'' };
+  var pct = /%\s*$/.test(s);
+  var n = Math.max(0, Math.floor(Number(s.replace(/[^0-9.]/g,''))||0));
+  if (!n) return { type:null, value:0, text: s };  // ข้อความล้วน (เช่น "ของแถม") = แสดงอย่างเดียว
+  if (pct) return { type:'percent', value: Math.min(100,n), text:'ลด '+Math.min(100,n)+'%' };
+  return { type:'fixed', value:n, text:'ลด ฿'+n };
+}
 function ldParsePrizes(text){
   return String(text||'').split('\n').map(function(line){
     var parts = line.split('|').map(function(s){ return s.trim(); });
     if (!parts[0]) return null;
-    var discountText = parts[1]||'', code = parts[2]||'';
+    var d = ldParseDiscount(parts[1]||''), code = parts[2]||'';
+    var isPrize = (d.type !== null) || !!code;   // มีส่วนลดใช้ได้ หรือมีโค้ด = คูปอง, ไม่งั้น = 'nothing'
     return {
-      label: parts[0], discountText: discountText, couponCode: code,
+      label: parts[0], discountText: d.text, couponCode: code,
+      discountType: d.type, discountValue: d.value,
       weight: Math.max(0, Math.floor(Number(parts[3])||0)),
       stock: (parts[4]===undefined||parts[4]==='') ? null : Math.max(0, Math.floor(Number(parts[4])||0)),
-      awarded: 0, type: (!discountText && !code) ? 'nothing' : 'coupon'
+      awarded: 0, type: isPrize ? 'coupon' : 'nothing'
     };
   }).filter(Boolean).filter(function(p){ return p.weight > 0; });
 }

@@ -194,17 +194,21 @@ exports.spinLuckyDraw = onCall(async (req) => {
     let couponOut = null;
     if (isWin) {
       const couponRef = userRef.collection("coupons").doc();
+      const dType = (prize.discountType === "percent" || prize.discountType === "fixed") ? prize.discountType : null;
+      const dVal = Math.max(0, Math.floor(Number(prize.discountValue) || 0));
       const coupon = {
         drawId: drawId,
         drawName: draw.name || "",
         prizeLabel: prize.label || "รางวัล",
         code: prize.couponCode || genCouponCode(),
         discountText: prize.discountText || "",
+        discountType: dType,          // 'fixed' (บาท) | 'percent' (%) | null (แสดงอย่างเดียว ใช้ตอน checkout ไม่ได้)
+        discountValue: dVal,          // ตัวเลขส่วนลด
         used: false,
         at: FieldValue.serverTimestamp(),
       };
       tx.set(couponRef, coupon);
-      couponOut = { id: couponRef.id, label: coupon.prizeLabel, code: coupon.code, discountText: coupon.discountText };
+      couponOut = { id: couponRef.id, label: coupon.prizeLabel, code: coupon.code, discountText: coupon.discountText, discountType: dType, discountValue: dVal };
     }
 
     return {
@@ -214,6 +218,81 @@ exports.spinLuckyDraw = onCall(async (req) => {
       costPoints: cost,
       pointsLeft: Math.max(0, points - cost),
     };
+  });
+});
+
+// ============================================================
+//  placeOrderWithCoupon — สร้างออเดอร์ + ใช้คูปองแบบ atomic
+//  server เท่านั้นที่มาร์คคูปอง used (rules ห้าม client เขียน) → กันใช้ซ้ำ
+//  server คำนวณส่วนลด+ยอดสุทธิเอง (ไม่เชื่อ client) แล้วสร้าง order ในทรานแซกชันเดียว
+// ============================================================
+function couponDiscountAmount(coupon, base) {
+  const val = Math.max(0, Math.floor(Number(coupon.discountValue) || 0));
+  const b = Math.max(0, Math.floor(Number(base) || 0));
+  if (coupon.discountType === "fixed") return Math.min(val, b);
+  if (coupon.discountType === "percent") return Math.min(b, Math.floor(b * Math.min(val, 100) / 100));
+  return 0;
+}
+
+exports.placeOrderWithCoupon = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  const tid = await resolveTid(req.data && req.data.tid);
+  const couponId = ((req.data && req.data.couponId) || "").toString();
+  const cli = (req.data && req.data.order) || {};
+  if (!couponId) throw new HttpsError("invalid-argument", "ต้องระบุ couponId");
+
+  const items = Array.isArray(cli.items) ? cli.items : [];
+  if (items.length === 0) throw new HttpsError("invalid-argument", "ตะกร้าว่าง");
+
+  const subtotal = Math.max(0, Math.floor(Number(cli.subtotal) || 0));
+  const tierDiscount = Math.max(0, Math.floor(Number(cli.discount) || 0));
+  const shippingFee = Math.max(0, Math.floor(Number(cli.shippingFee) || 0));
+  const base = Math.max(0, subtotal - tierDiscount);   // ยอดสินค้าหลังส่วนลดสมาชิก (คูปองลดจากตรงนี้ ไม่ลดค่าส่ง)
+
+  const db = admin.firestore();
+  const couponRef = troot(tid).collection("users").doc(uid).collection("coupons").doc(couponId);
+  const orderRef = troot(tid).collection("orders").doc();
+
+  return db.runTransaction(async (tx) => {
+    const cSnap = await tx.get(couponRef);
+    if (!cSnap.exists) throw new HttpsError("not-found", "ไม่พบคูปอง");
+    const coupon = cSnap.data();
+    if (coupon.used === true) throw new HttpsError("failed-precondition", "คูปองนี้ถูกใช้ไปแล้ว");
+    if (coupon.discountType !== "fixed" && coupon.discountType !== "percent") {
+      throw new HttpsError("failed-precondition", "คูปองนี้ใช้ลดราคาไม่ได้");
+    }
+
+    const couponDiscount = couponDiscountAmount(coupon, base);
+    const total = Math.max(0, base - couponDiscount + shippingFee);
+
+    const order = {
+      tenantId: tid,
+      userId: uid,
+      userName: (cli.userName || "").toString(),
+      items: items,
+      subtotal: subtotal,
+      discountPct: Math.max(0, Math.floor(Number(cli.discountPct) || 0)),
+      discount: tierDiscount,
+      couponId: couponId,
+      couponCode: coupon.code || "",
+      couponLabel: coupon.prizeLabel || "",
+      couponDiscount: couponDiscount,
+      shippingFee: shippingFee,
+      weight: Math.max(0, Number(cli.weight) || 0),
+      total: total,
+      shipping: cli.shipping || {},
+      status: "pending_payment",
+      paymentMethod: "promptpay",
+      promptpayAmount: total,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    tx.set(orderRef, order);
+    tx.update(couponRef, { used: true, usedAt: FieldValue.serverTimestamp(), orderId: orderRef.id });
+
+    return { orderId: orderRef.id, total: total, couponDiscount: couponDiscount, couponCode: coupon.code || "" };
   });
 });
 

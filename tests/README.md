@@ -41,15 +41,23 @@ npm install --prefix functions   # emulator ต้องโหลดโค้ด
 
 ### รัน (จาก repo root)
 ```bash
-firebase emulators:exec --only functions,firestore,auth --project demo-bocean "node --test tests/spin.test.js"
+firebase emulators:exec --only functions,firestore,auth --project demo-bocean \
+  "node --test --test-concurrency=1 tests/spin.test.js tests/coupon.test.js"
 ```
+> ⚠️ ต้องมี `--test-concurrency=1` — สองไฟล์ share emulator เดียวกันและใช้ `clearFirestore()` ถ้ารัน parallel จะล้างข้อมูลของกันกลางคัน
 
-### เคสที่คุม (8)
+### เคสที่คุม
+**`spin.test.js` (8) — spinLuckyDraw:**
 - **ชนะ** → ได้คูปอง (users/{uid}/coupons) + หักแต้ม + `spins`++
 - **ไม่ถูกรางวัล** (prize type `nothing`) → `win:false` ไม่มีคูปอง แต่ยังหักแต้ม
 - **สต็อกจำกัด** → `awarded`++ แล้วรอบถัดไป "รางวัลหมด" (ไม่หักแต้มซ้ำ)
-- guard: แต้มไม่พอ / กิจกรรมปิด / pool ว่าง → `failed-precondition` (state ไม่เปลี่ยน)
-- guard: ไม่ส่ง `drawId` → `invalid-argument` · `drawId` ไม่มีจริง → `not-found`
+- guard: แต้มไม่พอ / กิจกรรมปิด / pool ว่าง → `failed-precondition` · ไม่ส่ง/ผิด `drawId` → `invalid-argument`/`not-found`
+
+**`coupon.test.js` (9) — placeOrderWithCoupon (คูปองใช้จริงตอน checkout):**
+- **fixed ฿** / **percent %** → คำนวณส่วนลด server-side ถูกต้อง + สร้าง order + มาร์คคูปอง `used` atomic
+- ส่วนลด > ยอด → clamp ไม่ติดลบ · ส่วนลดสมาชิกซ้อนคูปอง (base = subtotal − tier)
+- **กันใช้ซ้ำ**: คูปอง `used` แล้ว → `failed-precondition` · คูปองโชว์เฉยๆ (ไม่มี discountType) → ใช้ลดราคาไม่ได้
+- guard: couponId ผิด → `not-found` · ไม่ส่ง couponId / ตะกร้าว่าง → `invalid-argument`
 
 > รันอัตโนมัติทุก push/PR ผ่าน `.github/workflows/functions-e2e.yml`
 > หมายเหตุ: โค้ดใช้ modular `require("firebase-admin/firestore").FieldValue` (ไม่ใช่ `admin.firestore.FieldValue` แบบ compat) เพราะ namespaced static หายใต้ functions emulator

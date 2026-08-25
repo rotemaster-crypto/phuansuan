@@ -893,6 +893,7 @@ button .ic,a .ic{pointer-events:none}
       <div class="co-field"><label class="co-label">รหัสไปรษณีย์</label><input class="co-input" id="co-postcode" inputmode="numeric" maxlength="5" placeholder="xxxxx"></div>
       <div class="co-field"><label class="co-label">หมายเหตุถึงร้าน (ถ้ามี)</label><input class="co-input" id="co-note" maxlength="200" placeholder="เช่น ฝากไว้หน้าบ้าน"></div>
     </div>
+    <div class="co-coupon" id="co-coupon" style="padding:10px 16px 0"></div>
     <div class="co-summary" id="co-summary"></div>
     <div class="co-actions">
       <button class="btn-primary-lg" id="co-submit" onclick="submitCheckout()">ยืนยันสั่งซื้อ → ชำระเงิน</button>
@@ -2217,10 +2218,11 @@ async function loadMyCoupons(){
     if (!cs.length){ box.innerHTML=''; return; }
     box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">🎟️ คูปองของฉัน</div>'+
       cs.map(function(c){
-        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px">'+
-          '<div style="min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text)">'+escapeHtml(c.prizeLabel||c.drawName||'คูปอง')+'</div>'+
+        var used = c.used === true;
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;opacity:'+(used?'0.55':'1')+'">'+
+          '<div style="min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text)">'+escapeHtml(c.prizeLabel||c.drawName||'คูปอง')+(used?' <span style="font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:1px 6px;margin-left:4px">ใช้แล้ว</span>':'')+'</div>'+
           (c.discountText?'<div style="font-size:12px;color:var(--muted)">'+escapeHtml(c.discountText)+'</div>':'')+'</div>'+
-          '<div style="font-weight:800;letter-spacing:1px;color:var(--primary);flex:none">'+escapeHtml(c.code||'')+'</div></div>';
+          '<div style="font-weight:800;letter-spacing:1px;flex:none;'+(used?'color:var(--muted);text-decoration:line-through':'color:var(--primary)')+'">'+escapeHtml(c.code||'')+'</div></div>';
       }).join('');
   } catch(e){ box.innerHTML=''; }
 }
@@ -3327,6 +3329,48 @@ function tierDiscountPct(){
 function cartDiscount(){ return Math.round(cartSubtotal() * tierDiscountPct() / 100); }
 function cartTotal(){ return Math.max(0, cartSubtotal() - cartDiscount()) + shippingFee(); }
 
+// ── คูปองส่วนลด (จากสุ่มจับรางวัล) — ใช้ตอน checkout ─────────
+let checkoutCoupons = [];   // คูปองที่ยังไม่ใช้ + ลดราคาได้จริง
+let selectedCoupon = null;
+function couponBase(){ return Math.max(0, cartSubtotal() - cartDiscount()); }  // คูปองลดจากยอดสินค้าหลังส่วนลดสมาชิก (ไม่ลดค่าส่ง)
+function couponDiscountFor(c){
+  if (!c) return 0;
+  const b = couponBase(), v = Math.max(0, Math.floor(Number(c.discountValue)||0));
+  if (c.discountType === 'fixed') return Math.min(v, b);
+  if (c.discountType === 'percent') return Math.min(b, Math.floor(b * Math.min(v,100) / 100));
+  return 0;
+}
+function couponDiscountPreview(){ return couponDiscountFor(selectedCoupon); }
+function checkoutTotal(){ return Math.max(0, couponBase() - couponDiscountPreview()) + shippingFee(); }
+async function loadCheckoutCoupons(){
+  checkoutCoupons = []; selectedCoupon = null;
+  if (!currentUser || !db) return;
+  try {
+    const snap = await tdb().collection('users').doc(currentUser.uid).collection('coupons').where('used','==',false).get();
+    checkoutCoupons = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(c){ return c.discountType==='fixed' || c.discountType==='percent'; });
+  } catch(e){ checkoutCoupons = []; }
+}
+function selectCoupon(id){
+  selectedCoupon = (selectedCoupon && selectedCoupon.id===id) ? null : (checkoutCoupons.find(function(c){return c.id===id;})||null);
+  renderCouponPicker(); renderCheckoutSummary();
+}
+function renderCouponPicker(){
+  const el = document.getElementById('co-coupon'); if(!el) return;
+  if (!checkoutCoupons.length){ el.innerHTML=''; return; }
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">🎟️ ใช้คูปอง</div>'+
+    '<div style="display:flex;flex-direction:column;gap:6px">'+
+    checkoutCoupons.map(function(c){
+      const on = !!(selectedCoupon && selectedCoupon.id===c.id), amt = couponDiscountFor(c);
+      return '<button type="button" onclick="selectCoupon(\''+c.id+'\')" style="display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;'+
+        'border:1.5px solid '+(on?'var(--primary)':'var(--border)')+';background:'+(on?'#f0f9f0':'#fff')+';border-radius:10px;padding:9px 11px;cursor:pointer">'+
+        '<span style="min-width:0;overflow:hidden"><span style="font-weight:700;font-size:13px;color:var(--text)">'+escapeHtml(c.prizeLabel||c.drawName||'คูปอง')+'</span>'+
+        (c.discountText?' <span style="font-size:12px;color:var(--muted)">'+escapeHtml(c.discountText)+'</span>':'')+'</span>'+
+        '<span style="flex:none;font-weight:800;font-size:13px;color:'+(on?'var(--primary)':'var(--muted)')+'">'+(on?'− '+baht(amt):'ใช้')+'</span>'+
+        '</button>';
+    }).join('')+'</div>';
+}
+
 function renderCartBadge(){
   const b = document.getElementById('cart-badge');
   if (!b) return;
@@ -3508,6 +3552,8 @@ function goCheckout(){
   if (!currentUser){ toast('กรุณาเข้าสู่ระบบก่อนสั่งซื้อครับ'); return; }
   fillProvinces();
   prefillAddress();
+  loadCheckoutCoupons().then(function(){ renderCouponPicker(); renderCheckoutSummary(); });
+  renderCouponPicker();
   renderCheckoutSummary();
   closeCart();
   document.getElementById('checkoutModal').classList.add('open');
@@ -3518,8 +3564,10 @@ function renderCheckoutSummary(){
   const pct = tierDiscountPct();
   let h = '<div class="sum-row"><span>ยอดสินค้า ('+cartCount()+' ชิ้น)</span><span>'+baht(cartSubtotal())+'</span></div>';
   if (pct) h += '<div class="sum-row"><span>ส่วนลดสมาชิก '+pct+'%</span><span>− '+baht(cartDiscount())+'</span></div>';
+  const cd = couponDiscountPreview();
+  if (selectedCoupon && cd>0) h += '<div class="sum-row"><span>🎟️ คูปอง '+escapeHtml(selectedCoupon.discountText||'')+'</span><span>− '+baht(cd)+'</span></div>';
   h += '<div class="sum-row"><span>ค่าจัดส่ง</span><span>'+(shippingFee()===0?'ฟรี':baht(shippingFee()))+'</span></div>';
-  h += '<div class="sum-row total"><span>ยอดสุทธิ</span><span>'+baht(cartTotal())+'</span></div>';
+  h += '<div class="sum-row total"><span>ยอดสุทธิ</span><span>'+baht(checkoutTotal())+'</span></div>';
   el.innerHTML = h;
 }
 
@@ -3534,24 +3582,43 @@ async function submitCheckout(){
   if (!db || !currentUser){ toast('ระบบยังไม่พร้อม ลองใหม่อีกครั้งครับ'); return; }
   const btn = document.getElementById('co-submit'); if(btn){ btn.disabled=true; btn.textContent='กำลังสร้างออเดอร์...'; }
   const shipping = { name:name, phone:phone, addressLine:addr, province:province, district:district, subdistrict:sub, postcode:postcode, note:note };
-  const total = cartTotal();
-  const order = {
+  const items = cart.map(function(r){ return { id:r.id, name:r.name, price:r.price, qty:r.qty, weightKg:r.weightKg||1, category:r.category||'' }; });
+  const base = {
     tenantId: (typeof tenantId==='function')?tenantId():'default',
     userId: currentUser.uid, userName: currentUser.displayName || '',
-    items: cart.map(function(r){ return { id:r.id, name:r.name, price:r.price, qty:r.qty, weightKg:r.weightKg||1, category:r.category||'' }; }),
-    subtotal: cartSubtotal(), discountPct: tierDiscountPct(), discount: cartDiscount(),
-    shippingFee: shippingFee(), weight: cartWeight(), total: total,
-    shipping: shipping, status: 'pending_payment', paymentMethod: 'promptpay', promptpayAmount: total,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    items: items, subtotal: cartSubtotal(), discountPct: tierDiscountPct(), discount: cartDiscount(),
+    shippingFee: shippingFee(), weight: cartWeight(), shipping: shipping
   };
   try {
-    const ref = await tdb().collection('orders').add(order);
-    try { await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
-    pendingOrder = Object.assign({ id: ref.id }, order, { total: total });
-    closeCheckout();
-    openPayment(pendingOrder);
-  } catch(e){ toast('สร้างออเดอร์ไม่สำเร็จ: '+e.message); }
+    if (selectedCoupon) {
+      // มีคูปอง → ให้ server สร้าง order + มาร์คคูปอง used แบบ atomic (server คุมยอดส่วนลดเอง)
+      const fn = firebase.app().functions('asia-southeast1').httpsCallable('placeOrderWithCoupon');
+      const res = await fn({ tid: (typeof tenantId==='function')?tenantId():undefined, couponId: selectedCoupon.id, order: base });
+      const d = (res && res.data) || {};
+      try { await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
+      pendingOrder = Object.assign({ id: d.orderId }, base, {
+        status:'pending_payment', paymentMethod:'promptpay',
+        couponId: selectedCoupon.id, couponCode: d.couponCode || selectedCoupon.code || '',
+        couponDiscount: d.couponDiscount || 0, total: d.total, promptpayAmount: d.total
+      });
+      selectedCoupon = null;
+      closeCheckout();
+      openPayment(pendingOrder);
+      try { loadMyCoupons(); } catch(e){}
+    } else {
+      const total = cartTotal();
+      const order = Object.assign({}, base, {
+        total: total, status:'pending_payment', paymentMethod:'promptpay', promptpayAmount: total,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      const ref = await tdb().collection('orders').add(order);
+      try { await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
+      pendingOrder = Object.assign({ id: ref.id }, order, { total: total });
+      closeCheckout();
+      openPayment(pendingOrder);
+    }
+  } catch(e){ toast('สร้างออเดอร์ไม่สำเร็จ: '+((e&&e.message)||e)); }
   if(btn){ btn.disabled=false; btn.textContent='ยืนยันสั่งซื้อ → ชำระเงิน'; }
 }
 
