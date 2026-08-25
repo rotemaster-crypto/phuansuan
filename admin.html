@@ -697,13 +697,40 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 </div>
 
 <!-- PRODUCTS -->
+<style>
+.prod-sec{font-size:13px;font-weight:800;color:var(--primary);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px dashed var(--border)}
+.prod-sec:first-of-type{margin-top:4px}
+.prod-imgbox{width:88px;height:88px;flex:none;border:1.5px dashed var(--border);border-radius:10px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;line-height:1.4}
+.prod-imgbox.has{border-style:solid}
+.prod-imgbox.has span{display:none}
+.prod-card{display:flex;gap:12px;align-items:center;padding:11px;border:1px solid var(--border);border-radius:12px;margin-bottom:9px;background:var(--card)}
+.prod-card.off{opacity:.55}
+.prod-thumb{width:60px;height:60px;flex:none;border-radius:9px;background:var(--bg) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:26px}
+.prod-meta{flex:1;min-width:0}
+.prod-nm{font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prod-sub{font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.prod-stk{font-weight:700}
+.prod-stk.ok{color:#16a34a}.prod-stk.low{color:#d97706}.prod-stk.out{color:#dc2626}
+.prod-acts{display:flex;gap:6px;flex:none}
+.pill{font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px}
+.pill-off{background:#fee2e2;color:#dc2626}
+.pill-un{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+</style>
 <div class="screen" id="screen-products">
   <div class="page-header"><div class="page-title">📦 จัดการสินค้า</div><div class="page-sub">เพิ่ม ลบ แก้ไขสินค้าในแอป</div></div>
   <div class="card"><div class="card-title">➕ เพิ่มสินค้าใหม่</div>
-    <div class="form-grid">
-      <div class="fg"><label>ชื่อสินค้า</label><input id="new-prod-name" placeholder="เช่น Mancozeb 80% WP"></div>
-      <div class="fg"><label>ราคา (ขายจริง)</label><input id="new-prod-price" placeholder="เช่น 180 บาท"></div>
-      <div class="fg"><label>ต้นทุนโรงงาน / ชิ้น (สำหรับคิดกำไร — เว้นว่างได้)</label><input id="new-prod-cost" type="number" step="0.01" placeholder="เช่น 120"></div>
+
+    <div class="prod-sec">1) ข้อมูลพื้นฐาน</div>
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div class="prod-imgbox" id="new-prod-imgprev" onclick="document.getElementById('new-prod-file').click()" title="กดเพื่ออัปโหลดรูป"><span>＋<br>เพิ่มรูป</span></div>
+      <div style="flex:1;min-width:0">
+        <input type="file" id="new-prod-file" accept="image/*" style="display:none" onchange="uploadProdImg(this,'new-prod-img','new-prod-imgprev')">
+        <input id="new-prod-img" placeholder="วางลิงก์รูป หรือกดกล่องซ้ายเพื่ออัปโหลด" oninput="prodPrev('new-prod-img','new-prod-imgprev')">
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">แนะนำรูปจัตุรัส 1:1 · ไม่เกิน 3MB</div>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-top:12px">
+      <div class="fg" style="grid-column:1/-1"><label>ชื่อสินค้า</label><input id="new-prod-name" placeholder="เช่น Mancozeb 80% WP"></div>
       <div class="fg"><label>หมวดหมู่</label>
         <select id="new-prod-cat">
           <option value="pesticide">🧴 ยาฆ่าแมลง</option>
@@ -713,17 +740,29 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
           <option value="equipment">🔧 อุปกรณ์</option>
         </select>
       </div>
-      <div class="fg"><label>ลิงก์สินค้า / LINE Shop URL</label><input id="new-prod-url" value="https://line.me/R/ti/p/@demeterrich"></div>
-      <div class="fg"><label>🔗 สินค้า Affiliate (กดแล้วเปิดลิงก์ด้านบน แทนใส่ตะกร้า)</label><label class="toggle"><input type="checkbox" id="new-prod-affiliate"><span class="toggle-slider"></span></label></div>
-      <div class="fg"><label>ปัญหาที่แก้ได้ / แท็ก (คั่นด้วยจุลภาค)</label><input id="new-prod-diseases" placeholder="เช่น แอนแทรคโนส, ราสนิม"></div>
-      <div class="fg"><label>ใช้กับอะไรได้ / แท็ก (คั่นด้วยจุลภาค)</label><input id="new-prod-crops" placeholder="เช่น mango, chili"></div>
-      <div class="fg"><label>ราคาเดิม (ก่อนลด — เว้นว่างได้)</label><input id="new-prod-oldprice" placeholder="เช่น 220 บาท"></div>
-      <div class="fg"><label>ยอดขาย (จำนวนที่ขายแล้ว)</label><input type="number" id="new-prod-sold" placeholder="0"></div>
-      <div class="fg"><label>ป้าย Badge (เช่น ขายดี / ใหม่)</label><input id="new-prod-badge" placeholder="เว้นว่าง = ไม่มีป้าย"></div>
-      <div class="fg" style="grid-column:1/-1"><label>รายละเอียดสินค้า</label><textarea id="new-prod-desc" rows="3" placeholder="อธิบายสรรพคุณ วิธีใช้ ขนาดบรรจุ ฯลฯ"></textarea></div>
-      <div class="fg"><label>⭐ สินค้าแนะนำ (โชว์ใน carousel)</label><label class="toggle"><input type="checkbox" id="new-prod-featured"><span class="toggle-slider"></span></label></div>
+      <div class="fg" style="grid-column:1/-1"><label>รายละเอียดสินค้า</label><textarea id="new-prod-desc" rows="3" placeholder="สรรพคุณ วิธีใช้ ขนาดบรรจุ ฯลฯ"></textarea></div>
     </div>
-    <div class="save-row"><button class="btn btn-primary" onclick="addProduct()"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มสินค้า</button></div>
+
+    <div class="prod-sec">2) ราคา &amp; สต็อก</div>
+    <div class="form-grid">
+      <div class="fg"><label>ราคาขาย (บาท)</label><input id="new-prod-price" inputmode="numeric" placeholder="เช่น 180"></div>
+      <div class="fg"><label>ราคาเดิม (ก่อนลด — เว้นว่างได้)</label><input id="new-prod-oldprice" inputmode="numeric" placeholder="เช่น 220"></div>
+      <div class="fg"><label>สต็อกคงเหลือ (เว้นว่าง = ไม่จำกัด/ไม่ตัดสต็อก)</label><input id="new-prod-stock" type="number" min="0" placeholder="เช่น 100"></div>
+      <div class="fg"><label>ต้นทุน/ชิ้น (คิดกำไร — เว้นว่างได้)</label><input id="new-prod-cost" type="number" step="0.01" placeholder="เช่น 120"></div>
+    </div>
+
+    <div class="prod-sec">3) อื่นๆ</div>
+    <div class="form-grid">
+      <div class="fg"><label>ยอดขายเริ่มต้น</label><input type="number" id="new-prod-sold" placeholder="0"></div>
+      <div class="fg"><label>ป้าย Badge (เช่น ขายดี/ใหม่)</label><input id="new-prod-badge" placeholder="เว้นว่าง = ไม่มีป้าย"></div>
+      <div class="fg"><label>⭐ สินค้าแนะนำ (carousel)</label><label class="toggle"><input type="checkbox" id="new-prod-featured"><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>เปิดขาย (ปิด = ซ่อนจากร้าน)</label><label class="toggle"><input type="checkbox" id="new-prod-active" checked><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>ปัญหาที่แก้ได้ / แท็ก (คั่น ,)</label><input id="new-prod-diseases" placeholder="เช่น แอนแทรคโนส, ราสนิม"></div>
+      <div class="fg"><label>ใช้กับอะไรได้ / แท็ก (คั่น ,)</label><input id="new-prod-crops" placeholder="เช่น mango, chili"></div>
+      <div class="fg" style="grid-column:1/-1"><label>ลิงก์สินค้า / LINE Shop URL</label><input id="new-prod-url" value="https://line.me/R/ti/p/@demeterrich"></div>
+      <div class="fg"><label>🔗 สินค้า Affiliate (กดแล้วเปิดลิงก์ แทนใส่ตะกร้า)</label><label class="toggle"><input type="checkbox" id="new-prod-affiliate"><span class="toggle-slider"></span></label></div>
+    </div>
+    <div class="save-row"><button class="btn btn-ghost" onclick="resetProdForm()">ล้างฟอร์ม</button><button class="btn btn-primary" onclick="addProduct()"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มสินค้า</button></div>
   </div>
   <div class="card"><div class="card-title">📥 นำเข้าสินค้าจาก CSV</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">อัปโหลดไฟล์ CSV (export จาก Shopee/Lazada หรือไฟล์ทั่วไป) → จับคู่คอลัมน์ → ดูตัวอย่าง → นำเข้าเข้าแบรนด์ที่กำลังดูแล · แท็กในเซลล์ใช้ <b>;</b> คั่น</div>
@@ -748,31 +787,52 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
   </div>
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
-      <div class="card-title" style="margin:0">📋 สินค้าทั้งหมด</div>
-      <button class="btn btn-ghost" id="price-migrate-btn" onclick="migratePrices()" title="แปลงราคาที่ยังเป็นข้อความ (เช่น '180 บาท') ให้เป็นตัวเลข"><svg class="ic"><use href="#i-hash"/></svg> แปลงราคาเป็นตัวเลข</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <div class="card-title" style="margin:0">📋 สินค้าทั้งหมด <span id="prod-count" style="color:var(--muted);font-weight:400;font-size:13px"></span></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="prod-search" placeholder="🔍 ค้นหาชื่อสินค้า" oninput="renderProducts()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+        <button class="btn btn-ghost" id="price-migrate-btn" onclick="migratePrices()" title="แปลงราคาที่ยังเป็นข้อความ (เช่น '180 บาท') ให้เป็นตัวเลข"><svg class="ic"><use href="#i-hash"/></svg> แปลงราคาเป็นตัวเลข</button>
+      </div>
     </div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>ชื่อสินค้า</th><th>หมวด</th><th>ราคา</th><th>กำไร</th><th>Action</th></tr></thead>
-      <tbody id="products-table"><tr><td colspan="4" class="empty-state">กำลังโหลด...</td></tr></tbody>
-    </table></div>
+    <div id="products-list"><div class="empty-state">กำลังโหลด...</div></div>
   </div>
 </div>
 
 <div id="prodb-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeProdB()">
   <div style="background:var(--card);border-radius:14px;max-width:420px;width:92%;max-height:86vh;overflow:auto;padding:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:17px;font-weight:800">✏️ ตั้งโปรโมชันสินค้า</div><div onclick="closeProdB()" style="cursor:pointer;font-size:20px;color:#888">✕</div></div>
-    <div id="prodb-name" style="font-weight:700;margin-bottom:10px;color:var(--primary)"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:17px;font-weight:800">✏️ แก้ไขสินค้า</div><div onclick="closeProdB()" style="cursor:pointer;font-size:20px;color:#888">✕</div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <div class="prod-imgbox" id="prodb-imgprev" onclick="document.getElementById('prodb-file').click()" title="กดเพื่อเปลี่ยนรูป"><span>＋<br>เพิ่มรูป</span></div>
+      <div style="flex:1;min-width:0">
+        <input type="file" id="prodb-file" accept="image/*" style="display:none" onchange="uploadProdImg(this,'prodb-img','prodb-imgprev')">
+        <input id="prodb-img" placeholder="ลิงก์รูป หรือกดกล่องเพื่ออัปโหลด" oninput="prodPrev('prodb-img','prodb-imgprev')">
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">รูปจัตุรัส 1:1 · ไม่เกิน 3MB</div>
+      </div>
+    </div>
     <div class="form-grid">
-      <div class="fg"><label>ราคา</label><input id="prodb-price"></div>
-      <div class="fg"><label>ราคาเดิม (ก่อนลด)</label><input id="prodb-oldprice"></div>
-      <div class="fg"><label>ต้นทุนโรงงาน / ชิ้น</label><input id="prodb-cost" type="number" step="0.01" placeholder="เว้นว่าง = ไม่คิดกำไร"></div>
+      <div class="fg" style="grid-column:1/-1"><label>ชื่อสินค้า</label><input id="prodb-name-in"></div>
+      <div class="fg"><label>หมวดหมู่</label>
+        <select id="prodb-cat">
+          <option value="pesticide">🧴 ยาฆ่าแมลง</option>
+          <option value="fertilizer">💊 ปุ๋ย</option>
+          <option value="hormone">💧 ฮอร์โมน</option>
+          <option value="organic">🌱 อินทรีย์</option>
+          <option value="equipment">🔧 อุปกรณ์</option>
+        </select>
+      </div>
+      <div class="fg"><label>เปิดขาย</label><label class="toggle"><input type="checkbox" id="prodb-active"><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>ราคาขาย (บาท)</label><input id="prodb-price" inputmode="numeric"></div>
+      <div class="fg"><label>ราคาเดิม (ก่อนลด)</label><input id="prodb-oldprice" inputmode="numeric"></div>
+      <div class="fg"><label>สต็อกคงเหลือ (เว้นว่าง = ไม่จำกัด)</label><input id="prodb-stock" type="number" min="0"></div>
+      <div class="fg"><label>ต้นทุน / ชิ้น</label><input id="prodb-cost" type="number" step="0.01" placeholder="เว้นว่าง = ไม่คิดกำไร"></div>
       <div class="fg" id="prodb-pricing-btn" style="grid-column:1/-1;display:none"><button class="btn btn-ghost" style="width:100%" onclick="pricingFromProduct()"><svg class="ic"><use href="#i-hash"/></svg> คิดราคา–กำไร จากต้นทุนนี้</button></div>
       <div class="fg"><label>ยอดขาย</label><input type="number" id="prodb-sold"></div>
       <div class="fg"><label>ป้าย Badge</label><input id="prodb-badge"></div>
       <div class="fg"><label>⭐ สินค้าแนะนำ</label><label class="toggle"><input type="checkbox" id="prodb-featured"><span class="toggle-slider"></span></label></div>
-      <div class="fg" style="grid-column:1/-1"><label>ลิงก์สินค้า / Shop URL</label><input id="prodb-url"></div>
       <div class="fg"><label>🔗 สินค้า Affiliate</label><label class="toggle"><input type="checkbox" id="prodb-affiliate"><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>ปัญหาที่แก้ได้ / แท็ก (คั่น ,)</label><input id="prodb-diseases"></div>
+      <div class="fg"><label>ใช้กับอะไรได้ / แท็ก (คั่น ,)</label><input id="prodb-crops"></div>
+      <div class="fg" style="grid-column:1/-1"><label>ลิงก์สินค้า / Shop URL</label><input id="prodb-url"></div>
       <div class="fg" style="grid-column:1/-1"><label>รายละเอียดสินค้า</label><textarea id="prodb-desc" rows="3"></textarea></div>
     </div>
     <div class="save-row"><button class="btn btn-ghost" onclick="closeProdB()">ยกเลิก</button><button class="btn btn-primary" onclick="saveProdB()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button></div>
@@ -1476,33 +1536,51 @@ async function editProductB(id){
     const doc = await aDb().collection('products').doc(id).get();
     if (!doc.exists) return;
     const p = doc.data(); _prodbId = id;
-    document.getElementById('prodb-name').textContent = p.name || '';
-    document.getElementById('prodb-price').value = p.price || '';
-    document.getElementById('prodb-oldprice').value = p.oldPrice || '';
-    document.getElementById('prodb-cost').value = (p.cost != null ? p.cost : '');
-    document.getElementById('prodb-sold').value = p.soldCount || 0;
-    document.getElementById('prodb-badge').value = p.badge || '';
-    document.getElementById('prodb-featured').checked = p.featured === true;
-    document.getElementById('prodb-url').value = p.url || '';
-    document.getElementById('prodb-affiliate').checked = p.affiliate === true;
-    document.getElementById('prodb-desc').value = p.description || '';
+    const sv=(k,v)=>{ const e=document.getElementById(k); if(e) e.value=v; };
+    const sc=(k,v)=>{ const e=document.getElementById(k); if(e) e.checked=v; };
+    sv('prodb-name-in', p.name || '');
+    sv('prodb-img', p.image || '');
+    sv('prodb-cat', p.category || 'pesticide');
+    sv('prodb-price', p.price != null ? p.price : '');
+    sv('prodb-oldprice', p.oldPrice != null ? p.oldPrice : '');
+    sv('prodb-stock', (p.stock===null||p.stock===undefined) ? '' : p.stock);
+    sv('prodb-cost', (p.cost != null ? p.cost : ''));
+    sv('prodb-sold', p.soldCount || 0);
+    sv('prodb-badge', p.badge || '');
+    sc('prodb-featured', p.featured === true);
+    sc('prodb-affiliate', p.affiliate === true);
+    sc('prodb-active', p.active !== false);
+    sv('prodb-diseases', Array.isArray(p.diseases)?p.diseases.join(', '):'');
+    sv('prodb-crops', Array.isArray(p.crops)?p.crops.join(', '):'');
+    sv('prodb-url', p.url || '');
+    sv('prodb-desc', p.description || '');
+    prodPrev('prodb-img','prodb-imgprev');
     document.getElementById('prodb-modal').style.display = 'flex';
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
 function closeProdB(){ document.getElementById('prodb-modal').style.display='none'; _prodbId=null; }
 async function saveProdB(){
   if (!_prodbId) return;
+  const name = document.getElementById('prodb-name-in').value.trim();
+  if (!name){ toast('❌ กรอกชื่อสินค้า','error'); return; }
   try {
     await aDb().collection('products').doc(_prodbId).update({
+      name: name,
+      image: (document.getElementById('prodb-img').value||'').trim(),
+      category: document.getElementById('prodb-cat').value,
       price: parsePrice(document.getElementById('prodb-price').value),
       cost: parsePrice(document.getElementById('prodb-cost').value),
       oldPrice: parsePrice(document.getElementById('prodb-oldprice').value),
+      stock: parseStock(document.getElementById('prodb-stock').value),
       soldCount: +document.getElementById('prodb-sold').value || 0,
       badge: document.getElementById('prodb-badge').value.trim(),
       featured: document.getElementById('prodb-featured').checked,
+      affiliate: document.getElementById('prodb-affiliate').checked,
+      active: document.getElementById('prodb-active').checked,
+      diseases: document.getElementById('prodb-diseases').value.split(',').map(s=>s.trim()).filter(Boolean),
+      crops: document.getElementById('prodb-crops').value.split(',').map(s=>s.trim()).filter(Boolean),
       description: document.getElementById('prodb-desc').value.trim(),
-      url: document.getElementById('prodb-url').value,
-      affiliate: document.getElementById('prodb-affiliate').checked
+      url: document.getElementById('prodb-url').value
     });
     toast('✅ บันทึกแล้ว','success'); closeProdB(); loadProducts();
   } catch(e){ toast('❌ '+e.message,'error'); }
@@ -1538,19 +1616,57 @@ async function migratePrices(){
   } catch(e){ toast('❌ '+e.message,'error'); }
   if (btn){ btn.disabled = false; }
 }
+let _products = [];
 async function loadProducts() {
+  const box = document.getElementById('products-list'); if (box) box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
   try {
     const snap = await aDb().collection('products').get();
-    document.getElementById('products-table').innerHTML = snap.empty
-      ? '<tr><td colspan="5" class="empty-state">ยังไม่มีสินค้า</td></tr>'
-      : snap.docs.map(doc => {
-          const p = doc.data();
-          const pr = parsePrice(p.price), co = parsePrice(p.cost);
-          const mg = (pr>0 && co>0) ? marginBadge(pr, co) : '<span style="color:var(--muted)">—</span>';
-          return `<tr><td style="font-weight:700">${p.featured?'⭐ ':''}${p.name}</td><td><span class="tag-chip">${p.category||'—'}</span></td><td>${p.price?baht(pr):'—'}</td><td>${mg}</td>
-          <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editProductB('${doc.id}')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteProduct('${doc.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
-        }).join('');
-  } catch(e) { document.getElementById('products-table').innerHTML = `<tr><td colspan="5" class="empty-state">Error: ${e.message}</td></tr>`; }
+    _products = snap.docs.map(function(d){ return Object.assign({ _id:d.id }, d.data()); });
+    _products.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
+    renderProducts();
+  } catch(e) { if (box) box.innerHTML = '<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
+}
+function stockChip(p){
+  if (p.stock === null || p.stock === undefined) return '<span class="prod-stk" style="color:var(--muted)">สต็อก: ไม่จำกัด</span>';
+  const n = Math.max(0, Math.floor(Number(p.stock)||0));
+  const cls = n===0 ? 'out' : (n<=5 ? 'low' : 'ok');
+  return '<span class="prod-stk '+cls+'">'+(n===0?'สินค้าหมด':('เหลือ '+n))+'</span>';
+}
+function renderProducts() {
+  const box = document.getElementById('products-list'); if (!box) return;
+  const q = (document.getElementById('prod-search')?.value || '').trim().toLowerCase();
+  const list = q ? _products.filter(function(p){ return String(p.name||'').toLowerCase().indexOf(q)>=0; }) : _products;
+  const cnt = document.getElementById('prod-count'); if (cnt) cnt.textContent = '('+_products.length+' รายการ)';
+  if (!list.length){ box.innerHTML = '<div class="empty-state">'+(q?'ไม่พบสินค้าที่ค้นหา':'ยังไม่มีสินค้า')+'</div>'; return; }
+  box.innerHTML = list.map(function(p){
+    const pr = parsePrice(p.price), co = parsePrice(p.cost);
+    const off = p.active === false;
+    const thumb = p.image ? '<div class="prod-thumb" style="background-image:url(\''+escapeHtml(p.image)+'\')"></div>' : '<div class="prod-thumb">'+catEmojiA(p.category)+'</div>';
+    const mg = (pr>0 && co>0) ? (' · กำไร '+marginBadge(pr, co)) : '';
+    return '<div class="prod-card'+(off?' off':'')+'">'+
+      thumb+
+      '<div class="prod-meta">'+
+        '<div class="prod-nm">'+(p.featured?'⭐ ':'')+escapeHtml(p.name||'')+(off?' <span class="pill pill-off">ปิดขาย</span>':'')+'</div>'+
+        '<div class="prod-sub">'+
+          '<span style="font-weight:700;color:var(--text)">'+(pr>0?baht(pr):'—')+'</span>'+
+          (p.oldPrice&&parsePrice(p.oldPrice)>pr?' <span style="text-decoration:line-through;color:var(--muted)">'+baht(parsePrice(p.oldPrice))+'</span>':'')+
+          ' · '+stockChip(p)+
+          ' · <span>ขายแล้ว '+(p.soldCount||0)+'</span>'+mg+
+        '</div>'+
+      '</div>'+
+      '<div class="prod-acts">'+
+        '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="toggleProductActive(\''+p._id+'\','+(p.active!==false)+')" title="'+(off?'เปิดขาย':'ปิดขาย')+'">'+(off?'เปิด':'ปิด')+'</button>'+
+        '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="editProductB(\''+p._id+'\')"><svg class="ic"><use href="#i-edit"/></svg></button>'+
+        '<button class="btn btn-danger" style="padding:5px 9px;font-size:12px" onclick="deleteProduct(\''+p._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function catEmojiA(c){ return {pesticide:'🧴',fertilizer:'💊',hormone:'💧',organic:'🌱',equipment:'🔧'}[c]||'📦'; }
+async function toggleProductActive(id, cur){
+  try { await aDb().collection('products').doc(id).update({ active: !cur }); toast(cur?'ปิดขายแล้ว':'เปิดขายแล้ว','success');
+    const p = _products.find(function(x){return x._id===id;}); if(p) p.active = !cur; renderProducts();
+  } catch(e){ toast('❌ '+e.message,'error'); }
 }
 /* ===== เครื่องมือคิดราคา–กำไร (Phase 2) ===== */
 // ส่วนลดต่อชั้นสมาชิก = ค่ามาตรฐานระบบ (ตรงกับ config.js: bronze/silver/gold/platinum)
@@ -1952,16 +2068,53 @@ async function csvImport(){
   } catch(e){ toast('❌ '+e.message,'error'); }
   btn.disabled = false;
 }
+// สต็อก: ช่องว่าง = null (ไม่จำกัด/ไม่ตัดสต็อก) · มีเลข = ตัวเลข >= 0
+function parseStock(raw){ const s=String(raw==null?'':raw).trim(); if(s==='') return null; const n=Math.max(0,Math.floor(Number(s)||0)); return n; }
+// อัปรูปสินค้าขึ้น Storage → เก็บ URL ในช่อง target + โชว์พรีวิว
+async function uploadProdImg(input, targetId, prevId){
+  const file = input.files[0]; if(!file) return;
+  if (file.size > 3*1024*1024){ toast('❌ ไฟล์ใหญ่เกิน 3MB','error'); input.value=''; return; }
+  const box = document.getElementById(prevId); const prev = box ? box.innerHTML : '';
+  if (box){ box.innerHTML='<span>กำลังอัป...</span>'; }
+  try {
+    const ext = (file.name.split('.').pop()||'jpg').toLowerCase();
+    const ref = storage.ref('products/'+currentTenant+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    document.getElementById(targetId).value = url;
+    prodPrev(targetId, prevId);
+    toast('✅ อัปรูปแล้ว','success');
+  } catch(e){ if(box){ box.innerHTML=prev; } toast('❌ '+e.message,'error'); }
+  input.value='';
+}
+// โชว์พรีวิวรูปจากค่าในช่อง input
+function prodPrev(inputId, prevId){
+  const url = (document.getElementById(inputId).value||'').trim();
+  const box = document.getElementById(prevId); if(!box) return;
+  if (url){ box.style.backgroundImage='url("'+url.replace(/"/g,'')+'")'; box.classList.add('has'); }
+  else { box.style.backgroundImage=''; box.classList.remove('has'); }
+}
+function resetProdForm(){
+  ['new-prod-name','new-prod-img','new-prod-price','new-prod-oldprice','new-prod-stock','new-prod-cost','new-prod-sold','new-prod-badge','new-prod-desc','new-prod-diseases','new-prod-crops'].forEach(function(id){ const e=document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('new-prod-featured').checked=false;
+  document.getElementById('new-prod-affiliate').checked=false;
+  document.getElementById('new-prod-active').checked=true;
+  prodPrev('new-prod-img','new-prod-imgprev');
+}
 async function addProduct() {
   const name = document.getElementById('new-prod-name').value.trim();
   if (!name) { toast('❌ กรอกชื่อสินค้า','error'); return; }
   try {
     await aDb().collection('products').add({
-      name, price: parsePrice(document.getElementById('new-prod-price').value),
+      name,
+      image: (document.getElementById('new-prod-img').value||'').trim(),
+      price: parsePrice(document.getElementById('new-prod-price').value),
       cost: parsePrice(document.getElementById('new-prod-cost').value),
+      stock: parseStock(document.getElementById('new-prod-stock').value),
       category: document.getElementById('new-prod-cat').value,
       url: document.getElementById('new-prod-url').value,
       affiliate: document.getElementById('new-prod-affiliate').checked,
+      active: document.getElementById('new-prod-active').checked,
       diseases: document.getElementById('new-prod-diseases').value.split(',').map(s=>s.trim()).filter(Boolean),
       crops: document.getElementById('new-prod-crops').value.split(',').map(s=>s.trim()).filter(Boolean),
       oldPrice: parsePrice(document.getElementById('new-prod-oldprice').value),
@@ -1972,14 +2125,7 @@ async function addProduct() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     toast('✅ เพิ่มสินค้าแล้ว','success');
-    document.getElementById('new-prod-name').value = '';
-    document.getElementById('new-prod-price').value = '';
-    document.getElementById('new-prod-cost').value = '';
-    document.getElementById('new-prod-oldprice').value = '';
-    document.getElementById('new-prod-sold').value = '';
-    document.getElementById('new-prod-badge').value = '';
-    document.getElementById('new-prod-featured').checked = false;
-    document.getElementById('new-prod-desc').value = '';
+    resetProdForm();
     loadProducts();
   } catch(e) { toast('❌ '+e.message,'error'); }
 }

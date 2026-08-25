@@ -222,9 +222,8 @@ exports.spinLuckyDraw = onCall(async (req) => {
 });
 
 // ============================================================
-//  placeOrderWithCoupon — สร้างออเดอร์ + ใช้คูปองแบบ atomic
-//  server เท่านั้นที่มาร์คคูปอง used (rules ห้าม client เขียน) → กันใช้ซ้ำ
-//  server คำนวณส่วนลด+ยอดสุทธิเอง (ไม่เชื่อ client) แล้วสร้าง order ในทรานแซกชันเดียว
+//  placeOrder — สร้างออเดอร์ทุกใบ server-side (ตัดสต็อก + คูปอง atomic)
+//  server เท่านั้นที่มาร์คคูปอง used + ตัดสต็อก (rules ห้าม client เขียน) → กันขายเกิน/ใช้คูปองซ้ำ
 // ============================================================
 function couponDiscountAmount(coupon, base) {
   const val = Math.max(0, Math.floor(Number(coupon.discountValue) || 0));
@@ -234,36 +233,81 @@ function couponDiscountAmount(coupon, base) {
   return 0;
 }
 
-exports.placeOrderWithCoupon = onCall(async (req) => {
+// สร้างออเดอร์ทุกกรณีผ่านฟังก์ชันนี้ (server-authoritative):
+//  - ตรวจสินค้า active + สต็อกพอ · คิด subtotal จากราคาจริงใน DB (ไม่เชื่อ client)
+//  - ตัดสต็อก + เพิ่ม soldCount · ใช้คูปอง (ถ้ามี) มาร์ค used · ทั้งหมด atomic
+exports.placeOrder = onCall(async (req) => {
   const uid = req.auth && req.auth.uid;
   if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
   const tid = await resolveTid(req.data && req.data.tid);
-  const couponId = ((req.data && req.data.couponId) || "").toString();
   const cli = (req.data && req.data.order) || {};
-  if (!couponId) throw new HttpsError("invalid-argument", "ต้องระบุ couponId");
+  const couponId = ((req.data && req.data.couponId) || "").toString();  // optional
 
-  const items = Array.isArray(cli.items) ? cli.items : [];
-  if (items.length === 0) throw new HttpsError("invalid-argument", "ตะกร้าว่าง");
+  const rawItems = Array.isArray(cli.items) ? cli.items : [];
+  if (rawItems.length === 0) throw new HttpsError("invalid-argument", "ตะกร้าว่าง");
 
-  const subtotal = Math.max(0, Math.floor(Number(cli.subtotal) || 0));
-  const tierDiscount = Math.max(0, Math.floor(Number(cli.discount) || 0));
+  // รวมจำนวนตาม product id (กันซ้ำ)
+  const qtyById = {};
+  rawItems.forEach((it) => {
+    const id = ((it && it.id) || "").toString();
+    const q = Math.max(1, Math.floor(Number(it && it.qty) || 1));
+    if (id) qtyById[id] = (qtyById[id] || 0) + q;
+  });
+  const ids = Object.keys(qtyById);
+  if (ids.length === 0) throw new HttpsError("invalid-argument", "สินค้าไม่ถูกต้อง");
+
+  const tierPct = Math.min(90, Math.max(0, Math.floor(Number(cli.discountPct) || 0)));
   const shippingFee = Math.max(0, Math.floor(Number(cli.shippingFee) || 0));
-  const base = Math.max(0, subtotal - tierDiscount);   // ยอดสินค้าหลังส่วนลดสมาชิก (คูปองลดจากตรงนี้ ไม่ลดค่าส่ง)
 
   const db = admin.firestore();
-  const couponRef = troot(tid).collection("users").doc(uid).collection("coupons").doc(couponId);
+  const prodRefs = ids.map((id) => troot(tid).collection("products").doc(id));
+  const couponRef = couponId ? troot(tid).collection("users").doc(uid).collection("coupons").doc(couponId) : null;
   const orderRef = troot(tid).collection("orders").doc();
 
   return db.runTransaction(async (tx) => {
-    const cSnap = await tx.get(couponRef);
-    if (!cSnap.exists) throw new HttpsError("not-found", "ไม่พบคูปอง");
-    const coupon = cSnap.data();
-    if (coupon.used === true) throw new HttpsError("failed-precondition", "คูปองนี้ถูกใช้ไปแล้ว");
-    if (coupon.discountType !== "fixed" && coupon.discountType !== "percent") {
-      throw new HttpsError("failed-precondition", "คูปองนี้ใช้ลดราคาไม่ได้");
+    // อ่านทั้งหมดก่อน (transaction ต้อง read ก่อน write)
+    const prodSnaps = await Promise.all(prodRefs.map((r) => tx.get(r)));
+    const couponSnap = couponRef ? await tx.get(couponRef) : null;
+
+    let subtotal = 0;
+    const items = [];
+    const stockUpdates = [];
+    prodSnaps.forEach((snap, i) => {
+      const id = ids[i];
+      if (!snap.exists) throw new HttpsError("not-found", "ไม่พบสินค้าบางรายการ");
+      const p = snap.data();
+      const nm = p.name || "สินค้า";
+      if (p.active === false) throw new HttpsError("failed-precondition", '"' + nm + '" ปิดขายอยู่');
+      const qty = qtyById[id];
+      const tracked = !(p.stock === null || p.stock === undefined);
+      if (tracked) {
+        const stock = Math.max(0, Math.floor(Number(p.stock) || 0));
+        if (stock < qty) {
+          throw new HttpsError("failed-precondition", stock === 0 ? ('"' + nm + '" สินค้าหมด') : ('"' + nm + '" เหลือ ' + stock + ' ชิ้น (สั่ง ' + qty + ')'));
+        }
+      }
+      const price = Math.max(0, Math.round(Number(p.price) || 0));
+      subtotal += price * qty;
+      items.push({ id: id, name: nm, price: price, qty: qty, weightKg: Number(p.weightKg) || 1, category: p.category || "", image: p.image || "" });
+      stockUpdates.push({ ref: prodRefs[i], tracked: tracked, qty: qty });
+    });
+
+    const tierDiscount = Math.floor(subtotal * tierPct / 100);
+    const base = Math.max(0, subtotal - tierDiscount);   // คูปองลดจากยอดหลังส่วนลดสมาชิก (ไม่ลดค่าส่ง)
+
+    let couponDiscount = 0, couponCode = "", couponLabel = "";
+    if (couponRef) {
+      if (!couponSnap.exists) throw new HttpsError("not-found", "ไม่พบคูปอง");
+      const coupon = couponSnap.data();
+      if (coupon.used === true) throw new HttpsError("failed-precondition", "คูปองนี้ถูกใช้ไปแล้ว");
+      if (coupon.discountType !== "fixed" && coupon.discountType !== "percent") {
+        throw new HttpsError("failed-precondition", "คูปองนี้ใช้ลดราคาไม่ได้");
+      }
+      couponDiscount = couponDiscountAmount(coupon, base);
+      couponCode = coupon.code || "";
+      couponLabel = coupon.prizeLabel || "";
     }
 
-    const couponDiscount = couponDiscountAmount(coupon, base);
     const total = Math.max(0, base - couponDiscount + shippingFee);
 
     const order = {
@@ -272,11 +316,11 @@ exports.placeOrderWithCoupon = onCall(async (req) => {
       userName: (cli.userName || "").toString(),
       items: items,
       subtotal: subtotal,
-      discountPct: Math.max(0, Math.floor(Number(cli.discountPct) || 0)),
+      discountPct: tierPct,
       discount: tierDiscount,
-      couponId: couponId,
-      couponCode: coupon.code || "",
-      couponLabel: coupon.prizeLabel || "",
+      couponId: couponId || null,
+      couponCode: couponCode,
+      couponLabel: couponLabel,
       couponDiscount: couponDiscount,
       shippingFee: shippingFee,
       weight: Math.max(0, Number(cli.weight) || 0),
@@ -290,9 +334,14 @@ exports.placeOrderWithCoupon = onCall(async (req) => {
     };
 
     tx.set(orderRef, order);
-    tx.update(couponRef, { used: true, usedAt: FieldValue.serverTimestamp(), orderId: orderRef.id });
+    stockUpdates.forEach((s) => {
+      const upd = { soldCount: FieldValue.increment(s.qty) };
+      if (s.tracked) upd.stock = FieldValue.increment(-s.qty);
+      tx.update(s.ref, upd);
+    });
+    if (couponRef) tx.update(couponRef, { used: true, usedAt: FieldValue.serverTimestamp(), orderId: orderRef.id });
 
-    return { orderId: orderRef.id, total: total, couponDiscount: couponDiscount, couponCode: coupon.code || "" };
+    return { orderId: orderRef.id, total: total, subtotal: subtotal, discount: tierDiscount, couponDiscount: couponDiscount, couponCode: couponCode };
   });
 });
 

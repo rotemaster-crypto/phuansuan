@@ -48,6 +48,13 @@ service firebase.storage {
       allow write: if isAdmin() && isImage() && underLimit(5);
     }
 
+    // รูปสินค้า — super-admin หรือ tenant-admin ของแบรนด์นั้น · เฉพาะรูป ไม่เกิน 5MB
+    match /products/{tenant}/{fileName} {
+      allow read: if true;
+      allow write: if isImage() && underLimit(5)
+        && (isAdmin() || (signedIn() && request.auth.token.tadmin != null && request.auth.token.tadmin[tenant] == true));
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

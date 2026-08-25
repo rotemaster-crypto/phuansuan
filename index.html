@@ -244,6 +244,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .prod-oldprice{font-size:11px;color:var(--muted);text-decoration:line-through}
 .disc-badge{position:absolute;top:7px;right:7px;background:var(--shop-disc,#ee4d2d);color:#fff;font-size:11px;font-weight:800;line-height:1.1;padding:3px 7px;border-radius:999px;z-index:2;box-shadow:0 2px 6px -1px rgba(0,0,0,.25)}
 .prod-badge{position:absolute;top:8px;left:0;background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:2px 8px 2px 7px;border-radius:0 999px 999px 0;z-index:2}
+.soldout-badge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);color:#333;font-size:14px;font-weight:800;z-index:3;letter-spacing:1px}
+.prod-card.is-out{opacity:.92}
+.prod-card.is-out .prod-img img{filter:grayscale(.4)}
 /* ===== รูปแบบการ์ด (preset เลือกต่อแบรนด์ที่ "ตกแต่งร้าน") — ค่าเริ่มต้น = อบอุ่น(brand) ด้านบน ===== */
 /* สะอาด พรีเมียม */
 #screen-shop[data-cardstyle="premium"] .prod-card{border:none;border-radius:14px;box-shadow:0 9px 26px -13px rgba(0,0,0,.30)}
@@ -3169,7 +3172,8 @@ async function loadShop(){
       const snap = await tdb().collection('products').get();
       const tid = (typeof tenantId === 'function') ? tenantId() : null;
       list = snap.docs.map(d => Object.assign({ _id:d.id }, d.data()))
-                      .filter(p => !p.tenantId || !tid || p.tenantId === tid);
+                      .filter(p => !p.tenantId || !tid || p.tenantId === tid)
+                      .filter(p => p.active !== false);   // ซ่อนสินค้าที่ปิดขาย
     }
     if (!list.length) list = (APP_CONFIG.products||[]).map(p => Object.assign({_id:p.id}, p));
     shopProducts = list.map(p => ({
@@ -3182,6 +3186,7 @@ async function loadShop(){
       oldPrice: parsePrice(p.oldPrice),
       discountPct: Number(p.discountPct) || 0,
       soldCount: Number(p.soldCount) || 0,
+      stock: (p.stock===null||p.stock===undefined) ? null : Math.max(0, Math.floor(Number(p.stock)||0)),
       badge: p.badge || "",
       featured: p.featured === true,
       description: p.description || '',
@@ -3227,15 +3232,21 @@ function renderProducts(){
     var disc = dp>0 ? '<div class="disc-badge">-'+dp+'%</div>' : '';
     var oldp = (p.oldPrice && p.oldPrice>p.price) ? '<span class="prod-oldprice">'+baht(p.oldPrice)+'</span>' : '';
     var sold = (p.soldCount>0 && (APP_CONFIG.shopDecor||{}).showSold !== false) ? '<div class="prod-sold">ขายแล้ว '+p.soldCount+'</div>' : '';
-    return '<div class="prod-card" onclick="openProduct(\''+p.id+'\')">'+
-      '<div class="prod-img">'+badge+disc+(p.image ? '<img src="'+escapeHtml(p.image)+'" alt="">' : catEmoji(p.category))+'</div>'+
+    var out = (p.stock === 0);
+    var soldout = out ? '<div class="soldout-badge">สินค้าหมด</div>' : '';
+    var lowstk = (!out && p.stock!=null && p.stock<=5) ? '<div class="prod-sold" style="color:#d97706">เหลือ '+p.stock+' ชิ้น</div>' : '';
+    var addBtn = out
+      ? '<button class="prod-add" disabled style="opacity:.45;cursor:not-allowed" onclick="event.stopPropagation()">หมด</button>'
+      : ((p.affiliate && p.url) ? '<a class="prod-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg class="ic"><use href="#i-share"/></svg></a>' : '<button class="prod-add" onclick="event.stopPropagation();addToCart(\''+p.id+'\')"><svg class="ic"><use href="#i-plus"/></svg></button>');
+    return '<div class="prod-card'+(out?' is-out':'')+'" onclick="openProduct(\''+p.id+'\')">'+
+      '<div class="prod-img">'+badge+disc+soldout+(p.image ? '<img src="'+escapeHtml(p.image)+'" alt="">' : catEmoji(p.category))+'</div>'+
       '<div class="prod-body">'+
         '<div class="prod-cat">'+escapeHtml(catName(p.category))+'</div>'+
         '<div class="prod-name">'+escapeHtml(p.name)+'</div>'+
-        sold+
+        (lowstk||sold)+
         '<div class="prod-foot">'+
           '<div class="prod-pricewrap">'+oldp+'<span class="prod-price">'+(p.price ? baht(p.price) : '—')+'</span></div>'+
-          ((p.affiliate && p.url) ? '<a class="prod-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg class="ic"><use href="#i-share"/></svg></a>' : '<button class="prod-add" onclick="event.stopPropagation();addToCart(\''+p.id+'\')"><svg class="ic"><use href="#i-plus"/></svg></button>')+
+          addBtn+
         '</div>'+
       '</div>'+
     '</div>';
@@ -3260,7 +3271,8 @@ function openProduct(id){
       '<div class="pd-sec"><div class="pd-sec-h">หมวดหมู่</div><div class="pd-chips"><span class="pd-chip">'+escapeHtml(catName(p.category))+'</span></div></div>'+
       desc + dis + crp +
     '</div>'+
-    ((p.affiliate && p.url) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()"><svg class="ic"><use href="#i-share"/></svg> ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()"><svg class="ic"><use href="#i-cart"/></svg> ใส่ตะกร้า</button>')+
+    (p.stock === 0 ? '<button class="pd-add" disabled style="opacity:.5;cursor:not-allowed">สินค้าหมด</button>' : ((p.affiliate && p.url) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()"><svg class="ic"><use href="#i-share"/></svg> ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()"><svg class="ic"><use href="#i-cart"/></svg> ใส่ตะกร้า</button>'))+
+    (p.stock!=null && p.stock>0 && p.stock<=5 ? '<div style="text-align:center;font-size:12px;color:#d97706;margin-top:6px">เหลือ '+p.stock+' ชิ้น</div>' : '')+
     '<div style="height:14px"></div>';
   var body = document.getElementById('pd-body'); if (body) body.innerHTML = html;
   var m = document.getElementById('prodDetailModal'); if (m) m.classList.add('open');
@@ -3288,7 +3300,10 @@ function renderFeatured(){
 function addToCart(id){
   const p = shopProducts.find(x=>x.id===id);
   if (!p) return;
+  if (p.stock === 0){ toast('ขออภัย สินค้าหมดครับ'); return; }
   const row = cart.find(x=>x.id===id);
+  const inCart = row ? row.qty : 0;
+  if (p.stock != null && inCart + 1 > p.stock){ toast('มีสต็อกเหลือ '+p.stock+' ชิ้น เพิ่มไม่ได้แล้วครับ'); return; }
   if (row) row.qty += 1;
   else cart.push({ id:p.id, name:p.name, price:p.price, category:p.category, image:p.image, weightKg:p.weightKg, qty:1 });
   saveCart();
@@ -3298,6 +3313,10 @@ function addToCart(id){
 function changeQty(id, delta){
   const row = cart.find(x=>x.id===id);
   if (!row) return;
+  if (delta > 0){
+    const p = shopProducts.find(x=>x.id===id);
+    if (p && p.stock != null && row.qty + delta > p.stock){ toast('มีสต็อกเหลือ '+p.stock+' ชิ้นครับ'); return; }
+  }
   row.qty += delta;
   if (row.qty <= 0) cart = cart.filter(x=>x.id!==id);
   saveCart();
@@ -3590,35 +3609,23 @@ async function submitCheckout(){
     shippingFee: shippingFee(), weight: cartWeight(), shipping: shipping
   };
   try {
-    if (selectedCoupon) {
-      // มีคูปอง → ให้ server สร้าง order + มาร์คคูปอง used แบบ atomic (server คุมยอดส่วนลดเอง)
-      const fn = firebase.app().functions('asia-southeast1').httpsCallable('placeOrderWithCoupon');
-      const res = await fn({ tid: (typeof tenantId==='function')?tenantId():undefined, couponId: selectedCoupon.id, order: base });
-      const d = (res && res.data) || {};
-      try { await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
-      pendingOrder = Object.assign({ id: d.orderId }, base, {
-        status:'pending_payment', paymentMethod:'promptpay',
-        couponId: selectedCoupon.id, couponCode: d.couponCode || selectedCoupon.code || '',
-        couponDiscount: d.couponDiscount || 0, total: d.total, promptpayAmount: d.total
-      });
-      selectedCoupon = null;
-      closeCheckout();
-      openPayment(pendingOrder);
-      try { loadMyCoupons(); } catch(e){}
-    } else {
-      const total = cartTotal();
-      const order = Object.assign({}, base, {
-        total: total, status:'pending_payment', paymentMethod:'promptpay', promptpayAmount: total,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      const ref = await tdb().collection('orders').add(order);
-      try { await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
-      pendingOrder = Object.assign({ id: ref.id }, order, { total: total });
-      closeCheckout();
-      openPayment(pendingOrder);
-    }
-  } catch(e){ toast('สร้างออเดอร์ไม่สำเร็จ: '+((e&&e.message)||e)); }
+    // ออเดอร์ทุกใบผ่าน server (ตัดสต็อก + soldCount + คูปอง atomic, server คุมยอดเอง)
+    const fn = firebase.app().functions('asia-southeast1').httpsCallable('placeOrder');
+    const res = await fn({ tid: (typeof tenantId==='function')?tenantId():undefined, couponId: selectedCoupon?selectedCoupon.id:'', order: base });
+    const d = (res && res.data) || {};
+    try { await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
+    pendingOrder = Object.assign({ id: d.orderId }, base, {
+      status:'pending_payment', paymentMethod:'promptpay',
+      couponId: selectedCoupon?selectedCoupon.id:null, couponCode: d.couponCode||'',
+      couponDiscount: d.couponDiscount||0, discount: d.discount!=null?d.discount:base.discount,
+      subtotal: d.subtotal!=null?d.subtotal:base.subtotal, total: d.total, promptpayAmount: d.total
+    });
+    const usedCoupon = !!selectedCoupon; selectedCoupon = null;
+    cart = []; try { saveCart(); renderCart(); renderCartBadge(); renderCartFab(); } catch(e){}
+    closeCheckout();
+    openPayment(pendingOrder);
+    if (usedCoupon) { try { loadMyCoupons(); } catch(e){} }
+  } catch(e){ toast('สั่งซื้อไม่สำเร็จ: '+((e&&e.message)||e)); }
   if(btn){ btn.disabled=false; btn.textContent='ยืนยันสั่งซื้อ → ชำระเงิน'; }
 }
 

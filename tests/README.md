@@ -42,7 +42,7 @@ npm install --prefix functions   # emulator ต้องโหลดโค้ด
 ### รัน (จาก repo root)
 ```bash
 firebase emulators:exec --only functions,firestore,auth --project demo-bocean \
-  "node --test --test-concurrency=1 tests/spin.test.js tests/coupon.test.js"
+  "node --test --test-concurrency=1 tests/spin.test.js tests/place.test.js"
 ```
 > ⚠️ ต้องมี `--test-concurrency=1` — สองไฟล์ share emulator เดียวกันและใช้ `clearFirestore()` ถ้ารัน parallel จะล้างข้อมูลของกันกลางคัน
 
@@ -53,11 +53,11 @@ firebase emulators:exec --only functions,firestore,auth --project demo-bocean \
 - **สต็อกจำกัด** → `awarded`++ แล้วรอบถัดไป "รางวัลหมด" (ไม่หักแต้มซ้ำ)
 - guard: แต้มไม่พอ / กิจกรรมปิด / pool ว่าง → `failed-precondition` · ไม่ส่ง/ผิด `drawId` → `invalid-argument`/`not-found`
 
-**`coupon.test.js` (9) — placeOrderWithCoupon (คูปองใช้จริงตอน checkout):**
-- **fixed ฿** / **percent %** → คำนวณส่วนลด server-side ถูกต้อง + สร้าง order + มาร์คคูปอง `used` atomic
-- ส่วนลด > ยอด → clamp ไม่ติดลบ · ส่วนลดสมาชิกซ้อนคูปอง (base = subtotal − tier)
-- **กันใช้ซ้ำ**: คูปอง `used` แล้ว → `failed-precondition` · คูปองโชว์เฉยๆ (ไม่มี discountType) → ใช้ลดราคาไม่ได้
-- guard: couponId ผิด → `not-found` · ไม่ส่ง couponId / ตะกร้าว่าง → `invalid-argument`
+**`place.test.js` (10) — placeOrder (สร้างออเดอร์ + ตัดสต็อก + คูปอง server-side):**
+- **สั่งปกติ** → order + ตัดสต็อก + `soldCount`++ · **subtotal คิดจากราคาจริงใน DB** (ไม่เชื่อ client)
+- **กันขายเกิน**: สั่งเกินสต็อก / stock 0 / `active:false` → `failed-precondition` (สต็อกไม่ขยับ)
+- **สต็อก null (ไม่จำกัด)** → ไม่ตัดสต็อก แต่ soldCount++ · **tier discount** คิดจาก `discountPct` ฝั่ง server
+- **คูปอง + ตัดสต็อก atomic** · **กันคูปองซ้ำ**: คูปอง `used` แล้ว → ทั้ง tx roll back (สต็อกไม่ถูกตัด) · ตะกร้าว่าง → `invalid-argument`
 
 > รันอัตโนมัติทุก push/PR ผ่าน `.github/workflows/functions-e2e.yml`
 > หมายเหตุ: โค้ดใช้ modular `require("firebase-admin/firestore").FieldValue` (ไม่ใช่ `admin.firestore.FieldValue` แบบ compat) เพราะ namespaced static หายใต้ functions emulator
