@@ -480,6 +480,7 @@ button .ic,a .ic{pointer-events:none}
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
 <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
 <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></symbol>
 </defs></svg>
 
 <!-- ══ LOADING SCREEN ══ -->
@@ -495,7 +496,7 @@ button .ic,a .ic{pointer-events:none}
 <div id="login-screen">
   <div class="login-logo">🌿</div>
   <div class="login-appname">เพื่อนสวน</div>
-  <div class="login-tagline">ชุมชนชาวสวนออนไลน์<br>แชร์ปัญหา รับคำแนะนำ สะสมแต้ม</div>
+  <div class="login-tagline">ชุมชน · กิจกรรม · ร้านค้า<br>พูดคุย สะสมแต้ม ช้อปกับแบรนด์ที่คุณชอบ</div>
   <div class="login-features">
     <div class="lf-item"><div class="lf-icon">💬</div><div class="lf-text">ถาม–ตอบ แชร์ประสบการณ์กับชุมชน</div></div>
     <div class="lf-item"><div class="lf-icon">🛒</div><div class="lf-text">ช้อปสินค้าคุณภาพ ส่งตรงจากแบรนด์</div></div>
@@ -589,12 +590,6 @@ button .ic,a .ic{pointer-events:none}
   <div class="prof-nav">
     <div class="pnav active">โพส</div>
   </div>
-  <div class="points-card">
-    <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
-    <div class="bar-bg"><div class="bar-fg" id="pts-bar" style="width:0%"></div></div>
-    <div class="tier-lbs"><span id="tlb-bronze">มือใหม่</span><span id="tlb-silver">เงิน</span><span id="tier-label" class="tier-act">มือใหม่</span><span id="tlb-platinum">ปราชญ์</span></div>
-    <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
-  </div>
   <div class="crops-card">
     <div class="sec-title"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-pin"/></svg> ที่อยู่จัดส่ง</div>
     <div style="font-size:12px;color:var(--muted);margin:2px 0 10px">ตั้งไว้ครั้งเดียว — เวลาสั่งของจะเติมให้อัตโนมัติ ไม่ต้องกรอกซ้ำ</div>
@@ -626,18 +621,27 @@ button .ic,a .ic{pointer-events:none}
 <!-- ══ COMMUNITY SCREEN ══ -->
 <div class="screen" id="screen-community">
   <div style="padding:14px 16px 84px">
-    <!-- ── กลุ่มชุมชน ── -->
+    <div style="font-size:22px;font-weight:800;color:var(--text)">🎯 กิจกรรม</div>
+    <div style="font-size:13px;color:var(--muted);margin:2px 0 16px">สะสมแต้ม ไต่อันดับ รับสิทธิพิเศษ</div>
+    <!-- ── แต้ม & ระดับของฉัน ── -->
+    <div class="points-card" style="border:1px solid var(--border);border-bottom:1px solid var(--border);border-radius:12px;margin-bottom:20px">
+      <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
+      <div class="bar-bg"><div class="bar-fg" id="pts-bar" style="width:0%"></div></div>
+      <div class="tier-lbs"><span id="tlb-bronze">มือใหม่</span><span id="tlb-silver">เงิน</span><span id="tier-label" class="tier-act">มือใหม่</span><span id="tlb-platinum">ปราชญ์</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
+    </div>
+    <!-- ── กลุ่มย่อย (ปิด default — เปิดต่อแบรนด์) ── -->
     <div id="community-groups-section" style="display:none;margin-bottom:22px">
-      <div style="font-size:20px;font-weight:800;color:var(--text)">👥 กลุ่มชุมชน</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text)"><svg class="ic" style="width:16px;height:16px;vertical-align:-2px"><use href="#i-users"/></svg> กลุ่มย่อย</div>
       <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">เข้าร่วมกลุ่มที่คุณสนใจ แล้วโพสต์คุยกันในกลุ่ม</div>
       <div id="groups-list">
         <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
       </div>
     </div>
-    <!-- ── ตารางอันดับ (ปราชญ์) ── -->
+    <!-- ── อันดับนักสะสมแต้ม ── -->
     <div id="community-lb-section">
-      <div id="lb-title" style="font-size:20px;font-weight:800;color:var(--text)">🏆 ปราชญ์ชาวสวน</div>
-      <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">อันดับผู้สะสมแต้มสูงสุด — ยิ่งแบ่งปัน ยิ่งไต่อันดับ</div>
+      <div id="lb-title" style="font-size:18px;font-weight:800;color:var(--text)">🏆 อันดับนักสะสมแต้ม</div>
+      <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">ยิ่งมีส่วนร่วม ยิ่งไต่อันดับ</div>
       <div id="leaderboard-list">
         <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
       </div>
@@ -969,20 +973,20 @@ button .ic,a .ic{pointer-events:none}
 <button class="line-oa-fab" id="line-oa-fab" onclick="openLineOa()"><span class="li"><svg class="ic" style="width:22px;height:22px"><use href="#i-chat"/></svg></span><span id="line-oa-label">แชทกับเรา</span></button>
 <div class="bottom-nav">
   <div class="bn" id="nav-feed" onclick="switchScreen('feed')">
-    <div class="bn-ico"><svg class="ic"><use href="#i-home"/></svg></div>
-    <div class="bn-lbl" id="nav-lbl-feed">หน้าหลัก</div>
+    <div class="bn-ico"><svg class="ic"><use href="#i-chat"/></svg></div>
+    <div class="bn-lbl" id="nav-lbl-feed">ชุมชน</div>
   </div>
   <div class="bn" id="nav-community" onclick="switchScreen('community')">
-    <div class="bn-ico"><svg class="ic"><use href="#i-users"/></svg></div>
-    <div class="bn-lbl" id="nav-lbl-community">ชุมชน</div>
-  </div>
-  <div class="bn" id="nav-profile" onclick="switchScreen('profile')">
-    <div class="bn-ico"><svg class="ic"><use href="#i-user"/></svg></div>
-    <div class="bn-lbl" id="nav-lbl-profile">โปรไฟล์</div>
+    <div class="bn-ico"><svg class="ic"><use href="#i-award"/></svg></div>
+    <div class="bn-lbl" id="nav-lbl-community">กิจกรรม</div>
   </div>
   <div class="bn commerce-entry active" id="nav-shop" onclick="switchScreen('shop')">
     <div class="bn-ico"><svg class="ic"><use href="#i-cart"/></svg></div>
     <div class="bn-lbl" id="nav-lbl-shop">ร้านค้า</div>
+  </div>
+  <div class="bn" id="nav-profile" onclick="switchScreen('profile')">
+    <div class="bn-ico"><svg class="ic"><use href="#i-user"/></svg></div>
+    <div class="bn-lbl" id="nav-lbl-profile">โปรไฟล์</div>
   </div>
 </div>
 
@@ -1864,10 +1868,10 @@ function renderAdminBranding() {
     + row('ระดับ 3', 'br-tier-gold', (b.tierLabels && b.tierLabels.gold) || C.tiers.gold.label)
     + row('ระดับ 4 (สูงสุด)', 'br-tier-platinum', (b.tierLabels && b.tierLabels.platinum) || C.tiers.platinum.label)
     + '<div style="font-size:14px;font-weight:700;margin:14px 0 4px;color:#333">ป้ายแท็บล่าง</div>'
-    + row('แท็บ 1', 'br-nav-feed', (b.navLabels && b.navLabels.feed) || 'หน้าหลัก')
-    + row('แท็บ 2', 'br-nav-community', (b.navLabels && b.navLabels.community) || 'ชุมชน')
-    + row('แท็บ 3', 'br-nav-profile', (b.navLabels && b.navLabels.profile) || 'โปรไฟล์')
-    + row('แท็บ 4', 'br-nav-shop', (b.navLabels && b.navLabels.shop) || 'ร้านค้า')
+    + row('แท็บ 1 (Community)', 'br-nav-feed', (b.navLabels && b.navLabels.feed) || 'ชุมชน')
+    + row('แท็บ 2 (Activity)', 'br-nav-community', (b.navLabels && b.navLabels.community) || 'กิจกรรม')
+    + row('แท็บ 3 (Market)', 'br-nav-shop', (b.navLabels && b.navLabels.shop) || 'ร้านค้า')
+    + row('แท็บ 4 (Profile)', 'br-nav-profile', (b.navLabels && b.navLabels.profile) || 'โปรไฟล์')
     + '<button onclick="saveBranding()" style="width:100%;margin-top:6px;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">บันทึกแบรนด์</button>';
 }
 
@@ -2332,12 +2336,13 @@ function applyConfig() {
     sel.appendChild(o);
   });
 
-  // Crops grid (profile)
+  // Crops grid (profile) — ตัดออกแล้ว (guard เผื่อ element ไม่มี)
   const grid = document.getElementById('crops-list');
-  const shown = C.crops.filter(c => c.id !== 'other').slice(0, 6);
-  shown.forEach(c => {
-    grid.innerHTML += `<div class="crop-item"><div class="crop-emoji">${c.emoji}</div><div class="crop-name">${c.name}</div><div class="crop-posts">— โพส</div></div>`;
-  });
+  if (grid) {
+    C.crops.filter(c => c.id !== 'other').slice(0, 6).forEach(c => {
+      grid.innerHTML += `<div class="crop-item"><div class="crop-emoji">${c.emoji}</div><div class="crop-name">${c.name}</div><div class="crop-posts">— โพส</div></div>`;
+    });
+  }
 
   // Points hint
   document.getElementById('pts-hint').textContent =
