@@ -8,6 +8,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
+const { FieldValue } = require("firebase-admin/firestore");
 const crypto = require("crypto");
 
 admin.initializeApp();
@@ -181,13 +182,13 @@ exports.spinLuckyDraw = onCall(async (req) => {
     const isWin = prize.type !== "nothing";
 
     // หักแต้ม + นับรอบหมุน
-    tx.update(userRef, { points: admin.firestore.FieldValue.increment(-cost) });
+    tx.update(userRef, { points: FieldValue.increment(-cost) });
     if (chosen.stock !== Infinity) {
       const newPrizes = prizes.map((p, idx) => (idx === chosen.i)
         ? Object.assign({}, p, { awarded: (Math.floor(Number(p.awarded) || 0) + 1) }) : p);
-      tx.update(drawRef, { prizes: newPrizes, spins: admin.firestore.FieldValue.increment(1) });
+      tx.update(drawRef, { prizes: newPrizes, spins: FieldValue.increment(1) });
     } else {
-      tx.update(drawRef, { spins: admin.firestore.FieldValue.increment(1) });
+      tx.update(drawRef, { spins: FieldValue.increment(1) });
     }
 
     let couponOut = null;
@@ -200,7 +201,7 @@ exports.spinLuckyDraw = onCall(async (req) => {
         code: prize.couponCode || genCouponCode(),
         discountText: prize.discountText || "",
         used: false,
-        at: admin.firestore.FieldValue.serverTimestamp(),
+        at: FieldValue.serverTimestamp(),
       };
       tx.set(couponRef, coupon);
       couponOut = { id: couponRef.id, label: coupon.prizeLabel, code: coupon.code, discountText: coupon.discountText };
@@ -318,15 +319,15 @@ exports.analyzePlant = onCall(
 
     // ── เพิ่มตัวนับโควต้า + บันทึกประวัติ (ใต้ tenant) ──────
     await quotaRef.set({
-      count: admin.firestore.FieldValue.increment(1),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      count: FieldValue.increment(1),
+      updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
 
     const diagRef = await troot(tid).collection("users").doc(uid)
       .collection("diagnoses").add({
         crop: cropName,
         result: result,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
       });
 
     return {
@@ -421,7 +422,7 @@ async function updateTier(userRef, tid) {
   const earned = await earnedBadges(tid, d);
   const have = Array.isArray(d.badges) ? d.badges : [];
   const fresh = earned.filter((x) => have.indexOf(x) === -1);
-  if (fresh.length) updates.badges = admin.firestore.FieldValue.arrayUnion(...fresh);
+  if (fresh.length) updates.badges = FieldValue.arrayUnion(...fresh);
   if (Object.keys(updates).length) await userRef.update(updates);
 }
 
@@ -435,14 +436,14 @@ exports.onPostCreated = onDocumentCreated(
     const pts = post.imageUrl ? P.perPostWithImg : P.perPost;
     const ref = troot(tid).collection("users").doc(post.authorId);
     await ref.update({
-      points:    admin.firestore.FieldValue.increment(pts),
-      postCount: admin.firestore.FieldValue.increment(1),
+      points:    FieldValue.increment(pts),
+      postCount: FieldValue.increment(1),
     });
     await updateTier(ref, tid);
     // group post counter (โพสต์ในกลุ่ม → นับให้กลุ่ม)
     if (post.groupId) {
       await troot(tid).collection("groups").doc(post.groupId)
-        .update({ postCount: admin.firestore.FieldValue.increment(1) }).catch(() => {});
+        .update({ postCount: FieldValue.increment(1) }).catch(() => {});
     }
   }
 );
@@ -454,13 +455,13 @@ exports.onCommentCreated = onDocumentCreated(
     if (!cmt?.authorId) return;
     const tid = event.params.tid;
     const postRef = troot(tid).collection("posts").doc(event.params.postId);
-    await postRef.update({ comments: admin.firestore.FieldValue.increment(1) }).catch(() => {});
+    await postRef.update({ comments: FieldValue.increment(1) }).catch(() => {});
     const marker = postRef.collection("commentAwarded").doc(cmt.authorId);
     if ((await marker.get()).exists) return;
-    await marker.set({ at: admin.firestore.FieldValue.serverTimestamp() });
+    await marker.set({ at: FieldValue.serverTimestamp() });
     const ref = troot(tid).collection("users").doc(cmt.authorId);
     const P = await getPts(tid);
-    await ref.update({ points: admin.firestore.FieldValue.increment(P.perComment) });
+    await ref.update({ points: FieldValue.increment(P.perComment) });
     await updateTier(ref, tid);
   }
 );
@@ -470,7 +471,7 @@ exports.onCommentDeleted = onDocumentDeleted(
   { document: "tenants/{tid}/posts/{postId}/comments/{commentId}", region: "asia-southeast1" },
   async (event) => {
     await troot(event.params.tid).collection("posts").doc(event.params.postId)
-      .update({ comments: admin.firestore.FieldValue.increment(-1) }).catch(() => {});
+      .update({ comments: FieldValue.increment(-1) }).catch(() => {});
   }
 );
 
@@ -482,9 +483,9 @@ async function awardOnce(tid, postId, actorUid, markerCol, authorId, pts, extra)
   const marker = troot(tid).collection("posts").doc(postId).collection(markerCol).doc(actorUid);
   const got = await marker.get();
   if (got.exists) return;
-  await marker.set({ at: admin.firestore.FieldValue.serverTimestamp() });
+  await marker.set({ at: FieldValue.serverTimestamp() });
   const uref = troot(tid).collection("users").doc(authorId);
-  await uref.update(Object.assign({ points: admin.firestore.FieldValue.increment(pts) }, extra || {}));
+  await uref.update(Object.assign({ points: FieldValue.increment(pts) }, extra || {}));
   await updateTier(uref, tid);
 }
 
@@ -495,7 +496,7 @@ exports.onLikeWrite = onDocumentWritten(
     const had = before?.exists, has = after?.exists;
     const tid = event.params.tid;
     const postRef = troot(tid).collection("posts").doc(event.params.postId);
-    const inc = admin.firestore.FieldValue.increment;
+    const inc = FieldValue.increment;
     if (!had && has) {
       const p = await postRef.get(); if (!p.exists) return;
       const type = after.data().type || "like";
@@ -524,12 +525,12 @@ exports.onHelpWrite = onDocumentWritten(
     const postRef = troot(tid).collection("posts").doc(event.params.postId);
     if (!had && has) {
       const p = await postRef.get(); if (!p.exists) return;
-      await postRef.update({ helps: admin.firestore.FieldValue.increment(1) });
+      await postRef.update({ helps: FieldValue.increment(1) });
       const P = await getPts(tid);
-      await awardOnce(tid, event.params.postId, event.params.uid, "helpAwarded", p.data().authorId, P.perHelp, { helpCount: admin.firestore.FieldValue.increment(1) });
+      await awardOnce(tid, event.params.postId, event.params.uid, "helpAwarded", p.data().authorId, P.perHelp, { helpCount: FieldValue.increment(1) });
     } else if (had && !has) {
       const p = await postRef.get(); if (!p.exists) return;
-      await postRef.update({ helps: admin.firestore.FieldValue.increment(-1) });
+      await postRef.update({ helps: FieldValue.increment(-1) });
     }
   }
 );
@@ -542,7 +543,7 @@ exports.onPostDeleted = onDocumentDeleted(
     const post = event.data?.data();
     if (!post?.groupId) return;
     await troot(event.params.tid).collection("groups").doc(post.groupId)
-      .update({ postCount: admin.firestore.FieldValue.increment(-1) }).catch(() => {});
+      .update({ postCount: FieldValue.increment(-1) }).catch(() => {});
   }
 );
 
@@ -554,14 +555,14 @@ exports.onGroupMemberWrite = onDocumentWritten(
     if (had === has) return;
     const inc = has ? 1 : -1;
     await troot(event.params.tid).collection("groups").doc(event.params.gid)
-      .update({ memberCount: admin.firestore.FieldValue.increment(inc) }).catch(() => {});
+      .update({ memberCount: FieldValue.increment(inc) }).catch(() => {});
   }
 );
 
 const { onDocumentUpdated: onDocUpd } = require("firebase-functions/v2/firestore");
 async function sendNotif(tid, uid, text, icon) {
   if (!uid) return;
-  await troot(tid).collection("notifications").add({ uid, text, icon: icon || "bell", read: false, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+  await troot(tid).collection("notifications").add({ uid, text, icon: icon || "bell", read: false, createdAt: FieldValue.serverTimestamp() });
   const uSnap = await troot(tid).collection("users").doc(uid).get();
   const token = uSnap.data() && uSnap.data().fcmToken;
   if (!token) return;
@@ -569,7 +570,7 @@ async function sendNotif(tid, uid, text, icon) {
     await admin.messaging().send({ token, notification: { title: "phuansuan", body: text }, webpush: { notification: { icon: "/icons/icon-192.png" } } });
   } catch (e) {
     if (e.code === "messaging/registration-token-not-registered") {
-      await troot(tid).collection("users").doc(uid).update({ fcmToken: admin.firestore.FieldValue.delete() });
+      await troot(tid).collection("users").doc(uid).update({ fcmToken: FieldValue.delete() });
     }
   }
 }
