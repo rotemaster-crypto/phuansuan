@@ -38,6 +38,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial
 .sb-item:hover{background:var(--bg)}.sb-item.active{background:#242424;color:var(--primary);font-weight:700}
 .sb-item .si{font-size:18px;width:24px;text-align:center}
 .sb-badge{background:var(--danger);color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 6px;margin-left:auto}
+.sys-only{display:none}
+body.is-super .sb-item.sys-only{display:flex}
+body.is-super .sb-section.sys-only{display:block}
+.sb-brandbar{padding:10px 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg);margin:6px 0}
+.sb-brandbar-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+#brand-switcher{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;background:var(--card);color:var(--text);cursor:pointer}
+#brand-static{font-size:14px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:6px}
 .page-header{margin-bottom:24px}
 .page-title{font-size:24px;font-weight:800;color:var(--text)}.page-sub{font-size:14px;color:var(--muted);margin-top:4px}
 .card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
@@ -195,32 +202,39 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div><div class="sb-admin-name" id="admin-name">Admin</div><div class="sb-admin-role" id="admin-role">🔑 Super Admin</div></div>
   </div>
   <div class="sb-menu">
-    <div class="sb-section">ภาพรวม</div>
-    <div class="sb-item active" onclick="showScreen('dashboard',this)"><span class="si">📊</span> Dashboard</div>
-    <div class="sb-section">จัดการ</div>
+    <!-- ═══ โซนระบบ Bocean (super-admin เท่านั้น) ═══ -->
+    <div class="sb-section sys-only">🏢 ระบบ Bocean</div>
+    <div class="sb-item sys-only" onclick="showScreen('sysoverview',this)"><span class="si">📊</span> ภาพรวมระบบ</div>
+    <div class="sb-item sys-only" onclick="showScreen('tenants',this)"><span class="si">🏢</span> จัดการแบรนด์</div>
+    <div class="sb-item sys-only" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
+
+    <!-- ═══ โซนหลังร้านแบรนด์ ═══ -->
+    <div class="sb-brandbar">
+      <div class="sb-brandbar-h">🏪 หลังร้านแบรนด์</div>
+      <select id="brand-switcher" onchange="onBrandSwitch(this.value)" style="display:none"></select>
+      <div id="brand-static" style="display:none"><span class="si">📍</span> <b id="cur-tenant-label">phuansuan</b></div>
+    </div>
+    <div class="sb-item active" onclick="showScreen('dashboard',this)"><span class="si">📊</span> ภาพรวมร้าน</div>
+    <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
+    <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
+    <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน & จัดส่ง</div>
+    <div class="sb-item" id="sb-item-pricing" style="display:none" onclick="showScreen('pricing',this)"><span class="si">🧮</span> คิดราคา–กำไร</div>
+    <div class="sb-item" onclick="showScreen('luckydraw',this)"><span class="si">🎯</span> สุ่มจับรางวัล</div>
+    <div class="sb-section">ชุมชน & สมาชิก</div>
     <div class="sb-item" onclick="showScreen('users',this)"><span class="si">👥</span> Users <span class="sb-badge" id="badge-users">0</span></div>
     <div class="sb-item" onclick="showScreen('posts',this)"><span class="si">📝</span> โพส <span class="sb-badge" id="badge-posts">0</span></div>
-    <div class="sb-item" id="sb-item-team" style="display:none" onclick="showScreen('team',this)"><span class="si">👥</span> ทีมแอดมิน</div>
-    <div class="sb-section">ตั้งค่า</div>
+    <div class="sb-item" onclick="showScreen('groups',this)"><span class="si">👥</span> กลุ่มชุมชน</div>
+    <div class="sb-item" onclick="showScreen('points',this)"><span class="si">🏅</span> แต้ม & Tier</div>
+    <div class="sb-item" onclick="showScreen('badges',this)"><span class="si">🎖️</span> ตราสะสม</div>
+    <div class="sb-item" id="sb-item-team" style="display:none" onclick="showScreen('team',this)"><span class="si">🧑‍🤝‍🧑</span> ทีมแอดมิน</div>
+    <div class="sb-section">ตั้งค่าแบรนด์</div>
     <div class="sb-item" onclick="showScreen('appearance',this)"><span class="si">🎨</span> หน้าตา & โลโก้</div>
     <div class="sb-item" onclick="showScreen('icons',this)"><span class="si">🖼️</span> ไอคอน & รูปภาพ</div>
     <div class="sb-item" onclick="showScreen('content',this)"><span class="si">📢</span> Content & ข้อความ</div>
     <div class="sb-item" onclick="showScreen('features',this)"><span class="si">⚙️</span> Features Toggle</div>
-    <div class="sb-item" onclick="showScreen('points',this)"><span class="si">🏅</span> แต้ม & Tier</div>
-    <div class="sb-item" onclick="showScreen('badges',this)"><span class="si">🎖️</span> ตราสะสม</div>
-    <div class="sb-item" onclick="showScreen('groups',this)"><span class="si">👥</span> กลุ่มชุมชน</div>
-    <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน</div>
-    <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
-    <div class="sb-item" id="sb-item-pricing" style="display:none" onclick="showScreen('pricing',this)"><span class="si">🧮</span> คิดราคา–กำไร</div>
-    <div class="sb-item" onclick="showScreen('luckydraw',this)"><span class="si">🎯</span> สุ่มจับรางวัล</div>
-    <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
-    <div class="sb-section" id="sb-sec-bocean">Bocean</div>
-    <div class="sb-item" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
-    <div class="sb-item" onclick="showScreen('tenants',this)"><span class="si">🏢</span> จัดการ Tenant</div>
-    <div class="sb-item" style="pointer-events:none;opacity:.7;font-size:13px"><span class="si">📍</span> ดูแล: <b id="cur-tenant-label" style="margin-left:3px">phuansuan</b></div>
     <div class="sb-section">ระบบ</div>
-    <div class="sb-item" onclick="window.open('https://phuansuan.web.app','_blank')"><span class="si">🌐</span> เปิดแอป</div>
-    <div class="sb-item" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><span class="si">🔥</span> Firebase Console</div>
+    <div class="sb-item" onclick="openBrandApp()"><span class="si">🌐</span> เปิดแอปร้าน</div>
+    <div class="sb-item sys-only" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><span class="si">🔥</span> Firebase Console</div>
   </div>
 </div>
 
@@ -239,8 +253,25 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">💡 คนที่เพิ่มใหม่ต้องเข้าสู่ระบบด้วย LINE 1 ครั้งให้สิทธิ์มีผล · หา LINE User ID ได้จากโปรไฟล์ในแอป</div>
   </div>
 </div>
+<div class="screen" id="screen-sysoverview">
+  <div class="page-header"><div class="page-title">📊 ภาพรวมระบบ Bocean</div><div class="page-sub">สรุปทุกแบรนด์บนแพลตฟอร์ม</div></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-val" id="sys-brands">—</div><div class="stat-label">แบรนด์ทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="sys-users">—</div><div class="stat-label">ผู้ใช้รวมทุกแบรนด์</div></div>
+    <div class="stat-card"><div class="stat-icon">🛒</div><div class="stat-val" id="sys-orders">—</div><div class="stat-label">ออเดอร์รวม</div></div>
+    <div class="stat-card"><div class="stat-icon">📨</div><div class="stat-val" id="sys-reqs">—</div><div class="stat-label">คำขอเปิดร้านค้าง</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="card-title" style="margin:0">แบรนด์บนแพลตฟอร์ม</div>
+      <button class="btn btn-ghost" onclick="showScreen('tenants', document.querySelector('.sb-item[onclick*=&quot;tenants&quot;]'))"><svg class="ic"><use href="#i-plus"/></svg> จัดการ / สร้างแบรนด์</button>
+    </div>
+    <div id="sys-brandlist"><div class="empty-state">กำลังโหลด...</div></div>
+  </div>
+</div>
+
 <div class="screen" id="screen-tenants">
-  <div class="page-header"><div class="page-title">🏢 จัดการ Tenant (Bocean)</div><div class="page-sub">บริหารทุกแบรนด์บนแพลตฟอร์ม · สลับ tenant ที่กำลังดูแล · สร้าง/ระงับ</div></div>
+  <div class="page-header"><div class="page-title">🏢 จัดการแบรนด์ (Bocean)</div><div class="page-sub">บริหารทุกแบรนด์บนแพลตฟอร์ม · สลับแบรนด์ที่กำลังดูแล · สร้าง/ระงับ</div></div>
   <div class="card">
     <div style="font-weight:800;margin-bottom:10px">➕ สร้าง Tenant ใหม่</div>
     <div class="form-grid">
@@ -265,7 +296,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <!-- DASHBOARD -->
 <div class="screen active" id="screen-dashboard">
-  <div class="page-header"><div class="page-title">📊 Dashboard</div><div class="page-sub">ภาพรวมระบบเพื่อนสวน</div></div>
+  <div class="page-header"><div class="page-title">📊 ภาพรวมร้าน <span id="dash-brand" style="color:var(--muted);font-weight:400;font-size:16px"></span></div><div class="page-sub">สรุปหลังร้านของแบรนด์ที่กำลังดูแล</div></div>
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="ds-users">—</div><div class="stat-label">Users ทั้งหมด</div></div>
     <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-val" id="ds-posts">—</div><div class="stat-label">โพสทั้งหมด</div></div>
@@ -966,23 +997,87 @@ function showApp() {
 }
 // ── บทบาท: Super Admin (Bocean) vs Tenant Admin (แบรนด์) ──
 function applyRole() {
-  if (!IS_SUPER) {
+  document.body.classList.toggle('is-super', IS_SUPER);   // โชว์/ซ่อนโซนระบบ (.sys-only)
+  var roleEl = document.getElementById('admin-role');
+  var teamEl = document.getElementById('sb-item-team');
+  var sw = document.getElementById('brand-switcher');
+  var st = document.getElementById('brand-static');
+
+  if (IS_SUPER) {
+    if (roleEl) roleEl.textContent = '🔑 Super Admin · Bocean';
+    if (teamEl) teamEl.style.display = 'flex';       // super เห็นทีมแอดมินเสมอ
+    if (sw) sw.style.display = 'block';               // super = dropdown สลับแบรนด์
+    if (st) st.style.display = 'none';
+    populateBrandSwitcher();
+  } else {
+    // brand-admin: ล็อกที่แบรนด์ตัวเอง ไม่มีโซนระบบ ไม่มี switcher
     var mineT = Object.keys(ADMIN_TENANTS);
     if (mineT.length) setCurrentTenant(mineT[0]);
+    var isOwner = !!OWNER_TENANTS[currentTenant];
+    if (roleEl) roleEl.textContent = (isOwner ? '👑 เจ้าของแบรนด์ · ' : '🏪 แอดมินแบรนด์ · ') + currentTenant;
+    if (teamEl) teamEl.style.display = isOwner ? 'flex' : 'none';   // owner เห็นทีมของแบรนด์ตัวเอง
+    if (sw) sw.style.display = 'none';
+    if (st) st.style.display = 'flex';
   }
-  // เมนูทีมแอดมิน: super เห็นเสมอ / owner เห็นของ tenant ตัวเอง
-  var teamEl = document.getElementById('sb-item-team');
-  if (teamEl) teamEl.style.display = (IS_SUPER || !!OWNER_TENANTS[currentTenant]) ? 'flex' : 'none';
-  if (IS_SUPER) return;
-  var isOwner = !!OWNER_TENANTS[currentTenant];
-  var roleEl = document.getElementById('admin-role');
-  if (roleEl) roleEl.textContent = (isOwner ? '👑 Owner: ' : '🏪 Tenant Admin: ') + currentTenant;
-  ['bocean', 'tenants'].forEach(function (n) {
-    var el = document.querySelector('.sb-item[onclick*="' + n + '"]');
-    if (el) el.style.display = 'none';
-  });
-  var sec = document.getElementById('sb-sec-bocean');
-  if (sec) sec.style.display = 'none';
+  updateBrandLabels();
+}
+// เติมรายชื่อแบรนด์ใน dropdown (super)
+async function populateBrandSwitcher(){
+  var sw = document.getElementById('brand-switcher'); if (!sw || !db) return;
+  try {
+    var snap = await db.collection('tenants').get();
+    var ts = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+    ts.sort(function(a,b){ return (a.id===currentTenant?-1:0)-(b.id===currentTenant?-1:0) || String(a.name||a.id).localeCompare(String(b.name||b.id)); });
+    sw.innerHTML = ts.map(function(t){
+      return '<option value="'+escapeHtml(t.id)+'"'+(t.id===currentTenant?' selected':'')+'>'+escapeHtml(t.name||t.id)+(t.status==='suspended'?' (ระงับ)':'')+'</option>';
+    }).join('');
+  } catch(e){}
+}
+function onBrandSwitch(tid){
+  if (!tid || tid===currentTenant) return;
+  switchToTenant(tid);
+  // โหลดหน้าปัจจุบันใหม่ตามแบรนด์ที่เลือก
+  var active = document.querySelector('.sb-item.active');
+  var m = active && (active.getAttribute('onclick')||'').match(/showScreen\('([^']+)'/);
+  if (m) showScreen(m[1], active); else showScreen('dashboard', document.querySelector('.sb-item[onclick*="dashboard"]'));
+}
+function updateBrandLabels(){
+  var lbl = document.getElementById('cur-tenant-label'); if (lbl) lbl.textContent = currentTenant;
+  var db2 = document.getElementById('dash-brand'); if (db2) db2.textContent = '· ' + currentTenant;
+  var sw = document.getElementById('brand-switcher'); if (sw && sw.value !== currentTenant) sw.value = currentTenant;
+}
+function openBrandApp(){
+  var base = (typeof location !== 'undefined' && location.origin) ? location.origin : 'https://phuansuan.web.app';
+  var u = (currentTenant === 'phuansuan') ? base : (base + '/?t=' + encodeURIComponent(currentTenant));
+  window.open(u, '_blank');
+}
+// ภาพรวมระบบ (super) — รวมสถิติทุกแบรนด์
+async function loadSysOverview(){
+  if (!db) return;
+  var setT = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+  try {
+    var snap = await db.collection('tenants').get();
+    var ts = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+    setT('sys-brands', ts.length);
+    var box = document.getElementById('sys-brandlist');
+    if (box) box.innerHTML = ts.map(function(t){
+      var sus = t.status==='suspended';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px'+(t.id===currentTenant?';border-color:var(--primary)':'')+'">'+
+        '<div style="min-width:0"><div style="font-weight:700">'+escapeHtml(t.name||t.id)+' <span style="color:var(--muted);font-weight:400;font-size:12px">('+escapeHtml(t.id)+')</span></div>'+
+        '<div style="font-size:12px;'+(sus?'color:#888':'color:#16a34a')+';font-weight:700">'+(sus?'ระงับ':'ใช้งาน')+'</div></div>'+
+        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="onBrandSwitch(\''+t.id+'\')">ดูแลแบรนด์นี้ →</button>'+
+      '</div>';
+    }).join('') || '<div class="empty-state">ยังไม่มีแบรนด์</div>';
+    // รวมผู้ใช้ + ออเดอร์ทุกแบรนด์ (super อ่านข้ามแบรนด์ได้ผ่าน isAdmin)
+    var totU = 0, totO = 0;
+    await Promise.all(ts.map(async function(t){
+      try { var u = await db.collection('tenants').doc(t.id).collection('users').get(); totU += u.size; } catch(e){}
+      try { var o = await db.collection('tenants').doc(t.id).collection('orders').get(); totO += o.size; } catch(e){}
+    }));
+    setT('sys-users', totU.toLocaleString());
+    setT('sys-orders', totO.toLocaleString());
+    try { var rq = await db.collection('tenantRequests').where('status','==','new').get(); setT('sys-reqs', rq.size); } catch(e){ setT('sys-reqs','—'); }
+  } catch(e){ var box=document.getElementById('sys-brandlist'); if(box) box.innerHTML='<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
 }
 function showDeny() {
   document.getElementById('loading-screen').style.display = 'none';
@@ -994,7 +1089,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
+  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -2247,7 +2342,7 @@ async function removeTeamAdmin(uid){
 function aTid(){ const t = adminTenant(); return t === 'office' ? 'phuansuan' : t; }
 let currentTenant = aTid();
 function aDb(){ return db.collection('tenants').doc(currentTenant); }
-function setCurrentTenant(tid){ currentTenant = tid; const lbl = document.getElementById('cur-tenant-label'); if (lbl) lbl.textContent = tid; }
+function setCurrentTenant(tid){ currentTenant = tid; if (typeof updateBrandLabels==='function') updateBrandLabels(); }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 function baht(n){ return '฿' + Math.round(Number(n)||0).toLocaleString(); }
 // เก็บราคาเป็น "ตัวเลข" เสมอ: รับได้ทั้ง 180, "180", "180 บาท", "1,180" → คืน number (ว่าง/กรอกผิด = 0)
