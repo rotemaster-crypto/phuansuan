@@ -81,11 +81,11 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
   // ── เปิด/ปิด Features ────────────────────────────────────
   features: {
     aiDiagnosis:     false,  // AI วิเคราะห์รูป (ปิด default — เปิดเฉพาะแบรนด์ที่ต้องการ, มีค่าใช้จ่าย)
-    proximityAlert:  true,   // แจ้งเตือนโรคระบาดในพื้นที่
+    proximityAlert:  false,  // "ใกล้ฉัน"/ตำแหน่ง (แท็บใกล้ฉัน + ขอ GPS + แจ้งเตือนพื้นที่) — default ปิด เปิดต่อแบรนด์ที่ต้องการ location
     productLink:     true,   // ลิงก์สินค้าร้าน
     stories:         true,   // Stories บนสุด Feed
     pointSystem:     true,   // ระบบแต้มสะสม
-    communityGroups: true,   // กลุ่ม/ชุมชน (มี join — คุมต่อแบรนด์)
+    communityGroups: false,  // กลุ่มย่อย (มี join) — default ปิด เปิดทีละแบรนด์ที่ต้องการ (ฟีด/ถามปัญหา/รีวิว ไม่เกี่ยว ยังอยู่)
     leaderboard:     true,   // ตารางอันดับ (ปราชญ์) — คุมต่อแบรนด์
     weatherAlert:    false,  // แจ้งเตือนสภาพอากาศ (เปิดทีหลัง)
     commerce:        true,   // ระบบร้านค้า + ตะกร้า (Phase 3)
