@@ -2977,46 +2977,90 @@ async function cancelOrder(id){
     if (typeof loadProducts==='function') loadProducts();   // สต็อกเปลี่ยน
   } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
 }
-// พิมพ์ใบส่งสินค้า — ดึงที่อยู่ผู้รับจากออเดอร์ (ที่ user กรอก/แก้เอง)
+// พิมพ์ใบส่งสินค้า — ป้ายมาตรฐานกลาง ใช้ได้ทุกขนส่ง (ดึงที่อยู่ผู้รับจากออเดอร์)
 function printDeliveryNote(id){
   var o = (adminOrders||[]).find(function(x){ return x.id===id; });
   if (!o){ toast('❌ ไม่พบออเดอร์','error'); return; }
-  var sh = o.shipping || {};
-  var shop = (document.getElementById('sb-app-name') && document.getElementById('sb-app-name').textContent) || currentTenant || 'ร้านค้า';
-  var addr = [sh.addressLine, sh.subdistrict, sh.district, sh.province, sh.postcode].filter(Boolean).map(escapeHtml).join(' ');
-  var items = (o.items||[]).map(function(it){
-    return '<tr><td>'+escapeHtml(it.name||'')+'</td><td style="text-align:center">'+(it.qty||1)+'</td><td style="text-align:right">'+baht((it.price||0)*(it.qty||1))+'</td></tr>';
-  }).join('') || '<tr><td colspan="3" style="text-align:center;color:#888">—</td></tr>';
-  var oid = '#'+String(o.id).slice(-6).toUpperCase();
-  var paid = (o.status==='pending_payment') ? '<b style="color:#c00">ยังไม่ชำระ (เก็บเงินปลายทาง/รอสลิป)</b>' : 'ชำระแล้ว';
-  var html = '<!doctype html><html><head><meta charset="utf-8"><title>ใบส่งสินค้า '+oid+'</title>'+
-    '<style>*{font-family:"Sarabun","Segoe UI",sans-serif;box-sizing:border-box}body{margin:0;padding:24px;color:#111}'+
-    '.dn{max-width:640px;margin:0 auto;border:1px solid #ccc;border-radius:10px;padding:22px}'+
-    '.dn h1{font-size:20px;margin:0 0 2px}.muted{color:#666;font-size:13px}'+
-    '.row{display:flex;gap:16px;margin-top:16px}.box{flex:1;border:1px solid #ddd;border-radius:8px;padding:12px}'+
-    '.box h3{margin:0 0 6px;font-size:13px;color:#666;text-transform:uppercase;letter-spacing:.5px}'+
-    '.box .big{font-size:16px;font-weight:700}table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}'+
-    'th,td{border-bottom:1px solid #eee;padding:8px;text-align:left}th{background:#f7f7f7;font-size:12px;color:#555}'+
-    '.tot{text-align:right;font-size:16px;font-weight:800;margin-top:12px}'+
-    '@media print{body{padding:0}.dn{border:none}.noprint{display:none}}</style></head><body>'+
-    '<div class="dn">'+
-      '<div style="display:flex;justify-content:space-between;align-items:start">'+
-        '<div><h1>ใบส่งสินค้า</h1><div class="muted">'+escapeHtml(shop)+' · ออเดอร์ '+oid+'</div></div>'+
-        '<div class="muted" style="text-align:right">วันที่ '+fmtDate(o.createdAt)+'<br>'+paid+'</div>'+
-      '</div>'+
-      '<div class="row">'+
-        '<div class="box"><h3>ผู้ส่ง</h3><div class="big">'+escapeHtml(shop)+'</div></div>'+
-        '<div class="box"><h3>ผู้รับ</h3><div class="big">'+escapeHtml(sh.name||o.userName||'-')+'</div>'+
-          '<div>📞 '+escapeHtml(sh.phone||'-')+'</div><div style="margin-top:4px">'+(addr||'-')+'</div>'+
-          (sh.note?'<div class="muted" style="margin-top:4px">📝 '+escapeHtml(sh.note)+'</div>':'')+
-        '</div>'+
-      '</div>'+
-      '<table><thead><tr><th>รายการ</th><th style="text-align:center">จำนวน</th><th style="text-align:right">รวม</th></tr></thead><tbody>'+items+'</tbody></table>'+
-      '<div class="tot">ยอดรวม: '+baht(o.total||0)+'</div>'+
-      '<div class="noprint" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:10px 20px;font-size:15px;font-weight:700;border:none;border-radius:8px;background:#334155;color:#fff;cursor:pointer">🖨️ พิมพ์</button></div>'+
-    '</div></body></html>';
+  var shopName = (document.getElementById('sb-app-name') && document.getElementById('sb-app-name').textContent) || currentTenant || 'ร้านค้า';
+  var data = {
+    oid: String(o.id).slice(-6).toUpperCase(),
+    shopName: shopName,
+    tenant: currentTenant,
+    date: fmtDate(o.createdAt),
+    shipping: o.shipping || {},
+    userName: o.userName || '',
+    items: (o.items||[]).map(function(it){ return { name: it.name||'', qty: it.qty||1 }; }),
+    total: o.total || 0,
+    unpaid: o.status === 'pending_payment'   // ยังไม่จ่าย = เก็บเงินปลายทาง (COD)
+  };
+  var json = JSON.stringify(data).replace(/</g, '\\u003c');
   var w = window.open('', '_blank');
-  if (!w){ toast('❌ เบราว์เซอร์บล็อกป๊อปอัป','error'); return; }
+  if (!w){ toast('❌ เบราว์เซอร์บล็อกป๊อปอัป (อนุญาต popup ก่อนครับ)','error'); return; }
+  var html = ''+
+'<!doctype html><html><head><meta charset="utf-8"><title>ใบส่งสินค้า #'+data.oid+'</title>'+
+'<style id="pagestyle">@page{size:4in 6in;margin:3mm}</style>'+
+'<style>*{font-family:"Sarabun","Segoe UI",sans-serif;box-sizing:border-box}body{margin:0;background:#eee;color:#000}'+
+'.bar{background:#1f2937;color:#fff;padding:10px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px}'+
+'.bar select,.bar input{padding:6px 9px;border-radius:6px;border:1px solid #555;font-size:13px}'+
+'.bar .grow{flex:1}.bar button{padding:8px 18px;border:none;border-radius:6px;background:#22c55e;color:#fff;font-weight:800;font-size:14px;cursor:pointer}'+
+'.wrap{padding:16px;display:flex;justify-content:center}'+
+'.lbl{background:#fff;width:190mm;max-width:100%;border:2px solid #000;padding:8mm}'+
+'.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:6px}'+
+'.hd .courier{font-size:22px;font-weight:900}.hd .oid{font-size:14px;text-align:right}'+
+'.awb{border:1px dashed #000;padding:6px 10px;margin-top:8px;font-size:15px;font-weight:700}'+
+'.blk{border:1px solid #000;padding:8px 10px;margin-top:8px}'+
+'.blk h3{margin:0 0 3px;font-size:12px;letter-spacing:1px}'+
+'.to .name{font-size:20px;font-weight:900}.to .addr{font-size:16px;line-height:1.5;margin-top:2px}'+
+'.cod{border:2px solid #000;padding:8px 10px;margin-top:8px;text-align:center}'+
+'.cod .amt{font-size:26px;font-weight:900}'+
+'.items{font-size:13px;margin-top:8px;border-top:1px solid #000;padding-top:6px}'+
+'@media print{body{background:#fff}.noprint{display:none!important}.wrap{padding:0}.lbl{border:2px solid #000;width:auto}'+
+'body.sticker .lbl{width:auto;padding:3mm;border-width:1px}body.sticker .hd .courier{font-size:18px}body.sticker .to .name{font-size:18px}body.sticker .cod .amt{font-size:22px}}'+
+'body.sticker .lbl{width:4in;padding:3mm}body.sticker .hd .courier{font-size:19px}body.sticker .to .name{font-size:18px}'+
+'</style></head><body>'+
+'<div class="bar noprint">'+
+  '<label>ขนส่ง: <select id="courier"></select></label>'+
+  '<label>เลขพัสดุ: <input id="awb" placeholder="กรอกหลังดรอป (ถ้ามี)" style="width:150px"></label>'+
+  '<label>ขนาด: <select id="size"><option value="sticker">ใบปะหน้า 4×6 นิ้ว (มาตรฐาน)</option><option value="a4">A4</option></select></label>'+
+  '<span class="grow"></span>'+
+  '<label>ผู้ส่ง: <input id="s-name" placeholder="ชื่อร้าน" style="width:120px"></label>'+
+  '<input id="s-phone" placeholder="เบอร์ผู้ส่ง" style="width:110px">'+
+  '<input id="s-addr" placeholder="ที่อยู่ผู้ส่ง (จำค่าไว้)" style="width:200px">'+
+  '<button onclick="window.print()">🖨️ พิมพ์</button>'+
+'</div>'+
+'<div class="wrap"><div class="lbl" id="lbl"></div></div>'+
+'<script>'+
+'var D='+json+';'+
+'var COURIERS=["ไม่ระบุ (ส่งได้ทุกขนส่ง)","ไปรษณีย์ไทย","Flash Express","Kerry Express","J&T Express","Best Express","Ninja Van","SPX Express","อื่นๆ"];'+
+'var SK="bocean_sender_"+(D.tenant||"x");'+
+'function esc(s){return String(s==null?"":s).replace(/[&<>\"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}'+
+'function baht(n){return "฿"+Math.round(Number(n)||0).toLocaleString();}'+
+'function render(){'+
+'  var sh=D.shipping||{};'+
+'  var courier=document.getElementById("courier").value;'+
+'  var awb=document.getElementById("awb").value.trim();'+
+'  var sName=document.getElementById("s-name").value.trim()||D.shopName;'+
+'  var sPhone=document.getElementById("s-phone").value.trim();'+
+'  var sAddr=document.getElementById("s-addr").value.trim();'+
+'  var addr=[sh.addressLine,sh.subdistrict,sh.district,sh.province,sh.postcode].filter(Boolean).map(esc).join(" ");'+
+'  var items=D.items.map(function(it){return esc(it.name)+" ×"+it.qty;}).join(", ")||"—";'+
+'  var cod=D.unpaid?("<div class=\\"cod\\"><div>เก็บเงินปลายทาง (COD)</div><div class=\\"amt\\">"+baht(D.total)+"</div></div>"):("<div class=\\"cod\\"><div>ชำระเงินแล้ว · ยอด "+baht(D.total)+"</div></div>");'+
+'  document.getElementById("lbl").innerHTML='+
+'   "<div class=\\"hd\\"><div class=\\"courier\\">"+esc(courier)+"</div><div class=\\"oid\\">ออเดอร์ #"+esc(D.oid)+"<br>"+esc(D.date)+"</div></div>"'+
+'   +"<div class=\\"awb\\">เลขพัสดุ (AWB): "+(awb?esc(awb):"________________________")+"</div>"'+
+'   +"<div class=\\"blk\\"><h3>ผู้ส่ง FROM</h3><div><b>"+esc(sName)+"</b>"+(sPhone?(" · โทร "+esc(sPhone)):"")+"</div>"+(sAddr?("<div>"+esc(sAddr)+"</div>"):"")+"</div>"'+
+'   +"<div class=\\"blk to\\"><h3>ผู้รับ TO</h3><div class=\\"name\\">"+esc(sh.name||D.userName||"-")+"</div><div class=\\"addr\\">โทร "+esc(sh.phone||"-")+"<br>"+(addr||"-")+"</div>"+(sh.note?("<div style=\\"font-size:13px;margin-top:3px\\">📝 "+esc(sh.note)+"</div>"):"")+"</div>"'+
+'   +cod'+
+'   +"<div class=\\"items\\"><b>รายการ:</b> "+esc(items)+"</div>";'+
+'  try{localStorage.setItem(SK,JSON.stringify({name:document.getElementById("s-name").value,phone:sPhone,addr:sAddr}));}catch(e){}'+
+'}'+
+'var cs=document.getElementById("courier");COURIERS.forEach(function(c){var o=document.createElement("option");o.value=c;o.textContent=c;cs.appendChild(o);});'+
+'try{var sv=JSON.parse(localStorage.getItem(SK)||"{}");document.getElementById("s-name").value=sv.name||D.shopName;document.getElementById("s-phone").value=sv.phone||"";document.getElementById("s-addr").value=sv.addr||"";}catch(e){document.getElementById("s-name").value=D.shopName;}'+
+'function applySize(v){document.body.className=v==="sticker"?"sticker":"";document.getElementById("pagestyle").textContent=v==="sticker"?"@page{size:4in 6in;margin:3mm}":"@page{size:A4;margin:12mm}";}'+
+'document.getElementById("size").addEventListener("change",function(){applySize(this.value);});applySize("sticker");'+
+'["courier","awb","s-name","s-phone","s-addr"].forEach(function(idv){document.getElementById(idv).addEventListener("input",render);});'+
+'render();'+
+'<\/script></body></html>';
   w.document.write(html); w.document.close();
 }
 function viewSlip(url){
