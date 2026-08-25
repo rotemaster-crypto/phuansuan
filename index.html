@@ -497,9 +497,9 @@ button .ic,a .ic{pointer-events:none}
   <div class="login-appname">เพื่อนสวน</div>
   <div class="login-tagline">ชุมชนชาวสวนออนไลน์<br>แชร์ปัญหา รับคำแนะนำ สะสมแต้ม</div>
   <div class="login-features">
-    <div class="lf-item"><div class="lf-icon">🦠</div><div class="lf-text" id="t-ai-feat">AI วิเคราะห์โรคพืชจากภาพถ่าย</div></div>
-    <div class="lf-item" id="lf-nearby"><div class="lf-icon">📍</div><div class="lf-text">ดูปัญหาสวนในพื้นที่ใกล้บ้าน</div></div>
-    <div class="lf-item"><div class="lf-icon">🏅</div><div class="lf-text">สะสมแต้ม รับส่วนลดร้าน DemeterRich</div></div>
+    <div class="lf-item"><div class="lf-icon">💬</div><div class="lf-text">ถาม–ตอบ แชร์ประสบการณ์กับชุมชน</div></div>
+    <div class="lf-item"><div class="lf-icon">🛒</div><div class="lf-text">ช้อปสินค้าคุณภาพ ส่งตรงจากแบรนด์</div></div>
+    <div class="lf-item"><div class="lf-icon">🏅</div><div class="lf-text">สะสมแต้ม รับสิทธิพิเศษจากร้าน</div></div>
   </div>
   <button class="btn-line-login" onclick="loginWithLine()">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
@@ -541,8 +541,8 @@ button .ic,a .ic{pointer-events:none}
     <div class="cp-divider"></div>
     <div class="cp-btns">
       <div class="cp-btn" onclick="openPostModal()"><svg class="ic"><use href="#i-camera"/></svg> ภาพ/วิดีโอ</div>
-      <div class="cp-btn" onclick="openAiDoctor()" id="t-ai-cp"><svg class="ic"><use href="#i-scan"/></svg> หมอพืช AI</div>
       <div class="cp-btn" onclick="openPostModal()">💡 แชร์ความรู้</div>
+      <div class="cp-btn" onclick="openPostModal()"><svg class="ic"><use href="#i-chat"/></svg> ถามคำถาม</div>
     </div>
   </div>
 
@@ -596,14 +596,26 @@ button .ic,a .ic{pointer-events:none}
     <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
   </div>
   <div class="crops-card">
-    <button onclick="openAiDoctor()" id="t-ai-big" style="width:100%;background:linear-gradient(135deg,#1877f2,#00b894);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic" style="width:20px;height:20px"><use href="#i-scan"/></svg> หมอพืช AI — วิเคราะห์โรคจากรูป</button>
-    <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px">ถ่ายรูปใบ/ต้น แล้วให้ AI ช่วยวินิจฉัย · ผลเป็นความลับ เห็นคนเดียว</div>
+    <div class="sec-title"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-pin"/></svg> ที่อยู่จัดส่ง</div>
+    <div style="font-size:12px;color:var(--muted);margin:2px 0 10px">ตั้งไว้ครั้งเดียว — เวลาสั่งของจะเติมให้อัตโนมัติ ไม่ต้องกรอกซ้ำ</div>
+    <div class="co-form">
+      <div class="co-field"><label class="co-label">ชื่อผู้รับ</label><input class="co-input" id="pf-name" maxlength="80" placeholder="ชื่อ-นามสกุล"></div>
+      <div class="co-field"><label class="co-label">เบอร์โทร</label><input class="co-input" id="pf-phone" inputmode="numeric" maxlength="10" placeholder="08xxxxxxxx"></div>
+      <div class="co-field"><label class="co-label">ที่อยู่ (บ้านเลขที่ / หมู่ / ถนน)</label><input class="co-input" id="pf-addr" maxlength="200" placeholder="เช่น 99 หมู่ 4 ถ.สุขใจ"></div>
+      <div class="co-field"><label class="co-label">จังหวัด</label><select class="co-select" id="pf-province"><option value="">— เลือกจังหวัด —</option></select></div>
+      <div class="co-row2">
+        <div class="co-field"><label class="co-label">อำเภอ/เขต</label><input class="co-input" id="pf-district" maxlength="60" placeholder="อำเภอ"></div>
+        <div class="co-field"><label class="co-label">ตำบล/แขวง</label><input class="co-input" id="pf-subdistrict" maxlength="60" placeholder="ตำบล"></div>
+      </div>
+      <div class="co-field"><label class="co-label">รหัสไปรษณีย์</label><input class="co-input" id="pf-postcode" inputmode="numeric" maxlength="5" placeholder="xxxxx"></div>
+    </div>
+    <button class="submit-btn" style="margin-top:10px" onclick="saveMyAddress()"><svg class="ic"><use href="#i-save"/></svg> บันทึกที่อยู่</button>
   </div>
   <div class="crops-card">
-    <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">พืชที่ปลูก
-      <button onclick="maybeShowOnboarding(true)" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-edit"/></svg> แก้ไข</button>
+    <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center"><span><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-package"/></svg> ประวัติการสั่งซื้อ</span>
+      <button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">ดูทั้งหมด →</button>
     </div>
-    <div class="crops-grid" id="crops-list"></div>
+    <div id="pf-orders" style="margin-top:8px"><div style="font-size:13px;color:var(--muted)">กำลังโหลด...</div></div>
   </div>
   <div class="crops-card">
     <div class="sec-title">โพสของฉัน</div>
@@ -755,10 +767,9 @@ button .ic,a .ic{pointer-events:none}
 <div class="overlay" id="onboardModal">
   <div class="modal" style="border-radius:16px 16px 0 0">
     <div class="modal-body" style="padding-top:22px">
-      <div class="ob-step-label">ตั้งค่าครั้งแรก · 1 นาทีเสร็จ</div>
-      <div class="ob-title">คุณปลูกอะไรอยู่บ้าง? 🌱</div>
-      <div class="ob-sub">เลือกได้หลายอย่าง — เราจะคัดโพสและคำแนะนำที่ตรงกับสวนของคุณ</div>
-      <div class="ob-crops" id="ob-crops"></div>
+      <div class="ob-step-label">ตั้งค่าครั้งแรก · ไม่กี่วินาที</div>
+      <div class="ob-title">ยินดีต้อนรับ 👋</div>
+      <div class="ob-sub">ยืนยันความยินยอมด้านล่าง แล้วเริ่มใช้งานได้เลย</div>
 
       <div id="ob-gps-wrap">
       <div class="ob-title" style="font-size:17px">ตำแหน่งสวนของคุณ 📍</div>
@@ -2070,24 +2081,71 @@ async function loadMyPosts() {
   }
 }
 
-// ── Onboarding (เลือกพืช + GPS) ───────────────────────────
+// ── ที่อยู่จัดส่ง (ตั้งในโปรไฟล์ → checkout ดึงไปใช้) ──────
+function renderMyAddress(){
+  if (!currentUser) return;
+  const sel = document.getElementById('pf-province');
+  if (sel && sel.options.length <= 1 && typeof TH_PROVINCES !== 'undefined') {
+    TH_PROVINCES.forEach(function(p){ const o=document.createElement('option'); o.value=p; o.textContent=p; sel.appendChild(o); });
+  }
+  const a = currentUser.shippingAddress || {};
+  const set = function(id,v){ const e=document.getElementById(id); if(e) e.value = v || ''; };
+  set('pf-name', a.name || currentUser.displayName || '');
+  set('pf-phone', a.phone);
+  set('pf-addr', a.addressLine);
+  set('pf-province', a.province);
+  set('pf-district', a.district);
+  set('pf-subdistrict', a.subdistrict);
+  set('pf-postcode', a.postcode);
+}
+async function saveMyAddress(){
+  if (!currentUser || !db){ toast('กรุณาเข้าสู่ระบบก่อนครับ'); return; }
+  const v = function(id){ const e=document.getElementById(id); return e?e.value.trim():''; };
+  const name=v('pf-name'), phone=v('pf-phone'), addr=v('pf-addr'), province=v('pf-province');
+  if (!name || !phone || !addr || !province){ toast('กรอก ชื่อ / เบอร์ / ที่อยู่ / จังหวัด ให้ครบครับ'); return; }
+  if (!/^[0-9]{9,10}$/.test(ppSan(phone))){ toast('เบอร์โทรไม่ถูกต้องครับ'); return; }
+  const shipping = { name:name, phone:phone, addressLine:addr, province:province, district:v('pf-district'), subdistrict:v('pf-subdistrict'), postcode:v('pf-postcode') };
+  try {
+    await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping });
+    currentUser.shippingAddress = shipping;
+    renderProfileInfo();
+    toast('✅ บันทึกที่อยู่แล้ว — สั่งของครั้งหน้าเติมให้อัตโนมัติ');
+  } catch(e){ toast('บันทึกไม่สำเร็จ: '+e.message); }
+}
+// ── ประวัติการสั่งซื้อ (มินิในโปรไฟล์ · กด "ดูทั้งหมด" เปิด modal เต็ม) ──
+async function renderProfileOrders(){
+  const box = document.getElementById('pf-orders');
+  if (!box) return;
+  if (!currentUser || !db){ box.innerHTML = '<div style="font-size:13px;color:var(--muted)">เข้าสู่ระบบเพื่อดูประวัติ</div>'; return; }
+  try {
+    const snap = await tdb().collection('orders').where('userId','==',currentUser.uid).get();
+    const tid = (typeof tenantId==='function')?tenantId():null;
+    let docs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }).filter(function(o){ return !tid || o.tenantId===tid; });
+    docs.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
+    if (!docs.length){ box.innerHTML = '<div style="font-size:13px;color:var(--muted)">ยังไม่มีประวัติการสั่งซื้อ</div>'; return; }
+    box.innerHTML = docs.slice(0,3).map(function(o){
+      const s = (typeof ORDER_STATUS!=='undefined' && ORDER_STATUS[o.status]) || {t:o.status, c:'#888'};
+      const n = (o.items||[]).reduce(function(x,i){ return x+i.qty; }, 0);
+      const first = (o.items && o.items[0]) ? escapeHtml(o.items[0].name) : '';
+      const more = (o.items && o.items.length>1) ? (' +'+(o.items.length-1)) : '';
+      const dt = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate().toLocaleDateString('th-TH') : '';
+      return '<div onclick="openMyOrders()" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer">'+
+        '<div style="min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+first+more+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+dt+' · '+n+' ชิ้น</div></div>'+
+        '<div style="text-align:right;flex:none"><div style="font-size:13px;font-weight:800;color:var(--shop-price,var(--primary))">'+baht(o.total||0)+'</div>'+
+        '<span style="font-size:10px;color:#fff;background:'+s.c+';padding:1px 7px;border-radius:8px">'+s.t+'</span></div>'+
+      '</div>';
+    }).join('') + (docs.length>3 ? '<div style="text-align:center;padding-top:8px"><button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer">ดูทั้งหมด '+docs.length+' ออเดอร์ →</button></div>' : '');
+  } catch(e){ box.innerHTML = '<div style="font-size:13px;color:var(--muted)">โหลดประวัติไม่สำเร็จ</div>'; }
+}
+
+// ── Onboarding (ตั้งค่าครั้งแรก) ───────────────────────────
 let obSelectedCrops = [];
 let obLocation = null;
 
 function maybeShowOnboarding(force) {
   if (!currentUser || !db) return;
   if (!force && currentUser.onboarded === true) return;
-  // เติม crop chips จาก config
-  const grid = document.getElementById('ob-crops');
-  grid.innerHTML = APP_CONFIG.crops.map(c => `
-    <button class="ob-chip" data-crop="${c.id}" onclick="toggleObCrop(this)">
-      <span class="oce">${c.emoji}</span><span class="ocn">${c.name}</span>
-    </button>`).join('');
-  // ถ้ามีข้อมูลเดิมบางส่วน เติมให้
-  obSelectedCrops = Array.isArray(currentUser.crops) ? [...currentUser.crops] : [];
-  obSelectedCrops.forEach(id => {
-    grid.querySelector(`[data-crop="${id}"]`)?.classList.add('sel');
-  });
   document.getElementById('onboardModal').classList.add('open');
 }
 
@@ -2131,13 +2189,12 @@ function requestGps() {
 
 async function saveOnboarding() {
   if (!currentUser || !db) return;
-  if (obSelectedCrops.length === 0) { toast('เลือกพืชอย่างน้อย 1 อย่างครับ 🌱'); return; }
   var _cc = document.getElementById('ob-consent-chk');
   if (_cc && !_cc.checked) { toast('กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนครับ'); return; }
   const btn = document.getElementById('ob-save-btn');
   btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
   try {
-    const updates = { crops: obSelectedCrops, onboarded: true, consent: { accepted: true, version: 1, at: firebase.firestore.FieldValue.serverTimestamp(), marketing: !!(document.getElementById('ob-mkt-chk') && document.getElementById('ob-mkt-chk').checked) } };
+    const updates = { onboarded: true, consent: { accepted: true, version: 1, at: firebase.firestore.FieldValue.serverTimestamp(), marketing: !!(document.getElementById('ob-mkt-chk') && document.getElementById('ob-mkt-chk').checked) } };
     if (obLocation) updates.location = obLocation;
     await tdb().collection('users').doc(currentUser.uid).update(updates);
     currentUser = { ...currentUser, ...updates };
@@ -2352,7 +2409,7 @@ function switchScreen(name){
   document.getElementById('screen-'+name).classList.add('active');
   const nav=document.getElementById('nav-'+name);
   if(nav) nav.classList.add('active');
-  if(name === 'profile'){ renderProfileInfo(); loadMyPosts(); }
+  if(name === 'profile'){ renderProfileInfo(); renderMyAddress(); renderProfileOrders(); loadMyPosts(); }
   if(name === 'community'){
     const f = (APP_CONFIG && APP_CONFIG.features) || {};
     if (f.communityGroups !== false) loadCommunityGroups();
