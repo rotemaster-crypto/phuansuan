@@ -65,5 +65,9 @@ firebase emulators:exec --only functions,firestore,auth --project demo-bocean \
 - **คืนสต็อก**: ยกเลิก → `stock += qty`, `soldCount -= qty`, order = cancelled + `restocked`
 - **idempotent**: ยกเลิกซ้ำ → ไม่คืนสต็อกซ้ำ · order เก่า (ไม่ `stockApplied`) → ยกเลิกได้แต่ไม่คืน · stock null → คืนแค่ soldCount
 
+**`mission.test.js` (7) — claimMission (ภารกิจ Phase 4):**
+- **progress ฝั่ง server**: points (จาก user.points) / posts (postCount) / purchases (นับออเดอร์ที่จ่ายแล้ว)
+- รางวัล **แต้ม** หรือ **คูปอง** (สร้าง coupon จริง) · **กันรับซ้ำ** (missionClaims) · ยังไม่ถึงเป้า/ภารกิจปิด → `failed-precondition`
+
 > รันอัตโนมัติทุก push/PR ผ่าน `.github/workflows/functions-e2e.yml`
 > หมายเหตุ: โค้ดใช้ modular `require("firebase-admin/firestore").FieldValue` (ไม่ใช่ `admin.firestore.FieldValue` แบบ compat) เพราะ namespaced static หายใต้ functions emulator

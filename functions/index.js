@@ -425,6 +425,81 @@ exports.adminCancelOrder = onCall(async (req) => {
 });
 
 // ============================================================
+//  claimMission — รับรางวัลภารกิจ (Phase 4) · server ตรวจ progress เอง
+//  progress ดึงจากตัวนับที่มีอยู่: points / postCount / จำนวนออเดอร์ที่จ่ายแล้ว
+//  รางวัล = แต้ม หรือ คูปอง · กันรับซ้ำด้วย missionClaims/{missionId}
+// ============================================================
+exports.claimMission = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  const tid = await resolveTid(req.data && req.data.tid);
+  const missionId = ((req.data && req.data.missionId) || "").toString();
+  if (!missionId) throw new HttpsError("invalid-argument", "ต้องระบุ missionId");
+
+  const db = admin.firestore();
+  const mRef = troot(tid).collection("missions").doc(missionId);
+  const uRef = troot(tid).collection("users").doc(uid);
+  const claimRef = uRef.collection("missionClaims").doc(missionId);
+
+  // ภารกิจแบบ 'purchases' ต้องนับออเดอร์ที่จ่ายแล้ว (อ่านนอก transaction)
+  const m0 = await mRef.get();
+  if (!m0.exists) throw new HttpsError("not-found", "ไม่พบภารกิจนี้");
+  let purchaseCount = 0;
+  if (m0.data().type === "purchases") {
+    const paid = ["paid_review", "confirmed", "shipped", "completed"];
+    const oSnap = await troot(tid).collection("orders").where("userId", "==", uid).get();
+    purchaseCount = oSnap.docs.filter((d) => paid.indexOf((d.data() || {}).status) > -1).length;
+  }
+
+  return db.runTransaction(async (tx) => {
+    const [mSnap, uSnap, cSnap] = await Promise.all([tx.get(mRef), tx.get(uRef), tx.get(claimRef)]);
+    if (!mSnap.exists) throw new HttpsError("not-found", "ไม่พบภารกิจนี้");
+    if (!uSnap.exists) throw new HttpsError("not-found", "ไม่พบผู้ใช้");
+    const m = mSnap.data(), u = uSnap.data();
+    if (m.active === false) throw new HttpsError("failed-precondition", "ภารกิจนี้ปิดอยู่");
+    const now = Date.now();
+    const ms = (v) => (v && typeof v.toMillis === "function") ? v.toMillis() : null;
+    if (ms(m.startAt) && now < ms(m.startAt)) throw new HttpsError("failed-precondition", "ภารกิจยังไม่เริ่ม");
+    if (ms(m.endAt) && now > ms(m.endAt)) throw new HttpsError("failed-precondition", "ภารกิจสิ้นสุดแล้ว");
+    if (cSnap.exists) throw new HttpsError("failed-precondition", "รับรางวัลภารกิจนี้ไปแล้ว");
+
+    const goal = Math.max(1, Math.floor(Number(m.goal) || 1));
+    let progress = 0;
+    if (m.type === "points") progress = Math.floor(Number(u.points) || 0);
+    else if (m.type === "posts") progress = Math.floor(Number(u.postCount) || 0);
+    else if (m.type === "purchases") progress = purchaseCount;
+    else throw new HttpsError("failed-precondition", "ประเภทภารกิจไม่รองรับ");
+    if (progress < goal) throw new HttpsError("failed-precondition", "ยังทำภารกิจไม่ครบ (" + progress + "/" + goal + ")");
+
+    const claim = { missionId: missionId, name: m.name || "", at: FieldValue.serverTimestamp() };
+    let reward;
+    if (m.rewardType === "coupon" && m.coupon) {
+      const c = m.coupon;
+      const couponRef = uRef.collection("coupons").doc();
+      const coupon = {
+        drawId: "mission:" + missionId, drawName: m.name || "",
+        prizeLabel: c.label || m.name || "คูปอง",
+        code: c.code || genCouponCode(),
+        discountText: c.discountText || "",
+        discountType: (c.discountType === "percent" || c.discountType === "fixed") ? c.discountType : null,
+        discountValue: Math.max(0, Math.floor(Number(c.discountValue) || 0)),
+        used: false, at: FieldValue.serverTimestamp(),
+      };
+      tx.set(couponRef, coupon);
+      claim.rewardType = "coupon";
+      reward = { type: "coupon", coupon: { code: coupon.code, label: coupon.prizeLabel } };
+    } else {
+      const pts = Math.max(0, Math.floor(Number(m.rewardPoints) || 0));
+      if (pts > 0) tx.update(uRef, { points: FieldValue.increment(pts) });
+      claim.rewardType = "points"; claim.rewardPoints = pts;
+      reward = { type: "points", points: pts };
+    }
+    tx.set(claimRef, claim);
+    return { ok: true, reward: reward, progress: progress, goal: goal };
+  });
+});
+
+// ============================================================
 //  analyzePlant — วิเคราะห์โรคพืชจากรูปด้วย Gemini Vision
 // ============================================================
 const { defineSecret } = require("firebase-functions/params");

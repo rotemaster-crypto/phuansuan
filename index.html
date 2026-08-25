@@ -633,6 +633,8 @@ button .ic,a .ic{pointer-events:none}
       <div class="tier-lbs"><span id="tlb-bronze">มือใหม่</span><span id="tlb-silver">เงิน</span><span id="tier-label" class="tier-act">มือใหม่</span><span id="tlb-platinum">ปราชญ์</span></div>
       <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
     </div>
+    <!-- ── ภารกิจ ── -->
+    <div id="missions-section" style="margin-bottom:20px"></div>
     <!-- ── สุ่มจับรางวัล ── -->
     <div id="luckydraw-section" style="margin-bottom:20px"></div>
     <!-- ── คูปองของฉัน ── -->
@@ -2211,6 +2213,65 @@ function showSpinResult(r){
   var m = document.getElementById('spinModal'); if (m) m.classList.add('open');
 }
 function closeSpinModal(){ var m=document.getElementById('spinModal'); if(m) m.classList.remove('open'); }
+// ── ภารกิจ (Phase 4) ──
+var MS_TYPE_TXT = { posts:'โพสต์', purchases:'สั่งซื้อ', points:'สะสมแต้ม' };
+async function loadMissions(){
+  var box = document.getElementById('missions-section'); if (!box) return;
+  if (!currentUser || !db){ box.innerHTML=''; return; }
+  try {
+    var snap = await tdb().collection('missions').where('active','==',true).get();
+    var ms = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+    if (!ms.length){ box.innerHTML=''; return; }
+    var claimS = await tdb().collection('users').doc(currentUser.uid).collection('missionClaims').get();
+    var claimed = {}; claimS.forEach(function(d){ claimed[d.id]=true; });
+    var purch = 0;
+    if (ms.some(function(m){ return m.type==='purchases'; })){
+      try { var os = await tdb().collection('orders').where('userId','==',currentUser.uid).get();
+        var paid=['paid_review','confirmed','shipped','completed'];
+        purch = os.docs.filter(function(d){ return paid.indexOf((d.data()||{}).status)>-1; }).length; } catch(e){}
+    }
+    ms.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
+    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">🎯 ภารกิจ</div>'+
+      ms.map(function(m){
+        var goal = Math.max(1, m.goal||1);
+        var prog = m.type==='points' ? (currentUser.points||0) : (m.type==='posts' ? (currentUser.postCount||0) : purch);
+        var isClaimed = claimed[m.id]===true, done = prog>=goal;
+        var pct = Math.min(100, Math.round(prog/goal*100));
+        var reward = m.rewardType==='coupon' ? ('🎟️ '+escapeHtml((m.coupon&&(m.coupon.discountText||m.coupon.label))||'คูปอง')) : ('🏅 '+(m.rewardPoints||0)+' แต้ม');
+        var btn = isClaimed
+          ? '<button disabled style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:13px;background:var(--border);color:var(--muted)">✓ รับแล้ว</button>'
+          : (done
+            ? '<button onclick="claimMissionUser(\''+m.id+'\')" style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:800;font-size:13px;background:var(--primary);color:#fff;cursor:pointer">รับรางวัล</button>'
+            : '<button disabled style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:13px;background:var(--bg);color:var(--muted)">'+prog+'/'+goal+'</button>');
+        return '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px">'+
+          '<div style="display:flex;align-items:center;gap:10px">'+
+            '<div style="font-size:26px;flex:none">'+escapeHtml(m.icon||'🎯')+'</div>'+
+            '<div style="flex:1;min-width:0">'+
+              '<div style="font-size:14px;font-weight:700;color:var(--text)">'+escapeHtml(m.name||'')+'</div>'+
+              (m.desc?'<div style="font-size:12px;color:var(--muted)">'+escapeHtml(m.desc)+'</div>':'')+
+              '<div style="font-size:12px;color:var(--muted);margin-top:2px">'+(MS_TYPE_TXT[m.type]||m.type)+' ครบ '+goal+' · รางวัล '+reward+'</div>'+
+            '</div>'+
+            btn+
+          '</div>'+
+          '<div style="height:6px;background:var(--bg);border-radius:99px;margin-top:9px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+(done?'#16a34a':'var(--primary)')+';border-radius:99px"></div></div>'+
+        '</div>';
+      }).join('');
+  } catch(e){ box.innerHTML=''; }
+}
+async function claimMissionUser(id){
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('claimMission');
+    var res = await fn({ tid: (typeof tenantId==='function'?tenantId():'phuansuan'), missionId: id });
+    var d = (res && res.data) || {};
+    if (d.reward && d.reward.type==='coupon') toast('🎉 รับคูปองแล้ว! โค้ด '+((d.reward.coupon&&d.reward.coupon.code)||''));
+    else {
+      var pts = (d.reward && d.reward.points) || 0;
+      toast('🎉 รับ '+pts+' แต้มแล้ว!');
+      if (currentUser){ currentUser.points = (currentUser.points||0)+pts; var pv=document.getElementById('pts-val-display'); if(pv) pv.textContent=((currentUser.points)||0).toLocaleString()+' แต้ม'; }
+    }
+    loadMissions(); loadMyCoupons();
+  } catch(e){ toast('❌ '+((e&&e.message)||'รับรางวัลไม่สำเร็จ')); }
+}
 async function loadMyCoupons(){
   var box = document.getElementById('mycoupons-section'); if (!box) return;
   if (!currentUser || !db){ box.innerHTML=''; return; }
@@ -2504,7 +2565,7 @@ function switchScreen(name){
   if(name === 'profile'){ renderProfileInfo(); renderMyAddress(); renderProfileOrders(); loadMyPosts(); }
   if(name === 'community'){
     const f = (APP_CONFIG && APP_CONFIG.features) || {};
-    loadLuckyDrawsUser(); loadMyCoupons();
+    loadMissions(); loadLuckyDrawsUser(); loadMyCoupons();
     if (f.communityGroups !== false) loadCommunityGroups();
     if (f.leaderboard !== false) loadLeaderboard();
   }

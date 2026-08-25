@@ -38,6 +38,8 @@ service cloud.firestore {
       match /products/{productId} { allow read: if true; allow write: if canManage(t); }
       // สุ่มจับรางวัล (Activity Engine) — แอดมินสร้าง/แก้ · ผู้ใช้อ่านได้ · หมุนจริงผ่าน Cloud Function เท่านั้น
       match /luckyDraws/{drawId} { allow read: if true; allow write: if canManage(t); }
+      // ภารกิจ/แคมเปญ (Phase 4) — แอดมินสร้าง/แก้ · ผู้ใช้อ่านได้ · รับรางวัลผ่าน Cloud Function เท่านั้น
+      match /missions/{mid} { allow read: if true; allow write: if canManage(t); }
       match /users/{uid} {
         allow read: if isOwner(uid) || memberOf(t) || canManage(t);
         allow create: if isOwner(uid) && memberOf(t)
@@ -54,6 +56,8 @@ service cloud.firestore {
         match /aiUsage/{day}     { allow read: if isOwner(uid); allow write: if false; }
         // คูปองที่สุ่มได้ — เจ้าของ/แอดมินอ่าน · เขียนโดย Cloud Function เท่านั้น (client เขียนไม่ได้)
         match /coupons/{cid}     { allow read: if isOwner(uid) || canManage(t); allow write: if false; }
+        // การรับรางวัลภารกิจ — เจ้าของ/แอดมินอ่าน · เขียนโดย Cloud Function เท่านั้น (กันรับซ้ำ)
+        match /missionClaims/{mid} { allow read: if isOwner(uid) || canManage(t); allow write: if false; }
       }
       match /posts/{postId} {
         allow read: if feedPublic(t) || memberOf(t) || canManage(t);

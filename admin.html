@@ -37,14 +37,22 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial
 .sb-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);transition:background 0.1s}
 .sb-item:hover{background:var(--bg)}.sb-item.active{background:#242424;color:var(--primary);font-weight:700}
 .sb-item .si{font-size:18px;width:24px;text-align:center}
+.sb-ic{width:19px;height:19px;flex:none}
+.sb-item.active .sb-ic{color:var(--primary)}
+#brand-static .sb-ic{color:var(--primary)}
 .sb-badge{background:var(--danger);color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 6px;margin-left:auto}
 .sys-only{display:none}
 body.is-super .sb-item.sys-only{display:flex}
 body.is-super .sb-section.sys-only{display:block}
+/* โซนหลังร้านแบรนด์ — โผล่เมื่ออยู่ในโหมดจัดการแบรนด์ (brand-admin เสมอ / super เมื่อกดเข้าแบรนด์) */
+.brand-zone{display:none}
+body.in-brand .sb-item.brand-zone{display:flex}
+body.in-brand .sb-section.brand-zone{display:block}
 .sb-brandbar{padding:10px 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg);margin:6px 0}
 .sb-brandbar-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 #brand-switcher{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;background:var(--card);color:var(--text);cursor:pointer}
 #brand-static{font-size:14px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:6px}
+#brand-exit{margin-top:8px;width:100%}
 .page-header{margin-bottom:24px}
 .page-title{font-size:24px;font-weight:800;color:var(--text)}.page-sub{font-size:14px;color:var(--muted);margin-top:4px}
 .card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
@@ -185,6 +193,19 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <symbol id="i-share" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></symbol>
 <symbol id="i-package" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22" x2="12" y2="12"/></symbol>
 <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
+<symbol id="i-building" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h6"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+<symbol id="i-store" viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M3 9h18"/><path d="M9 21v-6h6v6"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5L17 22l-5-3-5 3 1.5-8.5"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1a1.6 1.6 0 0 1 1.6-1.6h2c3 0 5.5-2.5 5.5-5.6C22 6 17.5 2 12 2z"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></symbol>
+<symbol id="i-megaphone" viewBox="0 0 24 24"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></symbol>
 </defs></svg>
 <div id="loading-screen"><div class="spinner"></div><div style="font-size:15px;color:var(--muted)">กำลังตรวจสอบสิทธิ์...</div></div>
 <div id="deny-screen"><div class="deny-icon">🚫</div><div class="deny-title">ไม่มีสิทธิ์เข้าถึง</div><div class="deny-sub">หน้านี้สำหรับ Admin เท่านั้น</div><a href="/" style="margin-top:16px;color:var(--primary);font-weight:700;text-decoration:none">← กลับหน้าหลัก</a></div>
@@ -203,38 +224,40 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
   <div class="sb-menu">
     <!-- ═══ โซนระบบ Bocean (super-admin เท่านั้น) ═══ -->
-    <div class="sb-section sys-only">🏢 ระบบ Bocean</div>
-    <div class="sb-item sys-only" onclick="showScreen('sysoverview',this)"><span class="si">📊</span> ภาพรวมระบบ</div>
-    <div class="sb-item sys-only" onclick="showScreen('tenants',this)"><span class="si">🏢</span> จัดการแบรนด์</div>
-    <div class="sb-item sys-only" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
+    <div class="sb-section sys-only">ระบบ Bocean</div>
+    <div class="sb-item sys-only" onclick="showScreen('sysoverview',this)"><svg class="ic sb-ic"><use href="#i-grid"/></svg> ภาพรวมระบบ</div>
+    <div class="sb-item sys-only" onclick="showScreen('tenants',this)"><svg class="ic sb-ic"><use href="#i-building"/></svg> จัดการแบรนด์</div>
+    <div class="sb-item sys-only" onclick="showScreen('bocean',this)"><svg class="ic sb-ic"><use href="#i-inbox"/></svg> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
 
-    <!-- ═══ โซนหลังร้านแบรนด์ ═══ -->
+    <!-- ═══ เข้าจัดการร้านแบรนด์ (super เลือกแบรนด์ / brand-admin = แบรนด์ตัวเอง) ═══ -->
     <div class="sb-brandbar">
-      <div class="sb-brandbar-h">🏪 หลังร้านแบรนด์</div>
+      <div class="sb-brandbar-h" id="brandbar-h">หลังร้านแบรนด์</div>
       <select id="brand-switcher" onchange="onBrandSwitch(this.value)" style="display:none"></select>
-      <div id="brand-static" style="display:none"><span class="si">📍</span> <b id="cur-tenant-label">phuansuan</b></div>
+      <div id="brand-static" style="display:none"><svg class="ic sb-ic"><use href="#i-store"/></svg> <b id="cur-tenant-label">phuansuan</b></div>
+      <button id="brand-exit" class="btn btn-ghost" onclick="exitBrand()" style="display:none">← กลับสู่ระบบ</button>
     </div>
-    <div class="sb-item active" onclick="showScreen('dashboard',this)"><span class="si">📊</span> ภาพรวมร้าน</div>
-    <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
-    <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
-    <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน & จัดส่ง</div>
-    <div class="sb-item" id="sb-item-pricing" style="display:none" onclick="showScreen('pricing',this)"><span class="si">🧮</span> คิดราคา–กำไร</div>
-    <div class="sb-item" onclick="showScreen('luckydraw',this)"><span class="si">🎯</span> สุ่มจับรางวัล</div>
-    <div class="sb-section">ชุมชน & สมาชิก</div>
-    <div class="sb-item" onclick="showScreen('users',this)"><span class="si">👥</span> Users <span class="sb-badge" id="badge-users">0</span></div>
-    <div class="sb-item" onclick="showScreen('posts',this)"><span class="si">📝</span> โพส <span class="sb-badge" id="badge-posts">0</span></div>
-    <div class="sb-item" onclick="showScreen('groups',this)"><span class="si">👥</span> กลุ่มชุมชน</div>
-    <div class="sb-item" onclick="showScreen('points',this)"><span class="si">🏅</span> แต้ม & Tier</div>
-    <div class="sb-item" onclick="showScreen('badges',this)"><span class="si">🎖️</span> ตราสะสม</div>
-    <div class="sb-item" id="sb-item-team" style="display:none" onclick="showScreen('team',this)"><span class="si">🧑‍🤝‍🧑</span> ทีมแอดมิน</div>
-    <div class="sb-section">ตั้งค่าแบรนด์</div>
-    <div class="sb-item" onclick="showScreen('appearance',this)"><span class="si">🎨</span> หน้าตา & โลโก้</div>
-    <div class="sb-item" onclick="showScreen('icons',this)"><span class="si">🖼️</span> ไอคอน & รูปภาพ</div>
-    <div class="sb-item" onclick="showScreen('content',this)"><span class="si">📢</span> Content & ข้อความ</div>
-    <div class="sb-item" onclick="showScreen('features',this)"><span class="si">⚙️</span> Features Toggle</div>
-    <div class="sb-section">ระบบ</div>
-    <div class="sb-item" onclick="openBrandApp()"><span class="si">🌐</span> เปิดแอปร้าน</div>
-    <div class="sb-item sys-only" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><span class="si">🔥</span> Firebase Console</div>
+    <div class="sb-item brand-zone active" onclick="showScreen('dashboard',this)"><svg class="ic sb-ic"><use href="#i-grid"/></svg> ภาพรวมร้าน</div>
+    <div class="sb-item brand-zone" onclick="showScreen('orders',this)"><svg class="ic sb-ic"><use href="#i-cart"/></svg> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
+    <div class="sb-item brand-zone" onclick="showScreen('products',this)"><svg class="ic sb-ic"><use href="#i-package"/></svg> สินค้า</div>
+    <div class="sb-item brand-zone" onclick="showScreen('shopdecor',this)"><svg class="ic sb-ic"><use href="#i-store"/></svg> ตกแต่งร้าน & จัดส่ง</div>
+    <div class="sb-item brand-zone" id="sb-item-pricing" style="display:none" onclick="showScreen('pricing',this)"><svg class="ic sb-ic"><use href="#i-hash"/></svg> คิดราคา–กำไร</div>
+    <div class="sb-item brand-zone" onclick="showScreen('luckydraw',this)"><svg class="ic sb-ic"><use href="#i-gift"/></svg> สุ่มจับรางวัล</div>
+    <div class="sb-item brand-zone" onclick="showScreen('campaigns',this)"><svg class="ic sb-ic"><use href="#i-target"/></svg> ภารกิจ & แคมเปญ</div>
+    <div class="sb-section brand-zone">ชุมชน & สมาชิก</div>
+    <div class="sb-item brand-zone" onclick="showScreen('users',this)"><svg class="ic sb-ic"><use href="#i-users"/></svg> Users <span class="sb-badge" id="badge-users">0</span></div>
+    <div class="sb-item brand-zone" onclick="showScreen('posts',this)"><svg class="ic sb-ic"><use href="#i-edit"/></svg> โพส <span class="sb-badge" id="badge-posts">0</span></div>
+    <div class="sb-item brand-zone" onclick="showScreen('groups',this)"><svg class="ic sb-ic"><use href="#i-chat"/></svg> กลุ่มชุมชน</div>
+    <div class="sb-item brand-zone" onclick="showScreen('points',this)"><svg class="ic sb-ic"><use href="#i-award"/></svg> แต้ม & Tier</div>
+    <div class="sb-item brand-zone" onclick="showScreen('badges',this)"><svg class="ic sb-ic"><use href="#i-target"/></svg> ตราสะสม</div>
+    <div class="sb-item brand-zone" id="sb-item-team" style="display:none" onclick="showScreen('team',this)"><svg class="ic sb-ic"><use href="#i-userplus"/></svg> ทีมแอดมิน</div>
+    <div class="sb-section brand-zone">ตั้งค่าแบรนด์</div>
+    <div class="sb-item brand-zone" onclick="showScreen('appearance',this)"><svg class="ic sb-ic"><use href="#i-palette"/></svg> หน้าตา & โลโก้</div>
+    <div class="sb-item brand-zone" onclick="showScreen('icons',this)"><svg class="ic sb-ic"><use href="#i-image"/></svg> ไอคอน & รูปภาพ</div>
+    <div class="sb-item brand-zone" onclick="showScreen('content',this)"><svg class="ic sb-ic"><use href="#i-megaphone"/></svg> Content & ข้อความ</div>
+    <div class="sb-item brand-zone" onclick="showScreen('features',this)"><svg class="ic sb-ic"><use href="#i-sliders"/></svg> Features Toggle</div>
+    <div class="sb-item brand-zone" onclick="openBrandApp()"><svg class="ic sb-ic"><use href="#i-globe"/></svg> เปิดแอปร้าน</div>
+    <div class="sb-section sys-only">เครื่องมือระบบ</div>
+    <div class="sb-item sys-only" onclick="window.open('https://console.firebase.google.com/project/phuansuan','_blank')"><svg class="ic sb-ic"><use href="#i-server"/></svg> Firebase Console</div>
   </div>
 </div>
 
@@ -768,6 +791,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 .pill{font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px}
 .pill-off{background:#fee2e2;color:#dc2626}
 .pill-un{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.ms-rw-coupon{display:none}
 </style>
 <div class="screen" id="screen-products">
   <div class="page-header"><div class="page-title">📦 จัดการสินค้า</div><div class="page-sub">เพิ่ม ลบ แก้ไขสินค้าในแอป</div></div>
@@ -928,6 +952,40 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<div class="screen" id="screen-campaigns">
+  <div class="page-header"><div class="page-title">🎯 ภารกิจ & แคมเปญ</div><div class="page-sub">ตั้งภารกิจให้ลูกค้าทำแล้วรับรางวัล (แต้ม/คูปอง) · ระบบตรวจความคืบหน้าให้อัตโนมัติ</div></div>
+  <div class="card"><div class="card-title">➕ สร้างภารกิจใหม่</div>
+    <div class="form-grid">
+      <div class="fg" style="grid-column:1/-1"><label>ชื่อภารกิจ</label><input id="ms-name" placeholder="เช่น โพสต์ครบ 5 โพสต์รับ 100 แต้ม"></div>
+      <div class="fg" style="grid-column:1/-1"><label>คำอธิบาย</label><input id="ms-desc" placeholder="อธิบายสั้นๆ ให้ลูกค้าเข้าใจ"></div>
+      <div class="fg"><label>ประเภทเงื่อนไข</label>
+        <select id="ms-type">
+          <option value="posts">โพสต์ครบ N โพสต์</option>
+          <option value="purchases">สั่งซื้อครบ N ออเดอร์</option>
+          <option value="points">สะสมแต้มถึง N แต้ม</option>
+        </select>
+      </div>
+      <div class="fg"><label>เป้าหมาย (N)</label><input type="number" id="ms-goal" min="1" value="5"></div>
+      <div class="fg"><label>ไอคอน (emoji)</label><input id="ms-icon" maxlength="4" placeholder="🎯"></div>
+      <div class="fg"><label>เปิดใช้งาน</label><label class="toggle"><input type="checkbox" id="ms-active" checked><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>ประเภทรางวัล</label>
+        <select id="ms-reward" onchange="msRewardUI()">
+          <option value="points">แต้ม</option>
+          <option value="coupon">คูปองส่วนลด</option>
+        </select>
+      </div>
+      <div class="fg ms-rw-points"><label>ให้กี่แต้ม</label><input type="number" id="ms-points" min="0" value="100"></div>
+      <div class="fg ms-rw-coupon"><label>ชื่อคูปอง</label><input id="ms-c-label" placeholder="เช่น ลด 50"></div>
+      <div class="fg ms-rw-coupon"><label>ส่วนลด (50 หรือ 10%)</label><input id="ms-c-disc" placeholder="50 = ฿50 · 10% = 10%"></div>
+      <div class="fg ms-rw-coupon"><label>โค้ด (เว้นว่าง=สุ่มให้)</label><input id="ms-c-code" placeholder="SAVE50"></div>
+    </div>
+    <div class="save-row"><button class="btn btn-primary" onclick="addMission()"><svg class="ic"><use href="#i-plus"/></svg> สร้างภารกิจ</button></div>
+  </div>
+  <div class="card"><div class="card-title">📋 ภารกิจทั้งหมด</div>
+    <div id="missions-list"><div class="empty-state">กำลังโหลด...</div></div>
+  </div>
+</div>
+
 <div class="screen" id="screen-orders">
   <div class="page-header"><div class="page-title">🛒 ออเดอร์</div><div class="page-sub">ตรวจสลิป ยืนยันรับเงิน และจัดส่ง</div></div>
   <div class="ord-filter" id="ord-filter">
@@ -981,8 +1039,12 @@ window.addEventListener('load', async () => {
     OWNER_TENANTS = res.data.ownerTenants || {};
     applyRole();
     showApp();
-    if (IS_SUPER) await Promise.all([loadDashboard(), loadSidebarBranding(), loadBoceanRequests()]);
-    else await Promise.all([loadDashboard(), loadSidebarBranding()]);
+    if (IS_SUPER) {
+      await Promise.all([loadSidebarBranding(), loadBoceanRequests()]);
+      showScreen('sysoverview', document.querySelector('.sb-item[onclick*="sysoverview"]'));   // super เริ่มที่ภาพรวมระบบ
+    } else {
+      await Promise.all([loadDashboard(), loadSidebarBranding()]);
+    }
     applyAdminFeatureFlags();
   } catch(err) { console.error(err); showDeny(); }
 });
@@ -999,52 +1061,82 @@ function showApp() {
 function applyRole() {
   document.body.classList.toggle('is-super', IS_SUPER);   // โชว์/ซ่อนโซนระบบ (.sys-only)
   var roleEl = document.getElementById('admin-role');
-  var teamEl = document.getElementById('sb-item-team');
   var sw = document.getElementById('brand-switcher');
   var st = document.getElementById('brand-static');
 
   if (IS_SUPER) {
+    // super เริ่มที่โหมดระบบ (ไม่อยู่ในแบรนด์) — เลือกแบรนด์เพื่อเข้าจัดการหลังร้าน
+    document.body.classList.remove('in-brand');
     if (roleEl) roleEl.textContent = '🔑 Super Admin · Bocean';
-    if (teamEl) teamEl.style.display = 'flex';       // super เห็นทีมแอดมินเสมอ
-    if (sw) sw.style.display = 'block';               // super = dropdown สลับแบรนด์
+    if (sw) sw.style.display = 'block';
     if (st) st.style.display = 'none';
     populateBrandSwitcher();
   } else {
-    // brand-admin: ล็อกที่แบรนด์ตัวเอง ไม่มีโซนระบบ ไม่มี switcher
+    // brand-admin: อยู่ในแบรนด์ตัวเองเสมอ ไม่มีโซนระบบ ไม่มี switcher
     var mineT = Object.keys(ADMIN_TENANTS);
-    if (mineT.length) setCurrentTenant(mineT[0]);
+    if (mineT.length) currentTenant = mineT[0];
+    document.body.classList.add('in-brand');
     var isOwner = !!OWNER_TENANTS[currentTenant];
     if (roleEl) roleEl.textContent = (isOwner ? '👑 เจ้าของแบรนด์ · ' : '🏪 แอดมินแบรนด์ · ') + currentTenant;
-    if (teamEl) teamEl.style.display = isOwner ? 'flex' : 'none';   // owner เห็นทีมของแบรนด์ตัวเอง
     if (sw) sw.style.display = 'none';
     if (st) st.style.display = 'flex';
+    refreshBrandExtras();
   }
   updateBrandLabels();
 }
-// เติมรายชื่อแบรนด์ใน dropdown (super)
+// super กดเข้าจัดการร้านของแบรนด์ (เห็นเมนูหลังร้านครบ)
+function enterBrand(tid){
+  if (!tid) return;
+  currentTenant = tid;
+  document.body.classList.add('in-brand');
+  var ex = document.getElementById('brand-exit'); if (ex) ex.style.display = IS_SUPER ? 'block' : 'none';
+  var h = document.getElementById('brandbar-h'); if (h && IS_SUPER) h.textContent = '🏪 กำลังจัดการร้าน';
+  toast('เข้าจัดการร้าน ' + tid + ' แล้ว','success');
+  updateBrandLabels();
+  refreshBrandExtras();
+  applyAdminFeatureFlags();
+  showScreen('dashboard', document.querySelector('.sb-item[onclick*="dashboard"]'));
+  if (typeof loadDashboard === 'function') loadDashboard();
+}
+// super ออกจากโหมดจัดการแบรนด์ กลับสู่ระบบ
+function exitBrand(){
+  document.body.classList.remove('in-brand');
+  var ex = document.getElementById('brand-exit'); if (ex) ex.style.display = 'none';
+  var h = document.getElementById('brandbar-h'); if (h) h.textContent = '🏪 หลังร้านแบรนด์';
+  var sw = document.getElementById('brand-switcher'); if (sw) sw.value = '';
+  showScreen('sysoverview', document.querySelector('.sb-item[onclick*="sysoverview"]'));
+}
+// อัปเดตเมนูพิเศษ (ทีมแอดมิน) ตามโหมด — ใช้ '' = ปล่อยให้ CSS brand-zone คุม, 'none' = ซ่อนแน่นอน
+function refreshBrandExtras(){
+  var teamEl = document.getElementById('sb-item-team');
+  if (teamEl){
+    var teamOK = IS_SUPER || !!OWNER_TENANTS[currentTenant];   // super หรือเจ้าของแบรนด์เห็นทีม
+    teamEl.style.display = teamOK ? '' : 'none';
+  }
+}
+// เติมรายชื่อแบรนด์ใน dropdown (super) + ตัวเลือก "เลือกแบรนด์"
 async function populateBrandSwitcher(){
   var sw = document.getElementById('brand-switcher'); if (!sw || !db) return;
   try {
     var snap = await db.collection('tenants').get();
     var ts = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
-    ts.sort(function(a,b){ return (a.id===currentTenant?-1:0)-(b.id===currentTenant?-1:0) || String(a.name||a.id).localeCompare(String(b.name||b.id)); });
-    sw.innerHTML = ts.map(function(t){
-      return '<option value="'+escapeHtml(t.id)+'"'+(t.id===currentTenant?' selected':'')+'>'+escapeHtml(t.name||t.id)+(t.status==='suspended'?' (ระงับ)':'')+'</option>';
+    ts.sort(function(a,b){ return String(a.name||a.id).localeCompare(String(b.name||b.id)); });
+    var inBrand = document.body.classList.contains('in-brand');
+    var opts = '<option value="">— เลือกแบรนด์เพื่อเข้าจัดการ —</option>' + ts.map(function(t){
+      return '<option value="'+escapeHtml(t.id)+'"'+(inBrand && t.id===currentTenant?' selected':'')+'>'+escapeHtml(t.name||t.id)+(t.status==='suspended'?' (ระงับ)':'')+'</option>';
     }).join('');
+    sw.innerHTML = opts;
   } catch(e){}
 }
 function onBrandSwitch(tid){
-  if (!tid || tid===currentTenant) return;
-  switchToTenant(tid);
-  // โหลดหน้าปัจจุบันใหม่ตามแบรนด์ที่เลือก
-  var active = document.querySelector('.sb-item.active');
-  var m = active && (active.getAttribute('onclick')||'').match(/showScreen\('([^']+)'/);
-  if (m) showScreen(m[1], active); else showScreen('dashboard', document.querySelector('.sb-item[onclick*="dashboard"]'));
+  if (!tid){ return; }
+  enterBrand(tid);
+  applyAdminFeatureFlags();
 }
 function updateBrandLabels(){
   var lbl = document.getElementById('cur-tenant-label'); if (lbl) lbl.textContent = currentTenant;
   var db2 = document.getElementById('dash-brand'); if (db2) db2.textContent = '· ' + currentTenant;
-  var sw = document.getElementById('brand-switcher'); if (sw && sw.value !== currentTenant) sw.value = currentTenant;
+  var sw = document.getElementById('brand-switcher'); if (sw && document.body.classList.contains('in-brand') && sw.value !== currentTenant) sw.value = currentTenant;
 }
 function openBrandApp(){
   var base = (typeof location !== 'undefined' && location.origin) ? location.origin : 'https://phuansuan.web.app';
@@ -1089,7 +1181,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
+  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -1535,7 +1627,7 @@ async function applyAdminFeatureFlags() {
   } catch(e) {}
   window.__pricingOn = on;
   const item = document.getElementById('sb-item-pricing');
-  if (item) item.style.display = on ? 'flex' : 'none';
+  if (item) item.style.display = on ? '' : 'none';   // '' = ปล่อยให้ CSS brand-zone คุม (โผล่เฉพาะตอนอยู่ในแบรนด์)
   const btn = document.getElementById('prodb-pricing-btn');
   if (btn) btn.style.display = on ? 'block' : 'none';
   if (!on) { const scr = document.getElementById('screen-pricing'); if (scr && scr.classList.contains('active')) showScreen('products', document.querySelector('.sb-item[onclick*="products"]')); }
@@ -1958,6 +2050,73 @@ async function toggleLuckyDraw(id, cur){
 async function deleteLuckyDraw(id){
   if (!confirm('ลบกล่องสุ่มนี้? (คูปองที่แจกไปแล้วยังอยู่)')) return;
   try { await aDb().collection('luckyDraws').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadLuckyDraws(); }
+  catch(e){ toast('❌ '+e.message,'error'); }
+}
+/* ===== ภารกิจ & แคมเปญ (Phase 4) — admin ===== */
+var MS_TYPE_LABEL = { posts:'โพสต์', purchases:'สั่งซื้อ', points:'สะสมแต้ม' };
+function msRewardUI(){
+  var isC = document.getElementById('ms-reward').value === 'coupon';
+  document.querySelectorAll('.ms-rw-coupon').forEach(function(el){ el.style.display = isC ? '' : 'none'; });
+  document.querySelectorAll('.ms-rw-points').forEach(function(el){ el.style.display = isC ? 'none' : ''; });
+}
+async function addMission(){
+  var name = document.getElementById('ms-name').value.trim();
+  if (!name){ toast('❌ กรอกชื่อภารกิจ','error'); return; }
+  var rewardType = document.getElementById('ms-reward').value;
+  var doc = {
+    name: name, desc: document.getElementById('ms-desc').value.trim(),
+    type: document.getElementById('ms-type').value,
+    goal: Math.max(1, Math.floor(Number(document.getElementById('ms-goal').value)||1)),
+    icon: document.getElementById('ms-icon').value.trim() || '🎯',
+    active: document.getElementById('ms-active').checked,
+    rewardType: rewardType,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if (rewardType === 'coupon'){
+    var d = ldParseDiscount(document.getElementById('ms-c-disc').value);
+    doc.coupon = { label: document.getElementById('ms-c-label').value.trim() || name, discountText: d.text, discountType: d.type, discountValue: d.value, code: document.getElementById('ms-c-code').value.trim() };
+  } else {
+    doc.rewardPoints = Math.max(0, Math.floor(Number(document.getElementById('ms-points').value)||0));
+  }
+  try {
+    await aDb().collection('missions').add(doc);
+    toast('✅ สร้างภารกิจแล้ว','success');
+    document.getElementById('ms-name').value=''; document.getElementById('ms-desc').value='';
+    loadCampaigns();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function loadCampaigns(){
+  msRewardUI();
+  var box = document.getElementById('missions-list'); if (box) box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  try {
+    var snap = await aDb().collection('missions').get();
+    var ms = snap.docs.map(function(d){ return Object.assign({ _id:d.id }, d.data()); });
+    ms.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
+    if (!ms.length){ if(box) box.innerHTML='<div class="empty-state">ยังไม่มีภารกิจ</div>'; return; }
+    box.innerHTML = ms.map(function(m){
+      var off = m.active === false;
+      var reward = m.rewardType==='coupon' ? ('🎟️ '+escapeHtml((m.coupon&&(m.coupon.discountText||m.coupon.label))||'คูปอง')) : ('🏅 '+(m.rewardPoints||0)+' แต้ม');
+      return '<div class="prod-card'+(off?' off':'')+'">'+
+        '<div class="prod-thumb">'+escapeHtml(m.icon||'🎯')+'</div>'+
+        '<div class="prod-meta">'+
+          '<div class="prod-nm">'+escapeHtml(m.name||'')+(off?' <span class="pill pill-off">ปิด</span>':'')+'</div>'+
+          '<div class="prod-sub"><span>'+(MS_TYPE_LABEL[m.type]||m.type)+' ครบ '+(m.goal||0)+'</span> · <span>'+reward+'</span></div>'+
+        '</div>'+
+        '<div class="prod-acts">'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="toggleMission(\''+m._id+'\','+(m.active!==false)+')">'+(off?'เปิด':'ปิด')+'</button>'+
+          '<button class="btn btn-danger" style="padding:5px 9px;font-size:12px" onclick="deleteMission(\''+m._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  } catch(e){ if(box) box.innerHTML='<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
+}
+async function toggleMission(id, cur){
+  try { await aDb().collection('missions').doc(id).update({ active: !cur }); loadCampaigns(); }
+  catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function deleteMission(id){
+  if (!confirm('ลบภารกิจนี้? (รางวัลที่รับไปแล้วยังอยู่)')) return;
+  try { await aDb().collection('missions').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadCampaigns(); }
   catch(e){ toast('❌ '+e.message,'error'); }
 }
 /* ===== Community Groups ===== */
@@ -2462,11 +2621,8 @@ function copyTenantLink(tid){
   catch(e){ toast(u,'success'); }
 }
 function switchToTenant(tid){
-  setCurrentTenant(tid);
-  toast('สลับมาดูแล '+tid+' แล้ว','success');
-  renderTenants();
-  if (typeof loadDashboard === 'function') loadDashboard();
-  applyAdminFeatureFlags();   // flag คิดราคาเป็นรายแบรนด์
+  enterBrand(tid);   // เข้าโหมดจัดการร้านของแบรนด์นี้ (เห็นเมนูหลังร้านครบ)
+  if (typeof renderTenants === 'function') renderTenants();
 }
 async function toggleTenantStatus(tid, status){
   if (!db) return;
