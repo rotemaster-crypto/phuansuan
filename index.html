@@ -633,6 +633,8 @@ button .ic,a .ic{pointer-events:none}
       <div class="tier-lbs"><span id="tlb-bronze">มือใหม่</span><span id="tlb-silver">เงิน</span><span id="tier-label" class="tier-act">มือใหม่</span><span id="tlb-platinum">ปราชญ์</span></div>
       <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
     </div>
+    <!-- ── แคมเปญแต้ม (วิธีได้แต้ม) ── -->
+    <div id="earn-section" style="margin-bottom:20px"></div>
     <!-- ── ทายผล ── -->
     <div id="predictions-section" style="margin-bottom:20px"></div>
     <!-- ── ภารกิจ ── -->
@@ -2301,6 +2303,37 @@ async function submitPredictionUser(id, ansEnc){
     loadPredictionsUser();
   } catch(e){ toast('❌ '+((e&&e.message)||'ส่งคำทายไม่สำเร็จ')); }
 }
+// ── แคมเปญแต้ม (Campaign builder) — โชว์วิธีได้แต้มให้ผู้ใช้ (อ่านอย่างเดียว) ──
+async function loadEarnCampaignsUser(){
+  var box = document.getElementById('earn-section'); if (!box) return;
+  if (!db){ box.innerHTML=''; return; }
+  try {
+    var snap = await tdb().collection('earnCampaigns').where('active','==',true).get();
+    var now = Date.now();
+    var cs = snap.docs.map(function(d){ return d.data(); }).filter(function(c){
+      var s = c.startAt && c.startAt.seconds ? c.startAt.seconds*1000 : null;
+      var e = c.endAt   && c.endAt.seconds   ? c.endAt.seconds*1000   : null;
+      if (s !== null && now < s) return false;
+      if (e !== null && now > e) return false;
+      return true;
+    });
+    if (!cs.length){ box.innerHTML=''; return; }
+    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">⭐ วิธีได้แต้ม</div>'+
+      cs.map(function(c){
+        var mult = (Number(c.multiplier)||1) > 1 ? ' <span style="background:#fef3c7;color:#92400e;font-weight:800;border-radius:6px;padding:1px 6px;font-size:12px">x'+c.multiplier+'</span>' : '';
+        var icon, title;
+        if (c.trigger === 'post'){ icon='✍️'; title='โพสต์ในชุมชน รับโบนัส +'+(c.bonusPoints||0)+' แต้ม'; }
+        else { icon='🛒'; title='ซื้อครบ ฿'+(c.ratePerBaht||0)+' รับ '+(c.ratePoints||0)+' แต้ม'+((c.minSpend||0)>0?' (ขั้นต่ำ ฿'+c.minSpend+')':''); }
+        return '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px">'+
+          '<div style="font-size:24px;flex:none">'+icon+'</div>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:14px;font-weight:700;color:var(--text)">'+escapeHtml(c.name||'')+mult+'</div>'+
+            '<div style="font-size:12px;color:var(--muted);margin-top:1px">'+title+'</div>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+  } catch(e){ box.innerHTML=''; }
+}
 // ── ภารกิจ (Phase 4) ──
 var MS_TYPE_TXT = { posts:'โพสต์', purchases:'สั่งซื้อ', points:'สะสมแต้ม' };
 async function loadMissions(){
@@ -2653,7 +2686,7 @@ function switchScreen(name){
   if(name === 'profile'){ renderProfileInfo(); renderMyAddress(); renderProfileOrders(); loadMyPosts(); }
   if(name === 'community'){
     const f = (APP_CONFIG && APP_CONFIG.features) || {};
-    loadPredictionsUser(); loadMissions(); loadLuckyDrawsUser(); loadMyCoupons();
+    loadEarnCampaignsUser(); loadPredictionsUser(); loadMissions(); loadLuckyDrawsUser(); loadMyCoupons();
     if (f.communityGroups !== false) loadCommunityGroups();
     if (f.leaderboard !== false) loadLeaderboard();
   }

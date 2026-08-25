@@ -904,6 +904,24 @@ async function updateTier(userRef, tid) {
   if (Object.keys(updates).length) await userRef.update(updates);
 }
 
+// ── Earn Campaigns (แคมเปญแต้ม) — กติกาสะสมแต้มที่ร้านตั้งเอง ต่อ trigger ──
+// อ่านแคมเปญที่ active + อยู่ในช่วงเวลา (startAt/endAt optional) ของ trigger นั้น
+// query แค่ trigger== (single-field index) แล้วกรอง active/เวลาใน memory (ไม่ต้องมี composite index)
+async function activeEarnCampaigns(tid, trigger, nowMs) {
+  let snap;
+  try {
+    snap = await troot(tid).collection("earnCampaigns").where("trigger", "==", trigger).get();
+  } catch (e) { return []; }
+  return snap.docs.map((d) => d.data()).filter((c) => {
+    if (c.active === false) return false;
+    const s = c.startAt && typeof c.startAt.toMillis === "function" ? c.startAt.toMillis() : null;
+    const e = c.endAt && typeof c.endAt.toMillis === "function" ? c.endAt.toMillis() : null;
+    if (s !== null && nowMs < s) return false;
+    if (e !== null && nowMs > e) return false;
+    return true;
+  });
+}
+
 exports.onPostCreated = onDocumentCreated(
   { document: "tenants/{tid}/posts/{postId}", region: "asia-southeast1" },
   async (event) => {
@@ -912,9 +930,17 @@ exports.onPostCreated = onDocumentCreated(
     const tid = event.params.tid;
     const P = await getPts(tid);
     const pts = post.imageUrl ? P.perPostWithImg : P.perPost;
+    // โบนัสจากแคมเปญแต้ม trigger=post (บวกเพิ่มจากแต้มโพสต์ปกติ)
+    let bonus = 0;
+    const camps = await activeEarnCampaigns(tid, "post", Date.now());
+    for (const c of camps) {
+      const bp = Math.max(0, Math.floor(_num(c.bonusPoints, 0)));
+      const mult = Math.max(1, _num(c.multiplier, 1));
+      bonus += Math.floor(bp * mult);
+    }
     const ref = troot(tid).collection("users").doc(post.authorId);
     await ref.update({
-      points:    FieldValue.increment(pts),
+      points:    FieldValue.increment(pts + bonus),
       postCount: FieldValue.increment(1),
     });
     await updateTier(ref, tid);
@@ -1034,6 +1060,41 @@ exports.onGroupMemberWrite = onDocumentWritten(
     const inc = has ? 1 : -1;
     await troot(event.params.tid).collection("groups").doc(event.params.gid)
       .update({ memberCount: FieldValue.increment(inc) }).catch(() => {});
+  }
+);
+
+// ── แคมเปญแต้ม trigger=purchase — ให้แต้มเมื่อออเดอร์ยืนยันรับเงิน (confirmed) ──
+// server-authoritative + idempotent (flag pointsAwarded บนออเดอร์) · คิดจาก subtotal (มูลค่าสินค้า)
+exports.onOrderConfirmed = onDocumentUpdated(
+  { document: "tenants/{tid}/orders/{orderId}", region: "asia-southeast1" },
+  async (event) => {
+    const before = event.data?.before?.data() || {};
+    const after  = event.data?.after?.data() || {};
+    if (before.status === after.status) return;      // status ไม่เปลี่ยน (กันลูปตอนเราเขียน pointsAwarded)
+    if (after.status !== "confirmed") return;         // ให้แต้มเฉพาะตอนยืนยันรับเงิน
+    if (after.pointsAwarded === true) return;         // กันซ้ำ
+    const uid = after.userId; if (!uid) return;
+    const tid = event.params.tid;
+    const subtotal = Math.max(0, Math.floor(_num(after.subtotal, 0)));
+
+    const camps = await activeEarnCampaigns(tid, "purchase", Date.now());
+    let pts = 0;
+    for (const c of camps) {
+      const per  = Math.max(1, Math.floor(_num(c.ratePerBaht, 0)));
+      const rp   = Math.max(0, Math.floor(_num(c.ratePoints, 0)));
+      const min  = Math.max(0, Math.floor(_num(c.minSpend, 0)));
+      const mult = Math.max(1, _num(c.multiplier, 1));
+      if (!rp || subtotal < min) continue;
+      pts += Math.floor(Math.floor(subtotal / per) * rp * mult);
+    }
+    pts = Math.floor(pts);
+
+    const orderRef = troot(tid).collection("orders").doc(event.params.orderId);
+    if (pts <= 0) { await orderRef.update({ pointsAwarded: true, pointsEarned: 0 }).catch(() => {}); return; }
+    const uref = troot(tid).collection("users").doc(uid);
+    await uref.update({ points: FieldValue.increment(pts) });
+    await updateTier(uref, tid);
+    await orderRef.update({ pointsAwarded: true, pointsEarned: pts }).catch(() => {});
   }
 );
 

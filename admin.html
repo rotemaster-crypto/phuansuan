@@ -244,6 +244,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item brand-zone" onclick="showScreen('luckydraw',this)"><svg class="ic sb-ic"><use href="#i-gift"/></svg> สุ่มจับรางวัล</div>
     <div class="sb-item brand-zone" onclick="showScreen('campaigns',this)"><svg class="ic sb-ic"><use href="#i-target"/></svg> ภารกิจ & แคมเปญ</div>
     <div class="sb-item brand-zone" onclick="showScreen('predictions',this)"><svg class="ic sb-ic"><use href="#i-help"/></svg> ทายผล</div>
+    <div class="sb-item brand-zone" onclick="showScreen('earn',this)"><svg class="ic sb-ic"><use href="#i-award"/></svg> แคมเปญแต้ม</div>
     <div class="sb-section brand-zone">ชุมชน & สมาชิก</div>
     <div class="sb-item brand-zone" onclick="showScreen('users',this)"><svg class="ic sb-ic"><use href="#i-users"/></svg> Users <span class="sb-badge" id="badge-users">0</span></div>
     <div class="sb-item brand-zone" onclick="showScreen('posts',this)"><svg class="ic sb-ic"><use href="#i-edit"/></svg> โพส <span class="sb-badge" id="badge-posts">0</span></div>
@@ -1033,6 +1034,43 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<div class="screen" id="screen-earn">
+  <div class="page-header"><div class="page-title">⭐ แคมเปญแต้ม</div><div class="page-sub">ตั้งกติกาให้ลูกค้าได้แต้มอัตโนมัติ (ซื้อของ/โพสต์ในชุมชน) · ตั้งช่วงโปรฯ คูณแต้มได้ · ระบบให้แต้มฝั่งเซิร์ฟเวอร์อัตโนมัติ</div></div>
+  <div class="card"><div class="card-title">➕ สร้างแคมเปญแต้มใหม่</div>
+    <div class="form-grid">
+      <div class="fg" style="grid-column:1/-1"><label>ชื่อแคมเปญ</label><input id="ec-name" placeholder="เช่น ซื้อครบ 100 รับ 1 แต้ม"></div>
+      <div class="fg"><label>ให้แต้มเมื่อ</label>
+        <select id="ec-trigger" onchange="earnTriggerUI()">
+          <option value="purchase">🛒 ซื้อสินค้า (คิดจากยอด)</option>
+          <option value="post">✍️ โพสต์ในชุมชน (โบนัส)</option>
+        </select>
+      </div>
+      <div class="fg"><label>ตัวคูณแต้ม (โปรโมชัน)</label>
+        <select id="ec-mult">
+          <option value="1">x1 (ปกติ)</option>
+          <option value="2">x2 (ดับเบิล)</option>
+          <option value="3">x3</option>
+          <option value="5">x5</option>
+        </select>
+      </div>
+      <!-- purchase fields -->
+      <div class="fg ec-t-purchase"><label>ได้กี่แต้ม</label><input type="number" id="ec-rate-pts" min="0" value="1"></div>
+      <div class="fg ec-t-purchase"><label>ต่อยอดกี่บาท</label><input type="number" id="ec-rate-baht" min="1" value="100"></div>
+      <div class="fg ec-t-purchase"><label>ยอดขั้นต่ำ (0=ไม่กำหนด)</label><input type="number" id="ec-min" min="0" value="0"></div>
+      <!-- post fields -->
+      <div class="fg ec-t-post"><label>แต้มโบนัสต่อโพสต์</label><input type="number" id="ec-bonus" min="0" value="5"></div>
+      <!-- window -->
+      <div class="fg"><label>เริ่ม (เว้นว่าง=ทันที)</label><input type="datetime-local" id="ec-start"></div>
+      <div class="fg"><label>สิ้นสุด (เว้นว่าง=ไม่จำกัด)</label><input type="datetime-local" id="ec-end"></div>
+      <div class="fg"><label>เปิดใช้งาน</label><label class="toggle"><input type="checkbox" id="ec-active" checked><span class="toggle-slider"></span></label></div>
+    </div>
+    <div class="save-row"><button class="btn btn-primary" onclick="addEarnCampaign()"><svg class="ic"><use href="#i-plus"/></svg> สร้างแคมเปญ</button></div>
+  </div>
+  <div class="card"><div class="card-title">📋 แคมเปญทั้งหมด</div>
+    <div id="earn-list"><div class="empty-state">กำลังโหลด...</div></div>
+  </div>
+</div>
+
 <div class="screen" id="screen-predictions">
   <div class="page-header"><div class="page-title">🔮 ทายผล</div><div class="page-sub">ให้ลูกค้าทายผล (กีฬา/หวย/อีเวนต์) ลุ้นรางวัล · เฉลยแล้วจ่ายรางวัลอัตโนมัติ</div></div>
   <div class="card"><div class="card-title">➕ สร้างกิจกรรมทายผล</div>
@@ -1271,7 +1309,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
+  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -2292,6 +2330,90 @@ async function toggleMission(id, cur){
 async function deleteMission(id){
   if (!confirm('ลบภารกิจนี้? (รางวัลที่รับไปแล้วยังอยู่)')) return;
   try { await aDb().collection('missions').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadCampaigns(); }
+  catch(e){ toast('❌ '+e.message,'error'); }
+}
+/* ===== แคมเปญแต้ม (Campaign builder) — admin ===== */
+function earnTriggerUI(){
+  var t = document.getElementById('ec-trigger').value;
+  document.querySelectorAll('.ec-t-purchase').forEach(function(el){ el.style.display = t==='purchase' ? '' : 'none'; });
+  document.querySelectorAll('.ec-t-post').forEach(function(el){ el.style.display = t==='post' ? '' : 'none'; });
+}
+function ecTs(id){
+  var v = (document.getElementById(id).value||'').trim();
+  if (!v) return null;
+  var d = new Date(v);
+  return isNaN(d.getTime()) ? null : firebase.firestore.Timestamp.fromDate(d);
+}
+async function addEarnCampaign(){
+  var name = document.getElementById('ec-name').value.trim();
+  if (!name){ toast('❌ กรอกชื่อแคมเปญ','error'); return; }
+  var trigger = document.getElementById('ec-trigger').value;
+  var doc = {
+    name: name, trigger: trigger,
+    multiplier: Math.max(1, Number(document.getElementById('ec-mult').value)||1),
+    active: document.getElementById('ec-active').checked,
+    startAt: ecTs('ec-start'), endAt: ecTs('ec-end'),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if (trigger === 'purchase'){
+    doc.ratePoints  = Math.max(0, Math.floor(Number(document.getElementById('ec-rate-pts').value)||0));
+    doc.ratePerBaht = Math.max(1, Math.floor(Number(document.getElementById('ec-rate-baht').value)||1));
+    doc.minSpend    = Math.max(0, Math.floor(Number(document.getElementById('ec-min').value)||0));
+    if (!doc.ratePoints){ toast('❌ ใส่จำนวนแต้มที่ได้','error'); return; }
+  } else {
+    doc.bonusPoints = Math.max(0, Math.floor(Number(document.getElementById('ec-bonus').value)||0));
+    if (!doc.bonusPoints){ toast('❌ ใส่แต้มโบนัสต่อโพสต์','error'); return; }
+  }
+  try {
+    await aDb().collection('earnCampaigns').add(doc);
+    toast('✅ สร้างแคมเปญแล้ว','success');
+    document.getElementById('ec-name').value='';
+    loadEarnCampaigns();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+function ecDesc(c){
+  var mult = (Number(c.multiplier)||1) > 1 ? ' <span class="pill" style="background:#fef3c7;color:#92400e">x'+c.multiplier+'</span>' : '';
+  if (c.trigger === 'post') return '✍️ โพสต์รับโบนัส +'+(c.bonusPoints||0)+' แต้ม'+mult;
+  var min = (c.minSpend||0) > 0 ? ' (ขั้นต่ำ ฿'+c.minSpend+')' : '';
+  return '🛒 ซื้อครบ ฿'+(c.ratePerBaht||0)+' รับ '+(c.ratePoints||0)+' แต้ม'+min+mult;
+}
+function ecWindow(c){
+  function f(ts){ if(!ts||!ts.seconds) return ''; var d=new Date(ts.seconds*1000); return (d.getMonth()+1)+'/'+d.getDate(); }
+  var s=f(c.startAt), e=f(c.endAt);
+  if (!s && !e) return '';
+  return ' · ⏱ '+(s||'ตอนนี้')+'–'+(e||'ไม่จำกัด');
+}
+async function loadEarnCampaigns(){
+  earnTriggerUI();
+  var box = document.getElementById('earn-list'); if (box) box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  try {
+    var snap = await aDb().collection('earnCampaigns').get();
+    var cs = snap.docs.map(function(d){ return Object.assign({ _id:d.id }, d.data()); });
+    cs.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
+    if (!cs.length){ if(box) box.innerHTML='<div class="empty-state">ยังไม่มีแคมเปญ — สร้างอันแรกด้านบน</div>'; return; }
+    box.innerHTML = cs.map(function(c){
+      var off = c.active === false;
+      return '<div class="prod-card'+(off?' off':'')+'">'+
+        '<div class="prod-thumb">'+(c.trigger==='post'?'✍️':'🛒')+'</div>'+
+        '<div class="prod-meta">'+
+          '<div class="prod-nm">'+escapeHtml(c.name||'')+(off?' <span class="pill pill-off">ปิด</span>':'')+'</div>'+
+          '<div class="prod-sub"><span>'+ecDesc(c)+'</span><span style="color:var(--muted)">'+ecWindow(c)+'</span></div>'+
+        '</div>'+
+        '<div class="prod-acts">'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="toggleEarnCampaign(\''+c._id+'\','+(c.active!==false)+')">'+(off?'เปิด':'ปิด')+'</button>'+
+          '<button class="btn btn-danger" style="padding:5px 9px;font-size:12px" onclick="deleteEarnCampaign(\''+c._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  } catch(e){ if(box) box.innerHTML='<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
+}
+async function toggleEarnCampaign(id, cur){
+  try { await aDb().collection('earnCampaigns').doc(id).update({ active: !cur }); loadEarnCampaigns(); }
+  catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function deleteEarnCampaign(id){
+  if (!confirm('ลบแคมเปญนี้? (แต้มที่ให้ไปแล้วยังอยู่)')) return;
+  try { await aDb().collection('earnCampaigns').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadEarnCampaigns(); }
   catch(e){ toast('❌ '+e.message,'error'); }
 }
 /* ===== ทายผล (Prediction) — admin ===== */
