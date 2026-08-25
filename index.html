@@ -2223,45 +2223,59 @@ async function loadPredictionsUser(){
     var snap = await tdb().collection('predictions').where('active','==',true).get();
     var ps = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
     if (!ps.length){ box.innerHTML=''; return; }
-    // อ่านคำทายของเราแต่ละกิจกรรม
-    var entries = {};
+    // อ่านจำนวนครั้งที่เราเล่น (+ นับครั้งที่ถูก ถ้าเฉลยแล้ว)
+    var stats = {};
     await Promise.all(ps.map(async function(p){
-      try { var e = await tdb().collection('predictions').doc(p.id).collection('entries').doc(currentUser.uid).get(); if (e.exists) entries[p.id]=e.data(); } catch(err){}
+      var st = { played: 0, wins: 0 };
+      try {
+        var c = await tdb().collection('predictions').doc(p.id).collection('userCounts').doc(currentUser.uid).get();
+        st.played = c.exists ? (c.data().count||0) : 0;
+        if (st.played>0 && p.status==='settled'){
+          var es = await tdb().collection('predictions').doc(p.id).collection('entries').where('uid','==',currentUser.uid).get();
+          es.forEach(function(d){ if (String((d.data()||{}).answer)===String(p.correctAnswer)) st.wins++; });
+        }
+      } catch(err){}
+      stats[p.id] = st;
     }));
     var now = Date.now();
     ps.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
     box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">🔮 ทายผลลุ้นรางวัล</div>'+
-      ps.map(function(p){ return predictionCard(p, entries[p.id], now); }).join('');
+      ps.map(function(p){ return predictionCard(p, stats[p.id]||{played:0,wins:0}, now); }).join('');
   } catch(e){ box.innerHTML=''; }
 }
-function predictionCard(p, entry, now){
+function predictionCard(p, st, now){
   var settled = p.status==='settled';
   var closeMs = (p.closeAt && p.closeAt.seconds) ? p.closeAt.seconds*1000 : null;
   var closed = settled || (closeMs && now > closeMs) || p.active===false;
+  var max = (p.maxEntries===undefined || p.maxEntries===null) ? 1 : p.maxEntries;
+  var played = st.played||0;
+  var canPlay = !closed && (max===0 || played < max);
   var reward = p.rewardType==='coupon' ? ('🎟️ '+escapeHtml((p.coupon&&(p.coupon.discountText||p.coupon.label))||'คูปอง')) : ('🏅 '+(p.rewardPoints||0)+' แต้ม');
+  var limitTxt = max===0 ? 'เล่นไม่จำกัด' : ('เล่นได้ '+max+' ครั้ง');
   var head = '<div style="display:flex;justify-content:space-between;gap:8px;align-items:start">'+
     '<div style="font-size:15px;font-weight:800;color:var(--text)">'+escapeHtml(p.name||'')+'</div>'+
     (settled?'<span style="flex:none;font-size:11px;font-weight:700;color:#16a34a;border:1px solid #16a34a;border-radius:6px;padding:1px 7px">เฉลยแล้ว</span>':(closed?'<span style="flex:none;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:1px 7px">ปิดรับ</span>':''))+
     '</div>';
   var sub = (p.desc?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+escapeHtml(p.desc)+'</div>':'')+
-    '<div style="font-size:12px;color:var(--muted);margin-top:3px">รางวัล '+reward+(p.costPoints?(' · ค่าเข้าร่วม '+p.costPoints+' แต้ม'):' · เล่นฟรี')+'</div>';
+    '<div style="font-size:12px;color:var(--muted);margin-top:3px">รางวัล '+reward+(p.costPoints?(' · ค่าเข้าร่วม '+p.costPoints+' แต้ม'):' · เล่นฟรี')+' · '+limitTxt+'</div>';
   var body = '';
   if (settled){
-    var won = entry && String(entry.answer)===String(p.correctAnswer);
     body = '<div style="margin-top:8px;font-size:13px">ผลที่ถูก: <b style="color:var(--primary)">'+escapeHtml(p.correctAnswer||'')+'</b></div>'+
-      (entry ? ('<div style="font-size:13px;margin-top:2px">คุณทาย: '+escapeHtml(entry.answer||'')+' → '+(won?'<b style="color:#16a34a">ถูก! ได้รับรางวัลแล้ว 🎉</b>':'<span style="color:var(--muted)">ยังไม่ถูกรอบนี้</span>')+'</div>') : '<div style="font-size:13px;color:var(--muted);margin-top:2px">คุณไม่ได้ร่วมทาย</div>');
-  } else if (entry){
-    body = '<div style="margin-top:8px;font-size:13px;color:var(--muted)">คุณทายไว้: <b style="color:var(--text)">'+escapeHtml(entry.answer||'')+'</b> · รอเฉลย</div>';
+      (played>0 ? ('<div style="font-size:13px;margin-top:2px">คุณเล่น '+played+' ครั้ง → '+(st.wins>0?('<b style="color:#16a34a">ถูก '+st.wins+' ครั้ง! ได้รับรางวัลแล้ว 🎉</b>'):'<span style="color:var(--muted)">ยังไม่ถูกรอบนี้</span>')+'</div>') : '<div style="font-size:13px;color:var(--muted);margin-top:2px">คุณไม่ได้ร่วมทาย</div>');
   } else if (closed){
-    body = '<div style="margin-top:8px;font-size:13px;color:var(--muted)">ปิดรับคำทายแล้ว</div>';
+    body = '<div style="margin-top:8px;font-size:13px;color:var(--muted)">ปิดรับคำทายแล้ว'+(played>0?(' · คุณเล่นไป '+played+' ครั้ง'):'')+'</div>';
+  } else if (!canPlay){
+    body = '<div style="margin-top:8px;font-size:13px;color:var(--muted)">คุณเล่นครบ '+max+' ครั้งแล้ว · รอเฉลย</div>';
   } else {
-    // ยังเปิดรับ + ยังไม่ทาย → แสดง UI ทาย
+    // ยังเล่นได้ → แสดง UI ทาย (+ บอกจำนวนครั้งที่เล่นไปแล้ว)
+    var pinfo = played>0 ? ('<div style="font-size:12px;color:var(--muted);margin-top:8px">เล่นไปแล้ว '+played+' ครั้ง'+(max>0?(' (เหลือ '+(max-played)+' ครั้ง)'):'')+'</div>') : '';
+    body = pinfo;
     if (p.mode==='choice'){
-      body = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+
+      body += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+
         (p.options||[]).map(function(o){ return '<button onclick="submitPredictionUser(\''+p.id+'\',\''+encodeURIComponent(o)+'\')" style="border:1.5px solid var(--primary);background:#fff;color:var(--primary);border-radius:9px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer">'+escapeHtml(o)+'</button>'; }).join('')+
         '</div>';
     } else {
-      body = '<div style="display:flex;gap:8px;margin-top:10px">'+
+      body += '<div style="display:flex;gap:8px;margin-top:10px">'+
         '<input id="pd-in-'+p.id+'" placeholder="กรอกคำทาย เช่น 2-1" style="flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:9px;font-size:14px">'+
         '<button onclick="submitPredictionInput(\''+p.id+'\')" style="flex:none;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:8px 16px;font-weight:800;font-size:13px;cursor:pointer">ทาย</button>'+
         '</div>';
@@ -3871,12 +3885,17 @@ async function openMyOrders(){
       const dt = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate().toLocaleDateString('th-TH') : '';
       let extra = '';
       if (o.status==='shipped' && o.trackingNumber) extra = '<div class="ord-track">📮 พัสดุ: '+escapeHtml(o.trackingNumber)+'</div>';
+      var sh = o.shipping || {};
+      var canEditAddr = ['pending_payment','paid_review','confirmed'].indexOf(o.status) > -1;
+      var addrLine = (sh.name||sh.addressLine) ? ('<div style="font-size:12px;color:var(--muted);margin-top:4px">📍 '+escapeHtml([sh.name, sh.addressLine, sh.province].filter(Boolean).join(' '))+'</div>') : '';
       return '<div class="ord-card">'+
         '<div class="ord-top"><span class="ord-id">#'+o.id.slice(-6).toUpperCase()+'</span>'+
         '<span class="ord-badge" style="background:'+s.c+'">'+s.t+'</span></div>'+
         '<div class="ord-items">'+first+more+' · '+n+' ชิ้น</div>'+
+        addrLine +
         '<div class="ord-bot"><span class="ord-date">'+dt+'</span><span class="ord-total">'+baht(o.total||0)+'</span></div>'+
         extra +
+        (canEditAddr ? '<button onclick="editOrderAddress(\''+o.id+'\')" style="width:100%;margin-top:8px;background:#fff;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-weight:600;font-size:13px;cursor:pointer">✏️ แก้ไขที่อยู่จัดส่ง</button>' : '')+
         (o.status==='pending_payment' ? '<button class="ord-pay" onclick="resumePayment(\''+o.id+'\')">ชำระเงิน</button>' : '')+
       '</div>';
     }).join('');
@@ -3891,6 +3910,43 @@ async function resumePayment(orderId){
     pendingOrder = Object.assign({id:doc.id}, doc.data());
     closeMyOrders();
     openPayment(pendingOrder);
+  } catch(e){ toast(e.message); }
+}
+// แก้ที่อยู่จัดส่งบนออเดอร์ที่ยังไม่จัดส่ง (อัปเดต order.shipping + ที่อยู่เริ่มต้นของ user)
+async function editOrderAddress(id){
+  if(!db || !currentUser) return;
+  try {
+    const snap = await tdb().collection('orders').doc(id).get();
+    if(!snap.exists) return;
+    const o = snap.data();
+    if(['shipped','completed','cancelled'].indexOf(o.status) > -1){ toast('ออเดอร์นี้แก้ที่อยู่ไม่ได้แล้วครับ'); return; }
+    const sh = o.shipping || {};
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
+    const f = function(label,key,val,ph){ return '<label style="display:block;font-size:12px;color:var(--muted);margin:8px 0 3px">'+label+'</label><input id="ea-'+key+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px">'; };
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px 16px 0 0;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:18px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:17px;font-weight:800">✏️ แก้ไขที่อยู่จัดส่ง</div><div id="ea-x" style="cursor:pointer;font-size:22px;color:#888">✕</div></div>'+
+      f('ชื่อผู้รับ','name',sh.name)+ f('เบอร์โทร','phone',sh.phone)+ f('ที่อยู่','addressLine',sh.addressLine,'บ้านเลขที่ ถนน')+
+      '<div style="display:flex;gap:8px"><div style="flex:1">'+f('ตำบล/แขวง','subdistrict',sh.subdistrict)+'</div><div style="flex:1">'+f('อำเภอ/เขต','district',sh.district)+'</div></div>'+
+      '<div style="display:flex;gap:8px"><div style="flex:1">'+f('จังหวัด','province',sh.province)+'</div><div style="flex:1">'+f('รหัสไปรษณีย์','postcode',sh.postcode)+'</div></div>'+
+      f('หมายเหตุถึงร้าน','note',sh.note)+
+      '<button id="ea-save" style="width:100%;margin-top:14px;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:12px;font-weight:800;font-size:15px;cursor:pointer">บันทึกที่อยู่</button>'+
+    '</div>';
+    document.body.appendChild(ov);
+    const close = function(){ if(ov.parentNode) document.body.removeChild(ov); };
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('#ea-x').onclick = close;
+    ov.querySelector('#ea-save').onclick = async function(){
+      const g = function(k){ const e=document.getElementById('ea-'+k); return e?e.value.trim():''; };
+      const shipping = { name:g('name'), phone:g('phone'), addressLine:g('addressLine'), subdistrict:g('subdistrict'), district:g('district'), province:g('province'), postcode:g('postcode'), note:g('note') };
+      if(!shipping.name || !shipping.phone || !shipping.addressLine || !shipping.province){ toast('กรอก ชื่อ/เบอร์/ที่อยู่/จังหวัด ให้ครบครับ'); return; }
+      try {
+        await tdb().collection('orders').doc(id).update({ shipping: shipping, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        try { await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping }); currentUser.shippingAddress = shipping; } catch(e){}
+        toast('✅ แก้ที่อยู่จัดส่งแล้ว');
+        close(); openMyOrders();
+      } catch(e){ toast('❌ '+((e&&e.message)||'บันทึกไม่สำเร็จ')); }
+    };
   } catch(e){ toast(e.message); }
 }
 

@@ -44,7 +44,10 @@ service cloud.firestore {
       match /predictions/{pid} {
         allow read: if true;
         allow write: if canManage(t);
-        match /entries/{uid} { allow read: if isOwner(uid) || canManage(t); allow write: if false; }
+        // คำทายแต่ละครั้ง (auto-id, มี field uid) — เจ้าของ (ดูจาก data.uid) หรือแอดมินอ่านได้ · เขียนผ่าน Cloud Function เท่านั้น
+        match /entries/{eid} { allow read: if canManage(t) || (signedIn() && resource.data.uid == request.auth.uid); allow write: if false; }
+        // ตัวนับจำนวนครั้งที่ user เล่น (doc-id = uid)
+        match /userCounts/{uid} { allow read: if isOwner(uid) || canManage(t); allow write: if false; }
       }
       match /users/{uid} {
         allow read: if isOwner(uid) || memberOf(t) || canManage(t);
@@ -98,7 +101,12 @@ service cloud.firestore {
           || (signedIn() && resource.data.userId == request.auth.uid
               && resource.data.status in ['pending_payment', 'paid_review']
               && request.resource.data.status == 'paid_review'
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','slipUrl','paidAt','updatedAt']));
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','slipUrl','paidAt','updatedAt']))
+          // เจ้าของแก้ที่อยู่จัดส่งได้เอง ตราบใดที่ยังไม่จัดส่ง (สถานะไม่เปลี่ยน)
+          || (signedIn() && resource.data.userId == request.auth.uid
+              && resource.data.status in ['pending_payment', 'paid_review', 'confirmed']
+              && request.resource.data.status == resource.data.status
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shipping','updatedAt']));
         allow delete: if canManage(t);
       }
       match /notifications/{nid} {

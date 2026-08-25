@@ -1003,6 +1003,15 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ปิดรับคำทาย</label><input type="datetime-local" id="pd-close"></div>
       <div class="fg pd-choice" style="grid-column:1/-1"><label>ตัวเลือก (คั่นด้วยจุลภาค)</label><input id="pd-options" placeholder="ไทยชนะ, เสมอ, เวียดนามชนะ"></div>
       <div class="fg"><label>ค่าเข้าร่วม (แต้ม · 0 = ฟรี)</label><input type="number" id="pd-cost" min="0" value="0"></div>
+      <div class="fg"><label>เล่นได้กี่ครั้ง/คน</label>
+        <select id="pd-max">
+          <option value="1">ครั้งเดียว</option>
+          <option value="3">3 ครั้ง</option>
+          <option value="5">5 ครั้ง</option>
+          <option value="10">10 ครั้ง</option>
+          <option value="0">ไม่จำกัด (จนกว่าแต้มจะหมด)</option>
+        </select>
+      </div>
       <div class="fg"><label>เปิดใช้งาน</label><label class="toggle"><input type="checkbox" id="pd-active" checked><span class="toggle-slider"></span></label></div>
       <div class="fg"><label>รางวัลถ้าทายถูก</label>
         <select id="pd-reward" onchange="pdRewardUI()">
@@ -2178,6 +2187,7 @@ async function addPrediction(){
     name: name, desc: document.getElementById('pd-desc').value.trim(),
     mode: mode, options: mode==='choice' ? options : [],
     closeAt: closeAt, costPoints: Math.max(0, Math.floor(Number(document.getElementById('pd-cost').value)||0)),
+    maxEntries: Math.max(0, Math.floor(Number(document.getElementById('pd-max').value)||0)),
     active: document.getElementById('pd-active').checked,
     rewardType: rewardType, status: 'open', correctAnswer: null, entriesCount: 0, winnersCount: 0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2217,7 +2227,7 @@ async function loadPredictions(){
         '<div class="oa-box" style="margin-top:8px">'+
           (p.desc?'<div class="oa-line">'+escapeHtml(p.desc)+'</div>':'')+
           '<div class="oa-line">'+(p.mode==='choice'?('ตัวเลือก: '+escapeHtml((p.options||[]).join(' / '))):'กรอกคำตอบเอง')+'</div>'+
-          '<div class="oa-line">รางวัล: '+reward+(p.costPoints?(' · ค่าเข้าร่วม '+p.costPoints+' แต้ม'):' · เล่นฟรี')+'</div>'+
+          '<div class="oa-line">รางวัล: '+reward+(p.costPoints?(' · ค่าเข้าร่วม '+p.costPoints+' แต้ม'):' · เล่นฟรี')+' · '+(!p.maxEntries?'เล่นไม่จำกัด':('เล่นได้ '+p.maxEntries+' ครั้ง/คน'))+'</div>'+
           '<div class="oa-line" style="color:var(--muted);font-size:13px">'+info+'</div>'+
         '</div>'+
         '<div class="oa-actions">'+acts+'</div>'+
@@ -2909,6 +2919,7 @@ function orderCardHtml(o){
   if (o.status==='shipped')     acts += '<button class="oa-btn oa-done" onclick="completeOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ปิดออเดอร์ (สำเร็จ)</button>';
   if (['pending_payment','paid_review','confirmed'].indexOf(o.status) > -1)
     acts += '<button class="oa-btn oa-cancel" onclick="cancelOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-x"/></svg> ยกเลิก</button>';
+  acts += '<button class="oa-btn" onclick="printDeliveryNote(\''+o.id+'\')" style="background:#334155;color:#fff"><svg class="ic"><use href="#i-truck"/></svg> พิมพ์ใบส่งสินค้า</button>';
 
   const track = o.trackingNumber ? '<div class="oa-line" style="color:#7b61ff;font-weight:600">📮 เลขพัสดุ: '+escapeHtml(o.trackingNumber)+'</div>' : '';
 
@@ -2965,6 +2976,48 @@ async function cancelOrder(id){
     loadOrders();
     if (typeof loadProducts==='function') loadProducts();   // สต็อกเปลี่ยน
   } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
+}
+// พิมพ์ใบส่งสินค้า — ดึงที่อยู่ผู้รับจากออเดอร์ (ที่ user กรอก/แก้เอง)
+function printDeliveryNote(id){
+  var o = (adminOrders||[]).find(function(x){ return x.id===id; });
+  if (!o){ toast('❌ ไม่พบออเดอร์','error'); return; }
+  var sh = o.shipping || {};
+  var shop = (document.getElementById('sb-app-name') && document.getElementById('sb-app-name').textContent) || currentTenant || 'ร้านค้า';
+  var addr = [sh.addressLine, sh.subdistrict, sh.district, sh.province, sh.postcode].filter(Boolean).map(escapeHtml).join(' ');
+  var items = (o.items||[]).map(function(it){
+    return '<tr><td>'+escapeHtml(it.name||'')+'</td><td style="text-align:center">'+(it.qty||1)+'</td><td style="text-align:right">'+baht((it.price||0)*(it.qty||1))+'</td></tr>';
+  }).join('') || '<tr><td colspan="3" style="text-align:center;color:#888">—</td></tr>';
+  var oid = '#'+String(o.id).slice(-6).toUpperCase();
+  var paid = (o.status==='pending_payment') ? '<b style="color:#c00">ยังไม่ชำระ (เก็บเงินปลายทาง/รอสลิป)</b>' : 'ชำระแล้ว';
+  var html = '<!doctype html><html><head><meta charset="utf-8"><title>ใบส่งสินค้า '+oid+'</title>'+
+    '<style>*{font-family:"Sarabun","Segoe UI",sans-serif;box-sizing:border-box}body{margin:0;padding:24px;color:#111}'+
+    '.dn{max-width:640px;margin:0 auto;border:1px solid #ccc;border-radius:10px;padding:22px}'+
+    '.dn h1{font-size:20px;margin:0 0 2px}.muted{color:#666;font-size:13px}'+
+    '.row{display:flex;gap:16px;margin-top:16px}.box{flex:1;border:1px solid #ddd;border-radius:8px;padding:12px}'+
+    '.box h3{margin:0 0 6px;font-size:13px;color:#666;text-transform:uppercase;letter-spacing:.5px}'+
+    '.box .big{font-size:16px;font-weight:700}table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}'+
+    'th,td{border-bottom:1px solid #eee;padding:8px;text-align:left}th{background:#f7f7f7;font-size:12px;color:#555}'+
+    '.tot{text-align:right;font-size:16px;font-weight:800;margin-top:12px}'+
+    '@media print{body{padding:0}.dn{border:none}.noprint{display:none}}</style></head><body>'+
+    '<div class="dn">'+
+      '<div style="display:flex;justify-content:space-between;align-items:start">'+
+        '<div><h1>ใบส่งสินค้า</h1><div class="muted">'+escapeHtml(shop)+' · ออเดอร์ '+oid+'</div></div>'+
+        '<div class="muted" style="text-align:right">วันที่ '+fmtDate(o.createdAt)+'<br>'+paid+'</div>'+
+      '</div>'+
+      '<div class="row">'+
+        '<div class="box"><h3>ผู้ส่ง</h3><div class="big">'+escapeHtml(shop)+'</div></div>'+
+        '<div class="box"><h3>ผู้รับ</h3><div class="big">'+escapeHtml(sh.name||o.userName||'-')+'</div>'+
+          '<div>📞 '+escapeHtml(sh.phone||'-')+'</div><div style="margin-top:4px">'+(addr||'-')+'</div>'+
+          (sh.note?'<div class="muted" style="margin-top:4px">📝 '+escapeHtml(sh.note)+'</div>':'')+
+        '</div>'+
+      '</div>'+
+      '<table><thead><tr><th>รายการ</th><th style="text-align:center">จำนวน</th><th style="text-align:right">รวม</th></tr></thead><tbody>'+items+'</tbody></table>'+
+      '<div class="tot">ยอดรวม: '+baht(o.total||0)+'</div>'+
+      '<div class="noprint" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:10px 20px;font-size:15px;font-weight:700;border:none;border-radius:8px;background:#334155;color:#fff;cursor:pointer">🖨️ พิมพ์</button></div>'+
+    '</div></body></html>';
+  var w = window.open('', '_blank');
+  if (!w){ toast('❌ เบราว์เซอร์บล็อกป๊อปอัป','error'); return; }
+  w.document.write(html); w.document.close();
 }
 function viewSlip(url){
   const lb = document.getElementById('slipLightbox');

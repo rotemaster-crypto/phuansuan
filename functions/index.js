@@ -516,10 +516,11 @@ exports.submitPrediction = onCall(async (req) => {
   const db = admin.firestore();
   const pRef = troot(tid).collection("predictions").doc(eventId);
   const uRef = troot(tid).collection("users").doc(uid);
-  const eRef = pRef.collection("entries").doc(uid);
+  const eRef = pRef.collection("entries").doc();               // แต่ละครั้ง = เอกสารใหม่ (auto-id)
+  const cntRef = pRef.collection("userCounts").doc(uid);       // ตัวนับจำนวนครั้งของ user
 
   return db.runTransaction(async (tx) => {
-    const [pSnap, uSnap, eSnap] = await Promise.all([tx.get(pRef), tx.get(uRef), tx.get(eRef)]);
+    const [pSnap, uSnap, cntSnap] = await Promise.all([tx.get(pRef), tx.get(uRef), tx.get(cntRef)]);
     if (!pSnap.exists) throw new HttpsError("not-found", "ไม่พบกิจกรรมทายผล");
     if (!uSnap.exists) throw new HttpsError("not-found", "ไม่พบผู้ใช้");
     const p = pSnap.data(), u = uSnap.data();
@@ -532,7 +533,12 @@ exports.submitPrediction = onCall(async (req) => {
       const opts = Array.isArray(p.options) ? p.options.map((x) => String(x)) : [];
       if (opts.indexOf(answer) < 0) throw new HttpsError("invalid-argument", "ตัวเลือกไม่ถูกต้อง");
     }
-    if (eSnap.exists) throw new HttpsError("failed-precondition", "คุณทายกิจกรรมนี้ไปแล้ว");
+    // จำนวนครั้งที่เล่นได้: maxEntries=1 ครั้งเดียว · >1 จำกัด N ครั้ง · 0 = ไม่จำกัด (จนแต้มหมดถ้ามีค่าเข้าร่วม)
+    const maxEntries = (p.maxEntries === undefined || p.maxEntries === null) ? 1 : Math.max(0, Math.floor(Number(p.maxEntries) || 0));
+    const played = cntSnap.exists ? Math.floor(Number(cntSnap.data().count) || 0) : 0;
+    if (maxEntries > 0 && played >= maxEntries) {
+      throw new HttpsError("failed-precondition", maxEntries === 1 ? "คุณทายกิจกรรมนี้ไปแล้ว" : ("เล่นครบ " + maxEntries + " ครั้งแล้ว"));
+    }
 
     const cost = Math.max(0, Math.floor(Number(p.costPoints) || 0));
     if (cost > 0) {
@@ -541,8 +547,9 @@ exports.submitPrediction = onCall(async (req) => {
       tx.update(uRef, { points: FieldValue.increment(-cost) });
     }
     tx.set(eRef, { uid: uid, answer: answer, won: false, rewarded: false, at: FieldValue.serverTimestamp() });
+    tx.set(cntRef, { uid: uid, count: FieldValue.increment(1) }, { merge: true });
     tx.update(pRef, { entriesCount: FieldValue.increment(1) });
-    return { ok: true, answer: answer, costPoints: cost };
+    return { ok: true, answer: answer, costPoints: cost, played: played + 1, maxEntries: maxEntries };
   });
 });
 
