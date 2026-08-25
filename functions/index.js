@@ -8,6 +8,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 
 admin.initializeApp();
 setGlobalOptions({ region: "asia-southeast1", maxInstances: 10 });
@@ -124,6 +125,95 @@ exports.claimTenant = onCall(async (req) => {
 
   await admin.auth().setCustomUserClaims(uid, claims);
   return { ok: true, tid: tid };
+});
+
+// ============================================================
+//  spinLuckyDraw — สุ่มจับรางวัล (Activity Engine)
+//  จ่ายด้วยแต้มสะสม · รางวัล = คูปองส่วนลด · สุ่มถ่วงน้ำหนักฝั่ง server
+//  atomic ทั้งหมดใน transaction (หักแต้ม + ตัดสต็อก + บันทึกคูปอง)
+// ============================================================
+function genCouponCode() {
+  return "LD-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+}
+exports.spinLuckyDraw = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  const tid = await resolveTid(req.data && req.data.tid);
+  const drawId = ((req.data && req.data.drawId) || "").toString();
+  if (!drawId) throw new HttpsError("invalid-argument", "ต้องระบุ drawId");
+
+  const db = admin.firestore();
+  const drawRef = troot(tid).collection("luckyDraws").doc(drawId);
+  const userRef = troot(tid).collection("users").doc(uid);
+
+  return db.runTransaction(async (tx) => {
+    const [drawSnap, userSnap] = await Promise.all([tx.get(drawRef), tx.get(userRef)]);
+    if (!drawSnap.exists) throw new HttpsError("not-found", "ไม่พบกิจกรรมนี้");
+    if (!userSnap.exists) throw new HttpsError("not-found", "ไม่พบผู้ใช้");
+    const draw = drawSnap.data();
+    const user = userSnap.data();
+
+    if (draw.active === false) throw new HttpsError("failed-precondition", "กิจกรรมนี้ปิดอยู่");
+    const now = Date.now();
+    const ms = (v) => (v && typeof v.toMillis === "function") ? v.toMillis() : null;
+    if (ms(draw.startAt) && now < ms(draw.startAt)) throw new HttpsError("failed-precondition", "กิจกรรมยังไม่เริ่ม");
+    if (ms(draw.endAt) && now > ms(draw.endAt)) throw new HttpsError("failed-precondition", "กิจกรรมสิ้นสุดแล้ว");
+
+    const cost = Math.max(0, Math.floor(Number(draw.costPoints) || 0));
+    const points = Math.floor(Number(user.points) || 0);
+    if (points < cost) throw new HttpsError("failed-precondition", "แต้มไม่พอ (ต้องใช้ " + cost + " แต้ม)");
+
+    // เตรียม pool: รางวัลที่ weight>0 และยังมีสต็อก (stock=null = ไม่จำกัด)
+    const prizes = Array.isArray(draw.prizes) ? draw.prizes : [];
+    const pool = prizes.map((p, i) => {
+      const stock = (p.stock === null || p.stock === undefined) ? Infinity : Math.floor(Number(p.stock) || 0);
+      const awarded = Math.floor(Number(p.awarded) || 0);
+      return { i, p, weight: Math.max(0, Math.floor(Number(p.weight) || 0)), stock, awarded };
+    }).filter((x) => x.weight > 0 && (x.stock === Infinity || x.awarded < x.stock));
+    if (pool.length === 0) throw new HttpsError("failed-precondition", "รางวัลหมดแล้ว");
+
+    // สุ่มถ่วงน้ำหนัก (crypto)
+    const totalW = pool.reduce((s, x) => s + x.weight, 0);
+    let r = crypto.randomInt(0, totalW);
+    let chosen = pool[pool.length - 1];
+    for (const x of pool) { if (r < x.weight) { chosen = x; break; } r -= x.weight; }
+    const prize = chosen.p;
+    const isWin = prize.type !== "nothing";
+
+    // หักแต้ม + นับรอบหมุน
+    tx.update(userRef, { points: admin.firestore.FieldValue.increment(-cost) });
+    if (chosen.stock !== Infinity) {
+      const newPrizes = prizes.map((p, idx) => (idx === chosen.i)
+        ? Object.assign({}, p, { awarded: (Math.floor(Number(p.awarded) || 0) + 1) }) : p);
+      tx.update(drawRef, { prizes: newPrizes, spins: admin.firestore.FieldValue.increment(1) });
+    } else {
+      tx.update(drawRef, { spins: admin.firestore.FieldValue.increment(1) });
+    }
+
+    let couponOut = null;
+    if (isWin) {
+      const couponRef = userRef.collection("coupons").doc();
+      const coupon = {
+        drawId: drawId,
+        drawName: draw.name || "",
+        prizeLabel: prize.label || "รางวัล",
+        code: prize.couponCode || genCouponCode(),
+        discountText: prize.discountText || "",
+        used: false,
+        at: admin.firestore.FieldValue.serverTimestamp(),
+      };
+      tx.set(couponRef, coupon);
+      couponOut = { id: couponRef.id, label: coupon.prizeLabel, code: coupon.code, discountText: coupon.discountText };
+    }
+
+    return {
+      win: isWin,
+      prizeLabel: prize.label || (isWin ? "รางวัล" : "ยังไม่ถูกรอบนี้"),
+      coupon: couponOut,
+      costPoints: cost,
+      pointsLeft: Math.max(0, points - cost),
+    };
+  });
 });
 
 // ============================================================

@@ -45,6 +45,11 @@ beforeEach(async () => {
     // กลุ่มชุมชน: brandA public (settings/app ไม่มี = feedPublic default true), brandB private
     await setDoc(doc(db, 'tenants/brandA/groups/gA'), { name: 'Group A', memberCount: 0 });
     await setDoc(doc(db, 'tenants/brandB/groups/gB'), { name: 'Group B', memberCount: 0 });
+    // สุ่มจับรางวัล (Activity Engine)
+    await setDoc(doc(db, 'tenants/brandA/luckyDraws/dA'), { name: 'Draw A', active: true, costPoints: 20, prizes: [] });
+    await setDoc(doc(db, 'tenants/brandB/luckyDraws/dB'), { name: 'Draw B', active: true, costPoints: 20, prizes: [] });
+    await setDoc(doc(db, 'tenants/brandA/users/uA/coupons/cA'), { code: 'X1', used: false });
+    await setDoc(doc(db, 'tenants/brandB/users/uB/coupons/cB'), { code: 'X2', used: false });
   });
 });
 
@@ -130,4 +135,30 @@ test('member A เขียนสมาชิกภาพแทน uid อื่
 });
 test('member A อ่านกลุ่ม private ของ brand B = DENIED', async () => {
   await assertFails(getDoc(doc(memberA(), 'tenants/brandB/groups/gB')));
+});
+
+// ── 10. สุ่มจับรางวัล (Lucky Draw / Activity Engine) ───────
+test('member ธรรมดาอ่านกล่องสุ่ม = OK (public read)', async () => {
+  await assertSucceeds(getDoc(doc(memberA(), 'tenants/brandA/luckyDraws/dA')));
+});
+test('member ธรรมดาสร้าง/แก้กล่องสุ่ม = DENIED (แอดมินเท่านั้น)', async () => {
+  await assertFails(setDoc(doc(memberA(), 'tenants/brandA/luckyDraws/dX'), { name: 'X', active: true }));
+});
+test('tenant admin ของ A สร้างกล่องสุ่มใน A = OK', async () => {
+  await assertSucceeds(setDoc(doc(tAdminA(), 'tenants/brandA/luckyDraws/dX'), { name: 'X', active: true, costPoints: 10, prizes: [] }));
+});
+test('tenant admin ของ A สร้างกล่องสุ่มใน B = DENIED (ไม่ข้ามแบรนด์)', async () => {
+  await assertFails(setDoc(doc(tAdminA(), 'tenants/brandB/luckyDraws/dX'), { name: 'X', active: true }));
+});
+test('member A แก้กล่องสุ่ม (ตัดสต็อก/หมุนเอง) = DENIED', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/luckyDraws/dA'), { spins: 999 }));
+});
+test('member A อ่านคูปองตัวเอง = OK', async () => {
+  await assertSucceeds(getDoc(doc(memberA(), 'tenants/brandA/users/uA/coupons/cA')));
+});
+test('member A เขียนคูปองให้ตัวเอง (client) = DENIED (function เท่านั้น)', async () => {
+  await assertFails(setDoc(doc(memberA(), 'tenants/brandA/users/uA/coupons/cX'), { code: 'HACK', used: false }));
+});
+test('member A อ่านคูปองของ uB ข้ามแบรนด์ = DENIED', async () => {
+  await assertFails(getDoc(doc(memberA(), 'tenants/brandB/users/uB/coupons/cB')));
 });
