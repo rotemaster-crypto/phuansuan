@@ -22,7 +22,8 @@
 | Auth LINE/LIFF + guest + Google/FB | ✅ BUILT | `index.html:956-1024`; `functions/index.js:41-127` |
 | FCM push | ✅ BUILT | `functions/index.js:409-422` |
 | Brand/tenant profile + ธีม | ✅ BUILT | `admin.html:262-576`; `themes.js` |
-| **เครื่องมือต้นทุน–ราคา–margin** | 🔴 **ABSENT** | — (ราคาเป็นแค่ข้อความ `"180 บาท"`) |
+| ราคาสินค้าเป็นตัวเลข | ✅ BUILT (2026-08-25) | `admin.html` parsePrice + ปุ่ม migrate · `index.html:2935` |
+| **เครื่องมือต้นทุน–ราคา–margin** | ✅ BUILT (2026-08-25) | `admin.html` screen-pricing (`pricingCalc`), field `cost` ต่อสินค้า, กำไรต่อชั้นสมาชิก |
 | **ผู้ช่วยการตลาด (AI content)** | 🔴 **ABSENT** | — (AI มีแค่ "หมอพืช") |
 | AI หมอพืช (Gemini vision) | ✅ BUILT (โควตา 5/วัน) | `functions/index.js:129-248` |
 | เอกสาร (ใบเสนอราคา/ใบส่งของ) | 🔴 ABSENT | — |
@@ -45,4 +46,4 @@
 
 - **"แท็บ Community" = ศูนย์รวมชุมชน** (กลุ่ม + Leaderboard) — แต่ละส่วนเปิด/ปิดต่อแบรนด์ผ่าน `settings/features` (`communityGroups`, `leaderboard`) · ปิดทั้งคู่ = ซ่อน nav ชุมชน
 - **Multi-tenant สร้างจริงแล้ว** (PROGRESS_4.md เก่าเขียนว่ายัง single-tenant — ไม่จริงแล้ว) แต่ "จริง" ในระดับโครงสร้าง ยังต้อง **ลบ legacy rules #3 + เขียนเทสต์ #1** (isolation) และ **แก้บั๊ก settings #2** (consistency) ก่อนวางใจ — #3+#1 คือเรื่อง leak, #2 เป็นคนละเรื่อง (fail-silent)
-- **ราคาสินค้าเป็นข้อความ ไม่ใช่ตัวเลข** → ต้องแปลงเป็นตัวเลขก่อน ถึงจะทำเครื่องมือต้นทุน-ราคาได้
+- ~~**ราคาสินค้าเป็นข้อความ**~~ ✅ แก้แล้ว (2026-08-25) — admin เก็บ `price`/`oldPrice`/`cost` เป็น number, มีปุ่ม migrate ของเก่า · เครื่องมือต้นทุน–ราคา–margin สร้างแล้ว

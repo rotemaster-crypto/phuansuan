@@ -8,7 +8,8 @@
 
 - ✅ **Phase 0 ปิดครบ (2026-08-24)** — isolation แน่น: rules-test 15/15 เขียวใน CI, + bocean.web.app landing
 - ✅ **Phase 1 ปิดครบ (2026-08-24)** — Community Groups (มี join, คุมต่อแบรนด์) + Badges (ตราสะสม แจกจริง server-side) + จุดไฟชุมชน (seed กลุ่ม/โพสต์ต้อนรับ/ตรา + checklist onboarding) + e2e ร้านผ่าน + toast แทน alert/confirm · rules-test 22/22 · deploy + push ครบ
-- ▶️ **ถัดไป = Phase 2** (ตัวต่าง): แปลงราคาสินค้าเป็นตัวเลข → เครื่องมือต้นทุน-ราคา-margin v1 → ผู้ช่วยการตลาด AI (text-gen จาก product data)
+- ▶️ **Phase 2 กำลังทำ:** ✅ แปลงราคาเป็นตัวเลข + ✅ เครื่องมือต้นทุน–ราคา–margin (deploy 2026-08-25) · ✅ icon minimal social ทั้ง 2 แอป · **ถัดไป = ผู้ช่วยการตลาด AI** (text-gen คำโปรย/แคปชัน/โปรโมชัน จาก product data — reuse Gemini `analyzePlant`)
+- ⚠️ ค้าง verify: เครื่องมือคิดราคาฝั่งแอดมิน ยัง test สดไม่ได้ (ต้อง login) — Roger ช่วยกดลองในแอดมินจริงเมื่อสะดวก
 - รายละเอียดงานย่อย → ROADMAP.md · สถานะฟีเจอร์จริง → STATUS.md
 
 ---

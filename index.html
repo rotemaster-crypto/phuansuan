@@ -309,6 +309,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .co-actions{padding:12px 16px;border-top:1px solid var(--border)}
 .btn-primary-lg{width:100%;background:var(--primary);color:#fff;border:none;border-radius:11px;padding:14px;font-size:16px;font-weight:700;cursor:pointer}
 .btn-primary-lg:disabled{opacity:.55;cursor:not-allowed}
+/* minimal outline icons (social style) — สืบสีจากตัวอักษร */
+.ic{width:1.05em;height:1.05em;flex:none;vertical-align:-0.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+button .ic,a .ic{pointer-events:none}
 /* payment */
 .pay-body{overflow-y:auto;padding:16px;flex:1;text-align:center}
 .pay-amt{font-size:30px;font-weight:800;color:var(--primary);margin:4px 0}
@@ -436,6 +439,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+<symbol id="i-paperclip" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></symbol>
+<symbol id="i-package" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22" x2="12" y2="12"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-pin-fill" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="3" fill="#fff" stroke="none"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+</defs></svg>
 
 <!-- ══ LOADING SCREEN ══ -->
 <div id="loading-screen">
@@ -476,8 +503,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="tb-logo" id="app-logo">เพื่อนสวน</div>
-  <button class="tb-btn" onclick="openNotifs()">🔔<span class="tb-badge" id="notif-badge" style="display:none">0</span></button>
-  <button class="tb-btn commerce-entry" onclick="openCart()">🛒<span class="tb-badge cart-badge" id="cart-badge" style="display:none">0</span></button>
+  <button class="tb-btn" onclick="openNotifs()"><svg class="ic" style="width:20px;height:20px"><use href="#i-bell"/></svg><span class="tb-badge" id="notif-badge" style="display:none">0</span></button>
+  <button class="tb-btn commerce-entry" onclick="openCart()"><svg class="ic" style="width:20px;height:20px"><use href="#i-cart"/></svg><span class="tb-badge cart-badge" id="cart-badge" style="display:none">0</span></button>
 </div>
 
 <!-- ══ FEED SCREEN ══ -->
@@ -495,8 +522,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     </div>
     <div class="cp-divider"></div>
     <div class="cp-btns">
-      <div class="cp-btn" onclick="openPostModal()">📷 ภาพ/วิดีโอ</div>
-      <div class="cp-btn" onclick="openAiDoctor()" id="t-ai-cp">🔬 หมอพืช AI</div>
+      <div class="cp-btn" onclick="openPostModal()"><svg class="ic"><use href="#i-camera"/></svg> ภาพ/วิดีโอ</div>
+      <div class="cp-btn" onclick="openAiDoctor()" id="t-ai-cp"><svg class="ic"><use href="#i-scan"/></svg> หมอพืช AI</div>
       <div class="cp-btn" onclick="openPostModal()">💡 แชร์ความรู้</div>
     </div>
   </div>
@@ -521,13 +548,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   <div style="position:relative">
     <div class="prof-cover" id="prof-cover"></div>
     <input type="file" id="cover-input" accept="image/*" style="display:none" onchange="uploadCoverPhoto(this)">
-    <button class="prof-cover-btn" onclick="document.getElementById('cover-input').click()">📷 แก้ไขรูปหน้าปก</button>
+    <button class="prof-cover-btn" onclick="document.getElementById('cover-input').click()"><svg class="ic"><use href="#i-camera"/></svg> แก้ไขรูปหน้าปก</button>
   </div>
   <div class="prof-body">
     <div class="prof-av-row">
       <div class="prof-av" id="prof-avatar">ฉ</div>
       <div class="prof-btns">
-        <button class="prof-btn-p" onclick="openEditProfile()">✏️ แก้ไขโปรไฟล์</button>
+        <button class="prof-btn-p" onclick="openEditProfile()"><svg class="ic"><use href="#i-edit"/></svg> แก้ไขโปรไฟล์</button>
         <button class="prof-btn-s" onclick="openMoreMenu()">••• เพิ่มเติม</button>
       </div>
     </div>
@@ -551,12 +578,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
     <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
   </div>
   <div class="crops-card">
-    <button onclick="openAiDoctor()" id="t-ai-big" style="width:100%;background:linear-gradient(135deg,#1877f2,#00b894);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">🔬 หมอพืช AI — วิเคราะห์โรคจากรูป</button>
+    <button onclick="openAiDoctor()" id="t-ai-big" style="width:100%;background:linear-gradient(135deg,#1877f2,#00b894);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic" style="width:20px;height:20px"><use href="#i-scan"/></svg> หมอพืช AI — วิเคราะห์โรคจากรูป</button>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px">ถ่ายรูปใบ/ต้น แล้วให้ AI ช่วยวินิจฉัย · ผลเป็นความลับ เห็นคนเดียว</div>
   </div>
   <div class="crops-card">
     <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">พืชที่ปลูก
-      <button onclick="maybeShowOnboarding(true)" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✏️ แก้ไข</button>
+      <button onclick="maybeShowOnboarding(true)" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-edit"/></svg> แก้ไข</button>
     </div>
     <div class="crops-grid" id="crops-list"></div>
   </div>
@@ -641,7 +668,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         <textarea id="modal-text" placeholder="บอกเล่าอาการที่เห็น หรือแชร์ประสบการณ์ของคุณ..."></textarea>
       </div>
       <div id="post-uploading" style="display:none;text-align:center;padding:8px;font-size:14px;color:var(--muted)">⏳ กำลังโพส...</div>
-      <button class="submit-btn" onclick="submitPost()" id="submit-btn">📤 โพสเลย</button>
+      <button class="submit-btn" onclick="submitPost()" id="submit-btn"><svg class="ic"><use href="#i-send"/></svg> โพสเลย</button>
       <div class="pts-hint" id="pts-hint">✨ คุณจะได้รับ +10 แต้มสะสมจากการโพสนี้</div>
     </div>
   </div>
@@ -671,7 +698,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         <div class="ob-sub" style="margin:14px 0 6px">พืชชนิดไหน?</div>
         <select id="ai-crop" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;background:#fff"></select>
 
-        <button class="submit-btn" id="ai-analyze-btn" onclick="runAiDoctor()" style="margin-top:16px">🔬 วิเคราะห์เลย</button>
+        <button class="submit-btn" id="ai-analyze-btn" onclick="runAiDoctor()" style="margin-top:16px"><svg class="ic"><use href="#i-scan"/></svg> วิเคราะห์เลย</button>
         <div id="ai-quota" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px"></div>
       </div>
 
@@ -700,7 +727,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <textarea id="edit-bio" maxlength="150" placeholder="เช่น ปลูกทุเรียนมา 10 ปี ที่จันทบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;resize:none;height:80px;box-sizing:border-box"></textarea>
       <div class="ob-sub" style="margin:14px 0 6px">ที่อยู่ (อำเภอ / จังหวัด)</div>
       <input id="edit-province" maxlength="60" placeholder="เช่น อ.บ้านโป่ง ราชบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;box-sizing:border-box">
-      <button class="submit-btn" id="edit-save-btn" onclick="saveProfileEdit()" style="margin-top:16px">💾 บันทึก</button>
+      <button class="submit-btn" id="edit-save-btn" onclick="saveProfileEdit()" style="margin-top:16px"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
       <button class="ob-skip" onclick="document.getElementById('editProfileModal').classList.remove('open')">ยกเลิก</button>
     </div>
   </div>
@@ -718,7 +745,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <div class="ob-title" style="font-size:17px">ตำแหน่งสวนของคุณ 📍</div>
       <div class="ob-sub">ใช้แสดงโพส "ใกล้ฉัน" และแจ้งเตือนโรคระบาดในพื้นที่ — เก็บเป็นพิกัดกว้างๆ ไม่เปิดเผยที่อยู่จริง</div>
       <button class="ob-gps" id="ob-gps-btn" onclick="requestGps()">
-        <span class="ob-gps-ico" id="ob-gps-ico">📍</span>
+        <span class="ob-gps-ico" id="ob-gps-ico"><svg class="ic" style="width:24px;height:24px"><use href="#i-pin"/></svg></span>
         <span>
           <span class="ob-gps-t" id="ob-gps-t">แชร์ตำแหน่งสวน</span>
           <span class="ob-gps-s" id="ob-gps-s">แตะเพื่ออนุญาตการเข้าถึงตำแหน่ง</span>
@@ -735,7 +762,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
           <span>ยินยอมรับข่าวสาร/โปรโมชันผ่าน LINE (ไม่บังคับ)</span>
         </label>
       </div>
-      <button class="submit-btn" id="ob-save-btn" onclick="saveOnboarding()" style="margin-top:10px">✅ เริ่มใช้งาน</button>
+      <button class="submit-btn" id="ob-save-btn" onclick="saveOnboarding()" style="margin-top:10px"><svg class="ic"><use href="#i-check"/></svg> เริ่มใช้งาน</button>
       <button class="ob-skip" onclick="skipOnboarding()">ข้ามไปก่อน ตั้งค่าทีหลังได้</button>
     </div>
   </div>
@@ -750,7 +777,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
       <div class="shop-title">🛒 ร้านค้า</div>
       <div class="shop-sub" id="shop-sub">สินค้าจากร้าน</div>
     </div>
-    <button class="ord-link" onclick="openMyOrders()">📦 ออเดอร์</button>
+    <button class="ord-link" onclick="openMyOrders()"><svg class="ic"><use href="#i-package"/></svg> ออเดอร์</button>
   </div>
   <div class="cat-bar" id="cat-bar"></div>
   <div id="feat-wrap" class="feat-wrap" style="display:none"><div class="feat-hd">🔥 สินค้าแนะนำ</div><div class="feat-row" id="feat-row"></div></div>
@@ -759,7 +786,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
   <div style="height:80px"></div>
   <button class="cart-fab" id="cart-fab" onclick="openCart()">
-    <span>🛒 ดูตะกร้า</span>
+    <span><svg class="ic"><use href="#i-cart"/></svg> ดูตะกร้า</span>
     <span id="cart-fab-info">0 ชิ้น · ฿0</span>
   </button>
 </div>
@@ -852,7 +879,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
         3. กลับมากด "แนบสลิป" ด้านล่าง
       </div>
       <input type="file" id="slip-input" accept="image/*" style="display:none" onchange="onSlipPicked(this)">
-      <button class="slip-btn" onclick="pickSlip()">📎 แนบสลิปที่โอนแล้ว</button>
+      <button class="slip-btn" onclick="pickSlip()"><svg class="ic"><use href="#i-paperclip"/></svg> แนบสลิปที่โอนแล้ว</button>
       <div class="pay-slip-status" id="pay-slip-status"></div>
     </div>
   </div>
@@ -908,22 +935,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
   </div>
 </div>
 
-<button class="line-oa-fab" id="line-oa-fab" onclick="openLineOa()"><span class="li">💬</span><span id="line-oa-label">แชทกับเรา</span></button>
+<button class="line-oa-fab" id="line-oa-fab" onclick="openLineOa()"><span class="li"><svg class="ic" style="width:22px;height:22px"><use href="#i-chat"/></svg></span><span id="line-oa-label">แชทกับเรา</span></button>
 <div class="bottom-nav">
   <div class="bn" id="nav-feed" onclick="switchScreen('feed')">
-    <div class="bn-ico">🏠</div>
+    <div class="bn-ico"><svg class="ic"><use href="#i-home"/></svg></div>
     <div class="bn-lbl" id="nav-lbl-feed">หน้าหลัก</div>
   </div>
   <div class="bn" id="nav-community" onclick="switchScreen('community')">
-    <div class="bn-ico">👥</div>
+    <div class="bn-ico"><svg class="ic"><use href="#i-users"/></svg></div>
     <div class="bn-lbl" id="nav-lbl-community">ชุมชน</div>
   </div>
   <div class="bn" id="nav-profile" onclick="switchScreen('profile')">
-    <div class="bn-ico">👤</div>
+    <div class="bn-ico"><svg class="ic"><use href="#i-user"/></svg></div>
     <div class="bn-lbl" id="nav-lbl-profile">โปรไฟล์</div>
   </div>
   <div class="bn commerce-entry active" id="nav-shop" onclick="switchScreen('shop')">
-    <div class="bn-ico">🛒</div>
+    <div class="bn-ico"><svg class="ic"><use href="#i-cart"/></svg></div>
     <div class="bn-lbl" id="nav-lbl-shop">ร้านค้า</div>
   </div>
 </div>
@@ -1362,8 +1389,8 @@ function renderAiResult(result, quotaLeft, imgUrl) {
   if (typeof quotaLeft === 'number') html += `<div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px">เหลือโควต้าวันนี้ ${quotaLeft} ครั้ง</div>`;
   // ปุ่มแชร์ถามชุมชน (เก็บผลไว้ใช้เติม post modal)
   window._aiLastResult = { result: result, imgUrl: imgUrl, crop: document.getElementById('ai-crop').value };
-  html += '<button class="submit-btn" onclick="shareAiToCommy()" style="background:#00b894">💬 แชร์ถามชุมชน</button>';
-  html += '<button class="ob-skip" onclick="resetAiDoctor()">🔄 วิเคราะห์รูปใหม่</button>';
+  html += '<button class="submit-btn" onclick="shareAiToCommy()" style="background:#00b894"><svg class="ic"><use href="#i-chat"/></svg> แชร์ถามชุมชน</button>';
+  html += '<button class="ob-skip" onclick="resetAiDoctor()"><svg class="ic"><use href="#i-refresh"/></svg> วิเคราะห์รูปใหม่</button>';
   box.innerHTML = html;
   box.style.display = 'block';
 }
@@ -1655,8 +1682,8 @@ function renderGroupHeader(gid, g) {
     + '<div style="font-size:12px;opacity:.85;margin-top:8px">👤 ' + (g.memberCount || 0) + ' สมาชิก · 📝 ' + (g.postCount || 0) + ' โพสต์</div>'
     + '</div>'
     + '<div style="display:flex;gap:8px;margin-top:12px">'
-    + '<button onclick="toggleJoinGroup(\'' + gid + '\')" style="flex:1;background:' + (joined ? '#eaf3ff' : 'var(--primary)') + ';color:' + (joined ? 'var(--primary)' : '#fff') + ';border:1px solid var(--primary);border-radius:10px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' + (joined ? '✓ เข้าร่วมแล้ว (แตะเพื่อออก)' : '+ เข้าร่วมกลุ่ม') + '</button>'
-    + (joined ? '<button onclick="openPostModalForGroup(\'' + gid + '\')" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✏️ โพสต์ในกลุ่ม</button>' : '')
+    + '<button onclick="toggleJoinGroup(\'' + gid + '\')" style="flex:1;background:' + (joined ? '#eaf3ff' : 'var(--primary)') + ';color:' + (joined ? 'var(--primary)' : '#fff') + ';border:1px solid var(--primary);border-radius:10px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' + (joined ? '<svg class="ic"><use href="#i-check"/></svg> เข้าร่วมแล้ว (แตะเพื่อออก)' : '<svg class="ic"><use href="#i-plus"/></svg> เข้าร่วมกลุ่ม') + '</button>'
+    + (joined ? '<button onclick="openPostModalForGroup(\'' + gid + '\')" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-edit"/></svg> โพสต์ในกลุ่ม</button>' : '')
     + '</div>';
 }
 
@@ -2070,7 +2097,7 @@ function requestGps() {
         lng: Math.round(pos.coords.longitude * 1000) / 1000,
       };
       document.getElementById('ob-gps-btn').classList.add('ok');
-      ico.textContent = '✅';
+      ico.innerHTML = '<svg class="ic" style="width:24px;height:24px"><use href="#i-check"/></svg>';
       t.textContent = 'ได้ตำแหน่งแล้ว';
       s.textContent = `พิกัด ${obLocation.lat}, ${obLocation.lng}`;
     },
@@ -2497,7 +2524,7 @@ async function loadFeed(mode) {
             <div style="font-size:48px;margin-bottom:12px">📍</div>
             <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่ได้ตั้งตำแหน่งสวน</div>
             <div style="font-size:14px;margin-bottom:16px">ตั้งตำแหน่งเพื่อดูโพสใกล้บ้านคุณ</div>
-            <button onclick="maybeShowOnboarding(true)" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📍 ตั้งตำแหน่งเลย</button>
+            <button onclick="maybeShowOnboarding(true)" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-pin"/></svg> ตั้งตำแหน่งเลย</button>
           </div>`;
         return;
       }
@@ -2770,8 +2797,8 @@ function renderPost(id, p, i) {
           <div class="pc-name">${escapeHtml(p.authorName) || 'ผู้ใช้'}</div>
           <div class="pc-meta">${timeAgo} · ${p._dist !== undefined ? '📍 ' + p._dist.toFixed(1) + ' กม.' : '🌍'}</div>
         </div>
-        ${isAdmin() ? `<button class="pc-more" onclick="togglePin('${id}',${p.pinned?'true':'false'})" title="ปักหมุด">${p.pinned?'📌':'📍'}</button>` : ''}
-        ${(isOwn || isAdmin()) ? `<button class="pc-more" onclick="deletePost('${id}')">🗑️</button>` : '<button class="pc-more">•••</button>'}
+        ${isAdmin() ? `<button class="pc-more" onclick="togglePin('${id}',${p.pinned?'true':'false'})" title="ปักหมุด">${p.pinned?'<svg class="ic"><use href="#i-pin-fill"/></svg>':'<svg class="ic"><use href="#i-pin"/></svg>'}</button>` : ''}
+        ${(isOwn || isAdmin()) ? `<button class="pc-more" onclick="deletePost('${id}')"><svg class="ic"><use href="#i-trash"/></svg></button>` : '<button class="pc-more">•••</button>'}
       </div>
       <div class="pc-tags">
         ${p.pinned ? `<span class="ptag pt-amber">📌 ปักหมุด</span>` : ''}
@@ -2790,9 +2817,9 @@ function renderPost(id, p, i) {
       </div>
       <div class="pc-actions">
         <button class="pa" id="rx-btn-${id}" data-rx="" onclick="toggleReactPicker(event,'${id}',this)"><span class="pi" id="rx-ico-${id}">👍</span><span id="rx-lbl-${id}">ถูกใจ</span></button>
-        <button class="pa" onclick="helpPost('${id}',this)"><span class="pi">✅</span>ช่วยได้</button>
-        <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi">💬</span>แสดงความคิดเห็น</button>
-        <button class="pa" onclick="sharePost()"><span class="pi">↗️</span>แชร์</button>
+        <button class="pa" onclick="helpPost('${id}',this)"><span class="pi"><svg class="ic"><use href="#i-check"/></svg></span>ช่วยได้</button>
+        <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi"><svg class="ic"><use href="#i-chat"/></svg></span>แสดงความคิดเห็น</button>
+        <button class="pa" onclick="sharePost()"><span class="pi"><svg class="ic"><use href="#i-share"/></svg></span>แชร์</button>
       </div>
       <div class="comments-wrap" id="cmt-${id}" style="display:none">
         <div class="cmt-input-row">
@@ -2800,7 +2827,7 @@ function renderPost(id, p, i) {
             ${currentUser?.photoUrl ? '' : (currentUser?.displayName?.charAt(0) || 'ฉ')}
           </div>
           <input class="cmt-input" placeholder="เขียนความคิดเห็น..." id="cmt-input-${id}">
-          <button class="cmt-send" onclick="addComment('${id}')">➤</button>
+          <button class="cmt-send" onclick="addComment('${id}')"><svg class="ic"><use href="#i-send"/></svg></button>
         </div>
         <div id="cmts-${id}"></div>
       </div>
@@ -3034,7 +3061,7 @@ function renderProducts(){
         sold+
         '<div class="prod-foot">'+
           '<div class="prod-pricewrap">'+oldp+'<span class="prod-price">'+(p.price ? baht(p.price) : '—')+'</span></div>'+
-          ((p.affiliate && p.url) ? '<a class="prod-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>' : '<button class="prod-add" onclick="event.stopPropagation();addToCart(\''+p.id+'\')">+</button>')+
+          ((p.affiliate && p.url) ? '<a class="prod-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg class="ic"><use href="#i-share"/></svg></a>' : '<button class="prod-add" onclick="event.stopPropagation();addToCart(\''+p.id+'\')"><svg class="ic"><use href="#i-plus"/></svg></button>')+
         '</div>'+
       '</div>'+
     '</div>';
@@ -3059,7 +3086,7 @@ function openProduct(id){
       '<div class="pd-sec"><div class="pd-sec-h">หมวดหมู่</div><div class="pd-chips"><span class="pd-chip">'+escapeHtml(catName(p.category))+'</span></div></div>'+
       desc + dis + crp +
     '</div>'+
-    ((p.affiliate && p.url) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()">↗ ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()">🛒 ใส่ตะกร้า</button>')+
+    ((p.affiliate && p.url) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()"><svg class="ic"><use href="#i-share"/></svg> ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()"><svg class="ic"><use href="#i-cart"/></svg> ใส่ตะกร้า</button>')+
     '<div style="height:14px"></div>';
   var body = document.getElementById('pd-body'); if (body) body.innerHTML = html;
   var m = document.getElementById('prodDetailModal'); if (m) m.classList.add('open');
@@ -3160,9 +3187,9 @@ function renderCart(){
         '<div class="cart-pr">'+baht(r.price)+' × '+r.qty+' = '+baht(r.price*r.qty)+'</div>'+
       '</div>'+
       '<div class="qty-ctrl">'+
-        '<button class="qty-btn" onclick="changeQty(\''+r.id+'\',-1)">−</button>'+
+        '<button class="qty-btn" onclick="changeQty(\''+r.id+'\',-1)"><svg class="ic"><use href="#i-minus"/></svg></button>'+
         '<span class="qty-n">'+r.qty+'</span>'+
-        '<button class="qty-btn" onclick="changeQty(\''+r.id+'\',1)">+</button>'+
+        '<button class="qty-btn" onclick="changeQty(\''+r.id+'\',1)"><svg class="ic"><use href="#i-plus"/></svg></button>'+
       '</div>'+
     '</div>'
   ).join('');
@@ -3528,7 +3555,7 @@ function relSectionHtml(list){
       '<div class="rel-img">'+img+'</div>'+
       '<div class="rel-nm">'+escapeHtml(p.name)+'</div>'+
       '<div class="rel-pr">'+(p.price?baht(p.price):'—')+'</div>'+
-      '<button class="rel-add" onclick="addToCart(\''+p.id+'\')">+ ใส่ตะกร้า</button>'+
+      '<button class="rel-add" onclick="addToCart(\''+p.id+'\')"><svg class="ic"><use href="#i-plus"/></svg> ใส่ตะกร้า</button>'+
     '</div>';
   }).join('');
   return '<div class="rel-wrap"><div class="rel-title">🛒 สินค้าที่อาจช่วยได้</div><div class="rel-scroll">'+cards+'</div></div>';

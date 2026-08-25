@@ -65,6 +65,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial
 .btn-primary{background:var(--primary);color:var(--on-primary)}.btn-danger{background:var(--danger);color:#fff}
 .btn-success{background:var(--success);color:#fff}.btn-ghost{background:var(--bg);color:var(--text)}
 .btn:active{opacity:0.8}
+/* minimal outline icons (social style) — สืบสีจากตัวอักษร */
+.ic{width:1.05em;height:1.05em;flex:none;vertical-align:-0.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+button .ic,a .ic{pointer-events:none}
 .save-row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -143,6 +146,39 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 2v6h6"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></symbol>
+<symbol id="i-hash" viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></symbol>
+<symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-truck" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V15"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></symbol>
+<symbol id="i-userplus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+<symbol id="i-paperclip" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></symbol>
+<symbol id="i-package" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22" x2="12" y2="12"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></symbol>
+</defs></svg>
 <div id="loading-screen"><div class="spinner"></div><div style="font-size:15px;color:var(--muted)">กำลังตรวจสอบสิทธิ์...</div></div>
 <div id="deny-screen"><div class="deny-icon">🚫</div><div class="deny-title">ไม่มีสิทธิ์เข้าถึง</div><div class="deny-sub">หน้านี้สำหรับ Admin เท่านั้น</div><a href="/" style="margin-top:16px;color:var(--primary);font-weight:700;text-decoration:none">← กลับหน้าหลัก</a></div>
 <div class="toast" id="toast"></div>
@@ -175,6 +211,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item" onclick="showScreen('groups',this)"><span class="si">👥</span> กลุ่มชุมชน</div>
     <div class="sb-item" onclick="showScreen('shopdecor',this)"><span class="si">🛍️</span> ตกแต่งร้าน</div>
     <div class="sb-item" onclick="showScreen('products',this)"><span class="si">📦</span> สินค้า</div>
+    <div class="sb-item" onclick="showScreen('pricing',this)"><span class="si">🧮</span> คิดราคา–กำไร</div>
     <div class="sb-item" onclick="showScreen('orders',this)"><span class="si">🛒</span> ออเดอร์ <span class="sb-badge" id="badge-orders">0</span></div>
     <div class="sb-section" id="sb-sec-bocean">Bocean</div>
     <div class="sb-item" onclick="showScreen('bocean',this)"><span class="si">📨</span> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
@@ -238,9 +275,9 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ชุมชนที่มีคนคุยกันตั้งแต่วันแรก จะไม่ร้าง · ทำ checklist ให้ครบ + โพสต์เริ่มบทสนทนาได้ในคลิกเดียว (โพสต์ในนามแบรนด์)</div>
     <div id="kickstart-checklist" style="margin-bottom:14px"><div class="empty-state" style="padding:10px">กำลังโหลด...</div></div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
-      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('intro')">👋 โพสต์ชวนแนะนำตัว</button>
-      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('question')">❓ โพสต์ถามปัญหายอดฮิต</button>
-      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('promo')">🎉 โพสต์โปรโมชันแรก</button>
+      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('intro')"><svg class="ic"><use href="#i-userplus"/></svg> โพสต์ชวนแนะนำตัว</button>
+      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('question')"><svg class="ic"><use href="#i-help"/></svg> โพสต์ถามปัญหายอดฮิต</button>
+      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('promo')"><svg class="ic"><use href="#i-gift"/></svg> โพสต์โปรโมชันแรก</button>
     </div>
   </div>
   <div class="card"><div class="card-title">👥 Users ล่าสุด</div>
@@ -285,7 +322,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="card"><div class="card-title">🔒 นโยบายความเป็นส่วนตัว (PDPA)</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">URL นโยบายของแบรนด์นี้ — จะแสดงเป็นลิงก์ตอนผู้ใช้ให้ความยินยอม (consent) · เว้นว่าง = ไม่มีลิงก์</div>
     <div class="fg"><label>Privacy Policy URL</label><input id="app-privacyurl" placeholder="https://brand.com/privacy"></div>
-    <button class="btn btn-primary" onclick="saveAppPrivacy()" style="margin-top:8px">💾 บันทึก URL นโยบาย</button>
+    <button class="btn btn-primary" onclick="saveAppPrivacy()" style="margin-top:8px"><svg class="ic"><use href="#i-save"/></svg> บันทึก URL นโยบาย</button>
   </div>
   <div class="card"><div class="card-title">🔤 คำศัพท์ร้าน (Terminology)</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ปรับคำให้เข้ากับธุรกิจคุณ — จะเปลี่ยนข้อความ AI/ปุ่ม/กล่องโพสต์ในแอปอัตโนมัติ</div>
@@ -296,7 +333,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ผู้เชี่ยวชาญ AI (เช่น หมอพืช)</label><input id="term-expert" placeholder="หมอพืช"></div>
       <div class="fg"><label>ปัญหา (เช่น โรคพืช)</label><input id="term-problem" placeholder="โรคพืช"></div>
     </div>
-    <button class="btn btn-primary" onclick="saveTerms()" style="margin-top:8px">💾 บันทึกคำศัพท์</button>
+    <button class="btn btn-primary" onclick="saveTerms()" style="margin-top:8px"><svg class="ic"><use href="#i-save"/></svg> บันทึกคำศัพท์</button>
   </div>
   <div class="card"><div class="card-title">📢 โหมดฟีด</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">กำหนดว่าใครเห็น/โพสต์ในฟีดได้ — ปรับได้ตามธรรมชาติของแบรนด์</div>
@@ -310,7 +347,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
         <option value="broadcast">เฉพาะแบรนด์ (Broadcast) — ลูกค้าคอมเมนต์/รีแอคเท่านั้น</option>
       </select>
     </div>
-    <button class="btn btn-primary" onclick="saveFeedMode()" style="margin-top:10px">💾 บันทึกโหมดฟีด</button>
+    <button class="btn btn-primary" onclick="saveFeedMode()" style="margin-top:10px"><svg class="ic"><use href="#i-save"/></svg> บันทึกโหมดฟีด</button>
   </div>
   <div class="card" id="theme-picker"><div class="card-title">🎨 ธีมแอป (เลือกได้)</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">เลือกธีมสำเร็จรูป — เปลี่ยนสี/พื้นทั้งแอปของแบรนด์นี้ · กดดูพรีวิวสด แล้วกดบันทึกด้านล่าง</div>
@@ -352,8 +389,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
   </div>
   <div class="save-row">
-    <button class="btn btn-ghost" onclick="loadAppearance()">↺ รีเซ็ต</button>
-    <button class="btn btn-primary" onclick="saveAppearance()">💾 บันทึก</button>
+    <button class="btn btn-ghost" onclick="loadAppearance()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveAppearance()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
   </div>
 </div>
 
@@ -466,8 +503,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
   </div>
   <div class="save-row">
-    <button class="btn btn-ghost" onclick="loadContent()">↺ รีเซ็ต</button>
-    <button class="btn btn-primary" onclick="saveContent()">💾 บันทึก</button>
+    <button class="btn btn-ghost" onclick="loadContent()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveContent()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
   </div>
 </div>
 
@@ -487,7 +524,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       </div>
       <div class="fg"><label>ถึงเกณฑ์ที่ (ตัวเลข)</label><input type="number" id="new-bdg-threshold" placeholder="เช่น 10"></div>
     </div>
-    <div class="save-row"><button class="btn btn-ghost" onclick="seedDefaultBadges()">↺ ใช้ชุดเริ่มต้น</button><button class="btn btn-primary" onclick="addBadge()">➕ เพิ่มตรา</button></div>
+    <div class="save-row"><button class="btn btn-ghost" onclick="seedDefaultBadges()"><svg class="ic"><use href="#i-reset"/></svg> ใช้ชุดเริ่มต้น</button><button class="btn btn-primary" onclick="addBadge()"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มตรา</button></div>
   </div>
   <div class="card"><div class="card-title">📋 ตราทั้งหมด</div>
     <div class="table-wrap"><table>
@@ -508,7 +545,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ลำดับการแสดง (น้อย = บนสุด)</label><input type="number" id="new-grp-order" placeholder="0"></div>
       <div class="fg" style="grid-column:1/-1"><label>คำอธิบายกลุ่ม</label><textarea id="new-grp-desc" rows="2" placeholder="กลุ่มนี้เกี่ยวกับอะไร"></textarea></div>
     </div>
-    <div class="save-row"><button class="btn btn-primary" onclick="addGroup()">➕ สร้างกลุ่ม</button></div>
+    <div class="save-row"><button class="btn btn-primary" onclick="addGroup()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกลุ่ม</button></div>
   </div>
   <div class="card"><div class="card-title">📋 กลุ่มทั้งหมด</div>
     <div class="table-wrap"><table>
@@ -528,7 +565,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ลำดับ</label><input type="number" id="grp-e-order"></div>
       <div class="fg" style="grid-column:1/-1"><label>คำอธิบาย</label><textarea id="grp-e-desc" rows="2"></textarea></div>
     </div>
-    <div class="save-row"><button class="btn btn-ghost" onclick="closeGrpEdit()">ยกเลิก</button><button class="btn btn-primary" onclick="saveGrpEdit()">💾 บันทึก</button></div>
+    <div class="save-row"><button class="btn btn-ghost" onclick="closeGrpEdit()">ยกเลิก</button><button class="btn btn-primary" onclick="saveGrpEdit()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button></div>
   </div>
 </div>
 
@@ -553,8 +590,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
   </div>
   <div class="save-row">
-    <button class="btn btn-ghost" onclick="loadFeatures()">↺ รีเซ็ต</button>
-    <button class="btn btn-primary" onclick="saveFeatures()">💾 บันทึก</button>
+    <button class="btn btn-ghost" onclick="loadFeatures()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveFeatures()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
   </div>
 </div>
 
@@ -591,8 +628,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </table>
   </div>
   <div class="save-row">
-    <button class="btn btn-ghost" onclick="loadPoints()">↺ รีเซ็ต</button>
-    <button class="btn btn-primary" onclick="savePoints()">💾 บันทึก</button>
+    <button class="btn btn-ghost" onclick="loadPoints()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="savePoints()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
   </div>
 </div>
 
@@ -645,8 +682,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
   </div>
   <div class="save-row">
-    <button class="btn btn-ghost" onclick="loadShopDecor()">↺ รีเซ็ต</button>
-    <button class="btn btn-primary" onclick="saveShopDecor()">💾 บันทึก</button>
+    <button class="btn btn-ghost" onclick="loadShopDecor()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
+    <button class="btn btn-primary" onclick="saveShopDecor()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
   </div>
 </div>
 
@@ -656,7 +693,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="card"><div class="card-title">➕ เพิ่มสินค้าใหม่</div>
     <div class="form-grid">
       <div class="fg"><label>ชื่อสินค้า</label><input id="new-prod-name" placeholder="เช่น Mancozeb 80% WP"></div>
-      <div class="fg"><label>ราคา</label><input id="new-prod-price" placeholder="เช่น 180 บาท"></div>
+      <div class="fg"><label>ราคา (ขายจริง)</label><input id="new-prod-price" placeholder="เช่น 180 บาท"></div>
+      <div class="fg"><label>ต้นทุนโรงงาน / ชิ้น (สำหรับคิดกำไร — เว้นว่างได้)</label><input id="new-prod-cost" type="number" step="0.01" placeholder="เช่น 120"></div>
       <div class="fg"><label>หมวดหมู่</label>
         <select id="new-prod-cat">
           <option value="pesticide">🧴 ยาฆ่าแมลง</option>
@@ -676,7 +714,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg" style="grid-column:1/-1"><label>รายละเอียดสินค้า</label><textarea id="new-prod-desc" rows="3" placeholder="อธิบายสรรพคุณ วิธีใช้ ขนาดบรรจุ ฯลฯ"></textarea></div>
       <div class="fg"><label>⭐ สินค้าแนะนำ (โชว์ใน carousel)</label><label class="toggle"><input type="checkbox" id="new-prod-featured"><span class="toggle-slider"></span></label></div>
     </div>
-    <div class="save-row"><button class="btn btn-primary" onclick="addProduct()">➕ เพิ่มสินค้า</button></div>
+    <div class="save-row"><button class="btn btn-primary" onclick="addProduct()"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มสินค้า</button></div>
   </div>
   <div class="card"><div class="card-title">📥 นำเข้าสินค้าจาก CSV</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">อัปโหลดไฟล์ CSV (export จาก Shopee/Lazada หรือไฟล์ทั่วไป) → จับคู่คอลัมน์ → ดูตัวอย่าง → นำเข้าเข้าแบรนด์ที่กำลังดูแล · แท็กในเซลล์ใช้ <b>;</b> คั่น</div>
@@ -697,12 +735,16 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
         <div class="fg"><label>ข้ามถ้าชื่อซ้ำ</label><label class="toggle"><input type="checkbox" id="csv-dedup" checked><span class="toggle-slider"></span></label></div>
       </div>
       <div id="csv-preview" style="margin-top:10px"></div>
-      <div class="save-row"><button class="btn btn-primary" id="csv-import-btn" onclick="csvImport()">📥 นำเข้า</button></div>
+      <div class="save-row"><button class="btn btn-primary" id="csv-import-btn" onclick="csvImport()"><svg class="ic"><use href="#i-download"/></svg> นำเข้า</button></div>
     </div>
   </div>
-  <div class="card"><div class="card-title">📋 สินค้าทั้งหมด</div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+      <div class="card-title" style="margin:0">📋 สินค้าทั้งหมด</div>
+      <button class="btn btn-ghost" id="price-migrate-btn" onclick="migratePrices()" title="แปลงราคาที่ยังเป็นข้อความ (เช่น '180 บาท') ให้เป็นตัวเลข"><svg class="ic"><use href="#i-hash"/></svg> แปลงราคาเป็นตัวเลข</button>
+    </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>ชื่อสินค้า</th><th>หมวด</th><th>ราคา</th><th>Action</th></tr></thead>
+      <thead><tr><th>ชื่อสินค้า</th><th>หมวด</th><th>ราคา</th><th>กำไร</th><th>Action</th></tr></thead>
       <tbody id="products-table"><tr><td colspan="4" class="empty-state">กำลังโหลด...</td></tr></tbody>
     </table></div>
   </div>
@@ -715,6 +757,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="form-grid">
       <div class="fg"><label>ราคา</label><input id="prodb-price"></div>
       <div class="fg"><label>ราคาเดิม (ก่อนลด)</label><input id="prodb-oldprice"></div>
+      <div class="fg"><label>ต้นทุนโรงงาน / ชิ้น</label><input id="prodb-cost" type="number" step="0.01" placeholder="เว้นว่าง = ไม่คิดกำไร"></div>
+      <div class="fg" style="grid-column:1/-1"><button class="btn btn-ghost" style="width:100%" onclick="pricingFromProduct()"><svg class="ic"><use href="#i-hash"/></svg> คิดราคา–กำไร จากต้นทุนนี้</button></div>
       <div class="fg"><label>ยอดขาย</label><input type="number" id="prodb-sold"></div>
       <div class="fg"><label>ป้าย Badge</label><input id="prodb-badge"></div>
       <div class="fg"><label>⭐ สินค้าแนะนำ</label><label class="toggle"><input type="checkbox" id="prodb-featured"><span class="toggle-slider"></span></label></div>
@@ -722,8 +766,22 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>🔗 สินค้า Affiliate</label><label class="toggle"><input type="checkbox" id="prodb-affiliate"><span class="toggle-slider"></span></label></div>
       <div class="fg" style="grid-column:1/-1"><label>รายละเอียดสินค้า</label><textarea id="prodb-desc" rows="3"></textarea></div>
     </div>
-    <div class="save-row"><button class="btn btn-ghost" onclick="closeProdB()">ยกเลิก</button><button class="btn btn-primary" onclick="saveProdB()">💾 บันทึก</button></div>
+    <div class="save-row"><button class="btn btn-ghost" onclick="closeProdB()">ยกเลิก</button><button class="btn btn-primary" onclick="saveProdB()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button></div>
   </div>
+</div>
+
+<div class="screen" id="screen-pricing">
+  <div class="page-header"><div class="page-title">🧮 คิดราคา–กำไร</div><div class="page-sub">กรอกต้นทุน → เห็นราคาขายแนะนำ · กำไรจริงต่อชั้นสมาชิก · ราคาขั้นต่ำที่ไม่ขาดทุน</div></div>
+  <div class="card"><div class="card-title">ต้นทุน & เป้าหมายกำไร</div>
+    <div class="form-grid">
+      <div class="fg"><label>ต้นทุนจากโรงงาน / ชิ้น (บาท)</label><input id="pc-factory" type="number" step="0.01" min="0" placeholder="เช่น 120" oninput="pricingCalc()"></div>
+      <div class="fg"><label>ต้นทุนอื่น / ชิ้น (แพ็ค + ส่ง + ค่าแรง)</label><input id="pc-other" type="number" step="0.01" min="0" placeholder="เช่น 20" oninput="pricingCalc()"></div>
+      <div class="fg"><label>กำไรที่ต้องการ (%)</label><input id="pc-margin" type="number" step="1" min="0" max="99" value="30" oninput="pricingCalc()"></div>
+      <div class="fg"><label>ราคาขายที่จะตั้ง (บาท)</label><input id="pc-price" type="number" step="0.01" min="0" placeholder="เว้นว่าง = ใช้ราคาแนะนำ" oninput="pricingCalc()"></div>
+    </div>
+    <div class="save-row"><button class="btn btn-ghost" onclick="pricingUseSuggested()"><svg class="ic"><use href="#i-reset"/></svg> ใช้ราคาแนะนำ</button></div>
+  </div>
+  <div class="card" id="pc-result" style="display:none"></div>
 </div>
 
 <div class="screen" id="screen-orders">
@@ -951,7 +1009,7 @@ function renderUsers(users) {
       </select></td>
       <td>${u.postCount||0}</td>
       <td style="color:var(--muted);font-size:13px">${fmtDate(u.lastLoginAt)}</td>
-      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="banUser('${u.id}','${u.displayName}')">🚫 Ban</button></td></tr>
+      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="banUser('${u.id}','${u.displayName}')"><svg class="ic"><use href="#i-ban"/></svg> Ban</button></td></tr>
   `).join('') || '<tr><td colspan="6" class="empty-state">ไม่มี users</td></tr>';
 }
 function filterUsers() {
@@ -985,7 +1043,7 @@ function renderPosts(posts) {
     <td style="font-size:13px">${p.authorName||'ไม่ระบุ'}</td>
     <td><span class="tag-chip">${p.type||'โพส'}</span></td>
     <td style="color:var(--muted);font-size:13px">${fmtDate(p.createdAt)}</td>
-    <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePost('${p.id}')">🗑️ ลบ</button></td></tr>
+    <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePost('${p.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>
   `).join('') || '<tr><td colspan="5" class="empty-state">ไม่มีโพส</td></tr>';
 }
 function filterPosts() {
@@ -1356,6 +1414,7 @@ async function editProductB(id){
     document.getElementById('prodb-name').textContent = p.name || '';
     document.getElementById('prodb-price').value = p.price || '';
     document.getElementById('prodb-oldprice').value = p.oldPrice || '';
+    document.getElementById('prodb-cost').value = (p.cost != null ? p.cost : '');
     document.getElementById('prodb-sold').value = p.soldCount || 0;
     document.getElementById('prodb-badge').value = p.badge || '';
     document.getElementById('prodb-featured').checked = p.featured === true;
@@ -1370,8 +1429,9 @@ async function saveProdB(){
   if (!_prodbId) return;
   try {
     await aDb().collection('products').doc(_prodbId).update({
-      price: document.getElementById('prodb-price').value,
-      oldPrice: document.getElementById('prodb-oldprice').value,
+      price: parsePrice(document.getElementById('prodb-price').value),
+      cost: parsePrice(document.getElementById('prodb-cost').value),
+      oldPrice: parsePrice(document.getElementById('prodb-oldprice').value),
       soldCount: +document.getElementById('prodb-sold').value || 0,
       badge: document.getElementById('prodb-badge').value.trim(),
       featured: document.getElementById('prodb-featured').checked,
@@ -1382,17 +1442,120 @@ async function saveProdB(){
     toast('✅ บันทึกแล้ว','success'); closeProdB(); loadProducts();
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
+// แปลงราคาสินค้าเดิมที่ยังเก็บเป็นข้อความ ("180 บาท") → ตัวเลข ทีเดียวทั้งแบรนด์
+async function migratePrices(){
+  const btn = document.getElementById('price-migrate-btn');
+  try {
+    const snap = await aDb().collection('products').get();
+    // เลือกเฉพาะ doc ที่ price หรือ oldPrice ยังไม่ใช่ number (และมีค่าอยู่)
+    const todo = snap.docs.filter(function(d){
+      const p = d.data();
+      const badPrice = (p.price !== undefined && p.price !== null && typeof p.price !== 'number');
+      const badOld   = (p.oldPrice !== undefined && p.oldPrice !== null && typeof p.oldPrice !== 'number');
+      return badPrice || badOld;
+    });
+    if (!todo.length){ toast('✅ ราคาทุกสินค้าเป็นตัวเลขอยู่แล้ว','success'); return; }
+    if (!confirm('พบ '+todo.length+' สินค้าที่ราคายังเป็นข้อความ\nจะแปลงเป็นตัวเลขทั้งหมด (เช่น "180 บาท" → 180)\nดำเนินการต่อ?')) return;
+    if (btn){ btn.disabled = true; }
+    const col = aDb().collection('products'); let n = 0;
+    for (let i=0;i<todo.length;i+=450){
+      const batch = db.batch();
+      todo.slice(i,i+450).forEach(function(d){
+        const p = d.data(); const upd = {};
+        if (p.price !== undefined && p.price !== null && typeof p.price !== 'number') upd.price = parsePrice(p.price);
+        if (p.oldPrice !== undefined && p.oldPrice !== null && typeof p.oldPrice !== 'number') upd.oldPrice = parsePrice(p.oldPrice);
+        batch.update(col.doc(d.id), upd);
+      });
+      await batch.commit(); n += Math.min(450, todo.length - i);
+    }
+    toast('✅ แปลงราคาเป็นตัวเลขแล้ว '+n+' รายการ','success');
+    loadProducts();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+  if (btn){ btn.disabled = false; }
+}
 async function loadProducts() {
   try {
     const snap = await aDb().collection('products').get();
     document.getElementById('products-table').innerHTML = snap.empty
-      ? '<tr><td colspan="4" class="empty-state">ยังไม่มีสินค้า</td></tr>'
+      ? '<tr><td colspan="5" class="empty-state">ยังไม่มีสินค้า</td></tr>'
       : snap.docs.map(doc => {
           const p = doc.data();
-          return `<tr><td style="font-weight:700">${p.featured?'⭐ ':''}${p.name}</td><td><span class="tag-chip">${p.category||'—'}</span></td><td>${p.price||'—'}</td>
-          <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editProductB('${doc.id}')">✏️ แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteProduct('${doc.id}')">🗑️ ลบ</button></td></tr>`;
+          const pr = parsePrice(p.price), co = parsePrice(p.cost);
+          const mg = (pr>0 && co>0) ? marginBadge(pr, co) : '<span style="color:var(--muted)">—</span>';
+          return `<tr><td style="font-weight:700">${p.featured?'⭐ ':''}${p.name}</td><td><span class="tag-chip">${p.category||'—'}</span></td><td>${p.price?baht(pr):'—'}</td><td>${mg}</td>
+          <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editProductB('${doc.id}')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteProduct('${doc.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
         }).join('');
-  } catch(e) { document.getElementById('products-table').innerHTML = `<tr><td colspan="4" class="empty-state">Error: ${e.message}</td></tr>`; }
+  } catch(e) { document.getElementById('products-table').innerHTML = `<tr><td colspan="5" class="empty-state">Error: ${e.message}</td></tr>`; }
+}
+/* ===== เครื่องมือคิดราคา–กำไร (Phase 2) ===== */
+// ส่วนลดต่อชั้นสมาชิก = ค่ามาตรฐานระบบ (ตรงกับ config.js: bronze/silver/gold/platinum)
+const PC_TIERS = [
+  { label: 'มือใหม่', discount: 0 },
+  { label: 'เงิน',    discount: 5 },
+  { label: 'ทอง',     discount: 10 },
+  { label: 'ปราชญ์',  discount: 15 }
+];
+// ป้ายกำไรขั้นต้น (ราคา vs ต้นทุน) — เขียว≥20% ส้ม≥5% แดง<5%
+function marginBadge(price, cost){
+  if (!(price > 0)) return '<span style="color:var(--muted)">—</span>';
+  const m = (price - cost) / price * 100;
+  const col = m >= 20 ? '#16a34a' : (m >= 5 ? '#d97706' : '#dc2626');
+  return '<span style="color:'+col+';font-weight:700">'+m.toFixed(0)+'%</span>';
+}
+function pricingUseSuggested(){
+  const total = parsePrice(document.getElementById('pc-factory').value) + parsePrice(document.getElementById('pc-other').value);
+  const mg = Math.min(99, Math.max(0, Number(document.getElementById('pc-margin').value) || 0));
+  const sug = total > 0 ? total / (1 - mg/100) : 0;
+  document.getElementById('pc-price').value = sug ? Math.ceil(sug) : '';
+  pricingCalc();
+}
+function pricingFromProduct(){
+  const cost = parsePrice(document.getElementById('prodb-cost').value);
+  const price = parsePrice(document.getElementById('prodb-price').value);
+  closeProdB();
+  showScreen('pricing', document.querySelector('.sb-item[onclick*="pricing"]'));
+  document.getElementById('pc-factory').value = cost || '';
+  document.getElementById('pc-other').value = '';
+  document.getElementById('pc-price').value = price || '';
+  if (!cost) toast('ℹ️ สินค้านี้ยังไม่มีต้นทุนโรงงาน — กรอกต้นทุนเพื่อคิดกำไร','');
+  pricingCalc();
+}
+function pricingCalc(){
+  const box = document.getElementById('pc-result');
+  const total = parsePrice(document.getElementById('pc-factory').value) + parsePrice(document.getElementById('pc-other').value);
+  const mg = Math.min(99, Math.max(0, Number(document.getElementById('pc-margin').value) || 0));
+  if (!(total > 0)) { box.style.display = 'none'; return; }
+  const suggested = total / (1 - mg/100);
+  const priceInput = parsePrice(document.getElementById('pc-price').value);
+  const price = priceInput > 0 ? priceInput : suggested;
+  const maxDisc = Math.max.apply(null, PC_TIERS.map(t => t.discount));
+  const beMaxDisc = total / (1 - maxDisc/100);
+
+  const rows = PC_TIERS.map(t => {
+    const net = price * (1 - t.discount/100);
+    const profit = net - total;
+    const m = net > 0 ? profit/net*100 : 0;
+    const col = profit <= 0 ? '#dc2626' : (m >= 20 ? '#16a34a' : '#d97706');
+    return '<tr><td>'+t.label+(t.discount?' <span style="color:var(--muted);font-size:12px">−'+t.discount+'%</span>':'')+'</td>'
+      + '<td>'+baht(net)+'</td>'
+      + '<td style="color:'+col+';font-weight:700">'+(profit>=0?'+':'')+baht(profit)+'</td>'
+      + '<td style="color:'+col+';font-weight:700">'+m.toFixed(0)+'%</td></tr>';
+  }).join('');
+
+  box.style.display = 'block';
+  box.innerHTML =
+    '<div class="card-title">ผลลัพธ์</div>'
+    + '<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">'
+      + '<div class="stat-card"><div class="stat-label">ต้นทุนรวม / ชิ้น</div><div class="stat-val">'+baht(total)+'</div></div>'
+      + '<div class="stat-card"><div class="stat-label">ราคาขายแนะนำ (กำไร '+mg+'%)</div><div class="stat-val" style="color:var(--primary)">'+baht(suggested)+'</div></div>'
+      + '<div class="stat-card"><div class="stat-label">คิดกำไรที่ราคา'+(priceInput>0?'':' (แนะนำ)')+'</div><div class="stat-val">'+baht(price)+'</div></div>'
+    + '</div>'
+    + '<div class="table-wrap"><table><thead><tr><th>ชั้นสมาชิก</th><th>ลูกค้าจ่ายสุทธิ</th><th>กำไร / ชิ้น</th><th>margin</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    + '<div style="margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.95">'
+      + '<div>🎯 <b>ราคาเท่าทุน</b> (ไม่มีส่วนลด): <b>'+baht(total)+'</b> — ต่ำกว่านี้ขาดทุนทันที</div>'
+      + '<div>🛡️ <b>ราคาขั้นต่ำที่ปลอดภัย</b>: <b>'+baht(beMaxDisc)+'</b> — ต่ำกว่านี้ สมาชิกชั้นสูงสุด (ลด '+maxDisc+'%) จะทำให้ขาดทุน</div>'
+    + '</div>'
+    + '<div style="margin-top:8px;font-size:12px;color:var(--muted)">* ส่วนลดต่อชั้นใช้ค่ามาตรฐานระบบ 0 / 5 / 10 / 15%</div>';
 }
 /* ===== Community Groups ===== */
 async function loadGroups() {
@@ -1405,7 +1568,7 @@ async function loadGroups() {
       : snap.docs.map(doc => {
           const g = doc.data();
           return `<tr><td style="font-weight:700">${escapeHtml(g.emoji||'👥')} ${escapeHtml(g.name||'—')}</td><td>${g.memberCount||0}</td><td>${g.postCount||0}</td>
-          <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editGroup('${doc.id}')">✏️ แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteGroup('${doc.id}')">🗑️ ลบ</button></td></tr>`;
+          <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editGroup('${doc.id}')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteGroup('${doc.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
         }).join('');
   } catch(e) { tb.innerHTML = `<tr><td colspan="4" class="empty-state">Error: ${e.message}</td></tr>`; }
 }
@@ -1487,7 +1650,7 @@ async function loadBadges() {
     : list.map(b => {
         const th = (BDG_METRIC_LABEL[b.metric] || b.metric) + ' ≥ ' + (b.threshold||0);
         return `<tr><td style="font-weight:700">${escapeHtml(b.emoji||'🎖️')} ${escapeHtml(b.name||'—')}</td><td>${escapeHtml(th)}</td>
-        <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteBadge('${b.id}')">🗑️ ลบ</button></td></tr>`;
+        <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteBadge('${b.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
       }).join('');
 }
 async function addBadge() {
@@ -1543,7 +1706,7 @@ async function seedDefaultBadges() {
 /* ===== CSV Import ===== */
 var __csvRows = [], __csvHeaders = [];
 var __csvFields = [
-  ['name','ชื่อสินค้า *'], ['price','ราคา'], ['oldPrice','ราคาเดิม'],
+  ['name','ชื่อสินค้า *'], ['price','ราคา'], ['oldPrice','ราคาเดิม'], ['cost','ต้นทุนโรงงาน'],
   ['category','หมวดหมู่'], ['url','ลิงก์'], ['image','รูป (URL)'],
   ['diseases','แท็กปัญหา (; คั่น)'], ['crops','แท็กใช้กับ (; คั่น)'],
   ['description','รายละเอียด'], ['badge','ป้าย'], ['soldCount','ยอดขาย']
@@ -1554,6 +1717,7 @@ function csvGuess(field, headers){
     name:['name','ชื่อ','product','title','สินค้า'],
     price:['price','ราคา','sale','ขาย'],
     oldPrice:['original','เดิม','ก่อนลด','list price','ปกติ'],
+    cost:['cost','ต้นทุน','ทุน','โรงงาน','factory','wholesale'],
     category:['category','หมวด','type','ประเภท'],
     url:['url','link','ลิงก์','web','href'],
     image:['image','รูป','photo','img','picture','ภาพ'],
@@ -1633,7 +1797,7 @@ async function csvImport(){
       if (dedup && (existing[key] || seen[key])) return;
       seen[key] = 1;
       items.push({
-        name: name, price: csvVal(r,'price'), oldPrice: csvVal(r,'oldPrice'),
+        name: name, price: parsePrice(csvVal(r,'price')), oldPrice: parsePrice(csvVal(r,'oldPrice')), cost: parsePrice(csvVal(r,'cost')),
         category: csvVal(r,'category') || defCat, url: csvVal(r,'url'), image: csvVal(r,'image'),
         affiliate: false, featured: false,
         diseases: csvSplit(csvVal(r,'diseases')), crops: csvSplit(csvVal(r,'crops')),
@@ -1662,13 +1826,14 @@ async function addProduct() {
   if (!name) { toast('❌ กรอกชื่อสินค้า','error'); return; }
   try {
     await aDb().collection('products').add({
-      name, price: document.getElementById('new-prod-price').value,
+      name, price: parsePrice(document.getElementById('new-prod-price').value),
+      cost: parsePrice(document.getElementById('new-prod-cost').value),
       category: document.getElementById('new-prod-cat').value,
       url: document.getElementById('new-prod-url').value,
       affiliate: document.getElementById('new-prod-affiliate').checked,
       diseases: document.getElementById('new-prod-diseases').value.split(',').map(s=>s.trim()).filter(Boolean),
       crops: document.getElementById('new-prod-crops').value.split(',').map(s=>s.trim()).filter(Boolean),
-      oldPrice: document.getElementById('new-prod-oldprice').value,
+      oldPrice: parsePrice(document.getElementById('new-prod-oldprice').value),
       soldCount: +document.getElementById('new-prod-sold').value || 0,
       badge: document.getElementById('new-prod-badge').value.trim(),
       featured: document.getElementById('new-prod-featured').checked,
@@ -1678,6 +1843,7 @@ async function addProduct() {
     toast('✅ เพิ่มสินค้าแล้ว','success');
     document.getElementById('new-prod-name').value = '';
     document.getElementById('new-prod-price').value = '';
+    document.getElementById('new-prod-cost').value = '';
     document.getElementById('new-prod-oldprice').value = '';
     document.getElementById('new-prod-sold').value = '';
     document.getElementById('new-prod-badge').value = '';
@@ -1746,6 +1912,12 @@ function aDb(){ return db.collection('tenants').doc(currentTenant); }
 function setCurrentTenant(tid){ currentTenant = tid; const lbl = document.getElementById('cur-tenant-label'); if (lbl) lbl.textContent = tid; }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 function baht(n){ return '฿' + Math.round(Number(n)||0).toLocaleString(); }
+// เก็บราคาเป็น "ตัวเลข" เสมอ: รับได้ทั้ง 180, "180", "180 บาท", "1,180" → คืน number (ว่าง/กรอกผิด = 0)
+function parsePrice(v){
+  if (typeof v === 'number') return isNaN(v) ? 0 : v;
+  const n = parseFloat(String(v||'').replace(/[^\d.]/g,''));
+  return isNaN(n) ? 0 : n;
+}
 
 const ORDER_META = {
   pending_payment:{t:'รอชำระเงิน',c:'#f5a623'},
@@ -1784,9 +1956,9 @@ function boceanCardHtml(r){
   const m = BOCEAN_META[r.status||'new'] || {t:r.status,c:'#888'};
   function row(label, val){ return val ? '<div class="oa-line"><b>'+label+':</b> '+escapeHtml(String(val))+'</div>' : ''; }
   let acts = '';
-  acts += '<button class="oa-btn oa-ship" onclick="setBoceanStatus(\''+r.id+'\',\'contacted\')">📞 ติดต่อแล้ว</button>';
-  acts += '<button class="oa-btn oa-confirm" onclick="provisionFromRequest(\''+r.id+'\')">✅ อนุมัติ + สร้างร้าน</button>';
-  acts += '<button class="oa-btn oa-cancel" onclick="setBoceanStatus(\''+r.id+'\',\'rejected\')">❌ ปฏิเสธ</button>';
+  acts += '<button class="oa-btn oa-ship" onclick="setBoceanStatus(\''+r.id+'\',\'contacted\')"><svg class="ic"><use href="#i-phone"/></svg> ติดต่อแล้ว</button>';
+  acts += '<button class="oa-btn oa-confirm" onclick="provisionFromRequest(\''+r.id+'\')"><svg class="ic"><use href="#i-check"/></svg> อนุมัติ + สร้างร้าน</button>';
+  acts += '<button class="oa-btn oa-cancel" onclick="setBoceanStatus(\''+r.id+'\',\'rejected\')"><svg class="ic"><use href="#i-x"/></svg> ปฏิเสธ</button>';
   return '<div class="oa-card">'+
     '<div class="oa-top"><span class="oa-id">'+escapeHtml(r.brandName||'-')+'</span>'+
       '<span class="oa-badge" style="background:'+m.c+'">'+m.t+'</span></div>'+
@@ -1835,17 +2007,17 @@ function tenantCardHtml(t){
   var base = (typeof location !== 'undefined' && location.origin) ? location.origin : 'https://phuansuan.web.app';
   var liveUrl = (t.id === 'phuansuan') ? base : (base + '/?t=' + encodeURIComponent(t.id));
   let acts = '';
-  if (!cur) acts += '<button class="oa-btn oa-ship" onclick="switchToTenant(\''+t.id+'\')">🔁 ดูแลแบรนด์นี้</button>';
+  if (!cur) acts += '<button class="oa-btn oa-ship" onclick="switchToTenant(\''+t.id+'\')"><svg class="ic"><use href="#i-repeat"/></svg> ดูแลแบรนด์นี้</button>';
   else acts += '<span class="oa-btn" style="background:var(--primary);color:var(--on-primary);cursor:default">📍 กำลังดูแล</span>';
   acts += suspended
-    ? '<button class="oa-btn oa-confirm" onclick="toggleTenantStatus(\''+t.id+'\',\'active\')">▶️ เปิดใช้</button>'
-    : '<button class="oa-btn oa-cancel" onclick="toggleTenantStatus(\''+t.id+'\',\'suspended\')">⏸️ ระงับ</button>';
+    ? '<button class="oa-btn oa-confirm" onclick="toggleTenantStatus(\''+t.id+'\',\'active\')"><svg class="ic"><use href="#i-play"/></svg> เปิดใช้</button>'
+    : '<button class="oa-btn oa-cancel" onclick="toggleTenantStatus(\''+t.id+'\',\'suspended\')"><svg class="ic"><use href="#i-pause"/></svg> ระงับ</button>';
   return '<div class="oa-card"'+(cur?' style="border:2px solid var(--primary)"':'')+'>'+
     '<div class="oa-top"><span class="oa-id">'+escapeHtml(t.name||t.id)+' <span style="color:var(--muted);font-weight:400">('+escapeHtml(t.id)+')</span></span>'+
       '<span class="oa-badge" style="background:'+stColor+'">'+stText+'</span></div>'+
     '<div class="oa-box" style="margin-top:8px">'+
       row('แพ็กเกจ', t.plan)+ row('โดเมน', (t.domains||[]).join(', '))+ row('Owner LINE', t.ownerLineId)+
-      '<div class="oa-line"><b>ลิงก์ใช้งาน:</b> <a href="'+liveUrl+'" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all">'+escapeHtml(liveUrl)+'</a> <button class="oa-btn" style="padding:2px 8px;font-size:12px;margin-left:6px" onclick="copyTenantLink(\''+t.id+'\')">📋 คัดลอก</button></div>'+
+      '<div class="oa-line"><b>ลิงก์ใช้งาน:</b> <a href="'+liveUrl+'" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all">'+escapeHtml(liveUrl)+'</a> <button class="oa-btn" style="padding:2px 8px;font-size:12px;margin-left:6px" onclick="copyTenantLink(\''+t.id+'\')"><svg class="ic"><use href="#i-copy"/></svg> คัดลอก</button></div>'+
     '</div>'+
     '<div class="oa-actions">'+acts+'</div>'+
   '</div>';
@@ -2009,11 +2181,11 @@ function orderCardHtml(o){
     : '<div class="oa-noslip">— ยังไม่มีสลิป —</div>';
 
   let acts = '';
-  if (o.status==='paid_review') acts += '<button class="oa-btn oa-confirm" onclick="confirmOrder(\''+o.id+'\')">✅ ยืนยันรับเงิน</button>';
-  if (o.status==='confirmed')   acts += '<button class="oa-btn oa-ship" onclick="shipOrder(\''+o.id+'\')">📮 จัดส่ง + เลขพัสดุ</button>';
-  if (o.status==='shipped')     acts += '<button class="oa-btn oa-done" onclick="completeOrder(\''+o.id+'\')">🏁 ปิดออเดอร์ (สำเร็จ)</button>';
+  if (o.status==='paid_review') acts += '<button class="oa-btn oa-confirm" onclick="confirmOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-check"/></svg> ยืนยันรับเงิน</button>';
+  if (o.status==='confirmed')   acts += '<button class="oa-btn oa-ship" onclick="shipOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-truck"/></svg> จัดส่ง + เลขพัสดุ</button>';
+  if (o.status==='shipped')     acts += '<button class="oa-btn oa-done" onclick="completeOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ปิดออเดอร์ (สำเร็จ)</button>';
   if (['pending_payment','paid_review','confirmed'].indexOf(o.status) > -1)
-    acts += '<button class="oa-btn oa-cancel" onclick="cancelOrder(\''+o.id+'\')">❌ ยกเลิก</button>';
+    acts += '<button class="oa-btn oa-cancel" onclick="cancelOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-x"/></svg> ยกเลิก</button>';
 
   const track = o.trackingNumber ? '<div class="oa-line" style="color:#7b61ff;font-weight:600">📮 เลขพัสดุ: '+escapeHtml(o.trackingNumber)+'</div>' : '';
 
