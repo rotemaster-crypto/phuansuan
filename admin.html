@@ -1330,13 +1330,24 @@ async function loadFeatures() {
   } catch(e) {}
 }
 async function saveFeatures() {
+  const tid = currentTenant;
   try {
+    // เขียนเฉพาะ toggle ที่ render จริง (กัน ?? true บังคับเปิด feature ที่ไม่มีช่อง)
     const data = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-    Object.entries(FEAT_MAP).forEach(([key, id]) => { data[key] = document.getElementById(id)?.checked ?? true; });
-    await aDb().collection('settings').doc('features').set(data, { merge: true });
-    toast('✅ บันทึกแล้ว','success');
+    Object.entries(FEAT_MAP).forEach(([key, id]) => { const el = document.getElementById(id); if (el) data[key] = el.checked; });
+    const ref = aDb().collection('settings').doc('features');
+    await ref.set(data, { merge: true });
+    // อ่านกลับมายืนยันว่าเขียนลง tenant นี้จริง (กันเคสสิทธิ์เพี้ยน/สลับ tenant เงียบ)
+    const chk = await ref.get();
+    const cd = chk.exists ? chk.data() : {};
+    const mismatch = Object.keys(data).filter(k => k !== 'updatedAt' && cd[k] !== data[k]);
+    if (mismatch.length) {
+      toast('⚠️ บันทึกไม่ลง '+tid+' ('+mismatch.length+' ค่าไม่ตรง) — เช็กสิทธิ์บัญชี','error');
+    } else {
+      toast('✅ บันทึกแล้ว → '+tid,'success');
+    }
     applyAdminFeatureFlags();   // เปิด/ปิดเมนูคิดราคาให้เห็นผลทันที
-  } catch(e) { toast('❌ '+e.message,'error'); }
+  } catch(e) { toast('❌ '+tid+': '+(e.code||e.message),'error'); }
 }
 // แสดง/ซ่อนเมนู+ปุ่มของ feature ที่คุมต่อแบรนด์ (ตอนนี้: เครื่องมือคิดราคา)
 async function applyAdminFeatureFlags() {
