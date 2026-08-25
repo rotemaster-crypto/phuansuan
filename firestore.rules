@@ -35,6 +35,8 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['adminLineIds', 'updatedAt']);
 
       match /settings/{doc} { allow read: if true; allow write: if canManage(t); }
+      // ข้อมูลลับต่อแบรนด์ (เช่น API key ขนส่ง) — เข้าถึงผ่าน Cloud Function เท่านั้น
+      match /private/{doc} { allow read, write: if false; }
       match /products/{productId} { allow read: if true; allow write: if canManage(t); }
       // สุ่มจับรางวัล (Activity Engine) — แอดมินสร้าง/แก้ · ผู้ใช้อ่านได้ · หมุนจริงผ่าน Cloud Function เท่านั้น
       match /luckyDraws/{drawId} { allow read: if true; allow write: if canManage(t); }

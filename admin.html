@@ -788,6 +788,34 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <button class="btn btn-primary" onclick="saveShipping()"><svg class="ic"><use href="#i-save"/></svg> บันทึกค่าจัดส่ง</button>
     </div>
   </div>
+
+  <div class="card"><div class="card-title">📦 เชื่อมระบบขนส่ง (สร้างเลขพัสดุอัตโนมัติ)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">เชื่อม API ขนส่งเพื่อสร้างเลขพัสดุ + ป้าย barcode จริงตอนยืนยันออเดอร์ · ยังไม่มี key ใช้ <b>โหมดทดสอบ</b> ลอง flow ได้เลย</div>
+    <div class="form-grid">
+      <div class="fg"><label>เปิดใช้ระบบขนส่งอัตโนมัติ</label><label class="toggle"><input type="checkbox" id="cr-active"><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>🧪 โหมดทดสอบ (เลขพัสดุจำลอง)</label><label class="toggle"><input type="checkbox" id="cr-mock" checked><span class="toggle-slider"></span></label></div>
+      <div class="fg"><label>ผู้ให้บริการ (aggregator/ขนส่ง)</label>
+        <select id="cr-provider">
+          <option value="shippop">Shippop (หลายขนส่งใน API เดียว)</option>
+          <option value="flash">Flash Express (ต่อตรง)</option>
+          <option value="kerry">Kerry (ต่อตรง)</option>
+          <option value="other">อื่นๆ</option>
+        </select>
+      </div>
+      <div class="fg" style="grid-column:1/-1"><label>ขนส่งที่เปิดให้เลือก (ติ๊กได้หลายเจ้า)</label>
+        <div id="cr-couriers" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px"></div>
+      </div>
+      <div class="fg" style="grid-column:1/-1"><label>API Key <span id="cr-keystatus" style="color:var(--muted);font-weight:400"></span></label>
+        <div style="display:flex;gap:8px"><input id="cr-apikey" type="password" placeholder="วาง API key ที่ได้จากผู้ให้บริการ" style="flex:1">
+          <button class="btn btn-primary" onclick="saveCourierKey()" style="flex:none"><svg class="ic"><use href="#i-save"/></svg> บันทึก key</button></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">🔒 key เก็บฝั่งเซิร์ฟเวอร์ (client อ่านไม่ได้) · เว้นว่าง = ใช้โหมดทดสอบ</div>
+      </div>
+    </div>
+    <div class="save-row">
+      <button class="btn btn-ghost" onclick="loadCourier()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
+      <button class="btn btn-primary" onclick="saveCourier()"><svg class="ic"><use href="#i-save"/></svg> บันทึกการตั้งค่า</button>
+    </div>
+  </div>
 </div>
 
 <!-- PRODUCTS -->
@@ -1731,6 +1759,7 @@ async function loadShopDecor() {
   } catch(e) {}
   loadShipping();
   loadStore();
+  loadCourier();
 }
 // ── ข้อมูลร้านค้า (settings/store) — ใช้เป็นผู้ส่งบนใบปะหน้า ──
 async function loadStore(){
@@ -1752,6 +1781,68 @@ async function saveStore(){
     }, { merge: true });
     toast('✅ บันทึกข้อมูลร้านแล้ว','success');
   } catch(e){ toast('❌ '+e.message,'error'); }
+}
+// ── เชื่อมระบบขนส่ง (settings/courier + secret ผ่าน Cloud Function) ──
+var COURIER_LIST = [ {id:'thaipost',name:'ไปรษณีย์ไทย'}, {id:'flash',name:'Flash'}, {id:'kerry',name:'Kerry'}, {id:'jt',name:'J&T'}, {id:'best',name:'Best'}, {id:'ninja',name:'Ninja'}, {id:'spx',name:'SPX'} ];
+function renderCourierChecks(enabled){
+  enabled = enabled || [];
+  var box = document.getElementById('cr-couriers'); if(!box) return;
+  box.innerHTML = COURIER_LIST.map(function(c){
+    var on = enabled.indexOf(c.id) > -1;
+    return '<label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600"><input type="checkbox" class="cr-cbx" value="'+c.id+'"'+(on?' checked':'')+'> '+c.name+'</label>';
+  }).join('');
+}
+async function loadCourier(){
+  try {
+    const doc = await aDb().collection('settings').doc('courier').get();
+    const d = doc.exists ? doc.data() : {};
+    const sc=(id,v)=>{ const e=document.getElementById(id); if(e) e.checked=v; };
+    const sv=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v; };
+    sc('cr-active', d.active === true);
+    sc('cr-mock', d.mock !== false);   // default โหมดทดสอบเปิด
+    sv('cr-provider', d.provider || 'shippop');
+    renderCourierChecks(Array.isArray(d.enabledCouriers)?d.enabledCouriers:['thaipost','flash','kerry','jt']);
+    var st = document.getElementById('cr-keystatus');
+    if (st) st.textContent = d.hasKey ? '· 🔒 ตั้งค่า key แล้ว' : '· ยังไม่ได้ตั้ง key (โหมดทดสอบ)';
+    var kf = document.getElementById('cr-apikey'); if (kf) kf.value = '';
+  } catch(e){}
+}
+async function saveCourier(){
+  try {
+    var enabled = Array.prototype.slice.call(document.querySelectorAll('.cr-cbx')).filter(function(x){return x.checked;}).map(function(x){return x.value;});
+    await aDb().collection('settings').doc('courier').set({
+      active: document.getElementById('cr-active').checked,
+      mock: document.getElementById('cr-mock').checked,
+      provider: document.getElementById('cr-provider').value,
+      enabledCouriers: enabled,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    toast('✅ บันทึกการตั้งค่าขนส่งแล้ว','success');
+    loadOrders();   // ปุ่มสร้างเลขพัสดุในออเดอร์อาจเปลี่ยน
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function saveCourierKey(){
+  var key = (document.getElementById('cr-apikey').value||'').trim();
+  if (!key){ toast('❌ วาง API key ก่อน','error'); return; }
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('setCourierCredential');
+    await fn({ tid: currentTenant, provider: document.getElementById('cr-provider').value, apiKey: key });
+    await aDb().collection('settings').doc('courier').set({ hasKey: true }, { merge: true });   // flag ไว้โชว์สถานะ (ไม่ใช่ key)
+    document.getElementById('cr-apikey').value = '';
+    toast('✅ บันทึก API key แล้ว (เก็บฝั่งเซิร์ฟเวอร์)','success');
+    loadCourier();
+  } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
+}
+// สร้างเลขพัสดุจากออเดอร์ (โหมดทดสอบได้ทันที · โหมดจริงรอเสียบ API)
+async function createShipmentFor(id){
+  if (!confirm('สร้างเลขพัสดุ + เปลี่ยนสถานะเป็น "จัดส่งแล้ว"?')) return;
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('createShipment');
+    var res = await fn({ tid: currentTenant, orderId: id, courier: '' });
+    var d = (res && res.data) || {};
+    toast((d.mock?'🧪 (ทดสอบ) ':'')+'เลขพัสดุ: '+(d.trackingNumber||''),'success');
+    loadOrders();
+  } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
 }
 // ── ค่าจัดส่ง (settings/commerce) ──────────────────────────
 function shipModeUI(){
@@ -2954,7 +3045,8 @@ function orderCardHtml(o){
 
   let acts = '';
   if (o.status==='paid_review') acts += '<button class="oa-btn oa-confirm" onclick="confirmOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-check"/></svg> ยืนยันรับเงิน</button>';
-  if (o.status==='confirmed')   acts += '<button class="oa-btn oa-ship" onclick="shipOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-truck"/></svg> จัดส่ง + เลขพัสดุ</button>';
+  if (o.status==='confirmed')   acts += '<button class="oa-btn oa-ship" onclick="shipOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-truck"/></svg> จัดส่ง + เลขพัสดุ (มือ)</button>';
+  if (o.status==='confirmed')   acts += '<button class="oa-btn" onclick="createShipmentFor(\''+o.id+'\')" style="background:#0ea5e9;color:#fff"><svg class="ic"><use href="#i-package"/></svg> สร้างเลขพัสดุอัตโนมัติ</button>';
   if (o.status==='shipped')     acts += '<button class="oa-btn oa-done" onclick="completeOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ปิดออเดอร์ (สำเร็จ)</button>';
   if (['pending_payment','paid_review','confirmed'].indexOf(o.status) > -1)
     acts += '<button class="oa-btn oa-cancel" onclick="cancelOrder(\''+o.id+'\')"><svg class="ic"><use href="#i-x"/></svg> ยกเลิก</button>';

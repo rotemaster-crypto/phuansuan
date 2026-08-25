@@ -69,7 +69,11 @@ firebase emulators:exec --only functions,firestore,auth --project demo-bocean \
 - **progress ฝั่ง server**: points (จาก user.points) / posts (postCount) / purchases (นับออเดอร์ที่จ่ายแล้ว)
 - รางวัล **แต้ม** หรือ **คูปอง** (สร้าง coupon จริง) · **กันรับซ้ำ** (missionClaims) · ยังไม่ถึงเป้า/ภารกิจปิด → `failed-precondition`
 
-**`prediction.test.js` (9) — submitPrediction + settlePrediction (ทายผล):**
+**`courier.test.js` (6) — setCourierCredential + createShipment (เชื่อมขนส่ง, โครงรอ API):**
+- เก็บ API key ใน `private/courier` (rules deny client · function เขียน) · **โหมดทดสอบ** → เลขพัสดุ MOCK + status shipped
+- guard: ยังไม่เปิดใช้/มีเลขพัสดุแล้ว → `failed-precondition` · โหมดจริง(มี key) → `unimplemented` (รอเสียบ API) · ไม่ใช่แอดมิน → `permission-denied`
+
+**`prediction.test.js` (11) — submitPrediction + settlePrediction (ทายผล):**
 - **ส่งคำทาย**: entry + entriesCount++ · choice ตัวเลือกผิด → `invalid-argument` · ทายซ้ำ/ปิดรับ/แต้มไม่พอ → `failed-precondition` · หักค่าเข้าร่วม
 - **เฉลย (admin)**: ผู้ชนะได้แต้ม/คูปองอัตโนมัติ + entry won/rewarded · **idempotent** (เฉลยซ้ำไม่จ่ายซ้ำ) · ไม่ใช่แอดมิน → `permission-denied`
 

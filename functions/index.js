@@ -621,6 +621,81 @@ exports.settlePrediction = onCall(async (req) => {
 });
 
 // ============================================================
+//  ขนส่ง (Courier integration) — โครงเตรียมไว้เสียบ API จริงทีหลัง
+//  setCourierCredential: เก็บ API key ไว้ใน private/courier (client อ่านไม่ได้)
+//  createShipment: สร้างเลขพัสดุ (มี mock mode ให้เทสต์ · จุดเสียบ API จริงมี TODO)
+// ============================================================
+function requireAdmin(req, tid) {
+  const uid = req.auth && req.auth.uid;
+  const token = (req.auth && req.auth.token) || {};
+  const isAdmin = token.admin === true || (token.tadmin && token.tadmin[tid] === true);
+  if (!uid || !isAdmin) throw new HttpsError("permission-denied", "เฉพาะแอดมินเท่านั้น");
+  return uid;
+}
+
+exports.setCourierCredential = onCall(async (req) => {
+  const tid = await resolveTid(req.data && req.data.tid);
+  requireAdmin(req, tid);
+  const provider = ((req.data && req.data.provider) || "").toString();
+  const apiKey = ((req.data && req.data.apiKey) || "").toString();
+  const apiSecret = ((req.data && req.data.apiSecret) || "").toString();
+  if (!provider) throw new HttpsError("invalid-argument", "ต้องระบุ provider");
+  // เก็บ secret ในที่ client อ่านไม่ได้ (rules: private/* read,write=false → เข้าถึงผ่าน admin SDK เท่านั้น)
+  await troot(tid).collection("private").doc("courier").set({
+    provider: provider, apiKey: apiKey, apiSecret: apiSecret,
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  return { ok: true, hasKey: apiKey.length > 0 };
+});
+
+exports.createShipment = onCall(async (req) => {
+  const tid = await resolveTid(req.data && req.data.tid);
+  requireAdmin(req, tid);
+  const orderId = ((req.data && req.data.orderId) || "").toString();
+  const courier = ((req.data && req.data.courier) || "").toString();
+  if (!orderId) throw new HttpsError("invalid-argument", "ต้องระบุ orderId");
+
+  const orderRef = troot(tid).collection("orders").doc(orderId);
+  const [oSnap, cfgSnap, secSnap] = await Promise.all([
+    orderRef.get(),
+    troot(tid).collection("settings").doc("courier").get(),
+    troot(tid).collection("private").doc("courier").get(),
+  ]);
+  if (!oSnap.exists) throw new HttpsError("not-found", "ไม่พบออเดอร์");
+  const order = oSnap.data();
+  if (order.trackingNumber) throw new HttpsError("failed-precondition", "ออเดอร์นี้มีเลขพัสดุแล้ว");
+  const cfg = cfgSnap.exists ? cfgSnap.data() : {};
+  if (cfg.active !== true) throw new HttpsError("failed-precondition", "ยังไม่ได้เปิดใช้ระบบขนส่งอัตโนมัติ (ตั้งค่าในแอดมิน)");
+  const sec = secSnap.exists ? secSnap.data() : {};
+  const useMock = cfg.mock === true || !sec.apiKey;
+
+  let trackingNumber, labelUrl = "";
+  if (useMock) {
+    // โหมดทดสอบ: เลขพัสดุจำลอง — ให้ลอง flow ได้โดยยังไม่ต้องมี API จริง
+    const suffix = (Date.now().toString(36) + Math.floor(order.total || 0).toString(36)).toUpperCase().slice(-8);
+    trackingNumber = "MOCK-" + (courier || "TH").toUpperCase().slice(0, 3) + "-" + suffix;
+  } else {
+    // ────────────────────────────────────────────────────────
+    // TODO(เชื่อม API จริง): provider = cfg.provider (shippop/flash/kerry/...)
+    //   ใช้ sec.apiKey / sec.apiSecret เรียก REST สร้าง shipment ของ `courier`
+    //   ดึง order.shipping (ผู้รับ) + settings/store (ผู้ส่ง) + order.items/weight
+    //   คืน { trackingNumber, labelUrl } จาก response แล้วเซ็ตด้านล่าง
+    // ────────────────────────────────────────────────────────
+    throw new HttpsError("unimplemented", "ยังไม่ได้เชื่อม API จริงของ " + (cfg.provider || "provider") + " — ส่ง credential มาให้ต่อได้เลย (ตอนนี้ใช้โหมดทดสอบไปก่อนได้)");
+  }
+
+  await orderRef.update({
+    status: "shipped",
+    courier: courier || cfg.provider || "",
+    trackingNumber: trackingNumber,
+    labelUrl: labelUrl,
+    shippedAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+  return { ok: true, trackingNumber: trackingNumber, labelUrl: labelUrl, mock: useMock };
+});
+
+// ============================================================
 //  analyzePlant — วิเคราะห์โรคพืชจากรูปด้วย Gemini Vision
 // ============================================================
 const { defineSecret } = require("firebase-functions/params");
