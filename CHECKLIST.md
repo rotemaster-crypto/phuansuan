@@ -8,7 +8,8 @@
 
 - ✅ **Phase 0 ปิดครบ (2026-08-24)** — isolation แน่น: rules-test 15/15 เขียวใน CI, + bocean.web.app landing
 - ✅ **Phase 1 ปิดครบ (2026-08-24)** — Community Groups (มี join, คุมต่อแบรนด์) + Badges (ตราสะสม แจกจริง server-side) + จุดไฟชุมชน (seed กลุ่ม/โพสต์ต้อนรับ/ตรา + checklist onboarding) + e2e ร้านผ่าน + toast แทน alert/confirm · rules-test 22/22 · deploy + push ครบ
-- ▶️ **Phase 2 กำลังทำ:** ✅ แปลงราคาเป็นตัวเลข + ✅ เครื่องมือต้นทุน–ราคา–margin (deploy 2026-08-25) · ✅ icon minimal social ทั้ง 2 แอป · **ถัดไป = ผู้ช่วยการตลาด AI** (text-gen คำโปรย/แคปชัน/โปรโมชัน จาก product data — reuse Gemini `analyzePlant`)
+- ✅ **Phase 2 ปิด (2026-08-25 ตาม scope ที่ตัด):** แปลงราคาเป็นตัวเลข + เครื่องมือต้นทุน–ราคา–margin + icon minimal social ทั้ง 2 แอป · **ผู้ช่วยการตลาด AI = Roger ตัดออก เลื่อนไป Phase 4**
+- ▶️ **ถัดไป = Phase 3** (ปล่อยจริง + วัดผล): feature flag ต่อแบรนด์ → dogfood DemeterRich → ลูกค้านำร่อง 1 ราย
 - ⚠️ ค้าง verify: เครื่องมือคิดราคาฝั่งแอดมิน ยัง test สดไม่ได้ (ต้อง login) — Roger ช่วยกดลองในแอดมินจริงเมื่อสะดวก
 - รายละเอียดงานย่อย → ROADMAP.md · สถานะฟีเจอร์จริง → STATUS.md
 
