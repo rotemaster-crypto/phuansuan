@@ -3387,13 +3387,16 @@ async function loadShop(){
                       .filter(p => !p.tenantId || !tid || p.tenantId === tid)
                       .filter(p => p.active !== false);   // ซ่อนสินค้าที่ปิดขาย
     }
-    if (!list.length) list = (APP_CONFIG.products||[]).map(p => Object.assign({_id:p.id}, p));
+    // ไม่ fallback ไปสินค้าตัวอย่างใน config แล้ว — ร้านที่ยังไม่ลงสินค้าจะขึ้น empty state
+    // (สินค้า config ไม่มีใน Firestore → เคยทำให้ลูกค้าซื้อแล้วเจอ "ไม่พบสินค้าบางรายการ")
     shopProducts = list.map(p => ({
       id: p._id || p.id,
       name: p.name || 'สินค้า',
       price: parsePrice(p.price),
       category: p.category || '',
       image: p.image || '',
+      url: p.url || '',
+      affiliate: p.affiliate === true,
       weightKg: Number(p.weightKg) || commerceCfg().defaultWeightKg,
       oldPrice: parsePrice(p.oldPrice),
       discountPct: Number(p.discountPct) || 0,
@@ -3437,7 +3440,7 @@ function renderProducts(){
   const grid = document.getElementById('prod-grid');
   if (!grid) return;
   const list = shopProducts.filter(p => activeCat==='all' || p.category===activeCat);
-  if (!list.length){ grid.innerHTML = '<div class="shop-empty">ยังไม่มีสินค้าในหมวดนี้</div>'; return; }
+  if (!list.length){ grid.innerHTML = '<div class="shop-empty">'+(shopProducts.length ? 'ยังไม่มีสินค้าในหมวดนี้' : 'ยังไม่มีสินค้าในร้านตอนนี้')+'</div>'; return; }
   grid.innerHTML = list.map(function(p){
     var dp = discPct(p);
     var badge = p.badge ? '<div class="prod-badge">'+escapeHtml(p.badge)+'</div>' : '';
@@ -4071,7 +4074,7 @@ function loadRelProducts(){
                         .filter(function(p){ return !p.tenantId || !tid || p.tenantId===tid; });
       }
     } catch(e){ list = []; }
-    if (!list.length) list = (APP_CONFIG.products||[]).map(function(p){ return Object.assign({_id:p.id}, p); });
+    // ไม่ fallback ไปสินค้าตัวอย่างใน config — โชว์เฉพาะสินค้าจริงใน DB (กัน addToCart สินค้าที่ไม่มีจริง)
     relProducts = list.map(function(p){
       return {
         id: p._id || p.id,
