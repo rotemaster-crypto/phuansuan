@@ -13,6 +13,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -905,9 +906,9 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
     <div class="save-row"><button class="btn btn-ghost" onclick="resetProdForm()">ล้างฟอร์ม</button><button class="btn btn-primary" onclick="addProduct()"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มสินค้า</button></div>
   </div>
-  <div class="card"><div class="card-title">📥 นำเข้าสินค้าจาก CSV</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">อัปโหลดไฟล์ CSV (export จาก Shopee/Lazada หรือไฟล์ทั่วไป) → จับคู่คอลัมน์ → ดูตัวอย่าง → นำเข้าเข้าแบรนด์ที่กำลังดูแล · แท็กในเซลล์ใช้ <b>;</b> คั่น</div>
-    <input type="file" id="csv-file" accept=".csv,text/csv" onchange="csvOnFile(this)">
+  <div class="card"><div class="card-title">📥 นำเข้าสินค้าจาก Shopee / CSV / Excel</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">อัปโหลดไฟล์ <b>.xlsx</b> ที่ export จาก Shopee Seller Center (หรือ .csv/Excel ทั่วไป) → ระบบจับคู่คอลัมน์อัตโนมัติ (ปรับได้) → ดูตัวอย่าง → นำเข้าเข้าแบรนด์ที่กำลังดูแล · แท็กในเซลล์ใช้ <b>;</b> คั่น<br>💡 Shopee: เข้า Seller Center → สินค้าของฉัน → ส่งออก/Export → ได้ไฟล์ .xlsx มาอัปที่นี่</div>
+    <input type="file" id="csv-file" accept=".csv,.xlsx,.xls,text/csv" onchange="csvOnFile(this)">
     <div id="csv-config" style="display:none;margin-top:14px">
       <div class="card-title" style="font-size:14px">จับคู่คอลัมน์</div>
       <div class="form-grid" id="csv-map"></div>
@@ -2728,7 +2729,7 @@ async function seedDefaultBadges() {
 /* ===== CSV Import ===== */
 var __csvRows = [], __csvHeaders = [];
 var __csvFields = [
-  ['name','ชื่อสินค้า *'], ['price','ราคา'], ['oldPrice','ราคาเดิม'], ['cost','ต้นทุนโรงงาน'],
+  ['name','ชื่อสินค้า *'], ['price','ราคา'], ['stock','สต็อก/คลัง'], ['oldPrice','ราคาเดิม'], ['cost','ต้นทุนโรงงาน'],
   ['category','หมวดหมู่'], ['url','ลิงก์'], ['image','รูป (URL)'],
   ['diseases','แท็กปัญหา (; คั่น)'], ['crops','แท็กใช้กับ (; คั่น)'],
   ['description','รายละเอียด'], ['badge','ป้าย'], ['soldCount','ยอดขาย']
@@ -2738,6 +2739,7 @@ function csvGuess(field, headers){
   var kw = {
     name:['name','ชื่อ','product','title','สินค้า'],
     price:['price','ราคา','sale','ขาย'],
+    stock:['stock','คลัง','สต็อก','คงเหลือ','quantity','qty','inventory','จำนวนสินค้า','จำนวน'],
     oldPrice:['original','เดิม','ก่อนลด','list price','ปกติ'],
     cost:['cost','ต้นทุน','ทุน','โรงงาน','factory','wholesale'],
     category:['category','หมวด','type','ประเภท'],
@@ -2756,9 +2758,31 @@ function csvGuess(field, headers){
   }
   return '';
 }
+function csvFeedRows(rows){
+  __csvRows = (rows || []).filter(function(r){ return r && Object.keys(r).length; });
+  __csvHeaders = __csvRows.length ? Object.keys(__csvRows[0]) : [];
+  if (!__csvRows.length){ toast('❌ ไฟล์ว่างหรืออ่านไม่ได้','error'); return; }
+  csvRenderMapping(); csvRenderPreview();
+  document.getElementById('csv-config').style.display = 'block';
+}
 function csvOnFile(input){
   var f = input.files && input.files[0];
   if (!f) return;
+  var ext = (f.name.split('.').pop() || '').toLowerCase();
+  // Excel (.xlsx/.xls) เช่นไฟล์ export ของ Shopee → อ่านด้วย SheetJS
+  if (ext === 'xlsx' || ext === 'xls'){
+    if (typeof XLSX === 'undefined'){ toast('❌ ตัวอ่าน Excel ยังโหลดไม่เสร็จ ลองใหม่','error'); return; }
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        var wb = XLSX.read(e.target.result, { type:'array' });
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        csvFeedRows(XLSX.utils.sheet_to_json(ws, { defval:'' }));
+      } catch(err){ toast('❌ อ่าน Excel ไม่สำเร็จ: '+(err.message||err),'error'); }
+    };
+    reader.readAsArrayBuffer(f);
+    return;
+  }
   if (typeof Papa === 'undefined'){ toast('❌ CSV parser ยังโหลดไม่เสร็จ ลองใหม่','error'); return; }
   Papa.parse(f, {
     header: true, skipEmptyLines: true,
@@ -2819,9 +2843,9 @@ async function csvImport(){
       if (dedup && (existing[key] || seen[key])) return;
       seen[key] = 1;
       items.push({
-        name: name, price: parsePrice(csvVal(r,'price')), oldPrice: parsePrice(csvVal(r,'oldPrice')), cost: parsePrice(csvVal(r,'cost')),
+        name: name, price: parsePrice(csvVal(r,'price')), stock: parseStock(csvVal(r,'stock')), oldPrice: parsePrice(csvVal(r,'oldPrice')), cost: parsePrice(csvVal(r,'cost')),
         category: csvVal(r,'category') || defCat, url: csvVal(r,'url'), image: csvVal(r,'image'),
-        affiliate: false, featured: false,
+        active: true, affiliate: false, featured: false,
         diseases: csvSplit(csvVal(r,'diseases')), crops: csvSplit(csvVal(r,'crops')),
         description: csvVal(r,'description'), badge: csvVal(r,'badge'),
         soldCount: parseInt(csvVal(r,'soldCount'),10) || 0,
