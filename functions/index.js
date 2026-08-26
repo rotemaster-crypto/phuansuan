@@ -531,6 +531,49 @@ exports.adminCancelOrder = onCall(async (req) => {
 });
 
 // ============================================================
+//  B2: order state machine — setOrderStatus (แอดมิน) เปลี่ยนสถานะผ่าน callable
+//  บังคับ transition ชุดเดียว (แทน admin เขียน status ตรง). ยกเลิก = adminCancelOrder
+//  (ต้องคืนสต็อก), auto-ship = createShipment; ที่นี่คุม confirm / ship(manual) / complete
+// ============================================================
+const ORDER_TRANSITIONS = {
+  pending_payment: ["paid_review", "confirmed", "cancelled"],
+  paid_review:     ["confirmed", "cancelled"],
+  confirmed:       ["shipped", "cancelled"],
+  shipped:         ["completed", "cancelled"],
+  completed:       [],
+  cancelled:       [],
+};
+const ORDER_STATUS_TS = { paid_review: "paidAt", confirmed: "confirmedAt", shipped: "shippedAt", completed: "completedAt" };
+exports._orderCanTransition = (from, to) => (ORDER_TRANSITIONS[from] || []).includes(to);  // unit test
+
+exports.setOrderStatus = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  const token = (req.auth && req.auth.token) || {};
+  const tid = await resolveTid(req.data && req.data.tid);
+  const isAdmin = token.admin === true || (token.tadmin && token.tadmin[tid] === true);
+  if (!uid || !isAdmin) throw new HttpsError("permission-denied", "เฉพาะแอดมินเท่านั้น");
+  const orderId = ((req.data && req.data.orderId) || "").toString();
+  const to = ((req.data && req.data.to) || "").toString();
+  if (!orderId) throw new HttpsError("invalid-argument", "ต้องระบุ orderId");
+  if (to === "cancelled") throw new HttpsError("failed-precondition", "ยกเลิกออเดอร์ผ่าน adminCancelOrder (ต้องคืนสต็อก)");
+  if (!ORDER_STATUS_TS[to]) throw new HttpsError("invalid-argument", "สถานะปลายทางไม่ถูกต้อง");
+  const trackingNumber = req.data && req.data.trackingNumber;
+  const orderRef = troot(tid).collection("orders").doc(orderId);
+  return admin.firestore().runTransaction(async (tx) => {
+    const s = await tx.get(orderRef);
+    if (!s.exists) throw new HttpsError("not-found", "ไม่พบออเดอร์");
+    const from = s.data().status || "pending_payment";
+    if (!(ORDER_TRANSITIONS[from] || []).includes(to)) {
+      throw new HttpsError("failed-precondition", "เปลี่ยนสถานะจาก " + from + " → " + to + " ไม่ได้");
+    }
+    const upd = { status: to, updatedAt: FieldValue.serverTimestamp(), [ORDER_STATUS_TS[to]]: FieldValue.serverTimestamp() };
+    if (to === "shipped" && typeof trackingNumber === "string" && trackingNumber.trim()) upd.trackingNumber = trackingNumber.trim();
+    tx.update(orderRef, upd);
+    return { ok: true, from: from, to: to };
+  });
+});
+
+// ============================================================
 //  claimMission — รับรางวัลภารกิจ (Phase 4) · server ตรวจ progress เอง
 //  progress ดึงจากตัวนับที่มีอยู่: points / postCount / จำนวนออเดอร์ที่จ่ายแล้ว
 //  รางวัล = แต้ม หรือ คูปอง · กันรับซ้ำด้วย missionClaims/{missionId}
