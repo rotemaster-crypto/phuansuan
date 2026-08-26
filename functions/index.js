@@ -1075,16 +1075,22 @@ exports.analyzePlant = onCall(
 
     const tid = await resolveTid(req.data && req.data.tid);
 
-    // ── เช็คโควต้ารายวัน (ใต้ tenant) ─────────────────────
+    // ── จองโควต้ารายวัน (atomic) ก่อนเรียก Gemini ─────────
+    // B9: เดิมอ่าน-เช็ค แล้วค่อย increment ทีหลัง → ยิงขนานอ่านค่าเดียวกันทะลุโควต้าได้
+    //     (TOCTOU, ค่า Gemini บาน) → ย้ายมา reserve ใน transaction ก่อนเรียกจริง
     const today = new Date().toISOString().slice(0, 10);
     const quotaRef = troot(tid).collection("users").doc(uid)
       .collection("aiUsage").doc(today);
-    const quotaSnap = await quotaRef.get();
-    const usedToday = quotaSnap.exists ? (quotaSnap.data().count || 0) : 0;
-    if (usedToday >= DAILY_QUOTA) {
-      throw new HttpsError("resource-exhausted",
-        `วันนี้ใช้ครบ ${DAILY_QUOTA} ครั้งแล้ว ลองใหม่พรุ่งนี้นะครับ 🌱`);
-    }
+    let usedToday = 0;
+    await admin.firestore().runTransaction(async (tx) => {
+      const s = await tx.get(quotaRef);
+      usedToday = s.exists ? (Number(s.data().count) || 0) : 0;
+      if (usedToday >= DAILY_QUOTA) {
+        throw new HttpsError("resource-exhausted",
+          `วันนี้ใช้ครบ ${DAILY_QUOTA} ครั้งแล้ว ลองใหม่พรุ่งนี้นะครับ 🌱`);
+      }
+      tx.set(quotaRef, { count: usedToday + 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    });
 
     // ── เรียก Gemini Vision ───────────────────────────────
     const prompt = `คุณคือผู้เชี่ยวชาญโรคพืชของไทย วิเคราะห์รูปนี้ซึ่งเป็น "${cropName}"
@@ -1148,17 +1154,14 @@ exports.analyzePlant = onCall(
         };
       }
     } catch (err) {
+      // B9: refund โควต้าที่จองไว้ — การเรียกไม่สำเร็จไม่ควรกินโควต้า
+      await quotaRef.set({ count: FieldValue.increment(-1) }, { merge: true }).catch(() => {});
       if (err instanceof HttpsError) throw err;
       console.error("analyzePlant error:", err);
       throw new HttpsError("internal", "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
     }
 
-    // ── เพิ่มตัวนับโควต้า + บันทึกประวัติ (ใต้ tenant) ──────
-    await quotaRef.set({
-      count: FieldValue.increment(1),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
-
+    // ── บันทึกประวัติ (โควต้าถูกจองไว้แล้วด้านบน) ──────
     const diagRef = await troot(tid).collection("users").doc(uid)
       .collection("diagnoses").add({
         crop: cropName,
