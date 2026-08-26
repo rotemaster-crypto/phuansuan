@@ -1084,12 +1084,24 @@ window.addEventListener('load', async () => {
     } else {
       // login แล้ว → ยืนยันตัวตนกับ Cloud Function (lineAuth)
       // ได้ Firebase uid = LINE userId จริง (Security Rules ใช้ตัวนี้)
-      await signInWithLineToken();
-      // จากนั้นดึงข้อมูล profile จาก LINE
-      await loadUserProfile();
-      hideLoading();
-      maybeShowOnboarding();
-      loadFeed();
+      const authed = await signInWithLineToken();
+      if (authed) {
+        // จากนั้นดึงข้อมูล profile จาก LINE
+        await loadUserProfile();
+        hideLoading();
+        maybeShowOnboarding();
+        loadFeed();
+      } else {
+        // B11: lineAuth ล้มเหลว → อย่า pretend เป็น LINE user (จะเขียนอะไรไม่ได้ + วนหน้า login)
+        //      เข้าโหมด guest ให้ browse ได้ + แจ้งเตือนให้ลองใหม่
+        await firebase.auth().signInAnonymously();
+        const gu = firebase.auth().currentUser;
+        currentUser = { uid: gu && gu.uid, displayName: 'ผู้เยี่ยมชม', photoUrl: '', lineUserId: '', isGuest: true };
+        hideLoading();
+        updateUIWithUser(currentUser);
+        loadFeed();
+        if (typeof toast === 'function') toast('เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้งภายหลัง');
+      }
     }
   } catch (err) {
     console.error('Init error:', err);
@@ -1109,11 +1121,12 @@ async function signInWithLineToken() {
     const res = await lineAuth({ accessToken, tid: (typeof tenantId === 'function' ? tenantId() : 'phuansuan') });
     await firebase.auth().signInWithCustomToken(res.data.token);
     console.log('✅ Firebase auth ด้วย LINE custom token สำเร็จ');
+    return true;
   } catch (err) {
-    // Fallback: ถ้า function ยังไม่ deploy ให้ใช้ anonymous ไปก่อน
-    // (โหมดนี้จะอ่าน feed ได้ แต่เขียนข้อมูลไม่ผ่าน Security Rules)
-    console.warn('lineAuth ล้มเหลว — fallback anonymous:', err.message);
-    await firebase.auth().signInAnonymously();
+    // B11: ไม่ลดเป็น anonymous เงียบ ๆ ที่นี่ — คืน false ให้ผู้เรียกจัดการ (guest + แจ้งเตือน)
+    //      เดิม signInAnonymously ทำให้ผู้ใช้ LINE กลายเป็น anon ที่เขียนอะไรไม่ได้ + วนหน้า login
+    console.error('lineAuth ล้มเหลว:', err && err.message);
+    return false;
   }
 }
 
