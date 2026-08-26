@@ -3,6 +3,11 @@
 > หลักการจัดลำดับ: **ปิดรอยร้าวฐานรากก่อน → ปิดงานค้าง → สร้างตัวต่าง → ปล่อยจริง**
 > ห้ามสร้างของใหม่บนฐานที่รั่ว · ทีม = โซโล่ (Roger + Claude) → ทุก Phase ตัด scope ให้ทำไหว
 > เกณฑ์ checklist: ✅ เสร็จ+เทสต์ · 🟡 มีโค้ดยังไม่เทสต์ · 🔴 ยังไม่เริ่ม · ขนาดงาน: S/M/L
+>
+> 🛡️ **Hardening pass (2026-08-26):** audit ทั้งระบบ → ปิด door-open (เงิน/แต้ม/XSS/isolation/PII) +
+> order state machine + config validation + observability · วาง `CLAUDE.md` (สัญญา) + `tools/guard.mjs`
+> (รั้ว CI) · test: functions e2e 110 + rules 51 + frontend 5 + guard 9 · **ดู `AUDIT_FINDINGS.md`**
+> (งานเลื่อน: scalability/monolith/App Check — ทำเมื่อถึงเวลา) · main ยังไม่ push
 
 ---
 
@@ -30,8 +35,8 @@
 - [x] push ขึ้น GitHub (deployed == repo) — ✅ commit `2456475`+`ef9d4b9` บน main (แก้ R4 divergence)
 
 > ✅ **Phase 0 ปิดครบ (2026-08-24)** · งานเก็บที่ยังค้าง (ไม่บล็อก): workflow `firebase-deploy.yml` fail มาตั้งแต่ มิ.ย. (secret ไม่ครบ — deploy มือแทน), orphan cleanup (`public/`, root `index.js`)
-- [ ] Snapshot baseline สะอาด + ยืนยัน deployed == repo — **S**
-- [ ] เปลี่ยนวิธีทำงาน: เลิก `apply_*.js` → แก้ไฟล์ตรงๆ — **S**
+- [ ] Snapshot baseline สะอาด + ยืนยัน deployed == repo — **S** · ⚠️ ตอนนี้ main ยัง ahead origin (hardening 2026-08-26 ยังไม่ push)
+- [x] เปลี่ยนวิธีทำงาน: เลิก `apply_*.js` → แก้ไฟล์ตรงๆ — ✅ **(2026-08-26)** ลบ `apply_*.js` ทั้งหมด + orphan (public/, root index.js/package.json) ใน hardening B16/B17
 
 **DoD:** rules-test เขียวใน CI · ตั้งค่าแบรนด์ A ไม่กระทบ B · deployed ตรง repo
 
@@ -41,7 +46,7 @@
 
 **เป้า:** ครึ่ง blue ocean ที่ทำไป ~80% ให้จบ 100% · กฎ: **ทำให้จบ หรือลบทิ้ง** ห้ามค้างครึ่งๆ
 
-- [ ] Badges (STUB) → **ตัดสินใจ:** ทำ logic แจกจริง หรือ **ลบทิ้ง** (แนะนำลบก่อน) — **S–M** · *(Roger เลือก "สร้างจริง" — ยังไม่ทำ ทำต่อจาก Groups)*
+- [x] Badges → **สร้างจริง** (Roger เลือก) — ✅ แจกฝั่ง server จริง: `earnedBadges`/`updateTier` → `badges: arrayUnion` บน user (trigger post/order/points), admin ตั้งค่าที่ `settings/badges`, โปรไฟล์ user โชว์ (verify 2026-08-26)
 - [x] Community groups → **สร้างจริง (มี join) + คุมเปิด/ปิดต่อแบรนด์** (ไม่ใช่ลบ flag) — ✅ build + rules-test 22/22 เขียว (2026-08-24) · รอ deploy · Leaderboard กลายเป็น toggle ต่อแบรนด์ด้วย
 - [x] ทดสอบ end-to-end ร้านค้า — ✅ **ผ่าน (2026-08-24)**: ร้าน→ตะกร้า→เช็คเอาท์→กรอกที่อยู่→สร้างออเดอร์+PromptPay QR→เก็บ Firestore→admin ลบ/จัดการได้ (verified live via Chrome + JS) · เหลือ upload สลิป+เปลี่ยนสถานะ = lifecycle เดิม · **โบนัส:** เปลี่ยน alert/confirm ทั้งหมดใน index.html → toast/confirmModal (UX ลื่น + ไม่บล็อกหน้าจอ)
 - [x] ขัดเงา tenant onboarding — ✅ **"จุดไฟชุมชน" (2026-08-24)**: seedTenant เพาะกลุ่ม+โพสต์ต้อนรับ+ชุดตราอัตโนมัติ · Dashboard มี checklist ตั้งค่า + ปุ่มโพสต์เริ่มบทสนทนา 1 คลิก — แบรนด์ใหม่เปิดมาไม่ร้าง
@@ -100,8 +105,9 @@
 - [x] **สุ่มจับรางวัล / lucky draw v1** — ✅ **(2026-08-25)** `spinLuckyDraw` (server-authoritative: transaction หักแต้ม + สุ่ม crypto + ตัดสต็อก + คูปอง) · rules + rules-test 30/30 · admin สร้างกล่องสุ่ม · user แท็บกิจกรรมหมุน+คูปองของฉัน · deploy ครบ · **รอ Roger เทสต์ e2e (สร้าง draw ในแอดมิน → user หมุน)**
 - [x] **Campaign builder v1** — ✅ **(2026-08-25)** แคมเปญแต้มที่ร้านตั้งเอง ต่อ **trigger**: `purchase` (ซื้อครบ X บาท รับ Y แต้ม + ยอดขั้นต่ำ) · `post` (โบนัสแต้มต่อโพสต์) · **ตัวคูณแต้ม** (x2/x3/x5 โปรฯ) + **ช่วงเวลา** (startAt/endAt) · ให้แต้มฝั่ง server: trigger `onOrderConfirmed` (ยิงตอนออเดอร์→confirmed, idempotent flag `pointsAwarded`, คิดจาก subtotal) + เสริม `onPostCreated` (โบนัสบวกจากแต้มโพสต์ปกติ) · แอดมินหน้า "⭐ แคมเปญแต้ม" · user เห็นการ์ด "วิธีได้แต้ม" ในแท็บกิจกรรม · rules `earnCampaigns` · e2e `campaign.test.js` 8/8 (รวม 60/60) + rules 30/30 · deploy ครบ · **โครง trigger ต่อยอดง่าย (เพิ่ม referral ฯลฯ)**
 - [x] **โปรฯ คูณแต้มทั้งร้าน** — ✅ **(2026-08-25)** `settings/promo` แบรนด์ตั้งเอง (คูณ xN ช่วงเวลา) → คูณแต้มทุกทาง (ซื้อ+โพสต์) สแต็กกับตัวคูณราย campaign · server `getPromoMultiplier` ใน onOrderConfirmed+onPostCreated · user banner 🔥 + checkout preview คูณตาม · e2e +5 (campaign 13/13, รวม 65/65) · deploy ครบ · verified สด
-- [ ] ชาเลนจ์ / ภารกิจ + แสดงผลในเสา Activity — **M**
-- [ ] คูปองใช้จริงตอน checkout (ตอนนี้เก็บโค้ด+แจ้งร้านเอง) — **M**
+- [x] **ภารกิจ (missions) + แสดงผลในเสา Activity** — ✅ **(verify 2026-08-26)** `claimMission` (server-auth: progress จาก points/posts/purchases, กันรับซ้ำ, ให้แต้ม/คูปอง) + admin สร้าง mission + user เห็น mission+progress bar+ปุ่มรับรางวัลในแท็บ Activity (`loadMissions`/`claimMissionUser`) · e2e `mission.test.js`
+- [ ] **"ชาเลนจ์" (streak/ทำต่อเนื่อง) เป็น engine แยก** — 🔴 ยังไม่มี (missions มีแค่ start/end window + dailyLoginBonus แยก · ไม่มี streak) — **M** · *ของ "อยากได้เพิ่ม" ไม่ใช่งานค้างครึ่งเดียว*
+- [x] **คูปองใช้จริงตอน checkout** — ✅ **(verify 2026-08-26)** user เลือกคูปองใน checkout (`loadCheckoutCoupons`/`selectCoupon`) → ส่ง `couponId` เข้า `placeOrder` → หักส่วนลด + mark `used` atomic · (โน้ตเดิม "เก็บโค้ด+แจ้งร้านเอง" ล้าสมัยแล้ว) · e2e `place.test.js`
 
 ---
 

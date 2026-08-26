@@ -1,6 +1,6 @@
 # STATUS — สร้างอะไรจริงบ้าง (ground truth)
 
-> อัปเดตล่าสุด: 2026-08-24 · อ้างอิงจากการสแกนโค้ดจริง (`index.html`, `admin.html`, `functions/index.js`, `firestore.rules`)
+> อัปเดตล่าสุด: 2026-08-26 · อ้างอิงจากการสแกนโค้ดจริง (`index.html`, `admin.html`, `functions/index.js`, `firestore.rules`)
 > **เอกสารนี้ = ความจริงของโค้ด** ไม่ใช่วิสัยทัศน์ · ถ้าโค้ดเปลี่ยน ให้แก้ไฟล์นี้ก่อน
 > เกณฑ์: ✅ BUILT (ใช้ได้จริง) · 🟡 PARTIAL/STUB (มีโครงแต่ยังไม่ครบ) · 🔴 ABSENT (ยังไม่มี)
 
@@ -10,35 +10,41 @@
 
 | ฟีเจอร์ | สถานะ | ตำแหน่งหลัก |
 |---|---|---|
-| Multi-tenant isolation | ✅ BUILT (แต่ **ไม่มีเทสต์** + มีบั๊ก) | `firestore.rules:31-87`, `index.html:2337`, `functions/index.js:21-38` |
-| Rules test / emulator | 🔴 ABSENT | — (ไม่มี test file, ไม่มี emulator config) |
-| Community: feed/โพสต์/คอมเมนต์/รีแอคชัน | ✅ BUILT | `index.html:2210-2312, 2604-2635`; `functions/index.js:304-406` |
-| Community groups (กลุ่ม + join) | ✅ BUILT (คุมต่อแบรนด์) | `index.html` (screen-community/screen-group), `admin.html` (screen-groups), `functions/index.js` (onGroupMemberWrite), `firestore.rules:69-77` |
-| Points / Tiers / Leaderboard | ✅ BUILT (ให้แต้มฝั่ง server) | `functions/index.js:256-457`; `index.html:1522` |
-| Badges | 🟡 STUB (นิยามไว้ แต่ไม่เคยแจกจริง) | `config.js:219`, `index.html:1804` |
-| Shop/ตะกร้า/เช็คเอาท์/ออเดอร์ (B2C) | ✅ BUILT | `index.html:2746-3213`; `admin.html:656` |
-| PromptPay QR + อัปสลิป (ยืนยันมือ) | ✅ BUILT (EMVCo จริง) | `index.html:3023-3137` |
-| CSV import สินค้า (PapaParse) | ✅ BUILT (import อย่างเดียว) | `admin.html:1275-1387` |
-| Auth LINE/LIFF + guest + Google/FB | ✅ BUILT | `index.html:956-1024`; `functions/index.js:41-127` |
-| FCM push | ✅ BUILT | `functions/index.js:409-422` |
-| Brand/tenant profile + ธีม | ✅ BUILT | `admin.html:262-576`; `themes.js` |
-| ราคาสินค้าเป็นตัวเลข | ✅ BUILT (2026-08-25) | `admin.html` parsePrice + ปุ่ม migrate · `index.html:2935` |
-| **เครื่องมือต้นทุน–ราคา–margin** | ✅ BUILT (2026-08-25) | `admin.html` screen-pricing (`pricingCalc`), field `cost` ต่อสินค้า, กำไรต่อชั้นสมาชิก |
-| **ผู้ช่วยการตลาด (AI content)** | 🔴 **ABSENT** | — (AI มีแค่ "หมอพืช") |
-| AI หมอพืช (Gemini vision) | ✅ BUILT (โควตา 5/วัน) | `functions/index.js:129-248` |
-| เอกสาร (ใบเสนอราคา/ใบส่งของ) | 🔴 ABSENT | — |
-| B2B / ราคาส่ง / ราคาต่อลูกค้า | 🔴 ABSENT | — |
-| Bocean landing + ฟอร์มขอเปิดร้าน | ✅ BUILT (lead → `tenantRequests`) | `bocean.html:253`; `admin.html:178,221` |
+| Multi-tenant isolation | ✅ BUILT + **มีเทสต์ + hardened** (resolveTid fail-closed, callable เช็ค membership, claimTenant origin-binding) | `firestore.rules`, `functions/index.js` resolveTid/assertTenantOrigin, `tests/rules.test.js` |
+| **Tests / CI / guard** | ✅ BUILT | `tests/*.test.js` (rules 51 + functions e2e 110 + frontend 5), `tools/guard.mjs` (รั้ว regression), CI **gate deploy ด้วย test** |
+| Community: feed/โพสต์/คอมเมนต์/รีแอคชัน | ✅ BUILT | `index.html` (feed/renderPost); `functions/index.js` (onPostCreated/onLikeWrite ฯลฯ) |
+| Community groups (กลุ่ม + join) | ✅ BUILT (คุมต่อแบรนด์) | `index.html`/`admin.html` (screen-groups), `functions` onGroupMemberWrite |
+| Points / Tiers / Leaderboard | ✅ BUILT (server-only, client เขียน points ไม่ได้แล้ว) | `functions/index.js`; `index.html` leaderboard |
+| Badges | ✅ **BUILT (แจกจริง server-side)** | `functions` earnedBadges/updateTier→arrayUnion, admin `settings/badges`, โปรไฟล์ user |
+| **Activity Engine: Lucky draw / Campaign / Promo / Missions / Predictions** | ✅ BUILT (server-authoritative + e2e) | `functions` spinLuckyDraw/onOrderConfirmed/claimMission/submitPrediction/getPromoMultiplier; admin screens; `tests/{spin,campaign,mission,prediction}.test.js` |
+| **Order state machine** (setOrderStatus + transition + rules lock + pending cap) | ✅ BUILT (2026-08-26) | `functions` setOrderStatus; `firestore.rules` orders; `tests/orderstatus.test.js` |
+| Shop/ตะกร้า/เช็คเอาท์/ออเดอร์ (B2C) | ✅ BUILT (ราคา/สต็อก/ส่วนลด server-auth) | `index.html` checkout; `functions` placeOrder |
+| **คูปองใช้จริงตอน checkout** | ✅ BUILT | `index.html` loadCheckoutCoupons/selectCoupon → `placeOrder(couponId)` mark used |
+| PromptPay QR + อัปสลิป (ยืนยันมือ) | ✅ BUILT (EMVCo จริง) | `index.html` checkout |
+| **Shipping (Shippop)** | ✅ BUILT (booking→confirm sandbox) + billing ต่อแบรนด์ | `functions` createShipment/shippingBillingSummary; `tests/{courier,billing}.test.js` |
+| CSV/xlsx import สินค้า (Shopee) | ✅ BUILT + paste-link OG | `admin.html`; `functions` fetchProductMeta (SSRF-guarded) |
+| Auth LINE/LIFF + guest + Google/FB | ✅ BUILT | `index.html`; `functions` lineAuth/claimTenant |
+| FCM push | ✅ BUILT | `functions` sendNotif |
+| Brand/tenant profile + ธีม | ✅ BUILT | `admin.html`; `themes.js` |
+| ราคาเป็นตัวเลข + เครื่องมือต้นทุน–ราคา–margin | ✅ BUILT (2026-08-25) | `admin.html` screen-pricing, field `cost` ต่อสินค้า |
+| AI หมอพืช (Gemini vision) | ✅ BUILT (โควตา 5/วัน, atomic — TOCTOU แก้แล้ว) | `functions` analyzePlant |
+| เอกสาร: ใบส่งของ | ✅ BUILT | `admin.html` printDeliveryNote |
+| เอกสาร: ใบเสนอราคา | 🔴 ABSENT (Phase 5) | — |
+| **ผู้ช่วยการตลาด (AI content)** | 🔴 ABSENT (Phase 5) | — (AI มีแค่หมอพืช) |
+| B2B / ราคาส่ง / ราคาต่อลูกค้า | 🔴 ABSENT (Phase 5) | — |
+| "ชาเลนจ์"/streak (แยกจาก missions) | 🔴 ABSENT (ของอยากได้เพิ่ม) | — (missions มี start/end + dailyLoginBonus แต่ไม่มี streak) |
+| Bocean landing + ฟอร์มขอเปิดร้าน | ✅ BUILT (lead → `tenantRequests`, ต้อง login แล้ว) | `bocean.html`; `admin.html` |
 
 ---
 
 ## หนี้เทคนิคที่ต้องรู้ (ก่อนทำงานต่อ)
 
-1. ~~**ไม่มีเทสต์ใดๆ**~~ ✅ **มี rules-test แล้ว** — `tests/rules.test.js` (15 เคส isolation) รันผ่าน 15/15 บน emulator (2026-08-24) + CI workflow (รอ push ยืนยันบน GitHub) · หมายเหตุ: unit test ตรรกะแอปอื่นๆ ยังไม่มี
+1. ~~**ไม่มีเทสต์**~~ ✅ **มีเทสต์หลายชั้น (2026-08-26)** — rules 51 + functions e2e 110 + frontend 5 (สกัดฟังก์ชันจริงจาก index.html รันใน vm) + `tools/guard.mjs` (รั้ว regression 9 กฎ) · CI **gate deploy ด้วย test** (แดง = ไม่ deploy) · หมายเหตุ: DOM-wiring/admin.html ยังต้อง browser test (ยังไม่ทำ)
 2. ~~**บั๊ก settings — 2 คลังตั้งค่าแข่งกัน**~~ ✅ **แก้แล้ว (2026-08-24)** — รวมเป็นคลังเดียว `settings/app`+`settings/features` · `saveBranding`/`setFeature` เขียน canonical · ลบ listener phantom · deploy+เทสต์ผ่าน · orphan doc `settings/{tid}` เก่าลบทีหลังได้ (ไม่มีผล)
 3. ~~**legacy rules ระดับ root = ตัว leak จริง**~~ ✅ **ลบแล้ว (2026-08-24)** — ยืนยันไม่มีโค้ดจริงใช้ root path (ทั้งหมดผ่าน `tdb()`/`aDb()`/`troot()`) แล้ว deploy · เหลือ top-level แค่ `/tenants`, `/tenantRequests`, catch-all deny · backup: `docs/_archive/firestore.rules_*.bak`
-4. **patch-pile** — `apply_*.js` 30+ ไฟล์ เป็น build history (อ่านไฟล์→`.replace()`→เขียนกลับ) ไม่ใช่ runtime · **เลิกใช้ pattern นี้ แก้ไฟล์ตรงๆ**
-5. **index.html ใหญ่ก้อนเดียว ~3,285 บรรทัด** — อย่า rewrite ใหญ่ ให้ refactor เฉพาะตอนแตะไฟล์นั้น
+4. ~~**patch-pile `apply_*.js`**~~ ✅ **ลบแล้ว (2026-08-26)** — ลบ `apply_*.js` ทั้งหมด + orphan (public/, root index.js/package.json/lock) · **แก้ไฟล์ตรงๆ เท่านั้น** ห้ามกลับไป pattern เดิม
+5. **index.html ใหญ่ก้อนเดียว ~4,300 บรรทัด** (admin.html ~3,600) — อย่า rewrite ใหญ่ · แตกไฟล์ต้องล้อม frontend test ก่อน (B15 ใน `AUDIT_FINDINGS.md`)
+6. **ก่อนทำ feature ใหม่: อ่าน `CLAUDE.md` (สัญญาพฤติกรรม) + `ARCHITECTURE.md` (แผนที่ระบบ)** · หนี้ security/scale ที่เลื่อน + วิธีแก้ อยู่ `AUDIT_FINDINGS.md` · ก่อน merge: `node tools/guard.mjs` + test ต้องผ่าน
 
 ---
 
