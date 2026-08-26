@@ -78,7 +78,11 @@
 ## 6. หนี้โครงสร้างที่รู้แล้ว (ยังไม่แก้ — ดู AUDIT_FINDINGS.md กอง B)
 - claims เป็น isolation ชั้นเดียว (ไม่มี defense-in-depth) — B1
 - order lifecycle ไม่มี state machine เจ้าเดียว (admin กระโดด status ได้) — B2
-- `claimTenant` ใครก็ join ทุก tenant → membership check (A6) แข็งเท่านี้ — B5
+- B5 (บางส่วน): `claimTenant` gate ด้วย origin ∈ `tenant.domains` แล้ว. **ก่อน deploy
+  ต้องตั้ง `tenant.domains` ให้ครบทุกโดเมนที่ผู้ใช้เข้าจริง** (web.app + firebaseapp.com +
+  custom) ไม่งั้น OAuth join พังจากโดเมนที่ตกหล่น. `lineAuth` ยังไม่ gate (เสี่ยงทำ login
+  พังถ้า domains ไม่ครบ; browser vector ปิดด้วย A2 แล้ว). curl ปลอม origin ได้ → **App
+  Check คือ closure เต็ม** (ยังไม่ทำ)
 - scalability: `loadSysOverview`/dashboard อ่านทั้ง collection, hot-doc campaign — B6/B7/B8
 - **frontend test = 0** (index.html/admin.html) — B13. การแก้ฝั่ง client ยัง verify ด้วย
   unit-test ตรรกะ + review เท่านั้น

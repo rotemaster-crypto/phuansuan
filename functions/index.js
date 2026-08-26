@@ -57,6 +57,34 @@ function troot(tid) {
   return admin.firestore().collection("tenants").doc(tid);
 }
 
+// ── B5: คุมการเข้าเป็นสมาชิก (closed tenants) ─────────────
+// ให้ membership เฉพาะเมื่อ request มาจากโดเมนของร้านนั้นจริง (origin ∈ tenant.domains)
+// → กัน browser ของร้าน A เข้าเป็นสมาชิกร้าน B
+// ข้อจำกัด: origin ปลอมได้จาก client ที่ไม่ใช่ browser (curl) → ต้องเสริม App Check ภายหลัง
+function _originHostAllowed(host, domains) {
+  if (!Array.isArray(domains) || domains.length === 0) return true; // ยังไม่ตั้ง domains → ไม่บังคับ
+  return !!host && domains.includes(host);
+}
+function _originHost(req) {
+  try {
+    const h = (req && req.rawRequest && req.rawRequest.headers) || {};
+    const o = h.origin || h.referer || "";
+    return o ? new URL(o).hostname : "";
+  } catch (e) { return ""; }
+}
+async function assertTenantOrigin(tid, req) {
+  if (process.env.FUNCTIONS_EMULATOR === "true") return;   // ข้ามใน emulator/dev (test)
+  let domains = [];
+  try {
+    const s = await troot(tid).get();
+    if (s.exists && Array.isArray(s.data().domains)) domains = s.data().domains;
+  } catch (e) { return; }   // อ่าน tenant ไม่ได้ (error ชั่วคราว) → ปล่อยผ่าน
+  if (!_originHostAllowed(_originHost(req), domains)) {
+    throw new HttpsError("permission-denied", "เข้าเป็นสมาชิกได้เฉพาะจากเว็บของร้านนี้");
+  }
+}
+exports._originHostAllowed = _originHostAllowed;   // สำหรับ unit test
+
 // ── lineAuth ──────────────────────────────────────────────
 exports.lineAuth = onCall(async (req) => {
   const accessToken = req.data?.accessToken;
@@ -106,6 +134,10 @@ exports.lineAuth = onCall(async (req) => {
     console.warn("tadmin lookup failed:", e && e.message);
   }
 
+  // B5 note: membership ที่นี่ (tenants[tid]) มาจาก tid ฝั่ง client เช่นกัน แต่ tid ของ
+  //   browser มาจากโดเมน (config.js) — จะส่ง tid ผิดต้องผ่าน XSS (ปิดแล้ว A2) หรือ client
+  //   ที่ไม่ใช่ browser (ต้อง App Check). ไม่ gate ด้วย origin ที่นี่เพราะเสี่ยงทำ login พัง
+  //   ทั้งระบบถ้า tenant.domains ไม่ครบ (path login หลัก) — closure เต็มรอ App Check
   const token = await admin
     .auth()
     .createCustomToken(profile.userId, { admin: isAdmin, tenants: { [tid]: true }, tadmin: tadmin, towner: towner });
@@ -135,6 +167,8 @@ exports.claimTenant = onCall(async (req) => {
     throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
   }
   const tid = await resolveTid(req.data && req.data.tid);
+  // B5: ให้ membership เฉพาะเมื่อ request มาจากโดเมนของร้านนี้จริง (closed tenants)
+  await assertTenantOrigin(tid, req);
 
   const userRec = await admin.auth().getUser(uid);
   const prev = userRec.customClaims || {};
