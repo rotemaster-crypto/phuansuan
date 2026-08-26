@@ -20,19 +20,37 @@ const ADMIN_LINE_ID = "U03582167674331d9005dfb42728c7151";
 // tenant แบบ data-driven: ตรวจจาก doc tenants/{tid} (cache 60 วิ)
 // เพิ่มแบรนด์ใหม่ = สร้าง doc tenants/{tid} (status != suspended) ไม่ต้องแก้/redeploy โค้ด
 const _tenantCache = {};
+// alias ฝั่ง client ที่ "จงใจ" ใช้ข้อมูลร่วมกับอีก tenant (ไม่ใช่ doc จริง)
+// เช่น 'office' = skin โซเชียลของ phuansuan (ดู config.js domains/overrides).
+// เพิ่ม alias ใหม่ที่นี่เท่านั้น — tid อื่นที่ไม่มี doc จริงจะถูกปฏิเสธ (fail-closed)
+const TENANT_ALIASES = { office: "phuansuan" };
+// resolveTid: fail-CLOSED. ปฏิเสธ tid ว่าง/ไม่มีจริง/ถูก suspend และปฏิเสธเมื่ออ่าน
+// Firestore ไม่สำเร็จ (ไม่ fallback ไป phuansuan, ไม่ cache ผลจาก error)
+// เดิม fallback ไป "phuansuan" เงียบ ๆ ทุกกรณี -> error ชั่วคราวทำข้อมูล tenant อื่น
+// ไหลลง phuansuan (cache 60 วิ). ตอนนี้แก้ให้ throw แทน (root-B: ล้มแบบปลอดภัย)
 async function resolveTid(reqTid) {
-  const x = (reqTid || "").toString();
-  if (!x) return "phuansuan";
+  let x = (reqTid || "").toString().trim();
+  if (!x) {
+    throw new HttpsError("invalid-argument", "ต้องระบุร้าน (tid) ให้ถูกต้อง");
+  }
+  if (TENANT_ALIASES[x]) x = TENANT_ALIASES[x]; // resolve alias ก่อน lookup
   const now = Date.now();
   const c = _tenantCache[x];
-  if (c && (now - c.at) < 60000) return c.ok ? x : "phuansuan";
-  let ok = false;
+  if (c && (now - c.at) < 60000) {
+    if (!c.ok) throw new HttpsError("failed-precondition", "ไม่พบร้าน (tenant) หรือถูกระงับ: " + x);
+    return x;
+  }
+  let snap;
   try {
-    const s = await admin.firestore().collection("tenants").doc(x).get();
-    ok = s.exists && s.data().status !== "suspended";
-  } catch (e) { ok = false; }
+    snap = await admin.firestore().collection("tenants").doc(x).get();
+  } catch (e) {
+    // fail-closed: อย่ากลืน error เป็น "ไม่มี tenant" แล้ว fallback — ให้ client retry
+    throw new HttpsError("unavailable", "ตรวจสอบร้าน (tenant) ไม่สำเร็จ กรุณาลองใหม่");
+  }
+  const ok = snap.exists && snap.data() && snap.data().status !== "suspended";
   _tenantCache[x] = { ok: ok, at: now };
-  return ok ? x : "phuansuan";
+  if (!ok) throw new HttpsError("failed-precondition", "ไม่พบร้าน (tenant) หรือถูกระงับ: " + x);
+  return x;
 }
 // document ราก ของ tenant — ใช้สร้าง path tenants/{tid}/...
 function troot(tid) {
