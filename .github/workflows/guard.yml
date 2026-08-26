@@ -1,0 +1,15 @@
+name: Guard (audit regression checks)
+# รั้วกัน regression ของ hardening audit — เร็ว (ไม่ต้อง emulator)
+# push→main ถูกครอบใน firebase-deploy.yml (gate deploy); ที่นี่ครอบ PR
+on:
+  pull_request:
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run audit guard
+        run: node tools/guard.mjs

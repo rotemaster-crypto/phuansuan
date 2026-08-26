@@ -43,8 +43,17 @@ jobs:
         run: npm install -g firebase-tools
       - name: Run rules tests (emulator)
         run: firebase emulators:exec --only firestore --project demo-bocean "node --test tests/rules.test.js"
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run audit guard (regression checks)
+        run: node tools/guard.mjs
   deploy:
-    needs: [ functions-e2e, rules-test ]
+    needs: [ guard, functions-e2e, rules-test ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
