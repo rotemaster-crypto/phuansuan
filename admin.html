@@ -862,6 +862,15 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="page-header"><div class="page-title">📦 จัดการสินค้า</div><div class="page-sub">เพิ่ม ลบ แก้ไขสินค้าในแอป</div></div>
   <div class="card"><div class="card-title">➕ เพิ่มสินค้าใหม่</div>
 
+    <div style="background:var(--bg,#f6f7f9);border:1px dashed var(--border);border-radius:10px;padding:12px;margin-bottom:14px">
+      <label style="font-weight:700;font-size:13px;display:block;margin-bottom:6px">⚡ ดึงข้อมูลจากลิงก์ (Shopee / เว็บร้าน)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="pl-url" placeholder="วางลิงก์สินค้า เช่น https://shopee.co.th/..." style="flex:1;min-width:200px;padding:9px;border:1px solid var(--border);border-radius:8px">
+        <button class="btn btn-ghost" onclick="fetchFromLink(this)"><svg class="ic"><use href="#i-download"/></svg> ดึงข้อมูล</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px">ดึงชื่อ/รูป/ราคา/รายละเอียดมาเติมฟอร์มให้อัตโนมัติ แล้วตรวจ/แก้ก่อนบันทึก · บางเว็บบล็อก อาจต้องกรอกเอง</div>
+    </div>
+
     <div class="prod-sec">1) ข้อมูลพื้นฐาน</div>
     <div style="display:flex;gap:12px;align-items:flex-start">
       <div class="prod-imgbox" id="new-prod-imgprev" onclick="document.getElementById('new-prod-file').click()" title="กดเพื่ออัปโหลดรูป"><span>＋<br>เพิ่มรูป</span></div>
@@ -2927,6 +2936,27 @@ async function addProduct() {
     resetProdForm();
     loadProducts();
   } catch(e) { toast('❌ '+e.message,'error'); }
+}
+// ดึงข้อมูลสินค้าจากลิงก์ (Shopee ฯลฯ) มาเติมฟอร์ม — best-effort ผ่าน Cloud Function fetchProductMeta
+async function fetchFromLink(btn){
+  var url = (document.getElementById('pl-url').value||'').trim();
+  if(!url){ toast('❌ วางลิงก์ก่อน','error'); return; }
+  var old = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled=true; btn.textContent='⏳ กำลังดึง...'; }
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('fetchProductMeta');
+    var d = (await fn({ tid: currentTenant, url: url })).data || {};
+    var set = function(id,v){ var e=document.getElementById(id); if(e && v){ e.value = v; } };
+    set('new-prod-name', d.name);
+    set('new-prod-price', d.price);
+    set('new-prod-img', d.image);
+    set('new-prod-desc', d.description);
+    var uEl=document.getElementById('new-prod-url'); if(uEl && !uEl.value) uEl.value = url;
+    if (typeof prodPrev==='function') prodPrev('new-prod-img','new-prod-imgprev');
+    if(d.found) toast('✅ ดึงข้อมูลมาแล้ว ตรวจ/แก้ก่อนบันทึก','success');
+    else toast('ℹ️ ลิงก์นี้ดึงข้อมูลไม่ได้ (เว็บอาจบล็อก) — กรอกเอง','error');
+  } catch(e){ toast('❌ '+(e.message||e),'error'); }
+  if(btn){ btn.disabled=false; btn.innerHTML=old; }
 }
 async function deleteProduct(id) {
   if (!confirm('ลบสินค้านี้?')) return;

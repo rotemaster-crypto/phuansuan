@@ -904,6 +904,80 @@ exports.setShippingBillStatus = onCall(async (req) => {
 });
 
 // ============================================================
+//  fetchProductMeta — ดึงข้อมูลสินค้าจากลิงก์ (best-effort OG meta)
+//  ช่วยเพิ่มสินค้าเร็วจากลิงก์ Shopee/เว็บร้าน · admin-only + กัน SSRF
+// ============================================================
+function isSafePublicUrl(u) {
+  let url;
+  try { url = new URL(u); } catch (e) { return false; }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+  const host = url.hostname.toLowerCase();
+  if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal")) return false;
+  if (host === "metadata.google.internal") return false;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {   // บล็อก IP ในวงภายใน/loopback/link-local
+    const p = host.split(".").map(Number);
+    if (p[0] === 0 || p[0] === 10 || p[0] === 127 ||
+        (p[0] === 192 && p[1] === 168) ||
+        (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+        (p[0] === 169 && p[1] === 254)) return false;
+  }
+  if (host === "[::1]" || host.startsWith("[fc") || host.startsWith("[fd") || host.startsWith("[fe80")) return false;
+  return true;
+}
+function decodeEntities(s) {
+  return String(s || "")
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&#x27;/gi, "'")
+    .replace(/&nbsp;/g, " ").trim();
+}
+function parseProductMeta(html, url) {
+  const pick = (names) => {
+    for (const n of names) {
+      const res = [
+        new RegExp('<meta[^>]+(?:property|name)=["\']' + n + '["\'][^>]+content=["\']([^"\']*)["\']', "i"),
+        new RegExp('<meta[^>]+content=["\']([^"\']*)["\'][^>]+(?:property|name)=["\']' + n + '["\']', "i"),
+      ];
+      for (const re of res) { const m = re.exec(html); if (m && m[1]) return m[1]; }
+    }
+    return "";
+  };
+  const titleTag = (/<title[^>]*>([^<]*)<\/title>/i.exec(html) || [])[1] || "";
+  const name = decodeEntities(pick(["og:title", "twitter:title"]) || titleTag);
+  const image = pick(["og:image", "og:image:url", "og:image:secure_url", "twitter:image", "twitter:image:src"]);
+  const description = decodeEntities(pick(["og:description", "twitter:description", "description"]));
+  const priceRaw = pick(["product:price:amount", "og:price:amount", "og:product:price:amount", "product:sale_price:amount"]);
+  const price = priceRaw ? String(priceRaw).replace(/[^\d.]/g, "") : "";
+  return { name: name, image: image, description: description, price: price, url: url, found: !!(name || image || price) };
+}
+exports._isSafePublicUrl = isSafePublicUrl;       // export ไว้ unit test
+exports._parseProductMeta = parseProductMeta;
+
+exports.fetchProductMeta = onCall(async (req) => {
+  const tid = await resolveTid(req.data && req.data.tid);
+  requireAdmin(req, tid);   // เฉพาะแอดมิน (กันใช้เป็น open proxy)
+  const url = ((req.data && req.data.url) || "").toString().trim();
+  if (!isSafePublicUrl(url)) throw new HttpsError("invalid-argument", "ลิงก์ไม่ถูกต้อง (ต้องเป็น http/https สาธารณะ)");
+  let html;
+  try {
+    const res = await fetch(url, {
+      redirect: "follow",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9",
+        "Accept-Language": "th,en;q=0.9",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) throw new HttpsError("unavailable", "ดึงหน้าไม่สำเร็จ (HTTP " + res.status + ") — เว็บอาจบล็อก ลองกรอกเอง");
+    html = (await res.text()).slice(0, 600000);
+  } catch (e) {
+    if (e instanceof HttpsError) throw e;
+    throw new HttpsError("unavailable", "ดึงหน้าไม่สำเร็จ (" + (e.name || "error") + ") — เว็บอาจบล็อก server ลองกรอกเอง");
+  }
+  return Object.assign({ ok: true }, parseProductMeta(html, url));
+});
+
+// ============================================================
 //  analyzePlant — วิเคราะห์โรคพืชจากรูปด้วย Gemini Vision
 // ============================================================
 const { defineSecret } = require("firebase-functions/params");
