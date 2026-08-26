@@ -12,7 +12,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator, signInAnonymously } from 'firebase/auth';
 import { getFunctions, connectFunctionsEmulator, httpsCallable } from 'firebase/functions';
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 
 const PROJECT = 'demo-bocean';
 const TID = 'demo';
@@ -167,6 +167,18 @@ test('คูปอง used แล้ว → failed-precondition, stock ไม่
 test('ตะกร้าว่าง → invalid-argument', async () => {
   await seed([P1]);
   await expectFail({ tid: TID, order: order([]) }, 'invalid-argument');
+});
+
+// ── A6: ไม่เป็นสมาชิกร้าน (ไม่มี user doc) → permission-denied + สต็อกไม่ถูกแตะ ──
+test('A6: ไม่เป็นสมาชิกร้านนี้ → permission-denied, stock คงเดิม', async () => {
+  await seed([P1]);
+  // ลบ user doc: จำลองผู้สั่งที่ไม่ใช่สมาชิกร้านนี้ (เช่นยิงข้ามจาก tenant อื่น)
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await deleteDoc(doc(ctx.firestore(), `tenants/${TID}/users/${uid}`));
+  });
+  await expectFail({ tid: TID, order: order([{ id: 'p1', qty: 1 }]) }, 'permission-denied');
+  const p = await read(`tenants/${TID}/products/p1`);
+  assert.equal(p.stock, 10);   // ตัดสต็อกไม่ได้ถ้าไม่ใช่สมาชิก (กัน DoS)
 });
 
 // ── ค่าจัดส่ง server-side (settings/commerce) ───────────────

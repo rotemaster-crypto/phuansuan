@@ -346,6 +346,9 @@ exports.placeOrder = onCall(async (req) => {
     const prodSnaps = await Promise.all(prodRefs.map((r) => tx.get(r)));
     const couponSnap = couponRef ? await tx.get(couponRef) : null;
     const userSnap = await tx.get(userRef);   // อ่าน tier/แต้มจริงของผู้ซื้อ (server-authoritative discount)
+    // A6: ต้องเป็นสมาชิกร้านนี้ (มี user doc ใต้ tenant นี้) — กันสั่งข้าม tenant / กัน non-member
+    //     ยิง placeOrder ตัดสต็อกร้านอื่น (DoS). ตรงตาม pattern spin/mission/dailyBonus
+    if (!userSnap.exists) throw new HttpsError("permission-denied", "ต้องเป็นสมาชิกร้านนี้ก่อนสั่งซื้อ");
 
     let subtotal = 0, weight = 0;
     const items = [];
