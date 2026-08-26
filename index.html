@@ -2,8 +2,17 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>เพื่อนสวน</title>
+<!-- ── PWA ── -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#2f9e6e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="เพื่อนสวน">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <script src="config.js"></script>
 <script src="firebase-config.js"></script>
 <script src="themes.js"></script>
@@ -4126,6 +4135,139 @@ function relSectionHtml(list){
   }).join('');
   return '<div class="rel-wrap"><div class="rel-title">🛒 สินค้าที่อาจช่วยได้</div><div class="rel-scroll">'+cards+'</div></div>';
 }
+</script>
+
+<!-- ══ PWA: service worker + manifest ต่อแบรนด์ + ปุ่มติดตั้ง ══ -->
+<script>
+(function(){
+  var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+  // ── 1) ลงทะเบียน service worker ──
+  if ('serviceWorker' in navigator) {
+    addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw.js').catch(function(e){ console.warn('[PWA] SW reg failed', e); });
+    });
+  }
+
+  // ── 2) manifest ตามแบรนด์จริง (ชื่อ/สี/ไอคอน emoji ดึงจาก branding ที่โหลดจาก Firestore) ──
+  //     ทำให้แอปที่ติดตั้ง = แบรนด์จริงของแต่ละ tenant (ไม่ค้างค่า default)
+  var cfg = window.APP_CONFIG || {};
+  var _lastBlob = null;
+  var rr = function(x,X,Y,W,H,r){ x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);x.arcTo(X+W,Y+H,X,Y+H,r);x.arcTo(X,Y+H,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.closePath(); };
+  var emojiIcon = function(size, emoji, bg, mask){
+    var c=document.createElement('canvas'); c.width=c.height=size; var x=c.getContext('2d');
+    x.fillStyle=bg; rr(x,0,0,size,size, mask?0:size*0.22); x.fill();
+    x.textAlign='center'; x.textBaseline='middle';
+    x.font=(size*(mask?0.5:0.62))+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif';
+    x.fillText(emoji, size/2, size/2*1.06);
+    return c.toDataURL('image/png');
+  };
+  function syncManifest(brand){
+    try {
+      brand = brand || {};
+      var name  = brand.appName || (cfg.tenant && cfg.tenant.name) || (cfg.app && cfg.app.name) || 'แอป';
+      var emoji = brand.logoEmoji || (cfg.app && cfg.app.logoEmoji) || '🌿';
+      var bg    = brand.primaryColor || brand.accentColor || (cfg.app && cfg.app.accentColor) || '#2f9e6e';
+      var i192=emojiIcon(192,emoji,bg,false), i512=emojiIcon(512,emoji,bg,false),
+          m512=emojiIcon(512,emoji,bg,true),  apple=emojiIcon(180,emoji,bg,true);
+      var man = {
+        name: name, short_name: name, lang: 'th',
+        start_url: '/index.html?src=pwa', scope: '/', id: '/index.html',
+        display: 'standalone', orientation: 'portrait',
+        background_color: '#f0f2f5', theme_color: bg,
+        icons: [
+          { src:i192, sizes:'192x192', type:'image/png', purpose:'any' },
+          { src:i512, sizes:'512x512', type:'image/png', purpose:'any' },
+          { src:m512, sizes:'512x512', type:'image/png', purpose:'maskable' }
+        ]
+      };
+      if (_lastBlob) URL.revokeObjectURL(_lastBlob);
+      _lastBlob = URL.createObjectURL(new Blob([JSON.stringify(man)], { type:'application/manifest+json' }));
+      var link = document.querySelector('link[rel="manifest"]'); if (link) link.href = _lastBlob;
+      var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = bg;
+      var at = document.querySelector('link[rel="apple-touch-icon"]'); if (at) at.href = apple;
+      var atitle = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (atitle) atitle.content = name;
+    } catch(e){ console.warn('[PWA] syncManifest skipped', e); }
+  }
+  // first paint: ใช้ค่าแบรนด์ที่ cache ไว้ (ผู้ใช้เดิม) เพื่อไม่ให้ชื่อ/สีกระพริบ
+  try { var _cached = JSON.parse(localStorage.getItem('phuan_brand') || 'null'); if (_cached) syncManifest(_cached); } catch(_){}
+  // live: ห่อ applyBranding ให้อัปเดต manifest ทุกครั้งที่แบรนด์โหลด/เปลี่ยน
+  try {
+    var _ab = window.applyBranding;
+    if (typeof _ab === 'function') {
+      window.applyBranding = function(b){ var r = _ab.apply(this, arguments); syncManifest(window._branding || b); return r; };
+    }
+  } catch(e){ console.warn('[PWA] applyBranding hook skipped', e); }
+
+  // ── 3) ปุ่มติดตั้ง (Android/Chrome: beforeinstallprompt) ──
+  if (standalone) return;
+  var DISMISS_KEY = 'pwaInstallDismissed';
+  var dismissedUntil = 0; try { dismissedUntil = +localStorage.getItem(DISMISS_KEY) || 0; } catch(_){}
+  var nowOk = function(){ try { return Date.now() > dismissedUntil; } catch(_) { return true; } };
+  var deferred = null, bar = null;
+
+  function buildBar(html, onInstall){
+    if (bar) return;
+    var s = document.createElement('style');
+    s.textContent = '.pwa-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;width:calc(100% - 24px);max-width:456px;'
+      + 'background:#fff;border:1px solid #e4e6eb;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.15);'
+      + 'padding:12px 12px 12px 14px;display:flex;align-items:center;gap:10px;z-index:9999;animation:pwaUp .25s ease}'
+      + '@keyframes pwaUp{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}'
+      + '.pwa-bar img{width:40px;height:40px;border-radius:10px;flex-shrink:0}'
+      + '.pwa-bar .tx{flex:1;min-width:0}.pwa-bar .t1{font-size:14px;font-weight:800;color:#1c1e21;line-height:1.3}'
+      + '.pwa-bar .t2{font-size:12px;color:#65676b;line-height:1.3;margin-top:1px}'
+      + '.pwa-bar .go{background:#2f9e6e;color:#fff;border:none;border-radius:10px;padding:9px 15px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0}'
+      + '.pwa-bar .go:active{transform:scale(.96)}'
+      + '.pwa-bar .x{background:none;border:none;color:#8a8d91;font-size:20px;line-height:1;cursor:pointer;padding:4px;flex-shrink:0}';
+    document.head.appendChild(s);
+    bar = document.createElement('div');
+    bar.className = 'pwa-bar';
+    bar.innerHTML = html;
+    document.body.appendChild(bar);
+    var go = bar.querySelector('.go'), x = bar.querySelector('.x');
+    if (go && onInstall) go.onclick = onInstall;
+    if (x) x.onclick = function(){
+      try { localStorage.setItem(DISMISS_KEY, String(Date.now() + 7*24*3600*1000)); } catch(_){}
+      removeBar();
+    };
+  }
+  function removeBar(){ if (bar && bar.parentNode) bar.parentNode.removeChild(bar); bar = null; }
+
+  addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); deferred = e;
+    if (!nowOk()) return;
+    buildBar(
+      '<img src="/icons/icon-192.png" alt="">'
+      + '<div class="tx"><div class="t1">ติดตั้งแอปเพื่อนสวน</div><div class="t2">เปิดเร็วขึ้น ใช้ได้เหมือนแอปจริง</div></div>'
+      + '<button class="go">ติดตั้ง</button><button class="x" aria-label="ปิด">&times;</button>',
+      function(){
+        removeBar();
+        if (!deferred) return;
+        deferred.prompt();
+        deferred.userChoice.finally(function(){ deferred = null; });
+      }
+    );
+  });
+  addEventListener('appinstalled', function(){ removeBar(); deferred = null; });
+
+  // ── iOS Safari: ไม่มี beforeinstallprompt → แนะวิธีเพิ่มลงหน้าจอ ──
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPhone|iPad|iPod/.test(ua) && !window.MSStream;
+  var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  if (isIOS && isSafari && nowOk()) {
+    addEventListener('load', function(){
+      setTimeout(function(){
+        if (bar) return;
+        buildBar(
+          '<img src="/icons/icon-192.png" alt="">'
+          + '<div class="tx"><div class="t1">เพิ่มเพื่อนสวนลงหน้าจอ</div><div class="t2">แตะ แชร์ ⬆️ แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”</div></div>'
+          + '<button class="x" aria-label="ปิด">&times;</button>',
+          null
+        );
+      }, 2500);
+    });
+  }
+})();
 </script>
 </body>
 </html>

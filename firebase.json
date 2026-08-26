@@ -3,12 +3,22 @@
     {
       "target": "main",
       "public": ".",
-      "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**","firestore.rules","storage.rules","*.md"]
+      "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**","firestore.rules","storage.rules","*.md"],
+      "headers": [
+        { "source": "/sw.js", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" } ] },
+        { "source": "/manifest.webmanifest", "headers": [ { "key": "Cache-Control", "value": "no-cache" }, { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" } ] },
+        { "source": "/icons/**", "headers": [ { "key": "Cache-Control", "value": "public, max-age=604800" } ] }
+      ]
     },
     {
       "target": "office",
       "public": ".",
-      "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**","firestore.rules","storage.rules","*.md"]
+      "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**","firestore.rules","storage.rules","*.md"],
+      "headers": [
+        { "source": "/sw.js", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" } ] },
+        { "source": "/manifest.webmanifest", "headers": [ { "key": "Cache-Control", "value": "no-cache" }, { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" } ] },
+        { "source": "/icons/**", "headers": [ { "key": "Cache-Control", "value": "public, max-age=604800" } ] }
+      ]
     },
     {
       "target": "bocean",

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ออฟไลน์ — เพื่อนสวน</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+       background:#f0f2f5;color:#1c1e21;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{max-width:360px;text-align:center}
+  .ic{width:96px;height:96px;margin:0 auto 20px;border-radius:24px;background:#2f9e6e;
+      display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(47,158,110,.3)}
+  .ic svg{width:52px;height:52px}
+  h1{font-size:20px;font-weight:800;margin-bottom:8px}
+  p{font-size:15px;color:#65676b;line-height:1.6;margin-bottom:24px}
+  button{background:#2f9e6e;color:#fff;border:none;border-radius:12px;padding:13px 28px;
+         font-size:15px;font-weight:700;cursor:pointer}
+  button:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+        <path d="M2 21c0-3 1.85-5.36 5.08-6"/>
+      </svg>
+    </div>
+    <h1>ออฟไลน์อยู่</h1>
+    <p>ดูเหมือนตอนนี้ไม่มีอินเทอร์เน็ต<br>ลองเชื่อมต่อใหม่แล้วกดปุ่มด้านล่าง</p>
+    <button onclick="location.reload()">ลองใหม่อีกครั้ง</button>
+  </div>
+</body>
+</html>
