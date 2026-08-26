@@ -265,6 +265,9 @@ function computeShipping(cfg, weightKg, subtotal) {
   return Math.max(0, Math.floor(Number(cfg.flatFee) || 0));   // flat (ค่าเริ่มต้น)
 }
 
+// ส่วนลดตาม tier (mirror config.js tiers[].discount) — server เป็นเจ้าของค่า ไม่เชื่อ client
+const TIER_DISCOUNT = { bronze: 0, silver: 5, gold: 10, platinum: 15 };
+
 // สร้างออเดอร์ทุกกรณีผ่านฟังก์ชันนี้ (server-authoritative):
 //  - ตรวจสินค้า active + สต็อกพอ · คิด subtotal จากราคาจริงใน DB (ไม่เชื่อ client)
 //  - ตัดสต็อก + เพิ่ม soldCount · ใช้คูปอง (ถ้ามี) มาร์ค used · ทั้งหมด atomic
@@ -288,21 +291,25 @@ exports.placeOrder = onCall(async (req) => {
   const ids = Object.keys(qtyById);
   if (ids.length === 0) throw new HttpsError("invalid-argument", "สินค้าไม่ถูกต้อง");
 
-  const tierPct = Math.min(90, Math.max(0, Math.floor(Number(cli.discountPct) || 0)));
+  // NOTE (A1): ไม่ใช้ cli.discountPct อีกต่อไป — ส่วนลด tier คิดฝั่ง server จาก tier
+  //            จริงของผู้ซื้อ (ดูใน transaction) เพื่อกันการยิง discountPct:90 เอาส่วนลดเอง
 
   const db = admin.firestore();
   const prodRefs = ids.map((id) => troot(tid).collection("products").doc(id));
   const couponRef = couponId ? troot(tid).collection("users").doc(uid).collection("coupons").doc(couponId) : null;
+  const userRef = troot(tid).collection("users").doc(uid);
   const orderRef = troot(tid).collection("orders").doc();
 
   // อ่านการตั้งค่าค่าจัดส่ง (นอก transaction — config เปลี่ยนน้อย) · ถ้าไม่มี doc = เชื่อค่าส่งจาก client (legacy config.js)
   const commSnap = await troot(tid).collection("settings").doc("commerce").get();
   const commCfg = commSnap.exists ? commSnap.data() : null;
+  const ptsCfg = await getPts(tid);   // threshold tier ต่อ tenant (ใช้คำนวณ tier จากแต้มจริง)
 
   return db.runTransaction(async (tx) => {
     // อ่านทั้งหมดก่อน (transaction ต้อง read ก่อน write)
     const prodSnaps = await Promise.all(prodRefs.map((r) => tx.get(r)));
     const couponSnap = couponRef ? await tx.get(couponRef) : null;
+    const userSnap = await tx.get(userRef);   // อ่าน tier/แต้มจริงของผู้ซื้อ (server-authoritative discount)
 
     let subtotal = 0, weight = 0;
     const items = [];
@@ -332,6 +339,14 @@ exports.placeOrder = onCall(async (req) => {
     // ค่าจัดส่ง: มี settings/commerce → คิดฝั่ง server · ไม่มี → เชื่อ client (legacy)
     const shippingFee = commCfg ? computeShipping(commCfg, weight, subtotal) : Math.max(0, Math.floor(Number(cli.shippingFee) || 0));
 
+    // ── ส่วนลดตาม tier: คิดฝั่ง server จากแต้มจริงของผู้ซื้อ (ไม่เชื่อ client) ──
+    // เปิดใช้เมื่อร้านตั้ง settings/commerce.useTierDiscount === true เท่านั้น
+    let tierPct = 0;
+    if (commCfg && commCfg.useTierDiscount === true) {
+      const userPts = userSnap.exists ? Math.max(0, Math.floor(Number(userSnap.data().points) || 0)) : 0;
+      const tierKey = calcTier(userPts, ptsCfg.tiers);
+      tierPct = Math.min(90, Math.max(0, Math.floor(Number(TIER_DISCOUNT[tierKey]) || 0)));
+    }
     const tierDiscount = Math.floor(subtotal * tierPct / 100);
     const base = Math.max(0, subtotal - tierDiscount);   // คูปองลดจากยอดหลังส่วนลดสมาชิก (ไม่ลดค่าส่ง)
 
