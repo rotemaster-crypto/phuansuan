@@ -2960,7 +2960,14 @@ async function removeTeamAdmin(uid){
 }
 function aTid(){ const t = adminTenant(); return t === 'office' ? 'phuansuan' : t; }
 let currentTenant = aTid();
-function aDb(){ return db.collection('tenants').doc(currentTenant); }
+// กัน currentTenant ว่าง/undefined เด็ดขาด — Firebase .doc(undefined) จะสร้าง tenant id สุ่มใหม่ทุกครั้ง
+// ทำให้เขียนสินค้า/ข้อมูลลง "ร้านผี" (phantom) หาไม่เจอ + โผล่ร้านร้าง. fallback ไป aTid() ที่เป็นค่าคงที่เสมอ
+function aDb(){
+  var t = currentTenant || aTid();
+  if (!t) throw new Error('ยังไม่ได้เลือกแบรนด์ (currentTenant ว่าง)');
+  if (t !== currentTenant) currentTenant = t;   // sync ค่ากลับ กัน label/โค้ดอื่นเห็น undefined
+  return db.collection('tenants').doc(t);
+}
 function setCurrentTenant(tid){ currentTenant = tid; if (typeof updateBrandLabels==='function') updateBrandLabels(); }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 function baht(n){ return '฿' + Math.round(Number(n)||0).toLocaleString(); }
