@@ -89,6 +89,28 @@ test('member A ปั๊ม points ตัวเอง (0→9999) = DENIED', asyn
 test('member A แก้ tier ตัวเอง = DENIED', async () => {
   await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { tier: 'platinum' }));
 });
+// A5: ห้าม client ขยับ points/postCount/lastBonusDay ตัวเองแม้แต่นิดเดียว (เดิม +20/write ทำได้)
+test('member A +5 แต้มตัวเอง (0→5) = DENIED (A5)', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { points: 5 }));
+});
+test('member A แก้ postCount ตัวเอง = DENIED (A5)', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { postCount: 100 }));
+});
+test('member A แก้ lastBonusDay ตัวเอง = DENIED (A5: กัน reset โบนัสรายวัน)', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { lastBonusDay: '2000-01-01' }));
+});
+test('member A แก้ field ปลอดภัย (displayName) = ALLOWED', async () => {
+  await assertSucceeds(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { displayName: 'ชื่อใหม่' }));
+});
+// A5: สร้าง user doc ต้องเริ่มแต้ม 0 (กันสร้างมาพร้อมแต้ม)
+test('สร้าง user ใหม่ด้วย points>0 = DENIED (A5)', async () => {
+  const uNew = env.authenticatedContext('uNew', { tenants: { brandA: true } }).firestore();
+  await assertFails(setDoc(doc(uNew, 'tenants/brandA/users/uNew'), { points: 20, tier: 'bronze' }));
+});
+test('สร้าง user ใหม่ด้วย points 0 = ALLOWED', async () => {
+  const uNew = env.authenticatedContext('uNew', { tenants: { brandA: true } }).firestore();
+  await assertSucceeds(setDoc(doc(uNew, 'tenants/brandA/users/uNew'), { points: 0, tier: 'bronze', banned: false }));
+});
 
 // ── 6. อ่านออเดอร์ของคนอื่น = ปฏิเสธ ───────────────────────
 test('member A อ่านออเดอร์ของ uB (brand B) = DENIED', async () => {

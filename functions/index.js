@@ -146,6 +146,42 @@ exports.claimTenant = onCall(async (req) => {
   return { ok: true, tid: tid };
 });
 
+// ── dailyLoginBonus ───────────────────────────────────────
+// ให้แต้มเข้าระบบรายวัน "ฝั่ง server" (idempotent ต่อวันตามเขตเวลาไทย)
+// ย้ายมาจาก client (index.html) ที่เดิม increment points เอง → กันปั๊มแต้ม (A5)
+// ตัดสินวันด้วยเวลา server (UTC+7) ไม่เชื่อ client; lastBonusDay ถูกล็อกไม่ให้ client แก้ (ดู rules)
+function bkkDayKey() {
+  // วันปฏิทินตามเขต Asia/Bangkok (UTC+7, ไม่มี DST) รูปแบบ YYYY-MM-DD
+  return new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+}
+exports.dailyLoginBonus = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  const tid = await resolveTid(req.data && req.data.tid);
+  const P = await getPts(tid);
+  const bonus = Math.max(0, Math.floor(Number(P.dailyLoginBonus) || 0));
+  const userRef = troot(tid).collection("users").doc(uid);
+  const dayKey = bkkDayKey();
+  return admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    if (!snap.exists) throw new HttpsError("failed-precondition", "ยังไม่มีบัญชีผู้ใช้");
+    const d = snap.data();
+    const cur = Math.max(0, Math.floor(Number(d.points) || 0));
+    if (d.lastBonusDay === dayKey || bonus === 0) {
+      return { granted: 0, day: dayKey, points: cur, tier: d.tier || calcTier(cur, P.tiers) };
+    }
+    const next = cur + bonus;
+    const tier = calcTier(next, P.tiers);
+    tx.update(userRef, {
+      points: next,
+      lastBonusDay: dayKey,
+      tier: tier,
+      lastLoginAt: FieldValue.serverTimestamp(),
+    });
+    return { granted: bonus, day: dayKey, points: next, tier: tier };
+  });
+});
+
 // ============================================================
 //  spinLuckyDraw — สุ่มจับรางวัล (Activity Engine)
 //  จ่ายด้วยแต้มสะสม · รางวัล = คูปองส่วนลด · สุ่มถ่วงน้ำหนักฝั่ง server
@@ -1167,6 +1203,7 @@ async function getPts(tid) {
     perComment:     _num(d.perComment,     PTS.perComment),
     perHelp:        _num(d.perHelp,        PTS.perHelp),
     perLike:        _num(d.perLike,        PTS.perLike),
+    dailyLoginBonus: _num(d.dailyLoginBonus, 5),
     tiers: [
       { key: "platinum", min: _num(d.tierPlatinum, 6000) },
       { key: "gold",     min: _num(d.tierGold,     3000) },

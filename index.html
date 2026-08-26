@@ -1231,7 +1231,7 @@ async function saveUserToFirestore(user) {
         displayName:  user.displayName,
         photoUrl:     user.photoUrl,
         lineUserId:   user.lineUserId,
-        points:       APP_CONFIG.points.dailyLoginBonus,
+        points:       0,   // A5: แต้มเริ่ม 0 — โบนัสเข้าระบบให้ผ่าน callable dailyLoginBonus
         tier:         'bronze',
         crops:        [],
         location:     null,
@@ -1243,23 +1243,17 @@ async function saveUserToFirestore(user) {
       });
       console.log('✅ สร้าง user ใหม่:', user.displayName);
     } else {
-      // User เก่า — อัพเดต lastLogin + daily bonus
-      const data = doc.data();
-      const lastLogin = data.lastLoginAt?.toDate();
-      const today = new Date();
-      const isNewDay = !lastLogin ||
-        lastLogin.toDateString() !== today.toDateString();
-
-      const updates = { lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(), tenantId: tenantId() };
-      if (isNewDay) {
-        updates.points = firebase.firestore.FieldValue.increment(
-          APP_CONFIG.points.dailyLoginBonus
-        );
-      }
-      await userRef.update(updates);
+      // User เก่า — อัพเดตเวลาเข้าใช้ (A5: ไม่ increment points ที่ client อีกต่อไป —
+      // rules ห้ามแล้ว; โบนัสรายวันให้ Cloud Function จัดการ ดูด้านล่าง)
+      await userRef.update({ lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(), tenantId: tenantId() });
     }
 
-    // ดึงข้อมูลล่าสุด
+    // A5: โบนัสเข้าระบบรายวัน — server เป็นคนให้ (idempotent ต่อวัน) แทน client เดิมที่ increment เอง
+    try {
+      await firebase.app().functions('asia-southeast1').httpsCallable('dailyLoginBonus')({ tid: tenantId() });
+    } catch (e) { console.warn('dailyLoginBonus ไม่สำเร็จ (ข้ามได้):', e && e.message); }
+
+    // ดึงข้อมูลล่าสุด (รวมแต้มที่เพิ่งได้จาก callable)
     const fresh = await userRef.get();
     currentUser = { ...currentUser, ...fresh.data() };
 
