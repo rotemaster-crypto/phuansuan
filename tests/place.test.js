@@ -181,6 +181,21 @@ test('A6: ไม่เป็นสมาชิกร้านนี้ → permi
   assert.equal(p.stock, 10);   // ตัดสต็อกไม่ได้ถ้าไม่ใช่สมาชิก (กัน DoS)
 });
 
+// ── B2 step3: เพดานออเดอร์ค้างชำระต่อผู้ใช้ (กัน spam hold สต็อก) ──
+test('B2: openOrders ถึงเพดาน → resource-exhausted, สต็อกไม่ถูกแตะ', async () => {
+  await seed([P1]);
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), `tenants/${TID}/users/${uid}`), { points: 0, openOrders: 5 }, { merge: true });
+  });
+  await expectFail({ tid: TID, order: order([{ id: 'p1', qty: 1 }]) }, 'resource-exhausted');
+  assert.equal((await read(`tenants/${TID}/products/p1`)).stock, 10);
+});
+test('B2: สั่งสำเร็จ → openOrders +1', async () => {
+  await seed([P1]);
+  await place({ tid: TID, order: order([{ id: 'p1', qty: 1 }]) });
+  assert.equal((await read(`tenants/${TID}/users/${uid}`)).openOrders, 1);
+});
+
 // ── ค่าจัดส่ง server-side (settings/commerce) ───────────────
 // P1 x1 = subtotal 100, weight 1 kg (weightKg default 1). client ส่ง shippingFee 30 มาแต่ server คิดเอง
 test('flat: ค่าส่งเหมา 40 (ไม่สนค่าส่ง client)', async () => {

@@ -57,6 +57,34 @@ function troot(tid) {
   return admin.firestore().collection("tenants").doc(tid);
 }
 
+// ── B5: คุมการเข้าเป็นสมาชิก (closed tenants) ─────────────
+// ให้ membership เฉพาะเมื่อ request มาจากโดเมนของร้านนั้นจริง (origin ∈ tenant.domains)
+// → กัน browser ของร้าน A เข้าเป็นสมาชิกร้าน B
+// ข้อจำกัด: origin ปลอมได้จาก client ที่ไม่ใช่ browser (curl) → ต้องเสริม App Check ภายหลัง
+function _originHostAllowed(host, domains) {
+  if (!Array.isArray(domains) || domains.length === 0) return true; // ยังไม่ตั้ง domains → ไม่บังคับ
+  return !!host && domains.includes(host);
+}
+function _originHost(req) {
+  try {
+    const h = (req && req.rawRequest && req.rawRequest.headers) || {};
+    const o = h.origin || h.referer || "";
+    return o ? new URL(o).hostname : "";
+  } catch (e) { return ""; }
+}
+async function assertTenantOrigin(tid, req) {
+  if (process.env.FUNCTIONS_EMULATOR === "true") return;   // ข้ามใน emulator/dev (test)
+  let domains = [];
+  try {
+    const s = await troot(tid).get();
+    if (s.exists && Array.isArray(s.data().domains)) domains = s.data().domains;
+  } catch (e) { return; }   // อ่าน tenant ไม่ได้ (error ชั่วคราว) → ปล่อยผ่าน
+  if (!_originHostAllowed(_originHost(req), domains)) {
+    throw new HttpsError("permission-denied", "เข้าเป็นสมาชิกได้เฉพาะจากเว็บของร้านนี้");
+  }
+}
+exports._originHostAllowed = _originHostAllowed;   // สำหรับ unit test
+
 // ── lineAuth ──────────────────────────────────────────────
 exports.lineAuth = onCall(async (req) => {
   const accessToken = req.data?.accessToken;
@@ -106,6 +134,10 @@ exports.lineAuth = onCall(async (req) => {
     console.warn("tadmin lookup failed:", e && e.message);
   }
 
+  // B5 note: membership ที่นี่ (tenants[tid]) มาจาก tid ฝั่ง client เช่นกัน แต่ tid ของ
+  //   browser มาจากโดเมน (config.js) — จะส่ง tid ผิดต้องผ่าน XSS (ปิดแล้ว A2) หรือ client
+  //   ที่ไม่ใช่ browser (ต้อง App Check). ไม่ gate ด้วย origin ที่นี่เพราะเสี่ยงทำ login พัง
+  //   ทั้งระบบถ้า tenant.domains ไม่ครบ (path login หลัก) — closure เต็มรอ App Check
   const token = await admin
     .auth()
     .createCustomToken(profile.userId, { admin: isAdmin, tenants: { [tid]: true }, tadmin: tadmin, towner: towner });
@@ -135,6 +167,8 @@ exports.claimTenant = onCall(async (req) => {
     throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
   }
   const tid = await resolveTid(req.data && req.data.tid);
+  // B5: ให้ membership เฉพาะเมื่อ request มาจากโดเมนของร้านนี้จริง (closed tenants)
+  await assertTenantOrigin(tid, req);
 
   const userRec = await admin.auth().getUser(uid);
   const prev = userRec.customClaims || {};
@@ -303,6 +337,9 @@ function computeShipping(cfg, weightKg, subtotal) {
 
 // ส่วนลดตาม tier (mirror config.js tiers[].discount) — server เป็นเจ้าของค่า ไม่เชื่อ client
 const TIER_DISCOUNT = { bronze: 0, silver: 5, gold: 10, platinum: 15 };
+// B2 step3: เพดานออเดอร์ที่ยังไม่ชำระ/รอตรวจ (pending_payment+paid_review) ต่อผู้ใช้
+// กัน spam สร้างออเดอร์เพื่อ hold สต็อก (DoS). นับด้วย openOrders บน user doc
+const MAX_OPEN_ORDERS = 5;
 
 // สร้างออเดอร์ทุกกรณีผ่านฟังก์ชันนี้ (server-authoritative):
 //  - ตรวจสินค้า active + สต็อกพอ · คิด subtotal จากราคาจริงใน DB (ไม่เชื่อ client)
@@ -349,6 +386,10 @@ exports.placeOrder = onCall(async (req) => {
     // A6: ต้องเป็นสมาชิกร้านนี้ (มี user doc ใต้ tenant นี้) — กันสั่งข้าม tenant / กัน non-member
     //     ยิง placeOrder ตัดสต็อกร้านอื่น (DoS). ตรงตาม pattern spin/mission/dailyBonus
     if (!userSnap.exists) throw new HttpsError("permission-denied", "ต้องเป็นสมาชิกร้านนี้ก่อนสั่งซื้อ");
+    // B2 step3: กันสร้างออเดอร์ค้างชำระเกินเพดาน (hold สต็อก / DoS)
+    if (Math.floor(Number(userSnap.data().openOrders) || 0) >= MAX_OPEN_ORDERS) {
+      throw new HttpsError("resource-exhausted", "มีออเดอร์ที่ยังไม่ชำระ/รอตรวจสอบมากเกินไป กรุณาชำระหรือรอตรวจสอบก่อนสั่งใหม่");
+    }
 
     let subtotal = 0, weight = 0;
     const items = [];
@@ -429,6 +470,7 @@ exports.placeOrder = onCall(async (req) => {
     };
 
     tx.set(orderRef, order);
+    tx.update(userRef, { openOrders: FieldValue.increment(1) });   // B2 step3: นับออเดอร์ค้างชำระ
     stockUpdates.forEach((s) => {
       const upd = { soldCount: FieldValue.increment(s.qty) };
       if (s.tracked) upd.stock = FieldValue.increment(-s.qty);
@@ -480,6 +522,16 @@ exports.adminCancelOrder = onCall(async (req) => {
       snaps.forEach((s, i) => { if (s.exists) restockRefs.push({ ref: refs[i], qty: agg[ids[i]], tracked: !(s.data().stock === null || s.data().stock === undefined) }); });
     }
 
+    // B2 step3: ถ้ายกเลิกออเดอร์ที่ยัง "ค้างชำระ" (pending_payment/paid_review) → ลด openOrders
+    // ของเจ้าของ (ออเดอร์ที่ confirmed แล้วถูกลดตอน confirm ไปแล้ว จึงไม่ลดซ้ำ)
+    const wasOpen = o.status === "pending_payment" || o.status === "paid_review";
+    let ownerRef = null, ownerOpen = 0, ownerExists = false;
+    if (wasOpen && o.userId) {
+      ownerRef = troot(tid).collection("users").doc(o.userId);
+      const us = await tx.get(ownerRef);   // อ่านก่อน write
+      ownerExists = us.exists; ownerOpen = us.exists ? (Number(us.data().openOrders) || 0) : 0;
+    }
+
     tx.update(orderRef, {
       status: "cancelled",
       cancelledAt: FieldValue.serverTimestamp(),
@@ -491,8 +543,59 @@ exports.adminCancelOrder = onCall(async (req) => {
       if (r.tracked) upd.stock = FieldValue.increment(r.qty);
       tx.update(r.ref, upd);
     });
+    if (ownerRef && ownerExists) tx.update(ownerRef, { openOrders: Math.max(0, Math.floor(ownerOpen) - 1) });
 
     return { ok: true, restocked: doRestock, items: restockRefs.length };
+  });
+});
+
+// ============================================================
+//  B2: order state machine — setOrderStatus (แอดมิน) เปลี่ยนสถานะผ่าน callable
+//  บังคับ transition ชุดเดียว (แทน admin เขียน status ตรง). ยกเลิก = adminCancelOrder
+//  (ต้องคืนสต็อก), auto-ship = createShipment; ที่นี่คุม confirm / ship(manual) / complete
+// ============================================================
+const ORDER_TRANSITIONS = {
+  pending_payment: ["paid_review", "confirmed", "cancelled"],
+  paid_review:     ["confirmed", "cancelled"],
+  confirmed:       ["shipped", "cancelled"],
+  shipped:         ["completed", "cancelled"],
+  completed:       [],
+  cancelled:       [],
+};
+const ORDER_STATUS_TS = { paid_review: "paidAt", confirmed: "confirmedAt", shipped: "shippedAt", completed: "completedAt" };
+exports._orderCanTransition = (from, to) => (ORDER_TRANSITIONS[from] || []).includes(to);  // unit test
+
+exports.setOrderStatus = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  const token = (req.auth && req.auth.token) || {};
+  const tid = await resolveTid(req.data && req.data.tid);
+  const isAdmin = token.admin === true || (token.tadmin && token.tadmin[tid] === true);
+  if (!uid || !isAdmin) throw new HttpsError("permission-denied", "เฉพาะแอดมินเท่านั้น");
+  const orderId = ((req.data && req.data.orderId) || "").toString();
+  const to = ((req.data && req.data.to) || "").toString();
+  if (!orderId) throw new HttpsError("invalid-argument", "ต้องระบุ orderId");
+  if (to === "cancelled") throw new HttpsError("failed-precondition", "ยกเลิกออเดอร์ผ่าน adminCancelOrder (ต้องคืนสต็อก)");
+  if (!ORDER_STATUS_TS[to]) throw new HttpsError("invalid-argument", "สถานะปลายทางไม่ถูกต้อง");
+  const trackingNumber = req.data && req.data.trackingNumber;
+  const orderRef = troot(tid).collection("orders").doc(orderId);
+  return admin.firestore().runTransaction(async (tx) => {
+    const s = await tx.get(orderRef);
+    if (!s.exists) throw new HttpsError("not-found", "ไม่พบออเดอร์");
+    const from = s.data().status || "pending_payment";
+    if (!(ORDER_TRANSITIONS[from] || []).includes(to)) {
+      throw new HttpsError("failed-precondition", "เปลี่ยนสถานะจาก " + from + " → " + to + " ไม่ได้");
+    }
+    // B2 step3: →confirmed = ออกจากชุดค้างชำระ → ลด openOrders ของเจ้าของ (อ่านก่อน write)
+    const ownerId = to === "confirmed" ? (s.data().userId || "") : "";
+    const ownerRef = ownerId ? troot(tid).collection("users").doc(ownerId) : null;
+    const ownerSnap = ownerRef ? await tx.get(ownerRef) : null;
+    const upd = { status: to, updatedAt: FieldValue.serverTimestamp(), [ORDER_STATUS_TS[to]]: FieldValue.serverTimestamp() };
+    if (to === "shipped" && typeof trackingNumber === "string" && trackingNumber.trim()) upd.trackingNumber = trackingNumber.trim();
+    tx.update(orderRef, upd);
+    if (ownerRef && ownerSnap.exists) {
+      tx.update(ownerRef, { openOrders: Math.max(0, Math.floor(Number(ownerSnap.data().openOrders) || 0) - 1) });
+    }
+    return { ok: true, from: from, to: to };
   });
 });
 
@@ -1075,16 +1178,22 @@ exports.analyzePlant = onCall(
 
     const tid = await resolveTid(req.data && req.data.tid);
 
-    // ── เช็คโควต้ารายวัน (ใต้ tenant) ─────────────────────
+    // ── จองโควต้ารายวัน (atomic) ก่อนเรียก Gemini ─────────
+    // B9: เดิมอ่าน-เช็ค แล้วค่อย increment ทีหลัง → ยิงขนานอ่านค่าเดียวกันทะลุโควต้าได้
+    //     (TOCTOU, ค่า Gemini บาน) → ย้ายมา reserve ใน transaction ก่อนเรียกจริง
     const today = new Date().toISOString().slice(0, 10);
     const quotaRef = troot(tid).collection("users").doc(uid)
       .collection("aiUsage").doc(today);
-    const quotaSnap = await quotaRef.get();
-    const usedToday = quotaSnap.exists ? (quotaSnap.data().count || 0) : 0;
-    if (usedToday >= DAILY_QUOTA) {
-      throw new HttpsError("resource-exhausted",
-        `วันนี้ใช้ครบ ${DAILY_QUOTA} ครั้งแล้ว ลองใหม่พรุ่งนี้นะครับ 🌱`);
-    }
+    let usedToday = 0;
+    await admin.firestore().runTransaction(async (tx) => {
+      const s = await tx.get(quotaRef);
+      usedToday = s.exists ? (Number(s.data().count) || 0) : 0;
+      if (usedToday >= DAILY_QUOTA) {
+        throw new HttpsError("resource-exhausted",
+          `วันนี้ใช้ครบ ${DAILY_QUOTA} ครั้งแล้ว ลองใหม่พรุ่งนี้นะครับ 🌱`);
+      }
+      tx.set(quotaRef, { count: usedToday + 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    });
 
     // ── เรียก Gemini Vision ───────────────────────────────
     const prompt = `คุณคือผู้เชี่ยวชาญโรคพืชของไทย วิเคราะห์รูปนี้ซึ่งเป็น "${cropName}"
@@ -1148,17 +1257,14 @@ exports.analyzePlant = onCall(
         };
       }
     } catch (err) {
+      // B9: refund โควต้าที่จองไว้ — การเรียกไม่สำเร็จไม่ควรกินโควต้า
+      await quotaRef.set({ count: FieldValue.increment(-1) }, { merge: true }).catch(() => {});
       if (err instanceof HttpsError) throw err;
       console.error("analyzePlant error:", err);
       throw new HttpsError("internal", "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
     }
 
-    // ── เพิ่มตัวนับโควต้า + บันทึกประวัติ (ใต้ tenant) ──────
-    await quotaRef.set({
-      count: FieldValue.increment(1),
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
-
+    // ── บันทึกประวัติ (โควต้าถูกจองไว้แล้วด้านบน) ──────
     const diagRef = await troot(tid).collection("users").doc(uid)
       .collection("diagnoses").add({
         crop: cropName,

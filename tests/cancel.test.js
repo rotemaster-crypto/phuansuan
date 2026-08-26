@@ -57,6 +57,24 @@ async function read(path) {
 // order ที่ผ่าน placeOrder (ตัดสต็อกแล้ว): product stock ถูกหักไปแล้ว
 const ORD = { status: 'pending_payment', stockApplied: true, items: [{ id: 'p1', qty: 3 }], total: 300 };
 
+// ── B2 step3: openOrders ── (คืน pending → ลด, confirmed → ไม่ลดซ้ำ)
+test('B2 step3: ยกเลิกออเดอร์ pending → ลด openOrders เจ้าของ', async () => {
+  await setAdminClaim(true);
+  await seed({ status: 'pending_payment', stockApplied: true, userId: 'buyer', items: [{ id: 'p1', qty: 1 }] },
+    [{ id: 'p1', name: 'A', price: 100, stock: 9, active: true }]);
+  await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), `tenants/${TID}/users/buyer`), { openOrders: 3 }); });
+  await cancel({ tid: TID, orderId: 'o1' });
+  assert.equal((await read(`tenants/${TID}/users/buyer`)).openOrders, 2);
+});
+test('B2 step3: ยกเลิกออเดอร์ confirmed → ไม่ลด openOrders ซ้ำ', async () => {
+  await setAdminClaim(true);
+  await seed({ status: 'confirmed', stockApplied: true, userId: 'buyer', items: [{ id: 'p1', qty: 1 }] },
+    [{ id: 'p1', name: 'A', price: 100, stock: 9, active: true }]);
+  await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), `tenants/${TID}/users/buyer`), { openOrders: 0 }); });
+  await cancel({ tid: TID, orderId: 'o1' });
+  assert.equal((await read(`tenants/${TID}/users/buyer`)).openOrders, 0, 'confirmed ถูกลดตอน confirm แล้ว');
+});
+
 // ── สิทธิ์: ไม่ใช่แอดมิน → permission-denied ────────────────
 test('ไม่ใช่แอดมิน → permission-denied', async () => {
   await setAdminClaim(false);
