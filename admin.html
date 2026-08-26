@@ -2937,25 +2937,46 @@ async function addProduct() {
     loadProducts();
   } catch(e) { toast('❌ '+e.message,'error'); }
 }
+// ดึงชื่อสินค้าจาก slug ของ URL (fallback เมื่อดึงหน้าเว็บไม่ได้) — Shopee: /{ชื่อ}-i.{shop}.{item}
+function nameFromUrl(u){
+  try {
+    var p = new URL(u).pathname;
+    var m = /\/(.+?)-i\.\d+\.\d+/.exec(p);           // Shopee pattern
+    var slug = m ? m[1] : p.replace(/^\/+|\/+$/g,'');
+    slug = decodeURIComponent(slug).replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim();
+    return slug.length > 3 ? slug : '';
+  } catch(e){ return ''; }
+}
 // ดึงข้อมูลสินค้าจากลิงก์ (Shopee ฯลฯ) มาเติมฟอร์ม — best-effort ผ่าน Cloud Function fetchProductMeta
 async function fetchFromLink(btn){
   var url = (document.getElementById('pl-url').value||'').trim();
   if(!url){ toast('❌ วางลิงก์ก่อน','error'); return; }
   var old = btn ? btn.innerHTML : '';
   if(btn){ btn.disabled=true; btn.textContent='⏳ กำลังดึง...'; }
+  var set = function(id,v){ var e=document.getElementById(id); if(e && v){ e.value = v; } };
+  var uEl=document.getElementById('new-prod-url');
   try {
     var fn = firebase.app().functions('asia-southeast1').httpsCallable('fetchProductMeta');
     var d = (await fn({ tid: currentTenant, url: url })).data || {};
-    var set = function(id,v){ var e=document.getElementById(id); if(e && v){ e.value = v; } };
-    set('new-prod-name', d.name);
-    set('new-prod-price', d.price);
-    set('new-prod-img', d.image);
-    set('new-prod-desc', d.description);
-    var uEl=document.getElementById('new-prod-url'); if(uEl && !uEl.value) uEl.value = url;
-    if (typeof prodPrev==='function') prodPrev('new-prod-img','new-prod-imgprev');
-    if(d.found) toast('✅ ดึงข้อมูลมาแล้ว ตรวจ/แก้ก่อนบันทึก','success');
-    else toast('ℹ️ ลิงก์นี้ดึงข้อมูลไม่ได้ (เว็บอาจบล็อก) — กรอกเอง','error');
-  } catch(e){ toast('❌ '+(e.message||e),'error'); }
+    if(d.found){
+      set('new-prod-name', d.name);
+      set('new-prod-price', d.price);
+      set('new-prod-img', d.image);
+      set('new-prod-desc', d.description);
+      if(uEl && !uEl.value) uEl.value = url;
+      if (typeof prodPrev==='function') prodPrev('new-prod-img','new-prod-imgprev');
+      toast('✅ ดึงข้อมูลมาแล้ว ตรวจ/แก้ก่อนบันทึก'+(d.price?'':' (Shopee ไม่ให้ราคา — เติมเอง)'),'success');
+    } else {
+      var nm = nameFromUrl(url);
+      if(nm){ set('new-prod-name', nm); if(uEl && !uEl.value) uEl.value = url; toast('ℹ️ ดึงจากเว็บไม่ได้ — ดึงชื่อจากลิงก์ให้แทน เติมราคา/รูปเอง','success'); }
+      else toast('ℹ️ ลิงก์นี้ดึงข้อมูลไม่ได้ — กรอกเอง','error');
+    }
+  } catch(e){
+    // เว็บบล็อก/error → fallback ดึงชื่อจากลิงก์
+    var nm2 = nameFromUrl(url);
+    if(nm2){ set('new-prod-name', nm2); if(uEl && !uEl.value) uEl.value = url; toast('ℹ️ ดึงจากเว็บไม่ได้ — ดึงชื่อจากลิงก์ให้แทน เติมราคา/รูปเอง','success'); }
+    else toast('❌ '+(e.message||e),'error');
+  }
   if(btn){ btn.disabled=false; btn.innerHTML=old; }
 }
 async function deleteProduct(id) {

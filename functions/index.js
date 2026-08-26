@@ -942,7 +942,10 @@ function parseProductMeta(html, url) {
     return "";
   };
   const titleTag = (/<title[^>]*>([^<]*)<\/title>/i.exec(html) || [])[1] || "";
-  const name = decodeEntities(pick(["og:title", "twitter:title"]) || titleTag);
+  // ตัดหาง " | Shopee Thailand" / " - Lazada" ฯลฯ ออกจากชื่อ
+  const name = decodeEntities(pick(["og:title", "twitter:title"]) || titleTag)
+    .replace(/\s*[|｜]\s*(Shopee|Lazada)\b.*$/i, "")
+    .replace(/\s*[-–]\s*(Shopee|Lazada)\b.*$/i, "").trim();
   const image = pick(["og:image", "og:image:url", "og:image:secure_url", "twitter:image", "twitter:image:src"]);
   const description = decodeEntities(pick(["og:description", "twitter:description", "description"]));
   const priceRaw = pick(["product:price:amount", "og:price:amount", "og:product:price:amount", "product:sale_price:amount"]);
@@ -962,7 +965,8 @@ exports.fetchProductMeta = onCall(async (req) => {
     const res = await fetch(url, {
       redirect: "follow",
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        // ใช้ UA แบบ crawler — เว็บ marketplace (Shopee ฯลฯ) เสิร์ฟ OG tag ให้ตัวนี้ (UA browser จะโดนหน้า anti-bot)
+        "User-Agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9",
         "Accept-Language": "th,en;q=0.9",
       },
