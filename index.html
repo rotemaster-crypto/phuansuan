@@ -3250,24 +3250,6 @@ function renderPost(id, p, i) {
 }
 
 // ── Post Actions ──────────────────────────────────────────
-async function likePost(id, btn) {
-  if (!currentUser || !db) return;
-  btn.classList.toggle('liked');
-  const liked = btn.classList.contains('liked');
-  const inc = liked ? 1 : -1;
-  const el = document.getElementById('likes-' + id);
-  if (el) el.textContent = Math.max(0, parseInt(el.textContent || '0') + inc);
-  const ref = tdb().collection('posts').doc(id).collection('likes').doc(currentUser.uid);
-  try {
-    if (liked) await ref.set({ at: firebase.firestore.FieldValue.serverTimestamp() });
-    else await ref.delete();
-  } catch(e) {
-    console.error(e);
-    btn.classList.toggle('liked');
-    if (el) el.textContent = Math.max(0, parseInt(el.textContent || '0') - inc);
-  }
-}
-
 async function helpPost(id, btn) {
   if (!currentUser || !db) return;
   btn.classList.toggle('helped');
