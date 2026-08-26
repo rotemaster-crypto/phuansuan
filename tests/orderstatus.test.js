@@ -123,3 +123,17 @@ test('order ไม่มีจริง → not-found', async () => {
   await seedOrder('confirmed');
   await expectFail({ tid: TID, orderId: 'ไม่มี', to: 'shipped' }, 'not-found');
 });
+
+// ── B2 step3: →confirmed ลด openOrders ของเจ้าของ ──
+test('B2 step3: →confirmed ลด openOrders ของเจ้าของ', async () => {
+  await setAdminClaim(true);
+  await env.clearFirestore();
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, `tenants/${TID}`), { status: 'active' });
+    await setDoc(doc(db, `tenants/${TID}/orders/o1`), { status: 'paid_review', userId: 'buyer', items: [], total: 100 });
+    await setDoc(doc(db, `tenants/${TID}/users/buyer`), { openOrders: 2 });
+  });
+  await setStatus({ tid: TID, orderId: 'o1', to: 'confirmed' });
+  assert.equal((await read(`tenants/${TID}/users/buyer`)).openOrders, 1, 'confirm ต้องลด openOrders');
+});

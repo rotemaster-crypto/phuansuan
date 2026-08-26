@@ -337,6 +337,9 @@ function computeShipping(cfg, weightKg, subtotal) {
 
 // ส่วนลดตาม tier (mirror config.js tiers[].discount) — server เป็นเจ้าของค่า ไม่เชื่อ client
 const TIER_DISCOUNT = { bronze: 0, silver: 5, gold: 10, platinum: 15 };
+// B2 step3: เพดานออเดอร์ที่ยังไม่ชำระ/รอตรวจ (pending_payment+paid_review) ต่อผู้ใช้
+// กัน spam สร้างออเดอร์เพื่อ hold สต็อก (DoS). นับด้วย openOrders บน user doc
+const MAX_OPEN_ORDERS = 5;
 
 // สร้างออเดอร์ทุกกรณีผ่านฟังก์ชันนี้ (server-authoritative):
 //  - ตรวจสินค้า active + สต็อกพอ · คิด subtotal จากราคาจริงใน DB (ไม่เชื่อ client)
@@ -383,6 +386,10 @@ exports.placeOrder = onCall(async (req) => {
     // A6: ต้องเป็นสมาชิกร้านนี้ (มี user doc ใต้ tenant นี้) — กันสั่งข้าม tenant / กัน non-member
     //     ยิง placeOrder ตัดสต็อกร้านอื่น (DoS). ตรงตาม pattern spin/mission/dailyBonus
     if (!userSnap.exists) throw new HttpsError("permission-denied", "ต้องเป็นสมาชิกร้านนี้ก่อนสั่งซื้อ");
+    // B2 step3: กันสร้างออเดอร์ค้างชำระเกินเพดาน (hold สต็อก / DoS)
+    if (Math.floor(Number(userSnap.data().openOrders) || 0) >= MAX_OPEN_ORDERS) {
+      throw new HttpsError("resource-exhausted", "มีออเดอร์ที่ยังไม่ชำระ/รอตรวจสอบมากเกินไป กรุณาชำระหรือรอตรวจสอบก่อนสั่งใหม่");
+    }
 
     let subtotal = 0, weight = 0;
     const items = [];
@@ -463,6 +470,7 @@ exports.placeOrder = onCall(async (req) => {
     };
 
     tx.set(orderRef, order);
+    tx.update(userRef, { openOrders: FieldValue.increment(1) });   // B2 step3: นับออเดอร์ค้างชำระ
     stockUpdates.forEach((s) => {
       const upd = { soldCount: FieldValue.increment(s.qty) };
       if (s.tracked) upd.stock = FieldValue.increment(-s.qty);
@@ -514,6 +522,16 @@ exports.adminCancelOrder = onCall(async (req) => {
       snaps.forEach((s, i) => { if (s.exists) restockRefs.push({ ref: refs[i], qty: agg[ids[i]], tracked: !(s.data().stock === null || s.data().stock === undefined) }); });
     }
 
+    // B2 step3: ถ้ายกเลิกออเดอร์ที่ยัง "ค้างชำระ" (pending_payment/paid_review) → ลด openOrders
+    // ของเจ้าของ (ออเดอร์ที่ confirmed แล้วถูกลดตอน confirm ไปแล้ว จึงไม่ลดซ้ำ)
+    const wasOpen = o.status === "pending_payment" || o.status === "paid_review";
+    let ownerRef = null, ownerOpen = 0, ownerExists = false;
+    if (wasOpen && o.userId) {
+      ownerRef = troot(tid).collection("users").doc(o.userId);
+      const us = await tx.get(ownerRef);   // อ่านก่อน write
+      ownerExists = us.exists; ownerOpen = us.exists ? (Number(us.data().openOrders) || 0) : 0;
+    }
+
     tx.update(orderRef, {
       status: "cancelled",
       cancelledAt: FieldValue.serverTimestamp(),
@@ -525,6 +543,7 @@ exports.adminCancelOrder = onCall(async (req) => {
       if (r.tracked) upd.stock = FieldValue.increment(r.qty);
       tx.update(r.ref, upd);
     });
+    if (ownerRef && ownerExists) tx.update(ownerRef, { openOrders: Math.max(0, Math.floor(ownerOpen) - 1) });
 
     return { ok: true, restocked: doRestock, items: restockRefs.length };
   });
@@ -566,9 +585,16 @@ exports.setOrderStatus = onCall(async (req) => {
     if (!(ORDER_TRANSITIONS[from] || []).includes(to)) {
       throw new HttpsError("failed-precondition", "เปลี่ยนสถานะจาก " + from + " → " + to + " ไม่ได้");
     }
+    // B2 step3: →confirmed = ออกจากชุดค้างชำระ → ลด openOrders ของเจ้าของ (อ่านก่อน write)
+    const ownerId = to === "confirmed" ? (s.data().userId || "") : "";
+    const ownerRef = ownerId ? troot(tid).collection("users").doc(ownerId) : null;
+    const ownerSnap = ownerRef ? await tx.get(ownerRef) : null;
     const upd = { status: to, updatedAt: FieldValue.serverTimestamp(), [ORDER_STATUS_TS[to]]: FieldValue.serverTimestamp() };
     if (to === "shipped" && typeof trackingNumber === "string" && trackingNumber.trim()) upd.trackingNumber = trackingNumber.trim();
     tx.update(orderRef, upd);
+    if (ownerRef && ownerSnap.exists) {
+      tx.update(ownerRef, { openOrders: Math.max(0, Math.floor(Number(ownerSnap.data().openOrders) || 0) - 1) });
+    }
     return { ok: true, from: from, to: to };
   });
 });
