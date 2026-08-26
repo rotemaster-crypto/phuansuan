@@ -1,6 +1,7 @@
 # CHECKLIST — resume งาน + เช็กตัวเองกันพลาด
 
-> เปิดมาอ่านไฟล์นี้ก่อนเริ่มทุกครั้ง · คู่กับ [STATUS.md](./STATUS.md) (โค้ดเป็นยังไง) + [ROADMAP.md](./ROADMAP.md) (ทำอะไรต่อ)
+> ⚠️ **งานค้างจริง (ทำอะไรต่อ) → ดู [BACKLOG.md](./BACKLOG.md)** · ไฟล์นี้ + STATUS.md + ROADMAP.md เป็น "done log" (จดที่เสร็จแล้ว) อย่าใช้ดูว่าเหลืออะไร
+> เปิดมาอ่าน [BACKLOG.md](./BACKLOG.md) + [CLAUDE.md](./CLAUDE.md) ก่อนเริ่มทุกครั้ง
 
 ---
 
