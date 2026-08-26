@@ -29,12 +29,21 @@ service cloud.firestore {
     }
 
     match /tenants/{t} {
-      allow read: if true;
+      // A8: เอกสารร้านมี ownerLineId/adminLineIds (= PII + UID ที่ใช้ gating) —
+      //     ล็อกอ่านเฉพาะสมาชิก/แอดมินร้านนั้น · list ทั้งคอลเลกชันเฉพาะ super-admin
+      //     (ลูกค้าอ่าน branding จาก settings/app ไม่อ่าน doc นี้)
+      allow get: if memberOf(t) || canManage(t);
+      allow list: if isAdmin();
       allow write: if isAdmin();
       allow update: if isTenantOwner(t)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['adminLineIds', 'updatedAt']);
 
-      match /settings/{doc} { allow read: if true; allow write: if canManage(t); }
+      // A8: settings ส่วนใหญ่ public (ลูกค้าอ่าน branding/flags/commerce) — ยกเว้น
+      //     'store' (ชื่อ/เบอร์/ที่อยู่ผู้ส่ง = business PII) อ่านได้เฉพาะแอดมิน
+      match /settings/{doc} {
+        allow read: if doc != 'store' || canManage(t);
+        allow write: if canManage(t);
+      }
       // ข้อมูลลับต่อแบรนด์ (เช่น API key ขนส่ง) — เข้าถึงผ่าน Cloud Function เท่านั้น
       match /private/{doc} { allow read, write: if false; }
       match /products/{productId} { allow read: if true; allow write: if canManage(t); }
@@ -124,7 +133,9 @@ service cloud.firestore {
 
     match /tenantRequests/{reqId} {
       allow read, update, delete: if isAdmin();
-      allow create: if request.resource.data.status == 'new'
+      // A10: ต้อง login ก่อน (กันสแปม lead จากคนนอกที่ไม่ระบุตัว)
+      allow create: if signedIn()
+        && request.resource.data.status == 'new'
         && request.resource.data.brandName is string
         && request.resource.data.brandName.size() > 0
         && request.resource.data.brandName.size() < 120
