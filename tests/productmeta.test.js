@@ -10,6 +10,21 @@ const idx = require('../functions/index.js');
 const safe = idx._isSafePublicUrl;
 const parse = idx._parseProductMeta;
 
+test('B14: DNS/IP guard — จำแนก IP ภายใน (กัน DNS-rebind)', () => {
+  const priv = idx._ipIsPrivate;
+  assert.equal(priv('8.8.8.8'), false);
+  assert.equal(priv('172.200.0.1'), false);          // public
+  assert.equal(priv('2001:4860:4860::8888'), false); // public IPv6
+  assert.equal(priv('10.0.0.5'), true);
+  assert.equal(priv('127.0.0.1'), true);
+  assert.equal(priv('192.168.1.1'), true);
+  assert.equal(priv('172.16.0.1'), true);
+  assert.equal(priv('169.254.169.254'), true);       // cloud metadata
+  assert.equal(priv('::1'), true);
+  assert.equal(priv('fd00::1'), true);
+  assert.equal(priv('fe80::1'), true);
+});
+
 test('SSRF guard — อนุญาตเฉพาะ http/https สาธารณะ', () => {
   assert.equal(safe('https://shopee.co.th/product/123/456'), true);
   assert.equal(safe('http://example.com/x'), true);

@@ -1099,6 +1099,43 @@ function isSafePublicUrl(u) {
   if (host === "[::1]" || host.startsWith("[fc") || host.startsWith("[fd") || host.startsWith("[fe80")) return false;
   return true;
 }
+// B14: จำแนก IP ภายใน — ใช้เช็ค IP ที่ DNS resolve ได้ (กัน DNS-rebind ที่ isSafePublicUrl
+// เช็คแค่ชื่อ host มองไม่เห็น)
+function ipIsPrivate(ip) {
+  const s = String(ip || "").toLowerCase();
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(s)) {
+    const p = s.split(".").map(Number);
+    return p[0] === 0 || p[0] === 10 || p[0] === 127 ||
+      (p[0] === 192 && p[1] === 168) ||
+      (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+      (p[0] === 169 && p[1] === 254);
+  }
+  return s === "::1" || s.startsWith("fc") || s.startsWith("fd") || s.startsWith("fe80")
+    || s.startsWith("::ffff:127.") || s.startsWith("::ffff:10.") || s.startsWith("::ffff:192.168.");
+}
+exports._ipIsPrivate = ipIsPrivate;   // unit test
+async function assertHostResolvesPublic(hostname) {
+  const dns = require("dns").promises;
+  let addrs;
+  try { addrs = await dns.lookup(hostname, { all: true }); }
+  catch (e) { throw new HttpsError("invalid-argument", "resolve โดเมนไม่ได้"); }
+  for (const a of addrs) {
+    if (ipIsPrivate(a.address)) throw new HttpsError("permission-denied", "โดเมนชี้ไปที่เครือข่ายภายใน (กัน SSRF)");
+  }
+}
+// fetch ที่กัน SSRF: ตรวจ host + IP ที่ resolve ได้ ทุก hop ของ redirect (manual, สูงสุด 4 hop)
+async function safeFetch(startUrl, opts) {
+  let u = startUrl;
+  for (let hop = 0; hop < 4; hop++) {
+    if (!isSafePublicUrl(u)) throw new HttpsError("invalid-argument", "ลิงก์ไม่ปลอดภัย");
+    await assertHostResolvesPublic(new URL(u).hostname);
+    const res = await fetch(u, Object.assign({}, opts, { redirect: "manual" }));
+    const loc = (res.status >= 300 && res.status < 400) ? res.headers.get("location") : null;
+    if (loc) { u = new URL(loc, u).toString(); continue; }
+    return res;
+  }
+  throw new HttpsError("unavailable", "redirect เยอะเกินไป");
+}
 function decodeEntities(s) {
   return String(s || "")
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
@@ -1137,8 +1174,7 @@ exports.fetchProductMeta = onCall(async (req) => {
   if (!isSafePublicUrl(url)) throw new HttpsError("invalid-argument", "ลิงก์ไม่ถูกต้อง (ต้องเป็น http/https สาธารณะ)");
   let html;
   try {
-    const res = await fetch(url, {
-      redirect: "follow",
+    const res = await safeFetch(url, {
       headers: {
         // ใช้ UA แบบ crawler — เว็บ marketplace (Shopee ฯลฯ) เสิร์ฟ OG tag ให้ตัวนี้ (UA browser จะโดนหน้า anti-bot)
         "User-Agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
