@@ -1321,6 +1321,8 @@ exports.onPostCreated = onDocumentCreated(
       postCount: FieldValue.increment(1),
     });
     await updateTier(ref, tid);
+    // A3: เก็บแต้มที่ให้จริงไว้บนโพสต์ เพื่อคืนได้เป๊ะตอนลบ (campaign/promo อาจเปลี่ยนภายหลัง)
+    await event.data.ref.update({ pointsAwarded: total }).catch(() => {});
     // group post counter (โพสต์ในกลุ่ม → นับให้กลุ่ม)
     if (post.groupId) {
       await troot(tid).collection("groups").doc(post.groupId)
@@ -1422,9 +1424,29 @@ exports.onPostDeleted = onDocumentDeleted(
   { document: "tenants/{tid}/posts/{postId}", region: "asia-southeast1" },
   async (event) => {
     const post = event.data?.data();
-    if (!post?.groupId) return;
-    await troot(event.params.tid).collection("groups").doc(post.groupId)
-      .update({ postCount: FieldValue.increment(-1) }).catch(() => {});
+    if (!post) return;
+    const tid = event.params.tid;
+    // A3: คืนแต้ม + postCount ที่ onPostCreated เคยให้ (กัน farm ด้วยการสร้าง/ลบโพสต์วน)
+    // ใช้ค่า pointsAwarded ที่ stamp ไว้บนโพสต์ (เป๊ะตามที่ให้จริง) · clamp ไม่ให้ติดลบ
+    if (post.authorId) {
+      const awarded = Math.max(0, Math.floor(Number(post.pointsAwarded) || 0));
+      const uref = troot(tid).collection("users").doc(post.authorId);
+      await admin.firestore().runTransaction(async (tx) => {
+        const s = await tx.get(uref);
+        if (!s.exists) return;
+        const d = s.data();
+        tx.update(uref, {
+          points:    Math.max(0, Math.floor(Number(d.points) || 0) - awarded),
+          postCount: Math.max(0, Math.floor(Number(d.postCount) || 0) - 1),
+        });
+      }).catch(() => {});
+      await updateTier(uref, tid);
+    }
+    // นับโพสต์ในกลุ่มลดเมื่อโพสต์ถูกลบ (keep group.postCount แม่นยำ)
+    if (post.groupId) {
+      await troot(tid).collection("groups").doc(post.groupId)
+        .update({ postCount: FieldValue.increment(-1) }).catch(() => {});
+    }
   }
 );
 
