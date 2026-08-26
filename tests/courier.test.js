@@ -12,10 +12,39 @@ import { getAuth, connectAuthEmulator, signInAnonymously } from 'firebase/auth';
 import { getFunctions, connectFunctionsEmulator, httpsCallable } from 'firebase/functions';
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import http from 'node:http';
 
 const PROJECT = 'demo-bocean';
 const TID = 'demo';
 let env, auth, uid, setCred, ship;
+
+// ── mock Shippop server (ทดสอบ path จริงแบบออฟไลน์: booking→confirm) ──
+// ยิงมาที่ /booking/ (JSON) แล้ว /confirm/ (formdata) เลียนแบบ mkpservice
+let mockServer, MOCK_URL;
+function startMockShippop() {
+  return new Promise((resolve) => {
+    mockServer = http.createServer((req, res) => {
+      let body = '';
+      req.on('data', (c) => { body += c; });
+      req.on('end', () => {
+        res.setHeader('Content-Type', 'application/json');
+        if (req.url.startsWith('/booking/')) {
+          let cc = 'FLE';
+          try { cc = JSON.parse(body).data[0].courier_code; } catch (e) { /* ignore */ }
+          if (cc === 'BAD') {   // จำลองขนส่งที่ไม่อนุญาต
+            return res.end(JSON.stringify({ status: false, data: { '0': { BAD: { available: false, remark: 'Courier code not allow' } } } }));
+          }
+          return res.end(JSON.stringify({ status: true, purchase_id: 999001, total_price: 39, data: { '0': { status: true, tracking_code: 'SP-TEST-1', courier_code: cc, price: 39 } } }));
+        }
+        if (req.url.startsWith('/confirm/')) {
+          return res.end(JSON.stringify({ status: true, result: { '0': { status: true, tracking_code: 'SP-TEST-1', courier_tracking_code: 'TH-TEST-1', courier_code: 'FLE' } } }));
+        }
+        res.statusCode = 404; res.end('{}');
+      });
+    });
+    mockServer.listen(0, '127.0.0.1', () => { MOCK_URL = 'http://127.0.0.1:' + mockServer.address().port; resolve(); });
+  });
+}
 
 async function setAdminClaim(on) {
   await fetch('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:update', {
@@ -35,8 +64,9 @@ before(async () => {
   uid = (await signInAnonymously(auth)).user.uid;
   setCred = (d) => httpsCallable(functions, 'setCourierCredential')(d).then((r) => r.data);
   ship = (d) => httpsCallable(functions, 'createShipment')(d).then((r) => r.data);
+  await startMockShippop();
 });
-after(async () => { await env.cleanup(); });
+after(async () => { await env.cleanup(); if (mockServer) await new Promise((r) => mockServer.close(r)); });
 
 // ข้อมูลผู้รับ/ผู้ส่งครบ (สำหรับทดสอบโหมดจริงผ่าน preflight)
 const FULL_SHIP  = { name:'สมชาย', phone:'0812345678', addressLine:'123 ม.4', subdistrict:'บางรัก', district:'บางรัก', province:'กรุงเทพ', postcode:'10500' };
@@ -95,10 +125,32 @@ test('มีเลขพัสดุแล้ว → failed-precondition', async
   await expectFail(ship, { tid: TID, orderId: 'o1' }, 'failed-precondition');
 });
 
-// ── โหมดจริง + ข้อมูลครบ → ผ่าน preflight ถึง unimplemented (รอเสียบ API) ──
-test('โหมดจริง + ข้อมูลครบ → unimplemented (ผ่าน preflight)', async () => {
+// ── โหมดจริง Shippop + ข้อมูลครบ → booking+confirm สำเร็จ (ผ่าน mock server) ──
+test('โหมดจริง shippop → ได้เลขพัสดุจริง + เก็บ shippopCode/purchaseId', async () => {
   await setAdminClaim(true);
-  await seed({ active: true, mock: false, provider: 'shippop' }, REAL_ORDER, { provider:'shippop', apiKey:'REALKEY' }, FULL_STORE);
+  await seed({ active: true, mock: false, provider: 'shippop', baseUrl: MOCK_URL, defaultCourier: 'FLE' }, REAL_ORDER, { provider:'shippop', apiKey:'REALKEY' }, FULL_STORE);
+  const res = await ship({ tid: TID, orderId: 'o1', courier: 'FLE' });
+  assert.equal(res.mock, false);
+  assert.equal(res.trackingNumber, 'TH-TEST-1');   // courier_tracking_code จาก confirm
+  const o = await read(`tenants/${TID}/orders/o1`);
+  assert.equal(o.status, 'shipped');
+  assert.equal(o.trackingNumber, 'TH-TEST-1');
+  assert.equal(o.shippopCode, 'SP-TEST-1');
+  assert.equal(o.shippopPurchaseId, 999001);
+  assert.equal(o.courier, 'FLE');
+});
+
+// ── โหมดจริง shippop: ขนส่งที่ไม่อนุญาต → failed-precondition + บอกเหตุผล ──
+test('โหมดจริง shippop: courier ไม่อนุญาต → failed-precondition (มี remark)', async () => {
+  await setAdminClaim(true);
+  await seed({ active: true, mock: false, provider: 'shippop', baseUrl: MOCK_URL }, REAL_ORDER, { provider:'shippop', apiKey:'REALKEY' }, FULL_STORE);
+  await expectFailMsg(ship, { tid: TID, orderId: 'o1', courier: 'BAD' }, 'failed-precondition', /not allow|BAD/);
+});
+
+// ── provider ที่ยังไม่รองรับ → unimplemented ──
+test('provider อื่น (ไม่ใช่ shippop) → unimplemented', async () => {
+  await setAdminClaim(true);
+  await seed({ active: true, mock: false, provider: 'kerry' }, REAL_ORDER, { provider:'kerry', apiKey:'REALKEY' }, FULL_STORE);
   await expectFail(ship, { tid: TID, orderId: 'o1' }, 'unimplemented');
 });
 

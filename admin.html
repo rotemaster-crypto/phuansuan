@@ -228,6 +228,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item sys-only" onclick="showScreen('sysoverview',this)"><svg class="ic sb-ic"><use href="#i-grid"/></svg> ภาพรวมระบบ</div>
     <div class="sb-item sys-only" onclick="showScreen('tenants',this)"><svg class="ic sb-ic"><use href="#i-building"/></svg> จัดการแบรนด์</div>
     <div class="sb-item sys-only" onclick="showScreen('bocean',this)"><svg class="ic sb-ic"><use href="#i-inbox"/></svg> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
+    <div class="sb-item sys-only" onclick="showScreen('shipbill',this)"><svg class="ic sb-ic"><use href="#i-truck"/></svg> ค่าส่ง & บิลแบรนด์</div>
 
     <!-- ═══ เข้าจัดการร้านแบรนด์ (super เลือกแบรนด์ / brand-admin = แบรนด์ตัวเอง) ═══ -->
     <div class="sb-brandbar">
@@ -293,6 +294,21 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
     <div id="sys-brandlist"><div class="empty-state">กำลังโหลด...</div></div>
   </div>
+</div>
+
+<!-- SHIPPING BILLING (Bocean Super Admin) -->
+<div class="screen" id="screen-shipbill">
+  <div class="page-header"><div class="page-title">🚚 ค่าส่ง & บิลแบรนด์</div><div class="page-sub">รวมต้นทุนค่าส่งจริง (Shippop) ต่อแบรนด์ต่อเดือน · สำหรับ Bocean ออกบิลเรียกเก็บกับแบรนด์ · ระบบเชื่อมขนส่งเป็นแค่ “ท่อ” หักเครดิต Shippop ของ Bocean</div></div>
+  <div class="card">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <label style="font-weight:700;font-size:14px">เดือน</label>
+      <input type="month" id="sb-month" style="padding:8px;border:1px solid var(--border);border-radius:8px">
+      <button class="btn btn-primary" onclick="loadShipBill()"><svg class="ic"><use href="#i-repeat"/></svg> ดึงยอด</button>
+      <div style="flex:1"></div>
+      <div id="sb-grand" style="font-weight:800;font-size:14px;color:var(--muted)"></div>
+    </div>
+  </div>
+  <div id="sb-list"><div class="empty-state">เลือกเดือนแล้วกด “ดึงยอด”</div></div>
 </div>
 
 <div class="screen" id="screen-tenants">
@@ -1321,7 +1337,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam };
+  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -3075,6 +3091,79 @@ async function toggleTenantStatus(tid, status){
     toast(status==='suspended' ? 'ระงับ '+tid+' แล้ว' : 'เปิดใช้ '+tid+' แล้ว','success');
     loadTenants();
   } catch(e){ toast('❌ '+e.message,'error'); }
+}
+
+// ══ ค่าส่ง & บิลแบรนด์ (super-admin) — รวมต้นทุน Shippop ต่อแบรนด์/เดือน ══
+var _shipbill = { month:'', brands:[], grandTotal:0, grandCount:0 };
+async function loadShipBill(){
+  var box = document.getElementById('sb-list');
+  var mi  = document.getElementById('sb-month');
+  if (!box) return;
+  if (mi && !mi.value){ var d=new Date(); mi.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+  var month = mi ? mi.value : '';
+  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('shippingBillingSummary');
+    _shipbill = (await fn({ month: month })).data || { brands:[] };
+    renderShipBill();
+  } catch(e){ box.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml(e.message||String(e))+'</div>'; }
+}
+function renderShipBill(){
+  var box = document.getElementById('sb-list');
+  var g   = document.getElementById('sb-grand');
+  if (!box) return;
+  var r = _shipbill || {};
+  if (g) g.textContent = 'รวมทั้งแพลตฟอร์ม: '+(r.grandCount||0)+' พัสดุ · '+baht(r.grandTotal||0);
+  if (!r.brands || !r.brands.length){ box.innerHTML = '<div class="empty-state">ไม่มีพัสดุจริงในเดือน '+escapeHtml(r.month||'')+' (พัสดุโหมดทดสอบไม่นับ)</div>'; return; }
+  box.innerHTML = r.brands.map(shipBillCard).join('');
+}
+function shipBillCard(b){
+  var paid = b.status==='paid';
+  var badge = '<span class="oa-badge" style="background:'+(paid?'#16a34a':'#d97706')+'">'+(paid?'ชำระแล้ว':'ค้างชำระ')+'</span>';
+  var rows = (b.orders||[]).map(function(o){
+    var dt = o.shippedAt ? new Date(o.shippedAt).toLocaleDateString('th-TH') : '-';
+    return '<tr><td style="padding:4px 8px">'+dt+'</td><td style="padding:4px 8px">'+escapeHtml(o.orderId)+'</td><td style="padding:4px 8px">'+escapeHtml(o.courier||'')+'</td><td style="padding:4px 8px">'+escapeHtml(o.trackingNumber||o.shippopCode||'')+'</td><td style="padding:4px 8px;text-align:right">'+baht(o.price)+'</td></tr>';
+  }).join('');
+  var table = '<div id="sbo-'+b.tid+'" style="display:none;margin-top:8px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+
+    '<thead><tr style="color:var(--muted);text-align:left"><th style="padding:4px 8px">วันที่ส่ง</th><th style="padding:4px 8px">ออเดอร์</th><th style="padding:4px 8px">ขนส่ง</th><th style="padding:4px 8px">Tracking</th><th style="padding:4px 8px;text-align:right">ค่าส่ง</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table></div>';
+  var act = '<div class="oa-actions">'+
+    '<button class="oa-btn" onclick="toggleSbOrders(\''+b.tid+'\')"><svg class="ic"><use href="#i-package"/></svg> ดูรายการ ('+b.count+')</button>'+
+    '<button class="oa-btn oa-ship" onclick="printBill(\''+b.tid+'\')">🖨️ พิมพ์บิล</button>'+
+    (paid
+      ? '<button class="oa-btn oa-cancel" onclick="markShipBill(\''+b.tid+'\',\'unpaid\')"><svg class="ic"><use href="#i-x"/></svg> ยกเลิกชำระ</button>'
+      : '<button class="oa-btn oa-confirm" onclick="markShipBill(\''+b.tid+'\',\'paid\')"><svg class="ic"><use href="#i-check"/></svg> ทำเครื่องหมายชำระแล้ว</button>')+
+    '</div>';
+  return '<div class="oa-card">'+
+    '<div class="oa-top"><span class="oa-id">'+escapeHtml(b.name)+' <span style="color:var(--muted);font-weight:400">('+escapeHtml(b.tid)+')</span></span>'+badge+'</div>'+
+    '<div class="oa-box" style="margin-top:8px"><div class="oa-line"><b>จำนวนพัสดุ:</b> '+b.count+'</div><div class="oa-line"><b>ต้นทุนค่าส่งรวม:</b> '+baht(b.total)+'</div>'+(b.note?'<div class="oa-line"><b>หมายเหตุ:</b> '+escapeHtml(b.note)+'</div>':'')+'</div>'+
+    table + act +
+  '</div>';
+}
+function toggleSbOrders(tid){ var el=document.getElementById('sbo-'+tid); if(el) el.style.display = el.style.display==='none'?'block':'none'; }
+async function markShipBill(tid, status){
+  var b = (_shipbill.brands||[]).find(function(x){return x.tid===tid;}); if(!b) return;
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('setShippingBillStatus');
+    await fn({ month:_shipbill.month, tid:tid, status:status, amount:b.total, count:b.count });
+    b.status = status; b.paidAt = status==='paid' ? new Date().toISOString() : null;
+    renderShipBill();
+    toast(status==='paid' ? 'ทำเครื่องหมายชำระแล้ว' : 'ยกเลิกการชำระแล้ว','success');
+  } catch(e){ toast('ทำไม่สำเร็จ: '+(e.message||e),'error'); }
+}
+function printBill(tid){
+  var b = (_shipbill.brands||[]).find(function(x){return x.tid===tid;}); if(!b) return;
+  var rows = (b.orders||[]).map(function(o){ var dt=o.shippedAt?new Date(o.shippedAt).toLocaleDateString('th-TH'):'-'; return '<tr><td>'+dt+'</td><td>'+escapeHtml(o.orderId)+'</td><td>'+escapeHtml(o.courier||'')+'</td><td>'+escapeHtml(o.trackingNumber||o.shippopCode||'')+'</td><td style="text-align:right">'+baht(o.price)+'</td></tr>'; }).join('');
+  var html = '<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>บิลค่าส่ง '+escapeHtml(b.name)+' '+escapeHtml(_shipbill.month)+'</title>'+
+    '<style>body{font-family:-apple-system,Arial,sans-serif;padding:24px;color:#111}h1{font-size:20px;margin:0 0 4px}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}tfoot td{font-weight:800}</style></head><body>'+
+    '<h1>บิลค่าส่ง — '+escapeHtml(b.name)+'</h1>'+
+    '<div style="color:#555;font-size:13px">แบรนด์: '+escapeHtml(b.tid)+' · เดือน: '+escapeHtml(_shipbill.month)+' · '+b.count+' พัสดุ</div>'+
+    '<table><thead><tr><th>วันที่ส่ง</th><th>ออเดอร์</th><th>ขนส่ง</th><th>Tracking</th><th style="text-align:right">ค่าส่ง</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody><tfoot><tr><td colspan="4" style="text-align:right">รวมทั้งสิ้น</td><td style="text-align:right">'+baht(b.total)+'</td></tr></tfoot></table>'+
+    '<p style="margin-top:20px;font-size:12px;color:#666">ออกโดย Bocean · ต้นทุนค่าจัดส่งจริงจาก Shippop (ยังไม่รวมส่วนต่าง/ค่าบริการ)</p>'+
+    '</body></html>';
+  var w = window.open('', '_blank'); if(!w){ toast('เบราว์เซอร์บล็อกหน้าต่าง — อนุญาต popup ก่อน','error'); return; }
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(function(){ try{ w.print(); }catch(e){} }, 350);
 }
 const TENANT_DEFAULTS = {
   points: { perPost:10, perPostWithImg:15, perComment:3, perHelp:5, perLike:1, perPurchase:50, perAlert:5, perVerified:20, dailyLoginBonus:5, tierSilver:1000, tierGold:3000, tierPlatinum:8000, discSilver:5, discGold:10, discPlatinum:15 }

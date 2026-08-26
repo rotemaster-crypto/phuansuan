@@ -673,6 +673,61 @@ function shipmentPreflight(order, store) {
 }
 exports._shipmentPreflight = shipmentPreflight;   // export ไว้เผื่อ unit test
 
+// ── Shippop (marketplace / mkpservice) — สร้างพัสดุจริง ──────────────
+//  getprice ไม่เปิดใน mkpservice → ใช้ booking(force_confirm:0) แล้ว confirm
+//  Address: Shippop.district = ตำบล/แขวง (ของเรา=subdistrict), Shippop.state = อำเภอ/เขต (ของเรา=district)
+//  Parcel.weight หน่วยเป็น "กรัม"; courier_tracking_code จะได้หลัง confirm
+async function shippopCreateShipment({ baseUrl, apiKey, email, from, to, parcel, courierCode, codAmount, product }) {
+  const B = (baseUrl || "https://mkpservice.shippop.dev").replace(/\/+$/, "");
+  const item = { from: from, to: to, parcel: parcel, courier_code: courierCode };
+  if (codAmount > 0) item.cod_amount = Math.round(codAmount);
+  if (product && Object.keys(product).length) item.product = product;   // Shippop บังคับมี product เมื่อเป็น COD
+
+  // 1) booking — จองก่อน (ยังไม่ commit)
+  const bRes = await fetch(B + "/booking/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ api_key: apiKey, email: email || "noreply@bocean.app", force_confirm: 0, data: [ item ] }),
+  });
+  const bText = await bRes.text();
+  let bJson;
+  try { bJson = JSON.parse(bText); }
+  catch (e) { throw new HttpsError("internal", "Shippop booking ตอบกลับไม่ใช่ JSON (ตรวจ baseUrl/สิทธิ์การใช้งาน)"); }
+  if (bJson.status !== true) {
+    let reason = bJson.message || "";
+    try {                                   // เหตุผลรายขนส่ง เช่น "Courier code not allow"
+      const c = bJson.data && (bJson.data["0"] || bJson.data[0]);
+      if (c) { const k = Object.keys(c)[0]; if (c[k] && c[k].remark) reason = courierCode + ": " + c[k].remark; }
+    } catch (e) { /* ignore */ }
+    throw new HttpsError("failed-precondition", "Shippop booking ไม่สำเร็จ — " + String(reason || JSON.stringify(bJson)).slice(0, 200));
+  }
+  const b0 = (bJson.data && (bJson.data["0"] || bJson.data[0])) || {};
+  const purchaseId = bJson.purchase_id;
+  const shippopCode = b0.tracking_code || "";
+  const price = Number(b0.price || bJson.total_price || 0);
+
+  // 2) confirm — commit (ส่งเข้าขนส่งจริง ยกเลิกไม่ได้) → ได้ courier_tracking_code
+  const fd = new FormData();
+  fd.append("api_key", apiKey);
+  fd.append("purchase_id", String(purchaseId));
+  const cRes = await fetch(B + "/confirm/", { method: "POST", body: fd });
+  const cJson = await cRes.json().catch(() => null);
+  if (!cJson || cJson.status !== true) {
+    throw new HttpsError("failed-precondition", "Shippop confirm ไม่สำเร็จ (booking " + purchaseId + ") — " + String((cJson && cJson.message) || "unknown").slice(0, 160));
+  }
+  const r0 = (cJson.result && (cJson.result["0"] || cJson.result[0])) || {};
+  if (r0.status !== true) {
+    throw new HttpsError("failed-precondition", "Shippop confirm รายการไม่ผ่าน — " + String(r0.message || "").slice(0, 160));
+  }
+  return {
+    trackingNumber: r0.courier_tracking_code || shippopCode,   // เลขที่ลูกค้าใช้ติดตามกับขนส่ง
+    shippopCode: shippopCode,                                  // เลข SHIPPOP (เรียก label/status ภายหลัง)
+    purchaseId: purchaseId,
+    courierCode: r0.courier_code || courierCode,
+    price: price,
+  };
+}
+
 exports.createShipment = onCall(async (req) => {
   const tid = await resolveTid(req.data && req.data.tid);
   requireAdmin(req, tid);
@@ -697,6 +752,8 @@ exports.createShipment = onCall(async (req) => {
   const useMock = cfg.mock === true || !sec.apiKey;
 
   let trackingNumber, labelUrl = "";
+  let courierUsed = courier || cfg.provider || "";
+  const extra = {};   // ฟิลด์เพิ่มจาก provider จริง (shippopCode/purchaseId/price)
   if (useMock) {
     // โหมดทดสอบ: เลขพัสดุจำลอง — ให้ลอง flow ได้โดยยังไม่ต้องมี API จริง
     const suffix = (Date.now().toString(36) + Math.floor(order.total || 0).toString(36)).toUpperCase().slice(-8);
@@ -707,24 +764,143 @@ exports.createShipment = onCall(async (req) => {
     if (miss.length) {
       throw new HttpsError("failed-precondition", "ข้อมูลไม่ครบสำหรับสร้างพัสดุ: " + miss.join(", "));
     }
-    // ────────────────────────────────────────────────────────
-    // TODO(เชื่อม API จริง): provider = cfg.provider (shippop/flash/kerry/...)
-    //   ใช้ sec.apiKey / sec.apiSecret เรียก REST สร้าง shipment ของ `courier`
-    //   ดึง order.shipping (ผู้รับ) + settings/store (ผู้ส่ง) + order.items/weight
-    //   คืน { trackingNumber, labelUrl } จาก response แล้วเซ็ตด้านล่าง
-    // ────────────────────────────────────────────────────────
-    throw new HttpsError("unimplemented", "ยังไม่ได้เชื่อม API จริงของ " + (cfg.provider || "provider") + " — ส่ง credential มาให้ต่อได้เลย (ตอนนี้ใช้โหมดทดสอบไปก่อนได้)");
+    const provider = (cfg.provider || "shippop").toLowerCase();
+    if (provider !== "shippop") {
+      throw new HttpsError("unimplemented", "ยังรองรับเฉพาะ Shippop — provider ปัจจุบัน: " + provider);
+    }
+    // map ที่อยู่: Shippop.district = ตำบล/แขวง (ของเรา subdistrict), Shippop.state = อำเภอ/เขต (ของเรา district)
+    const s = order.shipping || {};
+    const from = { name: store.name, address: store.addressLine, district: store.subdistrict, state: store.district, province: store.province, postcode: String(store.postcode), tel: String(store.phone) };
+    const to   = { name: s.name,     address: s.addressLine,     district: s.subdistrict,     state: s.district,     province: s.province,     postcode: String(s.postcode),     tel: String(s.phone) };
+    const grams = Math.max(1, Math.round(Number(order.weight || 0) * 1000));   // order.weight เป็น กก. → กรัม
+    const firstItem = (order.items && order.items[0] && order.items[0].name) || "สินค้า";
+    const parcel = {
+      name: firstItem, weight: grams,
+      width:  Number(order.boxW || store.boxW || 20),
+      length: Number(order.boxL || store.boxL || 20),
+      height: Number(order.boxH || store.boxH || 10),
+    };
+    const courierCode = String(courier || cfg.defaultCourier || "FLE").toUpperCase();
+    const codAmount = Number(order.codAmount || 0);   // 0 = พรีเพด (พร้อมเพย์)
+    // product object — Shippop บังคับมีเมื่อ COD (map จาก order.items: {id,name,price,qty,weightKg,category})
+    let product = null;
+    if (codAmount > 0 && Array.isArray(order.items) && order.items.length) {
+      product = {};
+      order.items.forEach((it, i) => {
+        product[String(i)] = {
+          product_code: String(it.id || ("P" + i)),
+          name: String(it.name || "สินค้า"),
+          category: String(it.category || "-"),
+          price: Number(it.price || 0),
+          amount: Number(it.qty || 1),
+          weight: Math.max(1, Math.round(Number(it.weightKg || 0) * 1000)) || 100,
+        };
+      });
+    }
+    const r = await shippopCreateShipment({
+      baseUrl: cfg.baseUrl, apiKey: sec.apiKey, email: store.email || sec.email,
+      from: from, to: to, parcel: parcel, courierCode: courierCode, codAmount: codAmount, product: product,
+    });
+    trackingNumber = r.trackingNumber;
+    courierUsed = r.courierCode || courierCode;
+    extra.shippopCode = r.shippopCode || "";
+    extra.shippopPurchaseId = r.purchaseId || null;
+    extra.shippingPrice = r.price || 0;
   }
 
-  await orderRef.update({
+  await orderRef.update(Object.assign({
     status: "shipped",
-    courier: courier || cfg.provider || "",
+    courier: courierUsed,
     trackingNumber: trackingNumber,
     labelUrl: labelUrl,
     shippedAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
-  });
-  return { ok: true, trackingNumber: trackingNumber, labelUrl: labelUrl, mock: useMock };
+  }, extra));
+  return { ok: true, trackingNumber: trackingNumber, labelUrl: labelUrl, mock: useMock, courier: courierUsed };
+});
+
+// ============================================================
+//  บิลค่าส่งต่อแบรนด์ (super-admin / Bocean) — รวมต้นทุน Shippop ต่อแบรนด์/เดือน
+//  ที่เชื่อมขนส่งคือ "ท่อ" (หักเครดิต Shippop ของ Bocean); ตรงนี้คือชั้น settlement
+//  ที่ Bocean ใช้ออกบิลกับแบรนด์ + ทำเครื่องหมายชำระแล้ว
+// ============================================================
+function requireSuperAdmin(req) {
+  const uid = req.auth && req.auth.uid;
+  const token = (req.auth && req.auth.token) || {};
+  if (!uid || token.admin !== true) throw new HttpsError("permission-denied", "เฉพาะผู้ดูแลระบบ Bocean เท่านั้น");
+  return uid;
+}
+
+function monthRange(month) {
+  const m = /^(\d{4})-(\d{2})$/.exec(String(month || ""));
+  const now = new Date();
+  let y, mo;
+  if (m) { y = +m[1]; mo = +m[2] - 1; } else { y = now.getUTCFullYear(); mo = now.getUTCMonth(); }
+  const start = new Date(Date.UTC(y, mo, 1, 0, 0, 0));
+  const end = new Date(Date.UTC(y, mo + 1, 1, 0, 0, 0));
+  const label = y + "-" + String(mo + 1).padStart(2, "0");
+  return { start: start, end: end, label: label };
+}
+
+exports.shippingBillingSummary = onCall(async (req) => {
+  requireSuperAdmin(req);
+  const { start, end, label } = monthRange(req.data && req.data.month);
+  const fs = admin.firestore();
+  const tenantsSnap = await fs.collection("tenants").get();
+  const brands = [];
+  let grandTotal = 0, grandCount = 0;
+  for (const t of tenantsSnap.docs) {
+    const tid = t.id;
+    const tdata = t.data() || {};
+    let os;
+    try {
+      os = await fs.collection("tenants").doc(tid).collection("orders")
+        .where("shippedAt", ">=", start).where("shippedAt", "<", end).get();
+    } catch (e) { continue; }
+    const orders = [];
+    let total = 0;
+    os.forEach((d) => {
+      const o = d.data() || {};
+      const price = Number(o.shippingPrice || 0);
+      if (!(price > 0)) return;   // เฉพาะพัสดุจริง (mock ไม่มี shippingPrice)
+      total += price;
+      const sa = (o.shippedAt && o.shippedAt.toDate) ? o.shippedAt.toDate().toISOString() : null;
+      orders.push({
+        orderId: d.id, price: price, courier: o.courier || "",
+        trackingNumber: o.trackingNumber || "", shippopCode: o.shippopCode || "",
+        shippedAt: sa, orderTotal: Number(o.total || 0),
+      });
+    });
+    if (!orders.length) continue;
+    orders.sort((a, b) => String(a.shippedAt).localeCompare(String(b.shippedAt)));
+    let status = "unpaid", paidAt = null, note = "";
+    try {
+      const bill = await fs.collection("shippingBills").doc(label + "__" + tid).get();
+      if (bill.exists) { const b = bill.data(); status = b.status || "unpaid"; paidAt = (b.paidAt && b.paidAt.toDate) ? b.paidAt.toDate().toISOString() : null; note = b.note || ""; }
+    } catch (e) { /* ignore */ }
+    brands.push({ tid: tid, name: tdata.name || tid, count: orders.length, total: Math.round(total * 100) / 100, status: status, paidAt: paidAt, note: note, orders: orders });
+    grandTotal += total; grandCount += orders.length;
+  }
+  brands.sort((a, b) => b.total - a.total);
+  return { month: label, brands: brands, grandTotal: Math.round(grandTotal * 100) / 100, grandCount: grandCount };
+});
+
+exports.setShippingBillStatus = onCall(async (req) => {
+  requireSuperAdmin(req);
+  const { label } = monthRange(req.data && req.data.month);
+  const tid = String((req.data && req.data.tid) || "");
+  const status = String((req.data && req.data.status) || "");
+  if (!tid) throw new HttpsError("invalid-argument", "ต้องระบุ tid");
+  if (status !== "paid" && status !== "unpaid") throw new HttpsError("invalid-argument", "status ต้องเป็น paid หรือ unpaid");
+  await admin.firestore().collection("shippingBills").doc(label + "__" + tid).set({
+    month: label, tid: tid, status: status,
+    note: String((req.data && req.data.note) || ""),
+    amount: Number((req.data && req.data.amount) || 0),
+    count: Number((req.data && req.data.count) || 0),
+    paidAt: status === "paid" ? FieldValue.serverTimestamp() : null,
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  return { ok: true, month: label, tid: tid, status: status };
 });
 
 // ============================================================
