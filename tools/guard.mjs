@@ -96,6 +96,17 @@ const checked = [];
   checked.push('A9 no public serving of dev/source');
 }
 
+// ── B12: functions ต้องไม่กลืน error เงียบใน background write ──
+{
+  const s = read('functions/index.js');
+  const m = s.match(/\.catch\(\(\)\s*=>\s*\{\}\)/);
+  if (m) {
+    const ln = s.slice(0, s.indexOf(m[0])).split('\n').length;
+    V('B12', `functions/index.js:${ln}: เจอ .catch(() => {}) กลืน error เงียบ — ต้อง log (เช่น .catch(e => console.error(...)))`);
+  }
+  checked.push('B12 no silent error swallow in functions');
+}
+
 // ── A7: deploy ต้อง gate ด้วย test ──
 {
   const s = read('.github/workflows/firebase-deploy.yml');

@@ -45,7 +45,10 @@
 - **Test**: ทุก callable/rule ใหม่ ต้องมี e2e/rules test บน emulator (ดู `tests/`).
   รูปแบบ harness: ดู `tests/spin.test.js` (functions) / `tests/rules.test.js` (rules)
 - **Error ฝั่ง function**: `throw new HttpsError(code, ข้อความไทย)` — อย่ากลืน error เงียบ
-- **Error ฝั่ง client**: อย่า `catch(e){}` เปล่าบน write path; โชว์ toast/สถานะให้ผู้ใช้เห็น
+- **Error ฝั่ง client**: มี global boundary แล้ว (window error/unhandledrejection → console.error
+  ใน index.html). อย่า `catch(e){}` เปล่าบน write path หรือ data loader — write ให้ toast,
+  loader ให้ render "โหลดไม่สำเร็จ ลองใหม่" (ห้าม render ว่างเงียบ). แปลง empty-catch เก่า
+  เมื่อแตะ loader นั้น (opportunistic)
 
 ## 4. ห้ามทำเด็ดขาด (anti-patterns จาก audit — guard.mjs บังคับ)
 | กฎ | ห้าม | เพราะ |

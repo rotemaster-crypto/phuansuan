@@ -1030,6 +1030,17 @@ button .ic,a .ic{pointer-events:none}
 let currentUser = null;  // { uid, displayName, photoUrl, lineUserId }
 let db = null;
 
+// ── B10: global error boundary — จับ error/promise ที่หลุด ไม่ให้หายเงียบ ──
+// (มองเห็นใน devtools/monitoring; ไม่ toast กันสแปม). ตัว loader ควรโชว์ error state
+// ของตัวเอง — ห้าม catch(e){} เปล่าแล้ว render ว่าง (ดู CLAUDE.md)
+window.addEventListener('error', function (e) {
+  console.error('[uncaught]', (e && (e.message || (e.error && e.error.message))) || e);
+});
+window.addEventListener('unhandledrejection', function (e) {
+  const r = e && e.reason;
+  console.error('[unhandledrejection]', (r && (r.message || r)) || e);
+});
+
 // ── Init ──────────────────────────────────────────────────
 window.addEventListener('load', async () => {
   resolveTenant();
