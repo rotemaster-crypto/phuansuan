@@ -1,8 +1,8 @@
 name: Firestore rules tests (tenant isolation)
 
 on:
-  push:
-    branches: [ main ]
+  # push→main is covered by firebase-deploy.yml (which gates deploy on this
+  # same suite); here we only need to gate pull requests.
   pull_request:
 
 jobs:

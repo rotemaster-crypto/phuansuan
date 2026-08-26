@@ -20,19 +20,37 @@ const ADMIN_LINE_ID = "U03582167674331d9005dfb42728c7151";
 // tenant แบบ data-driven: ตรวจจาก doc tenants/{tid} (cache 60 วิ)
 // เพิ่มแบรนด์ใหม่ = สร้าง doc tenants/{tid} (status != suspended) ไม่ต้องแก้/redeploy โค้ด
 const _tenantCache = {};
+// alias ฝั่ง client ที่ "จงใจ" ใช้ข้อมูลร่วมกับอีก tenant (ไม่ใช่ doc จริง)
+// เช่น 'office' = skin โซเชียลของ phuansuan (ดู config.js domains/overrides).
+// เพิ่ม alias ใหม่ที่นี่เท่านั้น — tid อื่นที่ไม่มี doc จริงจะถูกปฏิเสธ (fail-closed)
+const TENANT_ALIASES = { office: "phuansuan" };
+// resolveTid: fail-CLOSED. ปฏิเสธ tid ว่าง/ไม่มีจริง/ถูก suspend และปฏิเสธเมื่ออ่าน
+// Firestore ไม่สำเร็จ (ไม่ fallback ไป phuansuan, ไม่ cache ผลจาก error)
+// เดิม fallback ไป "phuansuan" เงียบ ๆ ทุกกรณี -> error ชั่วคราวทำข้อมูล tenant อื่น
+// ไหลลง phuansuan (cache 60 วิ). ตอนนี้แก้ให้ throw แทน (root-B: ล้มแบบปลอดภัย)
 async function resolveTid(reqTid) {
-  const x = (reqTid || "").toString();
-  if (!x) return "phuansuan";
+  let x = (reqTid || "").toString().trim();
+  if (!x) {
+    throw new HttpsError("invalid-argument", "ต้องระบุร้าน (tid) ให้ถูกต้อง");
+  }
+  if (TENANT_ALIASES[x]) x = TENANT_ALIASES[x]; // resolve alias ก่อน lookup
   const now = Date.now();
   const c = _tenantCache[x];
-  if (c && (now - c.at) < 60000) return c.ok ? x : "phuansuan";
-  let ok = false;
+  if (c && (now - c.at) < 60000) {
+    if (!c.ok) throw new HttpsError("failed-precondition", "ไม่พบร้าน (tenant) หรือถูกระงับ: " + x);
+    return x;
+  }
+  let snap;
   try {
-    const s = await admin.firestore().collection("tenants").doc(x).get();
-    ok = s.exists && s.data().status !== "suspended";
-  } catch (e) { ok = false; }
+    snap = await admin.firestore().collection("tenants").doc(x).get();
+  } catch (e) {
+    // fail-closed: อย่ากลืน error เป็น "ไม่มี tenant" แล้ว fallback — ให้ client retry
+    throw new HttpsError("unavailable", "ตรวจสอบร้าน (tenant) ไม่สำเร็จ กรุณาลองใหม่");
+  }
+  const ok = snap.exists && snap.data() && snap.data().status !== "suspended";
   _tenantCache[x] = { ok: ok, at: now };
-  return ok ? x : "phuansuan";
+  if (!ok) throw new HttpsError("failed-precondition", "ไม่พบร้าน (tenant) หรือถูกระงับ: " + x);
+  return x;
 }
 // document ราก ของ tenant — ใช้สร้าง path tenants/{tid}/...
 function troot(tid) {
@@ -126,6 +144,42 @@ exports.claimTenant = onCall(async (req) => {
 
   await admin.auth().setCustomUserClaims(uid, claims);
   return { ok: true, tid: tid };
+});
+
+// ── dailyLoginBonus ───────────────────────────────────────
+// ให้แต้มเข้าระบบรายวัน "ฝั่ง server" (idempotent ต่อวันตามเขตเวลาไทย)
+// ย้ายมาจาก client (index.html) ที่เดิม increment points เอง → กันปั๊มแต้ม (A5)
+// ตัดสินวันด้วยเวลา server (UTC+7) ไม่เชื่อ client; lastBonusDay ถูกล็อกไม่ให้ client แก้ (ดู rules)
+function bkkDayKey() {
+  // วันปฏิทินตามเขต Asia/Bangkok (UTC+7, ไม่มี DST) รูปแบบ YYYY-MM-DD
+  return new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+}
+exports.dailyLoginBonus = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  const tid = await resolveTid(req.data && req.data.tid);
+  const P = await getPts(tid);
+  const bonus = Math.max(0, Math.floor(Number(P.dailyLoginBonus) || 0));
+  const userRef = troot(tid).collection("users").doc(uid);
+  const dayKey = bkkDayKey();
+  return admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    if (!snap.exists) throw new HttpsError("failed-precondition", "ยังไม่มีบัญชีผู้ใช้");
+    const d = snap.data();
+    const cur = Math.max(0, Math.floor(Number(d.points) || 0));
+    if (d.lastBonusDay === dayKey || bonus === 0) {
+      return { granted: 0, day: dayKey, points: cur, tier: d.tier || calcTier(cur, P.tiers) };
+    }
+    const next = cur + bonus;
+    const tier = calcTier(next, P.tiers);
+    tx.update(userRef, {
+      points: next,
+      lastBonusDay: dayKey,
+      tier: tier,
+      lastLoginAt: FieldValue.serverTimestamp(),
+    });
+    return { granted: bonus, day: dayKey, points: next, tier: tier };
+  });
 });
 
 // ============================================================
@@ -247,6 +301,9 @@ function computeShipping(cfg, weightKg, subtotal) {
   return Math.max(0, Math.floor(Number(cfg.flatFee) || 0));   // flat (ค่าเริ่มต้น)
 }
 
+// ส่วนลดตาม tier (mirror config.js tiers[].discount) — server เป็นเจ้าของค่า ไม่เชื่อ client
+const TIER_DISCOUNT = { bronze: 0, silver: 5, gold: 10, platinum: 15 };
+
 // สร้างออเดอร์ทุกกรณีผ่านฟังก์ชันนี้ (server-authoritative):
 //  - ตรวจสินค้า active + สต็อกพอ · คิด subtotal จากราคาจริงใน DB (ไม่เชื่อ client)
 //  - ตัดสต็อก + เพิ่ม soldCount · ใช้คูปอง (ถ้ามี) มาร์ค used · ทั้งหมด atomic
@@ -270,21 +327,28 @@ exports.placeOrder = onCall(async (req) => {
   const ids = Object.keys(qtyById);
   if (ids.length === 0) throw new HttpsError("invalid-argument", "สินค้าไม่ถูกต้อง");
 
-  const tierPct = Math.min(90, Math.max(0, Math.floor(Number(cli.discountPct) || 0)));
+  // NOTE (A1): ไม่ใช้ cli.discountPct อีกต่อไป — ส่วนลด tier คิดฝั่ง server จาก tier
+  //            จริงของผู้ซื้อ (ดูใน transaction) เพื่อกันการยิง discountPct:90 เอาส่วนลดเอง
 
   const db = admin.firestore();
   const prodRefs = ids.map((id) => troot(tid).collection("products").doc(id));
   const couponRef = couponId ? troot(tid).collection("users").doc(uid).collection("coupons").doc(couponId) : null;
+  const userRef = troot(tid).collection("users").doc(uid);
   const orderRef = troot(tid).collection("orders").doc();
 
   // อ่านการตั้งค่าค่าจัดส่ง (นอก transaction — config เปลี่ยนน้อย) · ถ้าไม่มี doc = เชื่อค่าส่งจาก client (legacy config.js)
   const commSnap = await troot(tid).collection("settings").doc("commerce").get();
   const commCfg = commSnap.exists ? commSnap.data() : null;
+  const ptsCfg = await getPts(tid);   // threshold tier ต่อ tenant (ใช้คำนวณ tier จากแต้มจริง)
 
   return db.runTransaction(async (tx) => {
     // อ่านทั้งหมดก่อน (transaction ต้อง read ก่อน write)
     const prodSnaps = await Promise.all(prodRefs.map((r) => tx.get(r)));
     const couponSnap = couponRef ? await tx.get(couponRef) : null;
+    const userSnap = await tx.get(userRef);   // อ่าน tier/แต้มจริงของผู้ซื้อ (server-authoritative discount)
+    // A6: ต้องเป็นสมาชิกร้านนี้ (มี user doc ใต้ tenant นี้) — กันสั่งข้าม tenant / กัน non-member
+    //     ยิง placeOrder ตัดสต็อกร้านอื่น (DoS). ตรงตาม pattern spin/mission/dailyBonus
+    if (!userSnap.exists) throw new HttpsError("permission-denied", "ต้องเป็นสมาชิกร้านนี้ก่อนสั่งซื้อ");
 
     let subtotal = 0, weight = 0;
     const items = [];
@@ -314,6 +378,14 @@ exports.placeOrder = onCall(async (req) => {
     // ค่าจัดส่ง: มี settings/commerce → คิดฝั่ง server · ไม่มี → เชื่อ client (legacy)
     const shippingFee = commCfg ? computeShipping(commCfg, weight, subtotal) : Math.max(0, Math.floor(Number(cli.shippingFee) || 0));
 
+    // ── ส่วนลดตาม tier: คิดฝั่ง server จากแต้มจริงของผู้ซื้อ (ไม่เชื่อ client) ──
+    // เปิดใช้เมื่อร้านตั้ง settings/commerce.useTierDiscount === true เท่านั้น
+    let tierPct = 0;
+    if (commCfg && commCfg.useTierDiscount === true) {
+      const userPts = userSnap.exists ? Math.max(0, Math.floor(Number(userSnap.data().points) || 0)) : 0;
+      const tierKey = calcTier(userPts, ptsCfg.tiers);
+      tierPct = Math.min(90, Math.max(0, Math.floor(Number(TIER_DISCOUNT[tierKey]) || 0)));
+    }
     const tierDiscount = Math.floor(subtotal * tierPct / 100);
     const base = Math.max(0, subtotal - tierDiscount);   // คูปองลดจากยอดหลังส่วนลดสมาชิก (ไม่ลดค่าส่ง)
 
@@ -1134,6 +1206,7 @@ async function getPts(tid) {
     perComment:     _num(d.perComment,     PTS.perComment),
     perHelp:        _num(d.perHelp,        PTS.perHelp),
     perLike:        _num(d.perLike,        PTS.perLike),
+    dailyLoginBonus: _num(d.dailyLoginBonus, 5),
     tiers: [
       { key: "platinum", min: _num(d.tierPlatinum, 6000) },
       { key: "gold",     min: _num(d.tierGold,     3000) },
@@ -1251,6 +1324,8 @@ exports.onPostCreated = onDocumentCreated(
       postCount: FieldValue.increment(1),
     });
     await updateTier(ref, tid);
+    // A3: เก็บแต้มที่ให้จริงไว้บนโพสต์ เพื่อคืนได้เป๊ะตอนลบ (campaign/promo อาจเปลี่ยนภายหลัง)
+    await event.data.ref.update({ pointsAwarded: total }).catch(() => {});
     // group post counter (โพสต์ในกลุ่ม → นับให้กลุ่ม)
     if (post.groupId) {
       await troot(tid).collection("groups").doc(post.groupId)
@@ -1352,9 +1427,29 @@ exports.onPostDeleted = onDocumentDeleted(
   { document: "tenants/{tid}/posts/{postId}", region: "asia-southeast1" },
   async (event) => {
     const post = event.data?.data();
-    if (!post?.groupId) return;
-    await troot(event.params.tid).collection("groups").doc(post.groupId)
-      .update({ postCount: FieldValue.increment(-1) }).catch(() => {});
+    if (!post) return;
+    const tid = event.params.tid;
+    // A3: คืนแต้ม + postCount ที่ onPostCreated เคยให้ (กัน farm ด้วยการสร้าง/ลบโพสต์วน)
+    // ใช้ค่า pointsAwarded ที่ stamp ไว้บนโพสต์ (เป๊ะตามที่ให้จริง) · clamp ไม่ให้ติดลบ
+    if (post.authorId) {
+      const awarded = Math.max(0, Math.floor(Number(post.pointsAwarded) || 0));
+      const uref = troot(tid).collection("users").doc(post.authorId);
+      await admin.firestore().runTransaction(async (tx) => {
+        const s = await tx.get(uref);
+        if (!s.exists) return;
+        const d = s.data();
+        tx.update(uref, {
+          points:    Math.max(0, Math.floor(Number(d.points) || 0) - awarded),
+          postCount: Math.max(0, Math.floor(Number(d.postCount) || 0) - 1),
+        });
+      }).catch(() => {});
+      await updateTier(uref, tid);
+    }
+    // นับโพสต์ในกลุ่มลดเมื่อโพสต์ถูกลบ (keep group.postCount แม่นยำ)
+    if (post.groupId) {
+      await troot(tid).collection("groups").doc(post.groupId)
+        .update({ postCount: FieldValue.increment(-1) }).catch(() => {});
+    }
   }
 );
 

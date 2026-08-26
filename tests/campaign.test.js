@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator, signInAnonymously } from 'firebase/auth';
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 
 const PROJECT = 'demo-bocean';
 const TID = 'demo';
@@ -178,4 +178,34 @@ test('promo: คูณโพสต์ด้วย (perPost+โบนัส) → 
   await write(async (db) => { await setDoc(doc(db, `tenants/${TID}/posts/p1`), { authorId: uid, text: 'hello' }); });
   const u = await waitUntil(`tenants/${TID}/users/${uid}`, (u) => (u.postCount || 0) >= 1);
   assert.equal(u.points, 30);
+});
+
+// ── A3: ลบโพสต์ → คืนแต้ม + postCount ที่เคยให้ (กัน farm สร้าง/ลบวน) ──
+test('A3: สร้างโพสต์ +10 แล้วลบ → คืนเป็น 0 (points + postCount)', async () => {
+  await seedBase({ points: 0, postCount: 0 });
+  await write(async (db) => { await setDoc(doc(db, `tenants/${TID}/posts/pDel`), { authorId: uid, text: 'farm?' }); });
+  // รอ onPostCreated ให้แต้ม + stamp pointsAwarded บนโพสต์
+  const u1 = await waitUntil(`tenants/${TID}/users/${uid}`, (u) => (u.postCount || 0) >= 1);
+  assert.equal(u1.points, 10);
+  assert.equal(u1.postCount, 1);
+  await waitUntil(`tenants/${TID}/posts/pDel`, (p) => typeof p.pointsAwarded === 'number');
+  // ลบโพสต์ → onPostDeleted ต้องคืนแต้ม + postCount
+  await write(async (db) => { await deleteDoc(doc(db, `tenants/${TID}/posts/pDel`)); });
+  const u2 = await waitUntil(`tenants/${TID}/users/${uid}`, (u) => (u.points || 0) === 0);
+  assert.equal(u2.points, 0, 'สร้าง/ลบวนต้องไม่เหลือแต้ม');
+  assert.equal(u2.postCount, 0);
+});
+
+// ── A3: ลบโพสต์หลังใช้แต้มไปแล้ว → points ไม่ติดลบ (clamp 0) ──
+test('A3: ลบโพสต์หลังแต้มถูกใช้หมด → points ไม่ติดลบ', async () => {
+  await seedBase({ points: 0, postCount: 0 });
+  await write(async (db) => { await setDoc(doc(db, `tenants/${TID}/posts/pDel2`), { authorId: uid, text: 'x' }); });
+  await waitUntil(`tenants/${TID}/users/${uid}`, (u) => (u.postCount || 0) >= 1);
+  await waitUntil(`tenants/${TID}/posts/pDel2`, (p) => typeof p.pointsAwarded === 'number');
+  // จำลองผู้ใช้ใช้แต้มหมดก่อนลบโพสต์
+  await write(async (db) => { await updateDoc(doc(db, `tenants/${TID}/users/${uid}`), { points: 0 }); });
+  await write(async (db) => { await deleteDoc(doc(db, `tenants/${TID}/posts/pDel2`)); });
+  const u = await waitUntil(`tenants/${TID}/users/${uid}`, (u) => (u.postCount || 0) === 0);
+  assert.ok(u.points >= 0, 'points ต้องไม่ติดลบ');
+  assert.equal(u.postCount, 0);
 });

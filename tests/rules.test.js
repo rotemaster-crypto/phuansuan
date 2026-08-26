@@ -19,6 +19,7 @@ const guest      = () => env.unauthenticatedContext().firestore();
 const memberA    = () => env.authenticatedContext('uA', { tenants: { brandA: true } }).firestore();
 const memberB    = () => env.authenticatedContext('uB', { tenants: { brandB: true } }).firestore();
 const tAdminA    = () => env.authenticatedContext('adA', { tenants: { brandA: true }, tadmin: { brandA: true } }).firestore();
+const superAdmin = () => env.authenticatedContext('super', { admin: true }).firestore();
 
 before(async () => {
   env = await initializeTestEnvironment({
@@ -88,6 +89,28 @@ test('member A ปั๊ม points ตัวเอง (0→9999) = DENIED', asyn
 });
 test('member A แก้ tier ตัวเอง = DENIED', async () => {
   await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { tier: 'platinum' }));
+});
+// A5: ห้าม client ขยับ points/postCount/lastBonusDay ตัวเองแม้แต่นิดเดียว (เดิม +20/write ทำได้)
+test('member A +5 แต้มตัวเอง (0→5) = DENIED (A5)', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { points: 5 }));
+});
+test('member A แก้ postCount ตัวเอง = DENIED (A5)', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { postCount: 100 }));
+});
+test('member A แก้ lastBonusDay ตัวเอง = DENIED (A5: กัน reset โบนัสรายวัน)', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { lastBonusDay: '2000-01-01' }));
+});
+test('member A แก้ field ปลอดภัย (displayName) = ALLOWED', async () => {
+  await assertSucceeds(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { displayName: 'ชื่อใหม่' }));
+});
+// A5: สร้าง user doc ต้องเริ่มแต้ม 0 (กันสร้างมาพร้อมแต้ม)
+test('สร้าง user ใหม่ด้วย points>0 = DENIED (A5)', async () => {
+  const uNew = env.authenticatedContext('uNew', { tenants: { brandA: true } }).firestore();
+  await assertFails(setDoc(doc(uNew, 'tenants/brandA/users/uNew'), { points: 20, tier: 'bronze' }));
+});
+test('สร้าง user ใหม่ด้วย points 0 = ALLOWED', async () => {
+  const uNew = env.authenticatedContext('uNew', { tenants: { brandA: true } }).firestore();
+  await assertSucceeds(setDoc(doc(uNew, 'tenants/brandA/users/uNew'), { points: 0, tier: 'bronze', banned: false }));
 });
 
 // ── 6. อ่านออเดอร์ของคนอื่น = ปฏิเสธ ───────────────────────
@@ -161,4 +184,39 @@ test('member A เขียนคูปองให้ตัวเอง (client
 });
 test('member A อ่านคูปองของ uB ข้ามแบรนด์ = DENIED', async () => {
   await assertFails(getDoc(doc(memberA(), 'tenants/brandB/users/uB/coupons/cB')));
+});
+
+// ── A8: ปิด world-read ของเอกสารร้าน (PII: ownerLineId/adminLineIds) + settings/store ──
+test('A8: guest อ่านเอกสารร้าน (tenants/brandA) = DENIED (เดิม public → รั่ว adminLineIds)', async () => {
+  await assertFails(getDoc(doc(guest(), 'tenants/brandA')));
+});
+test('A8: member A อ่านเอกสารร้านตัวเอง = OK', async () => {
+  await assertSucceeds(getDoc(doc(memberA(), 'tenants/brandA')));
+});
+test('A8: super-admin อ่านเอกสารร้านใด ๆ = OK', async () => {
+  await assertSucceeds(getDoc(doc(superAdmin(), 'tenants/brandA')));
+});
+test('A8: guest อ่าน settings/store (ที่อยู่/เบอร์ผู้ส่ง) = DENIED', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'tenants/brandA/settings/store'), { phone: '08x', addressLine: 'secret' });
+  });
+  await assertFails(getDoc(doc(guest(), 'tenants/brandA/settings/store')));
+});
+test('A8: tenant admin อ่าน settings/store ร้านตัวเอง = OK', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'tenants/brandA/settings/store'), { phone: '08x' });
+  });
+  await assertSucceeds(getDoc(doc(tAdminA(), 'tenants/brandA/settings/store')));
+});
+test('A8: settings อื่น (app) ยัง public — guest อ่านได้', async () => {
+  await assertSucceeds(getDoc(doc(guest(), 'tenants/brandB/settings/app')));  // seeded ใน beforeEach
+});
+
+// ── A10: tenantRequests create ต้อง login (กันสแปมจากคนนอก) ──
+const validReq = { status: 'new', brandName: 'ร้านใหม่', contactName: 'สมชาย', phone: '0812345678' };
+test('A10: guest (ไม่ login) สร้าง tenantRequest = DENIED', async () => {
+  await assertFails(setDoc(doc(guest(), 'tenantRequests/r1'), validReq));
+});
+test('A10: ผู้ใช้ที่ login แล้วสร้าง tenantRequest = OK', async () => {
+  await assertSucceeds(setDoc(doc(memberA(), 'tenantRequests/r2'), validReq));
 });
