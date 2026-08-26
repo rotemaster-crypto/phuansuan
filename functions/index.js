@@ -1258,7 +1258,7 @@ exports.analyzePlant = onCall(
       }
     } catch (err) {
       // B9: refund โควต้าที่จองไว้ — การเรียกไม่สำเร็จไม่ควรกินโควต้า
-      await quotaRef.set({ count: FieldValue.increment(-1) }, { merge: true }).catch(() => {});
+      await quotaRef.set({ count: FieldValue.increment(-1) }, { merge: true }).catch((e) => console.error("bg-write failed:", e && e.message));
       if (err instanceof HttpsError) throw err;
       console.error("analyzePlant error:", err);
       throw new HttpsError("internal", "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
@@ -1431,11 +1431,11 @@ exports.onPostCreated = onDocumentCreated(
     });
     await updateTier(ref, tid);
     // A3: เก็บแต้มที่ให้จริงไว้บนโพสต์ เพื่อคืนได้เป๊ะตอนลบ (campaign/promo อาจเปลี่ยนภายหลัง)
-    await event.data.ref.update({ pointsAwarded: total }).catch(() => {});
+    await event.data.ref.update({ pointsAwarded: total }).catch((e) => console.error("bg-write failed:", e && e.message));
     // group post counter (โพสต์ในกลุ่ม → นับให้กลุ่ม)
     if (post.groupId) {
       await troot(tid).collection("groups").doc(post.groupId)
-        .update({ postCount: FieldValue.increment(1) }).catch(() => {});
+        .update({ postCount: FieldValue.increment(1) }).catch((e) => console.error("bg-write failed:", e && e.message));
     }
   }
 );
@@ -1447,7 +1447,7 @@ exports.onCommentCreated = onDocumentCreated(
     if (!cmt?.authorId) return;
     const tid = event.params.tid;
     const postRef = troot(tid).collection("posts").doc(event.params.postId);
-    await postRef.update({ comments: FieldValue.increment(1) }).catch(() => {});
+    await postRef.update({ comments: FieldValue.increment(1) }).catch((e) => console.error("bg-write failed:", e && e.message));
     const marker = postRef.collection("commentAwarded").doc(cmt.authorId);
     if ((await marker.get()).exists) return;
     await marker.set({ at: FieldValue.serverTimestamp() });
@@ -1463,7 +1463,7 @@ exports.onCommentDeleted = onDocumentDeleted(
   { document: "tenants/{tid}/posts/{postId}/comments/{commentId}", region: "asia-southeast1" },
   async (event) => {
     await troot(event.params.tid).collection("posts").doc(event.params.postId)
-      .update({ comments: FieldValue.increment(-1) }).catch(() => {});
+      .update({ comments: FieldValue.increment(-1) }).catch((e) => console.error("bg-write failed:", e && e.message));
   }
 );
 
@@ -1548,13 +1548,13 @@ exports.onPostDeleted = onDocumentDeleted(
           points:    Math.max(0, Math.floor(Number(d.points) || 0) - awarded),
           postCount: Math.max(0, Math.floor(Number(d.postCount) || 0) - 1),
         });
-      }).catch(() => {});
+      }).catch((e) => console.error("bg-write failed:", e && e.message));
       await updateTier(uref, tid);
     }
     // นับโพสต์ในกลุ่มลดเมื่อโพสต์ถูกลบ (keep group.postCount แม่นยำ)
     if (post.groupId) {
       await troot(tid).collection("groups").doc(post.groupId)
-        .update({ postCount: FieldValue.increment(-1) }).catch(() => {});
+        .update({ postCount: FieldValue.increment(-1) }).catch((e) => console.error("bg-write failed:", e && e.message));
     }
   }
 );
@@ -1567,7 +1567,7 @@ exports.onGroupMemberWrite = onDocumentWritten(
     if (had === has) return;
     const inc = has ? 1 : -1;
     await troot(event.params.tid).collection("groups").doc(event.params.gid)
-      .update({ memberCount: FieldValue.increment(inc) }).catch(() => {});
+      .update({ memberCount: FieldValue.increment(inc) }).catch((e) => console.error("bg-write failed:", e && e.message));
   }
 );
 
@@ -1600,11 +1600,11 @@ exports.onOrderConfirmed = onDocumentUpdated(
     pts = Math.floor(pts * promo);
 
     const orderRef = troot(tid).collection("orders").doc(event.params.orderId);
-    if (pts <= 0) { await orderRef.update({ pointsAwarded: true, pointsEarned: 0 }).catch(() => {}); return; }
+    if (pts <= 0) { await orderRef.update({ pointsAwarded: true, pointsEarned: 0 }).catch((e) => console.error("bg-write failed:", e && e.message)); return; }
     const uref = troot(tid).collection("users").doc(uid);
     await uref.update({ points: FieldValue.increment(pts) });
     await updateTier(uref, tid);
-    await orderRef.update({ pointsAwarded: true, pointsEarned: pts }).catch(() => {});
+    await orderRef.update({ pointsAwarded: true, pointsEarned: pts }).catch((e) => console.error("bg-write failed:", e && e.message));
   }
 );
 
