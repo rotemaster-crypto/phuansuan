@@ -111,7 +111,9 @@ service cloud.firestore {
         allow create: if signedIn() && memberOf(t)
           && request.resource.data.userId == request.auth.uid
           && request.resource.data.status == 'pending_payment';
-        allow update: if canManage(t)
+        // B2: admin แก้ field อื่นได้ แต่ "status" เปลี่ยนต้องผ่าน callable setOrderStatus
+        //     (admin SDK) เท่านั้น — กัน admin กระโดดสถานะข้ามขั้นจาก client (DAT-6)
+        allow update: if (canManage(t) && request.resource.data.status == resource.data.status)
           || (signedIn() && resource.data.userId == request.auth.uid
               && resource.data.status in ['pending_payment', 'paid_review']
               && request.resource.data.status == 'paid_review'

@@ -3443,27 +3443,28 @@ function orderCardHtml(o){
   '</div>';
 }
 
-async function updateOrder(id, fields, msg){
-  if (!db) return;
+// B2: เปลี่ยนสถานะออเดอร์ผ่าน callable setOrderStatus (validate transition ฝั่ง server +
+// ตั้ง timestamp ให้) แทนการเขียน status ตรง — rules ปิด admin เขียน status ตรงแล้ว
+async function changeOrderStatus(id, to, extra, msg){
   try {
-    fields.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-    await aDb().collection('orders').doc(id).update(fields);
+    const fn = firebase.app().functions('asia-southeast1').httpsCallable('setOrderStatus');
+    await fn(Object.assign({ tid: currentTenant, orderId: id, to: to }, extra || {}));
     toast(msg||'อัปเดตแล้ว','success');
     loadOrders();
-  } catch(e){ toast('❌ '+e.message,'error'); }
+  } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
 }
 function confirmOrder(id){
   if (!confirm('ยืนยันว่าได้รับเงินสำหรับออเดอร์นี้แล้ว?')) return;
-  updateOrder(id, { status:'confirmed', confirmedAt: firebase.firestore.FieldValue.serverTimestamp() }, '✅ ยืนยันรับเงินแล้ว');
+  changeOrderStatus(id, 'confirmed', null, '✅ ยืนยันรับเงินแล้ว');
 }
 function shipOrder(id){
   const tn = prompt('ใส่เลขพัสดุ (tracking number):', '');
   if (tn === null) return;
-  updateOrder(id, { status:'shipped', trackingNumber: tn.trim(), shippedAt: firebase.firestore.FieldValue.serverTimestamp() }, '📮 บันทึกการจัดส่งแล้ว');
+  changeOrderStatus(id, 'shipped', { trackingNumber: tn.trim() }, '📮 บันทึกการจัดส่งแล้ว');
 }
 function completeOrder(id){
   if (!confirm('ปิดออเดอร์นี้เป็น "สำเร็จ"?')) return;
-  updateOrder(id, { status:'completed', completedAt: firebase.firestore.FieldValue.serverTimestamp() }, '🏁 ปิดออเดอร์แล้ว');
+  changeOrderStatus(id, 'completed', null, '🏁 ปิดออเดอร์แล้ว');
 }
 async function cancelOrder(id){
   if (!confirm('ยกเลิกออเดอร์นี้? ระบบจะคืนสต็อกสินค้าให้อัตโนมัติ')) return;

@@ -186,6 +186,20 @@ test('member A อ่านคูปองของ uB ข้ามแบรน�
   await assertFails(getDoc(doc(memberA(), 'tenants/brandB/users/uB/coupons/cB')));
 });
 
+// ── B2: admin เปลี่ยน order.status ตรงจาก client = DENIED (ต้องผ่าน setOrderStatus) ──
+test('B2: tenant admin เขียน order.status ตรง = DENIED', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'tenants/brandA/orders/oA'), { userId: 'x', status: 'paid_review' });
+  });
+  await assertFails(updateDoc(doc(tAdminA(), 'tenants/brandA/orders/oA'), { status: 'confirmed' }));
+});
+test('B2: tenant admin แก้ field อื่นของ order (status คงเดิม) = ALLOWED', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'tenants/brandA/orders/oA'), { userId: 'x', status: 'paid_review' });
+  });
+  await assertSucceeds(updateDoc(doc(tAdminA(), 'tenants/brandA/orders/oA'), { note: 'ตรวจแล้ว' }));
+});
+
 // ── A8: ปิด world-read ของเอกสารร้าน (PII: ownerLineId/adminLineIds) + settings/store ──
 test('A8: guest อ่านเอกสารร้าน (tenants/brandA) = DENIED (เดิม public → รั่ว adminLineIds)', async () => {
   await assertFails(getDoc(doc(guest(), 'tenants/brandA')));
