@@ -1275,8 +1275,9 @@ function updateUIWithUser(user) {
   // ── Avatar helper ─────────────────────────────────────
   function setAvatar(el, photoUrl, fallback) {
     if (!el) return;
-    if (photoUrl) {
-      el.style.backgroundImage = `url(${photoUrl})`;
+    const u = safeUrl(photoUrl);
+    if (u) {
+      el.style.backgroundImage = `url("${u}")`;
       el.style.backgroundSize = 'cover';
       el.style.backgroundPosition = 'center';
       el.textContent = '';
@@ -1647,8 +1648,9 @@ async function loadLeaderboard() {
       var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : String(rank);
       var isMe = currentUser && d.id === currentUser.uid;
       var nm = escapeHtml(u.displayName || T('people'));
-      var av = u.photoUrl
-        ? '<div style="width:40px;height:40px;border-radius:50%;background-image:url(' + u.photoUrl + ');background-size:cover;background-position:center;flex-shrink:0"></div>'
+      var _pu = safeUrl(u.photoUrl);
+      var av = _pu
+        ? '<div style="width:40px;height:40px;border-radius:50%;background-image:url(\'' + _pu + '\');background-size:cover;background-position:center;flex-shrink:0"></div>'
         : '<div style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">' + (nm.charAt(0) || 'ช') + '</div>';
       rows.push(
         '<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;margin-bottom:8px;background:' + (isMe ? '#eaf3ff' : '#fff') + ';border:1px solid var(--border)">'
@@ -2034,6 +2036,15 @@ function escapeHtml(s) {
   if (s === undefined || s === null) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+// A2: กัน stored-XSS จาก URL รูป (photoUrl/imageUrl) ที่ผู้ใช้อื่นเขียนได้ —
+// อนุญาตเฉพาะ http/https และห้ามอักขระที่ break ออกจาก CSS url()/attribute
+// (คืน '' ถ้าไม่ปลอดภัย → ให้ fallback เป็นอักษรย่อ/ไม่แสดงรูป)
+function safeUrl(u) {
+  const s = (u === undefined || u === null ? '' : String(u)).trim();
+  if (!/^https?:\/\//i.test(s)) return '';
+  if (/["'()<>\\\s]/.test(s)) return '';
+  return s;
 }
 
 // ── Edit Profile ──────────────────────────────────────────
@@ -3170,8 +3181,8 @@ function renderPost(id, p, i) {
   return `
     <div class="post-card" id="post-${id}">
       <div class="pc-head">
-        <div class="pc-av ${avatarClass}" style="${p.authorPhoto ? `background-image:url(${p.authorPhoto});background-size:cover;background-position:center` : ''}">
-          ${p.authorPhoto ? '' : initials}
+        <div class="pc-av ${avatarClass}" style="${safeUrl(p.authorPhoto) ? `background-image:url('${safeUrl(p.authorPhoto)}');background-size:cover;background-position:center` : ''}">
+          ${safeUrl(p.authorPhoto) ? '' : initials}
         </div>
         <div class="pc-info">
           <div class="pc-name">${escapeHtml(p.authorName) || 'ผู้ใช้'}</div>
@@ -3186,7 +3197,7 @@ function renderPost(id, p, i) {
         ${cropName ? `<span class="ptag pt-green">${cropEmoji} ${cropName}</span>` : ''}
       </div>
       ${p.text ? `<div class="pc-text">${escapeHtml(p.text)}</div>` : ''}
-      ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;max-height:300px;object-fit:cover">` : ''}
+      ${safeUrl(p.imageUrl) ? `<img src="${safeUrl(p.imageUrl)}" style="width:100%;max-height:300px;object-fit:cover">` : ''}
       <div class="rel-prod" id="rel-${id}"></div>
       <div class="pc-reactions">
         <div class="r-counts">
@@ -3203,8 +3214,8 @@ function renderPost(id, p, i) {
       </div>
       <div class="comments-wrap" id="cmt-${id}" style="display:none">
         <div class="cmt-input-row">
-          <div class="cmt-me" style="${currentUser?.photoUrl ? `background-image:url(${currentUser.photoUrl});background-size:cover;background-position:center` : ''}">
-            ${currentUser?.photoUrl ? '' : (currentUser?.displayName?.charAt(0) || 'ฉ')}
+          <div class="cmt-me" style="${safeUrl(currentUser?.photoUrl) ? `background-image:url('${safeUrl(currentUser?.photoUrl)}');background-size:cover;background-position:center` : ''}">
+            ${safeUrl(currentUser?.photoUrl) ? '' : (currentUser?.displayName?.charAt(0) || 'ฉ')}
           </div>
           <input class="cmt-input" placeholder="เขียนความคิดเห็น..." id="cmt-input-${id}">
           <button class="cmt-send" onclick="addComment('${id}')"><svg class="ic"><use href="#i-send"/></svg></button>
@@ -3265,8 +3276,8 @@ async function addComment(postId) {
       const initials = currentUser.displayName?.charAt(0) || 'ฉ';
       cmtsEl.innerHTML += `
         <div class="cmt" style="margin-top:8px">
-          <div class="cmt-av" style="${currentUser.photoUrl?`background-image:url(${currentUser.photoUrl});background-size:cover;background-position:center`:''}">
-            ${currentUser.photoUrl?'':initials}
+          <div class="cmt-av" style="${safeUrl(currentUser.photoUrl)?`background-image:url('${safeUrl(currentUser.photoUrl)}');background-size:cover;background-position:center`:''}">
+            ${safeUrl(currentUser.photoUrl)?'':initials}
           </div>
           <div><div class="cmt-bubble">
             <div class="cmt-name">${escapeHtml(currentUser.displayName)||'คุณ'}</div>
