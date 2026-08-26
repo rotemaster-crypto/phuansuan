@@ -3394,7 +3394,8 @@ async function loadShop(){
       name: p.name || 'สินค้า',
       price: parsePrice(p.price),
       category: p.category || '',
-      image: p.image || '',
+      image: p.image || (Array.isArray(p.images) && p.images[0]) || '',
+      images: Array.isArray(p.images) ? p.images.filter(Boolean) : (p.image ? [p.image] : []),
       url: p.url || '',
       affiliate: p.affiliate === true,
       weightKg: Number(p.weightKg) || commerceCfg().defaultWeightKg,
@@ -3478,7 +3479,11 @@ function openProduct(id){
   var chip = function(arr){ return arr.map(function(x){ return '<span class="pd-chip">'+escapeHtml(x)+'</span>'; }).join(''); };
   var dis = (p.diseases && p.diseases.length) ? '<div class="pd-sec"><div class="pd-sec-h">ใช้รักษาโรค</div><div class="pd-chips">'+chip(p.diseases)+'</div></div>' : '';
   var crp = (p.crops && p.crops.length) ? '<div class="pd-sec"><div class="pd-sec-h">พืชที่ใช้ได้</div><div class="pd-chips">'+chip(p.crops)+'</div></div>' : '';
-  var html = '<div class="pd-img">'+(p.image ? '<img src="'+escapeHtml(p.image)+'" alt="">' : catEmoji(p.category))+'</div>'+
+  var imgs = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+  var mainImg = imgs.length ? '<img id="pd-main-img" src="'+escapeHtml(imgs[0])+'" alt="">' : catEmoji(p.category);
+  var thumbs = imgs.length>1 ? '<div style="display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:#fff;scrollbar-width:none">'+
+      imgs.map(function(u,i){ return '<img src="'+escapeHtml(u)+'" onclick="pdSwap(this)" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:2px solid '+(i===0?'var(--primary)':'#e4e6eb')+';cursor:pointer;flex-shrink:0" alt="">'; }).join('')+'</div>' : '';
+  var html = '<div class="pd-img">'+mainImg+'</div>'+ thumbs +
     '<div class="pd-info">'+
       '<div class="pd-name">'+escapeHtml(p.name)+'</div>'+
       '<div class="pd-pricerow"><span class="pd-price">'+(p.price?baht(p.price):'—')+'</span>'+oldp+disc+'</div>'+
@@ -3491,6 +3496,11 @@ function openProduct(id){
     '<div style="height:14px"></div>';
   var body = document.getElementById('pd-body'); if (body) body.innerHTML = html;
   var m = document.getElementById('prodDetailModal'); if (m) m.classList.add('open');
+}
+function pdSwap(el){
+  var m = document.getElementById('pd-main-img'); if (m) m.src = el.src;
+  Array.prototype.forEach.call(el.parentNode.children, function(t){ t.style.borderColor = '#e4e6eb'; });
+  el.style.borderColor = 'var(--primary)';
 }
 function closeProduct(){ var m = document.getElementById('prodDetailModal'); if (m) m.classList.remove('open'); }
 function renderFeatured(){

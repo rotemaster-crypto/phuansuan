@@ -880,6 +880,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
         <div style="font-size:12px;color:var(--muted);margin-top:4px">แนะนำรูปจัตุรัส 1:1 · ไม่เกิน 3MB</div>
       </div>
     </div>
+    <div class="fg" style="margin-top:10px"><label>รูปเพิ่มเติม (แกลเลอรี) — วางลิงก์รูป บรรทัดละ 1 รูป · รูปแรกด้านบน = รูปปก</label><textarea id="new-prod-images" rows="2" placeholder="https://...jpg&#10;https://...jpg"></textarea></div>
     <div class="form-grid" style="margin-top:12px">
       <div class="fg" style="grid-column:1/-1"><label>ชื่อสินค้า</label><input id="new-prod-name" placeholder="เช่น Mancozeb 80% WP"></div>
       <div class="fg"><label>หมวดหมู่</label>
@@ -960,6 +961,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
         <div style="font-size:12px;color:var(--muted);margin-top:4px">รูปจัตุรัส 1:1 · ไม่เกิน 3MB</div>
       </div>
     </div>
+    <div class="fg" style="margin-top:10px"><label>รูปเพิ่มเติม (แกลเลอรี) — วางลิงก์รูป บรรทัดละ 1 รูป · รูปแรกด้านบน = รูปปก</label><textarea id="prodb-images" rows="2" placeholder="https://...jpg&#10;https://...jpg"></textarea></div>
     <div class="form-grid">
       <div class="fg" style="grid-column:1/-1"><label>ชื่อสินค้า</label><input id="prodb-name-in"></div>
       <div class="fg"><label>หมวดหมู่</label>
@@ -2038,7 +2040,10 @@ async function editProductB(id){
     const sv=(k,v)=>{ const e=document.getElementById(k); if(e) e.value=v; };
     const sc=(k,v)=>{ const e=document.getElementById(k); if(e) e.checked=v; };
     sv('prodb-name-in', p.name || '');
-    sv('prodb-img', p.image || '');
+    var _gal = Array.isArray(p.images) ? p.images.filter(Boolean) : (p.image ? [p.image] : []);
+    var _cover = p.image || _gal[0] || '';
+    sv('prodb-img', _cover);
+    sv('prodb-images', _gal.filter(function(u){ return u && u !== _cover; }).join('\n'));
     sv('prodb-cat', p.category || 'pesticide');
     sv('prodb-price', p.price != null ? p.price : '');
     sv('prodb-oldprice', p.oldPrice != null ? p.oldPrice : '');
@@ -2063,9 +2068,10 @@ async function saveProdB(){
   const name = document.getElementById('prodb-name-in').value.trim();
   if (!name){ toast('❌ กรอกชื่อสินค้า','error'); return; }
   try {
+    var g = galleryVals('prodb-img','prodb-images');
     await aDb().collection('products').doc(_prodbId).update({
       name: name,
-      image: (document.getElementById('prodb-img').value||'').trim(),
+      image: g.image, images: g.images,
       category: document.getElementById('prodb-cat').value,
       price: parsePrice(document.getElementById('prodb-price').value),
       cost: parsePrice(document.getElementById('prodb-cost').value),
@@ -2845,15 +2851,24 @@ async function csvImport(){
       var snap = await aDb().collection('products').get();
       snap.forEach(function(d){ var n=((d.data().name)||'').trim().toLowerCase(); if(n) existing[n]=1; });
     }
+    // ทุกคอลัมน์ที่ชื่อคล้ายรูป (Shopee export มีหลายช่อง: ปก + รูป 1-8) → เก็บเข้าแกลเลอรี
+    var imgCols = __csvHeaders.filter(function(h){ return /(รูป|ภาพ|image|photo|picture|img)/i.test(h); });
     var items = [], seen = {};
     __csvRows.forEach(function(r){
       var name = csvVal(r,'name'); if (!name) return;
       var key = name.toLowerCase();
       if (dedup && (existing[key] || seen[key])) return;
       seen[key] = 1;
+      var imgs = [];
+      var cover = csvVal(r,'image'); if (/^https?:\/\//i.test(cover)) imgs.push(cover);
+      imgCols.forEach(function(h){
+        String(r[h]==null?'':r[h]).split(/[\s,|]+/).forEach(function(v){
+          v = v.trim(); if (/^https?:\/\//i.test(v) && imgs.indexOf(v) === -1) imgs.push(v);
+        });
+      });
       items.push({
         name: name, price: parsePrice(csvVal(r,'price')), stock: parseStock(csvVal(r,'stock')), oldPrice: parsePrice(csvVal(r,'oldPrice')), cost: parsePrice(csvVal(r,'cost')),
-        category: csvVal(r,'category') || defCat, url: csvVal(r,'url'), image: csvVal(r,'image'),
+        category: csvVal(r,'category') || defCat, url: csvVal(r,'url'), image: imgs[0] || cover, images: imgs,
         active: true, affiliate: false, featured: false,
         diseases: csvSplit(csvVal(r,'diseases')), crops: csvSplit(csvVal(r,'crops')),
         description: csvVal(r,'description'), badge: csvVal(r,'badge'),
@@ -2903,19 +2918,30 @@ function prodPrev(inputId, prevId){
   else { box.style.backgroundImage=''; box.classList.remove('has'); }
 }
 function resetProdForm(){
-  ['new-prod-name','new-prod-img','new-prod-price','new-prod-oldprice','new-prod-stock','new-prod-cost','new-prod-sold','new-prod-badge','new-prod-desc','new-prod-diseases','new-prod-crops'].forEach(function(id){ const e=document.getElementById(id); if(e) e.value=''; });
+  ['new-prod-name','new-prod-img','new-prod-images','new-prod-price','new-prod-oldprice','new-prod-stock','new-prod-cost','new-prod-sold','new-prod-badge','new-prod-desc','new-prod-diseases','new-prod-crops'].forEach(function(id){ const e=document.getElementById(id); if(e) e.value=''; });
   document.getElementById('new-prod-featured').checked=false;
   document.getElementById('new-prod-affiliate').checked=false;
   document.getElementById('new-prod-active').checked=true;
   prodPrev('new-prod-img','new-prod-imgprev');
 }
+// รวมรูปปก (ช่อง cover) + รูปเพิ่มเติม (textarea บรรทัดละ 1) → {image: ปก, images: [ทั้งหมด]}
+function galleryVals(coverId, extraId){
+  var cover = ((document.getElementById(coverId)||{}).value||'').trim();
+  var extraEl = document.getElementById(extraId);
+  var extra = (extraEl ? extraEl.value : '').split(/[\n,]+/).map(function(s){ return s.trim(); }).filter(function(v){ return /^https?:\/\//i.test(v); });
+  var imgs = [];
+  if (cover) imgs.push(cover);
+  extra.forEach(function(v){ if (imgs.indexOf(v) === -1) imgs.push(v); });
+  return { image: imgs[0] || cover, images: imgs };
+}
 async function addProduct() {
   const name = document.getElementById('new-prod-name').value.trim();
   if (!name) { toast('❌ กรอกชื่อสินค้า','error'); return; }
   try {
+    var g = galleryVals('new-prod-img','new-prod-images');
     await aDb().collection('products').add({
       name,
-      image: (document.getElementById('new-prod-img').value||'').trim(),
+      image: g.image, images: g.images,
       price: parsePrice(document.getElementById('new-prod-price').value),
       cost: parsePrice(document.getElementById('new-prod-cost').value),
       stock: parseStock(document.getElementById('new-prod-stock').value),
