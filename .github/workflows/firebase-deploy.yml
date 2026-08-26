@@ -52,6 +52,8 @@ jobs:
           node-version: 22
       - name: Run audit guard (regression checks)
         run: node tools/guard.mjs
+      - name: Frontend logic tests (B13)
+        run: node --test tests/frontend.test.js
   deploy:
     needs: [ guard, functions-e2e, rules-test ]
     runs-on: ubuntu-latest

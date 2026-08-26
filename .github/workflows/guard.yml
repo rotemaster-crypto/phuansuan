@@ -13,3 +13,5 @@ jobs:
           node-version: 22
       - name: Run audit guard
         run: node tools/guard.mjs
+      - name: Frontend logic tests (B13)
+        run: node --test tests/frontend.test.js

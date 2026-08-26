@@ -84,8 +84,10 @@
   พังถ้า domains ไม่ครบ; browser vector ปิดด้วย A2 แล้ว). curl ปลอม origin ได้ → **App
   Check คือ closure เต็ม** (ยังไม่ทำ)
 - scalability: `loadSysOverview`/dashboard อ่านทั้ง collection, hot-doc campaign — B6/B7/B8
-- **frontend test = 0** (index.html/admin.html) — B13. การแก้ฝั่ง client ยัง verify ด้วย
-  unit-test ตรรกะ + review เท่านั้น
+- **frontend test** (B13): มี harness แล้ว (`tests/frontend.test.js` — สกัดฟังก์ชันจริงจาก
+  index.html รันใน vm, ครอบ safeUrl/escapeHtml/tenantId). **ครอบเฉพาะ logic/pure fn**;
+  DOM-wiring + admin.html ยังไม่ครอบ (ต้อง browser — ยังไม่ทำ). เพิ่ม test ที่นี่เมื่อแตะ
+  logic ฝั่ง client
 - monolith 4,000 บรรทัด — B15 (แตกไฟล์ต้องล้อม test ก่อน)
 - office split-brain (client เขียน `tenants/office`, callable → phuansuan)
 - legacy `cli.shippingFee` ยังเชื่อ client เมื่อไม่มี `settings/commerce`
@@ -93,6 +95,7 @@
 ## 7. คำสั่งที่ใช้บ่อย
 ```
 node tools/guard.mjs                 # รั้ว regression (ต้องผ่านก่อน merge)
+node --test tests/frontend.test.js   # frontend logic (ไม่ต้อง emulator)
 firebase emulators:exec --only functions,firestore,auth --project demo-bocean \
   "node --test --test-concurrency=1 tests/*.test.js"   # e2e (ยกเว้น rules)
 firebase emulators:exec --only firestore --project demo-bocean \
