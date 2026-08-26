@@ -8,6 +8,7 @@ sa.json
 apply_*.js
 patch_*.js
 migrate*.js
+seed_tenant.js
 *.gz.b64
 
 # firebase emulator (rules-test)
