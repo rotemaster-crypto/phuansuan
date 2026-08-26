@@ -19,6 +19,15 @@ service cloud.firestore {
         && request.auth.token.towner[t] == true;
     }
     function canManage(t) { return isAdmin() || isTenantAdmin(t); }
+    // B4: defense-in-depth — field ตัวเลขเศรษฐกิจต้องเป็น number >= 0 (server clamp อยู่แล้ว
+    // แต่กัน client แปลก/บั๊กเขียน string/ติดลบ). ไม่บังคับ field ต้องมี (absent → default 0 = ผ่าน)
+    function econNum(d, k) { return d.get(k, 0) is number && d.get(k, 0) >= 0; }
+    function econOk(d) {
+      return econNum(d, 'costPoints') && econNum(d, 'ratePoints') && econNum(d, 'ratePerBaht')
+        && econNum(d, 'bonusPoints') && econNum(d, 'multiplier') && econNum(d, 'rewardPoints')
+        && econNum(d, 'minSpend') && econNum(d, 'maxEntries') && econNum(d, 'goal')
+        && econNum(d, 'discountValue');
+    }
     function feedPublic(t) {
       let p = /databases/$(database)/documents/tenants/$(t)/settings/app;
       return !exists(p) || get(p).data.get('feedPublic', true) == true;
@@ -48,15 +57,16 @@ service cloud.firestore {
       match /private/{doc} { allow read, write: if false; }
       match /products/{productId} { allow read: if true; allow write: if canManage(t); }
       // สุ่มจับรางวัล (Activity Engine) — แอดมินสร้าง/แก้ · ผู้ใช้อ่านได้ · หมุนจริงผ่าน Cloud Function เท่านั้น
-      match /luckyDraws/{drawId} { allow read: if true; allow write: if canManage(t); }
+      match /luckyDraws/{drawId} { allow read: if true; allow create, update: if canManage(t) && econOk(request.resource.data); allow delete: if canManage(t); }
       // ภารกิจ/แคมเปญ (Phase 4) — แอดมินสร้าง/แก้ · ผู้ใช้อ่านได้ · รับรางวัลผ่าน Cloud Function เท่านั้น
-      match /missions/{mid} { allow read: if true; allow write: if canManage(t); }
+      match /missions/{mid} { allow read: if true; allow create, update: if canManage(t) && econOk(request.resource.data); allow delete: if canManage(t); }
       // แคมเปญแต้ม (Campaign builder) — กติกาสะสมแต้ม (ซื้อ/โพสต์) · แอดมินตั้ง · ผู้ใช้อ่านได้ · ให้แต้มผ่าน Cloud Function เท่านั้น
-      match /earnCampaigns/{id} { allow read: if true; allow write: if canManage(t); }
+      match /earnCampaigns/{id} { allow read: if true; allow create, update: if canManage(t) && econOk(request.resource.data); allow delete: if canManage(t); }
       // ทายผล (Prediction) — แอดมินสร้าง/เฉลย · ผู้ใช้อ่านได้ · ส่งคำทาย+จ่ายรางวัลผ่าน Cloud Function เท่านั้น
       match /predictions/{pid} {
         allow read: if true;
-        allow write: if canManage(t);
+        allow create, update: if canManage(t) && econOk(request.resource.data);
+        allow delete: if canManage(t);
         // คำทายแต่ละครั้ง (auto-id, มี field uid) — เจ้าของ (ดูจาก data.uid) หรือแอดมินอ่านได้ · เขียนผ่าน Cloud Function เท่านั้น
         match /entries/{eid} { allow read: if canManage(t) || (signedIn() && resource.data.uid == request.auth.uid); allow write: if false; }
         // ตัวนับจำนวนครั้งที่ user เล่น (doc-id = uid)

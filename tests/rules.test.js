@@ -10,7 +10,7 @@ import {
   assertFails,
   assertSucceeds,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 let env;
 
@@ -198,6 +198,24 @@ test('B2: tenant admin แก้ field อื่นของ order (status ค�
     await setDoc(doc(ctx.firestore(), 'tenants/brandA/orders/oA'), { userId: 'x', status: 'paid_review' });
   });
   await assertSucceeds(updateDoc(doc(tAdminA(), 'tenants/brandA/orders/oA'), { note: 'ตรวจแล้ว' }));
+});
+
+// ── B4: config เศรษฐกิจต้องเป็น number >= 0 (defense-in-depth) ──
+test('B4: luckyDraw costPoints ติดลบ = DENIED', async () => {
+  await assertFails(setDoc(doc(tAdminA(), 'tenants/brandA/luckyDraws/dNeg'), { name: 'x', active: true, costPoints: -5, prizes: [] }));
+});
+test('B4: luckyDraw costPoints เป็น string = DENIED', async () => {
+  await assertFails(setDoc(doc(tAdminA(), 'tenants/brandA/luckyDraws/dStr'), { name: 'x', active: true, costPoints: '20', prizes: [] }));
+});
+test('B4: earnCampaign ตัวเลขถูกต้อง = ALLOWED', async () => {
+  await assertSucceeds(setDoc(doc(tAdminA(), 'tenants/brandA/earnCampaigns/ecOk'), { trigger: 'purchase', active: true, ratePoints: 1, ratePerBaht: 100, minSpend: 0, multiplier: 2 }));
+});
+test('B4: earnCampaign multiplier ติดลบ = DENIED', async () => {
+  await assertFails(setDoc(doc(tAdminA(), 'tenants/brandA/earnCampaigns/ecBad'), { trigger: 'purchase', active: true, ratePoints: 1, multiplier: -3 }));
+});
+test('B4: ลบ luckyDraw = ALLOWED (delete ไม่ต้อง validate)', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'tenants/brandA/luckyDraws/dDel'), { costPoints: 5 }); });
+  await assertSucceeds(deleteDoc(doc(tAdminA(), 'tenants/brandA/luckyDraws/dDel')));
 });
 
 // ── A8: ปิด world-read ของเอกสารร้าน (PII: ownerLineId/adminLineIds) + settings/store ──
