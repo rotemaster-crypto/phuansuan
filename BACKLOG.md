@@ -9,18 +9,21 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-27 (เซสชัน N0-N5)
-**local main = `2813517` · prod live ครบ (deploy มือ hosting+functions+rules+storage · login rotemaster พร้อม) · ยังไม่ push origin**
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-27 (เซสชัน N0-N7 · pushed)
+**origin/main = `63a67d4` · prod live ครบ + push แล้ว · deploy มือ (hosting+functions+rules+storage · login rotemaster พร้อม)**
 
-**✅ เซสชันนี้ (deploy prod + commit ครบ):**
-- **N0** เอา 4 feature ออกจาก toggle (flag-off) · **N1** แยกหน้าตกแต่งร้าน/จัดส่ง
-- **N2** ใบส่งดึงเลขพัสดุ Shippop API (client · N2b label barcode รอ sandbox)
-- **N3** หมวดสินค้า 27 หมวดแนว Shopee (คงเกษตร) · admin โหลด config.js single-source
-- **N4** ไอคอน admin+feed → SVG minimal · reaction FB/IG (SVG วงกลมสี) · เก็บ content emoji
-- **N5 ครบ 5 stage** (self-service เปิดร้าน + verified badge): createShop/submitVerification/listPendingVerifications/setTenantVerified + client 2 ฝั่ง + e2e 16 เทสใหม่ (shop8/verify4/verifyadmin4) — ดู [[n5-self-service-onboarding-design]]
-- **tier** ทิ้งปราชญ์ → 🥉Bronze/🥈Silver/🥇Gold/🏅Platinum (แบรนด์ override เอง)
+**✅ เซสชันนี้ (deploy prod + commit + push ครบ):**
+- **N0-N3** trim toggle · แยกตกแต่งร้าน/จัดส่ง · ใบส่งดึง Shippop API (N2b label รอ sandbox) · หมวด 27 แนว Shopee
+- **N4** ไอคอน SVG minimal (admin+feed) · reaction FB/IG (SVG วงกลมสี)
+- **N5 ครบ 5 stage** self-service เปิดร้าน + verified badge (4 callable + e2e 16 เทส) — [[n5-self-service-onboarding-design]]
+- **tier** → 🥉Bronze/🥈Silver/🥇Gold/🏅Platinum
+- **N6** font scale+family อิง Shopee จริง (inspect browser · index+admin) · responsive คอม (app column 660 framed · verify จริง)
+- **N7** ดีไซน์มาตรฐานเดียวคุมที่ super-admin ("ดีไซน์ระบบ" → global `platform/design` · client อ่านสด) · ตัดสี/ธีมออกจาก brand admin — [[prefer-config-panels-over-hardcode]]
 
-**⚠️ ค้าง/รอบหน้า:** push origin (ยังไม่ push) · Facebook login พักไว้ · CI deploy ยังรอ secret `FIREBASE_SA_PHUANSUAN` (deploy มือไปก่อน) · N2b Shippop label · App Check · หมวดต่อแบรนด์ (settings per-tenant)
+**⚠️ ค้าง/รอบหน้า:**
+- **verify N7 สด** — super-admin login → เมนู "ดีไซน์ระบบ" → ปรับ → เช็คลูกค้าเห็นสด (ยังไม่ได้ verify ด้วย login จริง)
+- **ต้อง Roger ทำเอง:** CI secret `FIREBASE_SA_PHUANSUAN` (deploy มือไปก่อน) · Facebook login (พักไว้)
+- **งานเทคนิคค้าง:** N2b Shippop label barcode (รอ sandbox key) · App Check (กันสแปม createShop) · listPendingVerifications ยัง iterate (scale) · หมวดต่อแบรนด์ (settings per-tenant)
 
 ---
 ### (resume pointer เก่า — c97ff92)
