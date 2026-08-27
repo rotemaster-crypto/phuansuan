@@ -11,8 +11,10 @@
 
 ## 📍 สถานะปัจจุบัน (resume pointer)
 - Hardening (audit) เสร็จ: door-open ปิด + order state machine + guard/CLAUDE.md · test เขียว (e2e 110 + rules 51 + frontend 5 + guard 9)
-- ✅ **🔴 เคลียร์หมดแล้ว (2026-08-27):** XSS admin.html+index.html ปิดครบ + guard A2 ครอบ 2 ไฟล์ · คอมเมนต์โหลดแล้ว → **งานถัดไปเริ่มที่ 🟡** (แนะนำ: dashboard เจ้าของร้าน / คอมเมนต์ pagination / Activity Engine แก้ไขได้)
-- ⚠️ **main ยังไม่ push** — ahead origin ~34 commits (งาน hardening + doc + XSS + comments)
+- ✅ **push แล้ว 2026-08-27** (origin/main = 06c8b98) → CI deploy รัน (gate e2e/rules/guard) · e2e local 110/110 เขียว
+- ✅ **ทำเสร็จ session นี้ (2026-08-27):** XSS admin+index ครบ · คอมเมนต์โหลดได้ · dashboard เจ้าของร้าน · **Activity Engine ครบ 4 engine** (edit+analytics+counter-on-doc) · .gitattributes กัน EOL flip
+- ⚠️ **ยัง verify สดไม่ได้** (ต้อง login admin/LINE): dashboard, activity edit/analytics — ทดสอบ static+unit+e2e ผ่านหมด แต่ DOM-wiring ยังไม่ได้กดจริง
+- ⚠️ **B5 ก่อน OAuth ใช้งานจริง:** prod `tenant.domains` ต้องครบ (web.app + firebaseapp.com + custom)
 - ⚠️ **ก่อน push/deploy:** (1) push→main = deploy จริง · (2) prod `tenant.domains` ต้องครบ (web.app + firebaseapp.com) ไม่งั้น OAuth join พัง (B5)
 - แผนฟีเจอร์เสร็จถึง Phase 4 (Activity Engine ทำงานได้) — ที่เหลือคือ **ทำงานได้แต่ไม่ครบ/หยาบ/ไม่ปลอดภัย** ด้านล่าง
 
