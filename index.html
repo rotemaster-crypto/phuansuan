@@ -1318,7 +1318,7 @@ function updateUIWithUser(user) {
 
   // Cover Photo
   const _cv = document.getElementById('prof-cover');
-  if (_cv && user.coverUrl) { _cv.style.backgroundImage = 'url(' + user.coverUrl + ')'; }
+  if (_cv && safeUrl(user.coverUrl)) { _cv.style.backgroundImage = 'url(' + safeUrl(user.coverUrl) + ')'; }
 
   // ── Names ─────────────────────────────────────────────
   const name = user.displayName || 'ชื่อของคุณ';
@@ -3116,7 +3116,8 @@ function applyShop(d) {
       var t1 = document.getElementById("shop-banner-title");
       if (t1) { t1.textContent = title; t1.style.fontSize = (d.bannerTitleSize ? d.bannerTitleSize : 21) + "px"; }
       var t2 = document.getElementById("shop-banner-tag"); if (t2) { t2.textContent = tag; t2.style.display = tag ? "" : "none"; }
-      if (d.coverImage) { bn.style.backgroundImage = "url(\"" + d.coverImage + "\")"; bn.style.backgroundSize = "cover"; bn.style.backgroundPosition = "center"; }
+      var _cov = safeUrl(d.coverImage);
+      if (_cov) { bn.style.backgroundImage = "url(\"" + _cov + "\")"; bn.style.backgroundSize = "cover"; bn.style.backgroundPosition = "center"; }
       else { var c1 = d.coverColor1 || "var(--primary,#1877f2)"; var c2 = d.coverColor2 || "#42b883"; bn.style.backgroundImage = "none"; bn.style.background = "linear-gradient(135deg," + c1 + "," + c2 + ")"; }
     }
   }
@@ -3324,7 +3325,7 @@ async function uploadCoverPhoto(input) {
     await tdb().collection('users').doc(currentUser.uid).update({ coverUrl: url });
     currentUser.coverUrl = url;
     const cv = document.getElementById('prof-cover');
-    if (cv) cv.style.backgroundImage = 'url(' + url + ')';
+    if (cv && safeUrl(url)) cv.style.backgroundImage = 'url(' + safeUrl(url) + ')';
   } catch (e) { toast('อัพโหลดไม่สำเร็จ: ' + e.message); }
   if (btn) { btn.textContent = '📷 แก้ไขรูปหน้าปก'; btn.disabled = false; }
 }
@@ -3464,9 +3465,9 @@ function renderProducts(){
     var lowstk = (!out && p.stock!=null && p.stock<=5) ? '<div class="prod-sold" style="color:#d97706">เหลือ '+p.stock+' ชิ้น</div>' : '';
     var addBtn = out
       ? '<button class="prod-add" disabled style="opacity:.45;cursor:not-allowed" onclick="event.stopPropagation()">หมด</button>'
-      : ((p.affiliate && p.url) ? '<a class="prod-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg class="ic"><use href="#i-share"/></svg></a>' : '<button class="prod-add" onclick="event.stopPropagation();addToCart(\''+p.id+'\')"><svg class="ic"><use href="#i-plus"/></svg></button>');
+      : ((p.affiliate && safeUrl(p.url)) ? '<a class="prod-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+safeUrl(p.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg class="ic"><use href="#i-share"/></svg></a>' : '<button class="prod-add" onclick="event.stopPropagation();addToCart(\''+p.id+'\')"><svg class="ic"><use href="#i-plus"/></svg></button>');
     return '<div class="prod-card'+(out?' is-out':'')+'" onclick="openProduct(\''+p.id+'\')">'+
-      '<div class="prod-img">'+badge+disc+soldout+(p.image ? '<img src="'+escapeHtml(p.image)+'" alt="">' : catEmoji(p.category))+'</div>'+
+      '<div class="prod-img">'+badge+disc+soldout+(safeUrl(p.image) ? '<img src="'+safeUrl(p.image)+'" alt="">' : catEmoji(p.category))+'</div>'+
       '<div class="prod-body">'+
         '<div class="prod-cat">'+escapeHtml(catName(p.category))+'</div>'+
         '<div class="prod-name">'+escapeHtml(p.name)+'</div>'+
@@ -3491,9 +3492,9 @@ function openProduct(id){
   var dis = (p.diseases && p.diseases.length) ? '<div class="pd-sec"><div class="pd-sec-h">ใช้รักษาโรค</div><div class="pd-chips">'+chip(p.diseases)+'</div></div>' : '';
   var crp = (p.crops && p.crops.length) ? '<div class="pd-sec"><div class="pd-sec-h">พืชที่ใช้ได้</div><div class="pd-chips">'+chip(p.crops)+'</div></div>' : '';
   var imgs = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
-  var mainImg = imgs.length ? '<img id="pd-main-img" src="'+escapeHtml(imgs[0])+'" alt="">' : catEmoji(p.category);
+  var mainImg = (imgs.length && safeUrl(imgs[0])) ? '<img id="pd-main-img" src="'+safeUrl(imgs[0])+'" alt="">' : catEmoji(p.category);
   var thumbs = imgs.length>1 ? '<div style="display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:#fff;scrollbar-width:none">'+
-      imgs.map(function(u,i){ return '<img src="'+escapeHtml(u)+'" onclick="pdSwap(this)" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:2px solid '+(i===0?'var(--primary)':'#e4e6eb')+';cursor:pointer;flex-shrink:0" alt="">'; }).join('')+'</div>' : '';
+      imgs.map(function(u,i){ var _tu=safeUrl(u); return _tu ? '<img src="'+_tu+'" onclick="pdSwap(this)" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:2px solid '+(i===0?'var(--primary)':'#e4e6eb')+';cursor:pointer;flex-shrink:0" alt="">' : ''; }).join('')+'</div>' : '';
   var html = '<div class="pd-img">'+mainImg+'</div>'+ thumbs +
     '<div class="pd-info">'+
       '<div class="pd-name">'+escapeHtml(p.name)+'</div>'+
@@ -3502,7 +3503,7 @@ function openProduct(id){
       '<div class="pd-sec"><div class="pd-sec-h">หมวดหมู่</div><div class="pd-chips"><span class="pd-chip">'+escapeHtml(catName(p.category))+'</span></div></div>'+
       desc + dis + crp +
     '</div>'+
-    (p.stock === 0 ? '<button class="pd-add" disabled style="opacity:.5;cursor:not-allowed">สินค้าหมด</button>' : ((p.affiliate && p.url) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()"><svg class="ic"><use href="#i-share"/></svg> ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()"><svg class="ic"><use href="#i-cart"/></svg> ใส่ตะกร้า</button>'))+
+    (p.stock === 0 ? '<button class="pd-add" disabled style="opacity:.5;cursor:not-allowed">สินค้าหมด</button>' : ((p.affiliate && safeUrl(p.url)) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+safeUrl(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()"><svg class="ic"><use href="#i-share"/></svg> ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()"><svg class="ic"><use href="#i-cart"/></svg> ใส่ตะกร้า</button>'))+
     (p.stock!=null && p.stock>0 && p.stock<=5 ? '<div style="text-align:center;font-size:12px;color:#d97706;margin-top:6px">เหลือ '+p.stock+' ชิ้น</div>' : '')+
     '<div style="height:14px"></div>';
   var body = document.getElementById('pd-body'); if (body) body.innerHTML = html;
@@ -3527,7 +3528,7 @@ function renderFeatured(){
     var dp = discPct(p);
     var disc = dp>0 ? '<div class="disc-badge">-'+dp+'%</div>' : '';
     return '<div class="feat-card" onclick="openProduct(\''+p.id+'\')">'+
-      '<div class="fc-img">'+disc+(p.image ? '<img src="'+escapeHtml(p.image)+'" alt="">' : catEmoji(p.category))+'</div>'+
+      '<div class="fc-img">'+disc+(safeUrl(p.image) ? '<img src="'+safeUrl(p.image)+'" alt="">' : catEmoji(p.category))+'</div>'+
       '<div class="fc-body"><div class="fc-name">'+escapeHtml(p.name)+'</div><div class="fc-price">'+(p.price?baht(p.price):'—')+'</div></div>'+
     '</div>';
   }).join('');
@@ -3722,7 +3723,7 @@ function renderCart(){
   }
   box.innerHTML = cart.map(r =>
     '<div class="cart-row">'+
-      '<div class="cart-emoji">'+(r.image ? '<img src="'+escapeHtml(r.image)+'" alt="">' : catEmoji(r.category))+'</div>'+
+      '<div class="cart-emoji">'+(safeUrl(r.image) ? '<img src="'+safeUrl(r.image)+'" alt="">' : catEmoji(r.category))+'</div>'+
       '<div class="cart-info">'+
         '<div class="cart-nm">'+escapeHtml(r.name)+'</div>'+
         '<div class="cart-pr">'+baht(r.price)+' × '+r.qty+' = '+baht(r.price*r.qty)+'</div>'+
@@ -4149,7 +4150,7 @@ async function populateRelatedProducts(docs){
 
 function relSectionHtml(list){
   const cards = list.map(function(p){
-    const img = p.image ? '<img src="'+escapeHtml(p.image)+'" alt="">' : ((typeof catEmoji==='function')?catEmoji(p.category):'📦');
+    const img = safeUrl(p.image) ? '<img src="'+safeUrl(p.image)+'" alt="">' : ((typeof catEmoji==='function')?catEmoji(p.category):'📦');
     return '<div class="rel-card">'+
       '<div class="rel-img">'+img+'</div>'+
       '<div class="rel-nm">'+escapeHtml(p.name)+'</div>'+

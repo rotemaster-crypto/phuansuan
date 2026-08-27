@@ -19,19 +19,10 @@
 
 ## 🔴 ต้องแก้ (security / broken) — ทำก่อน
 
-### XSS ที่ A2 แก้ไม่ครบ (A2 ทำแค่ index.html บางส่วน · admin.html ไม่ได้แตะ · guard เช็คแค่ index.html)
-admin.html รันใน session แอดมิน → ร้ายกว่า (user มุ่งร้ายรัน JS ในเบราว์เซอร์แอดมิน):
-- [ ] `admin.html:1481` — `onclick="banUser('${u.displayName}')"` = **JS-string injection** (escapeHtml แก้ไม่ได้ ต้อง JSON.stringify/strip หรือ data-id+delegation) · **S** ← คมสุด
-- [ ] `admin.html:1393,1471` — `url(${u.photoUrl})` ดิบ (dashboard/users) · **S**
-- [ ] `admin.html:1395,1473,1474` — `${u.displayName}`/`lineUserId` ไม่ escape · **S**
-- [ ] `admin.html:1511-1513` — `${p.text}`/`authorName`/`type` ไม่ escape (หน้า moderate โพสต์) · **S**
-- [ ] `admin.html:1664,1706` — `<img src="${d[key]}">` (icons) ไม่ escape · **S**
-- [ ] `admin.html:1223` — `url(${adminUser.pictureUrl})` (self, low) · **S**
-- [ ] `index.html:3467,3505` — affiliate `href="${escapeHtml(p.url)}"` **ไม่กัน `javascript:`** (escapeHtml ไม่บล็อก scheme) → ห่อ `safeUrl()` · **S** ← real
-- [ ] `index.html:3119` — shop banner `url("+d.coverImage+")` concat (CSS injection, tenant data) · **S**
-- [ ] `index.html:1321,3327` — cover `url('+url+')` concat (self, low) · **S**
-- [ ] เพิ่ม `safeUrl()` ใน admin.html + **ขยาย `tools/guard.mjs` A2 ให้เช็ค admin.html ด้วย** · **S**
-- [ ] (สม่ำเสมอ, low) img src ที่ใช้ escapeHtml อย่างเดียว: index.html 3469/3494/3496/3530/3725/4152 → ห่อ safeUrl
+### ~~XSS ที่ A2 แก้ไม่ครบ~~ — ✅ ปิดครบแล้ว 2026-08-27 (admin.html + index.html)
+- admin.html: banUser JS-injection, photo url(), displayName/lineUserId, posts moderate, icon img, admin avatar + เพิ่ม `safeUrl()` + ขยาย `tools/guard.mjs` A2 ให้สแกน admin.html
+- index.html: affiliate `href` (javascript: scheme) → safeUrl + fallback ปุ่มปกติ · shop banner CSS injection → safeUrl · profile cover concat → safeUrl · img src escapeHtml-only 6 จุด → safeUrl+fallback emoji
+- guard เขียว (9 กฎ, A2 ครอบ index+admin) · frontend test 5/5
 
 ### Broken (ฟีเจอร์พัง)
 - [ ] `index.html:2744,3247,3267` — **คอมเมนต์ไม่โหลดเลย** · `toggleComments` แค่ toggle display, คอมเมนต์ของคนอื่น (และของเราจาก session ก่อน) ไม่เคย render — มีแค่ optimistic self-comment ตอนโพสต์ · เพิ่ม loader query `posts/{id}/comments` (escape) · **M** ← รูใหญ่สุดฝั่ง user

@@ -1220,7 +1220,8 @@ function showApp() {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   const av = document.getElementById('admin-av');
-  if (adminUser.pictureUrl) { av.style.backgroundImage = `url(${adminUser.pictureUrl})`; av.textContent = ''; }
+  const _apic = safeUrl(adminUser.pictureUrl);
+  if (_apic) { av.style.backgroundImage = `url(${_apic})`; av.textContent = ''; }
   else { av.textContent = adminUser.displayName?.charAt(0) || 'A'; }
   document.getElementById('admin-name').textContent = adminUser.displayName || 'Admin';
 }
@@ -1390,9 +1391,9 @@ async function loadDashboard() {
     const sorted = [...users].sort((a,b) => (b.lastLoginAt?.seconds||0)-(a.lastLoginAt?.seconds||0)).slice(0,5);
     document.getElementById('recent-users-table').innerHTML = sorted.map(u => `
       <tr><td><div style="display:flex;align-items:center;gap:10px">
-        <div class="user-av" style="${u.photoUrl?`background-image:url(${u.photoUrl})`:''}">
-          ${u.photoUrl?'':(u.displayName?.charAt(0)||'?')}</div>
-        <div style="font-weight:700">${u.displayName||'ไม่ระบุ'}</div></div></td>
+        <div class="user-av" style="${safeUrl(u.photoUrl)?`background-image:url(${safeUrl(u.photoUrl)})`:''}">
+          ${safeUrl(u.photoUrl)?'':escapeHtml(u.displayName?.charAt(0)||'?')}</div>
+        <div style="font-weight:700">${escapeHtml(u.displayName||'ไม่ระบุ')}</div></div></td>
         <td><b>${(u.points||0).toLocaleString()}</b></td>
         <td><span class="tier-chip tc-${u.tier||'bronze'}">${tierEmoji(u.tier)} ${u.tier||'bronze'}</span></td>
         <td style="color:var(--muted);font-size:13px">${fmtDate(u.lastLoginAt)}</td></tr>
@@ -1468,17 +1469,17 @@ function __onColor(hex){
 function renderUsers(users) {
   document.getElementById('users-table').innerHTML = users.map(u => `
     <tr><td><div style="display:flex;align-items:center;gap:10px">
-      <div class="user-av" style="${u.photoUrl?`background-image:url(${u.photoUrl})`:''}">
-        ${u.photoUrl?'':(u.displayName?.charAt(0)||'?')}</div>
-      <div><div style="font-weight:700">${u.deletionRequested?'🗑️ ':''}${u.displayName||'ไม่ระบุ'}</div>
-      <div style="font-size:11px;color:var(--muted)">${u.lineUserId?.slice(0,20)||''}</div></div></div></td>
+      <div class="user-av" style="${safeUrl(u.photoUrl)?`background-image:url(${safeUrl(u.photoUrl)})`:''}">
+        ${safeUrl(u.photoUrl)?'':escapeHtml(u.displayName?.charAt(0)||'?')}</div>
+      <div><div style="font-weight:700">${u.deletionRequested?'🗑️ ':''}${escapeHtml(u.displayName||'ไม่ระบุ')}</div>
+      <div style="font-size:11px;color:var(--muted)">${escapeHtml(u.lineUserId?.slice(0,20)||'')}</div></div></div></td>
       <td><input type="number" value="${u.points||0}" style="width:80px;border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px" onchange="updateUserPoints('${u.id}',this.value)"></td>
       <td><select onchange="updateUserTier('${u.id}',this.value)" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px">
         ${['bronze','silver','gold','platinum'].map(t=>`<option value="${t}" ${(u.tier||'bronze')===t?'selected':''}>${tierEmoji(t)} ${t}</option>`).join('')}
       </select></td>
       <td>${u.postCount||0}</td>
       <td style="color:var(--muted);font-size:13px">${fmtDate(u.lastLoginAt)}</td>
-      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="banUser('${u.id}','${u.displayName}')"><svg class="ic"><use href="#i-ban"/></svg> Ban</button></td></tr>
+      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="banUser('${u.id}')"><svg class="ic"><use href="#i-ban"/></svg> Ban</button></td></tr>
   `).join('') || '<tr><td colspan="6" class="empty-state">ไม่มี users</td></tr>';
 }
 function filterUsers() {
@@ -1491,7 +1492,8 @@ async function updateUserPoints(uid, pts) {
 async function updateUserTier(uid, tier) {
   try { await aDb().collection('users').doc(uid).update({ tier }); toast('✅ อัพเดท Tier แล้ว','success'); } catch(e) { toast('❌ '+e.message,'error'); }
 }
-async function banUser(uid, name) {
+async function banUser(uid) {
+  const name = (allUsers||[]).find(u => u.id === uid)?.displayName || uid;
   if (!confirm(`Ban "${name}"?`)) return;
   try { await aDb().collection('users').doc(uid).update({ banned: true }); toast('🚫 Ban แล้ว','success'); loadUsers(); } catch(e) { toast('❌ '+e.message,'error'); }
 }
@@ -1508,9 +1510,9 @@ async function loadPosts() {
 }
 function renderPosts(posts) {
   document.getElementById('posts-table').innerHTML = posts.map(p => `
-    <tr><td><div style="font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.text||'(ไม่มีข้อความ)'}</div></td>
-    <td style="font-size:13px">${p.authorName||'ไม่ระบุ'}</td>
-    <td><span class="tag-chip">${p.type||'โพส'}</span></td>
+    <tr><td><div style="font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.text||'(ไม่มีข้อความ)')}</div></td>
+    <td style="font-size:13px">${escapeHtml(p.authorName||'ไม่ระบุ')}</td>
+    <td><span class="tag-chip">${escapeHtml(p.type||'โพส')}</span></td>
     <td style="color:var(--muted);font-size:13px">${fmtDate(p.createdAt)}</td>
     <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePost('${p.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>
   `).join('') || '<tr><td colspan="5" class="empty-state">ไม่มีโพส</td></tr>';
@@ -1661,7 +1663,7 @@ async function loadIcons() {
     Object.entries(iconMap).forEach(([key, previewId]) => {
       if (d[key]) {
         const el = document.getElementById(previewId);
-        if (el) { el.innerHTML = `<img src="${d[key]}" style="width:100%;height:100%;object-fit:contain">`; }
+        if (el) { const _u=safeUrl(d[key]); if(_u) el.innerHTML = `<img src="${_u}" style="width:100%;height:100%;object-fit:contain">`; }
       }
     });
   } catch(e) {}
@@ -1703,7 +1705,7 @@ async function uploadIcon(key, input) {
     // Update preview
     const previewMap = { logo:'prev-logo', nav_home:'prev-nav-home', nav_community:'prev-nav-community', nav_video:'prev-nav-video', nav_profile:'prev-nav-profile', nav_menu:'prev-nav-menu', default_cover:'prev-cover', login_bg:'prev-login-bg' };
     const prevEl = document.getElementById(previewMap[key]);
-    if (prevEl) prevEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:contain">`;
+    if (prevEl) { const _u=safeUrl(url); if(_u) prevEl.innerHTML = `<img src="${_u}" style="width:100%;height:100%;object-fit:contain">`; }
 
     if (progEl) progEl.style.display = 'none';
     toast('✅ อัพโหลดสำเร็จ!','success');
@@ -3070,6 +3072,9 @@ function aDb(){
 }
 function setCurrentTenant(tid){ currentTenant = tid; if (typeof updateBrandLabels==='function') updateBrandLabels(); }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+// A2: กัน stored-XSS จาก URL รูป (photoUrl/icon) ที่ผู้ใช้อื่น/แอดมินอื่นเขียนได้ —
+// อนุญาตเฉพาะ http/https และห้ามอักขระที่ break ออกจาก CSS url()/attribute (คืน '' ถ้าไม่ปลอดภัย)
+function safeUrl(u){ const s=(u==null?'':String(u)).trim(); if(!/^https?:\/\//i.test(s)) return ''; if(/["'()<>\\\s]/.test(s)) return ''; return s; }
 function baht(n){ return '฿' + Math.round(Number(n)||0).toLocaleString(); }
 // เก็บราคาเป็น "ตัวเลข" เสมอ: รับได้ทั้ง 180, "180", "180 บาท", "1,180" → คืน number (ว่าง/กรอกผิด = 0)
 function parsePrice(v){

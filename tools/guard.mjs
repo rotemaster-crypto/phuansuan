@@ -34,16 +34,19 @@ const checked = [];
 
 // ── A2: ห้าม interpolate URL ดิบใน url()/src ต้องผ่าน safeUrl()/escapeHtml() ──
 {
-  const s = read('index.html');
   // flag เฉพาะ "property access ดิบ" (${obj.field}) ที่อยู่ถัดจาก url( / src=" โดยตรง
   // — ปลอดภัยคือ ${safeUrl(...)} (มี '(' ไม่ใช่ '.') หรือ ${localVar} ที่ sanitize แล้ว
-  const re = /(?:url\(['"]?|<img\s+src=['"])\$\{\s*([A-Za-z_$][\w$]*\.[\w$.?]+)/g;
-  let m;
-  while ((m = re.exec(s))) {
-    const ln = s.slice(0, m.index).split('\n').length;
-    V('A2', `index.html:${ln}: URL ถูก interpolate ดิบ (\${${m[1]}}) ใน url()/src — ต้องห่อด้วย safeUrl() (กัน stored-XSS)`);
+  // สแกนทั้ง index.html (ลูกค้า) และ admin.html (session แอดมิน — ร้ายกว่า)
+  for (const file of ['index.html', 'admin.html']) {
+    const s = read(file);
+    const re = /(?:url\(['"]?|<img\s+src=['"])\$\{\s*([A-Za-z_$][\w$]*\.[\w$.?]+)/g;
+    let m;
+    while ((m = re.exec(s))) {
+      const ln = s.slice(0, m.index).split('\n').length;
+      V('A2', `${file}:${ln}: URL ถูก interpolate ดิบ (\${${m[1]}}) ใน url()/src — ต้องห่อด้วย safeUrl() (กัน stored-XSS)`);
+    }
   }
-  checked.push('A2 URL escaped in innerHTML');
+  checked.push('A2 URL escaped in innerHTML (index.html + admin.html)');
 }
 
 // ── A5: rules ห้าม client เขียน points ตัวเอง ──
