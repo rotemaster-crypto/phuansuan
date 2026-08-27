@@ -49,6 +49,13 @@
 
 ---
 
+## 🎨 UI มาตรฐาน (Roger 2026-08-27) — ดู [[ui-standards-font-responsive]]
+### N6 — font scale + responsive (ทำแบบมีสถาปัตยกรรม incremental)
+- [x] type scale เป็น CSS var (`--fs-xs..--fs-2xl`) ใน `:root` + body base = `--fs-base` · **Profile เป็นตัวอย่าง** (class → var) — deploy แล้ว รอ Roger เคาะสเกล
+- [ ] สวีป font scale ที่เหลือทุกหน้า (feed/shop/community/community/modals) — inline font-size ~400 จุด snap เข้าสเกล (ทีละหน้า verify)
+- [ ] responsive: ตอนนี้ body 480px→780px (@820), feed/prof 620px (@820) = แบบ A คอลัมน์กลาง · ขัดให้เนียนบนคอม (Roger เลือกแนวเมื่อดู sample)
+- [x] เปิดร้าน CTA → ข้อความ subtle แบบ Shopee ใน profile (ไม่ใช่การ์ดปุ่มใหญ่)
+
 ## 🆕 งานใหม่จาก Roger (2026-08-27 รอบสอง) — เรียงตามที่สั่ง
 > 🔴 กอง deploy-infra ด้านล่าง = **บล็อกที่ agent ทำเองไม่ได้** (ต้องสิทธิ์ Firebase/GitHub ของ Roger) → งานที่ลงมือได้จริงคือกองนี้
 
