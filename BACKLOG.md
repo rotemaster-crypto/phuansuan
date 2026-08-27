@@ -68,7 +68,8 @@
 
 ### Customer (index.html)
 - [ ] `index.html:2913` feed filter `tenantId===tenantId()` **ซ้ำซ้อน** (path per-tenant อยู่แล้ว) แต่ **drop โพสต์ที่ไม่มี field tenantId เงียบๆ** (โพสต์ legacy/import) → feed อาจโชว์ < 10 · ลบ filter หรือ backfill · **S**
-- [ ] feed/leaderboard/order-history **ไม่มี pagination** (`.get()` แล้ว slice — feed 2889, leaderboard 1664, orders 4002) โตแล้วเจอเพดาน/ช้า · **M** (= B8/audit)
+- [x] ~~feed ไม่มี pagination~~ — ✅ 2026-08-27: cursor pagination (`orderBy createdAt desc .limit(postsPerPage)` + `startAfter`) + ปุ่ม "โหลดเพิ่ม" · nearby คง geo mode (bounded 100) · pinned/reactions/stats-subscribe คงเดิม · footer "— หมดแล้ว —"
+  - leaderboard (top-N `.limit(100).slice(30)`) + my-posts (per-user `.limit(50)`) = **bounded by design** ไม่ใช่ scale issue จริง (ปล่อยไว้)
 - [ ] buyer เห็นสถานะออเดอร์เฉพาะเปิด modal เอง — ไม่มี affirmation หลังส่งสลิป / ไม่มี push ตอน admin confirm-ship / tracking โชว์เลขดิบไม่มีลิงก์ขนส่ง · **S**
 - [ ] `index.html:3911` checkout dead-end ถ้า promptpayId ไม่ตั้ง (บอกลูกค้า "แจ้งแอดมิน" — copy หยาบ) ควรซ่อน checkout · **S**
 - [ ] `index.html:1848` ปุ่มแชร์ไม่แชร์โพสต์นั้นจริง (ไม่ส่ง post id, แชร์ URL แอปกลางๆ) + swallow error · **S**

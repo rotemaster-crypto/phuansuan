@@ -2921,31 +2921,35 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 }
 
 // ── Load Feed ─────────────────────────────────────────────
-async function loadFeed(mode) {
+// feed pagination: cursor (orderBy createdAt desc) + "โหลดเพิ่ม" — เดิม limit 10 ไม่มีต่อ
+// nearby = geo mode (bounded 100, ไม่ paginate) · more=true → ต่อ batch เก่ากว่า
+var _feedDocs = [], _feedCursor = null, _feedEnd = false, _feedLoading = false, _feedMode = 'feed';
+function loadMoreFeed(){ loadFeed(_feedMode, true); }
+async function loadFeed(mode, more) {
   const container = document.getElementById('feed-container');
   if (!container || !db) return;
+  mode = mode || 'feed';
+  _feedMode = mode;
+  if (_feedLoading) return;
+  _feedLoading = true;
   try { refreshManagerFlag(); } catch(e){}
-
-  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
-
+  if (!more) {
+    _feedDocs = []; _feedCursor = null; _feedEnd = false;
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
+  }
   try {
-    const snap = await tdb().collection('posts')
-      .orderBy('createdAt', 'desc')
-      .limit(mode === 'nearby' ? 100 : (APP_CONFIG.feed.postsPerPage || 10))
-      .get();
-
-    if (snap.empty) {
-      container.innerHTML = `
-        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-          <div style="font-size:48px;margin-bottom:12px">🌱</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสเลย</div>
-          <div style="font-size:14px">เป็นคนแรกที่แชร์ปัญหาใน${T('itemPlace')}!</div>
-        </div>`;
-      return;
+    const PAGE = mode === 'nearby' ? 100 : (APP_CONFIG.feed.postsPerPage || 10);
+    let q = tdb().collection('posts').orderBy('createdAt', 'desc').limit(PAGE);
+    if (more && mode !== 'nearby' && _feedCursor) q = q.startAfter(_feedCursor);
+    const snap = await q.get();
+    if (mode === 'nearby') { _feedEnd = true; }
+    else {
+      if (snap.size < PAGE) _feedEnd = true;
+      if (snap.docs.length) _feedCursor = snap.docs[snap.docs.length - 1];
     }
 
-    let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
-    docs = docs.filter(d => d.data.tenantId === tenantId());
+    const batch = snap.docs.map(d => ({ id: d.id, data: d.data() })).filter(d => d.data.tenantId === tenantId());
+    _feedDocs = more ? _feedDocs.concat(batch) : batch;
 
     if (mode === 'nearby') {
       const loc = currentUser && currentUser.location;
@@ -2960,27 +2964,40 @@ async function loadFeed(mode) {
         return;
       }
       const radius = APP_CONFIG.feed.nearbyRadius || 15;
-      docs = docs.filter(d => d.data.location && typeof d.data.location.lat === 'number')
+      _feedDocs = _feedDocs.filter(d => d.data.location && typeof d.data.location.lat === 'number')
         .map(d => { d.data._dist = haversineKm(loc.lat, loc.lng, d.data.location.lat, d.data.location.lng); return d; })
         .filter(d => d.data._dist <= radius)
         .sort((a, b) => a.data._dist - b.data._dist);
-      if (docs.length === 0) {
-        container.innerHTML = `
-          <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-            <div style="font-size:48px;margin-bottom:12px">🏞️</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสในรัศมี ${radius} กม.</div>
-            <div style="font-size:14px">เป็นคนแรกที่โพสในพื้นที่ของคุณ!</div>
-          </div>`;
-        return;
-      }
+    } else {
+      _feedDocs.sort((a, b) => (b.data.pinned ? 1 : 0) - (a.data.pinned ? 1 : 0));
     }
 
-    if (mode !== 'nearby') {
-      docs.sort((a, b) => (b.data.pinned ? 1 : 0) - (a.data.pinned ? 1 : 0));
+    if (!_feedDocs.length) {
+      container.innerHTML = mode === 'nearby'
+        ? `
+        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+          <div style="font-size:48px;margin-bottom:12px">🏞️</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสในรัศมี ${APP_CONFIG.feed.nearbyRadius || 15} กม.</div>
+          <div style="font-size:14px">เป็นคนแรกที่โพสในพื้นที่ของคุณ!</div>
+        </div>`
+        : `
+        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+          <div style="font-size:48px;margin-bottom:12px">🌱</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสเลย</div>
+          <div style="font-size:14px">เป็นคนแรกที่แชร์ปัญหาใน${T('itemPlace')}!</div>
+        </div>`;
+      return;
     }
-    container.innerHTML = docs.map((d, i) => renderPost(d.id, d.data, i)).join('');
-    populateRelatedProducts(docs);
-    var _ids = docs.map(function(d){ return d.id; });
+
+    let html = _feedDocs.map((d, i) => renderPost(d.id, d.data, i)).join('');
+    if (mode !== 'nearby') {
+      html += _feedEnd
+        ? '<div style="text-align:center;padding:18px;color:var(--muted);font-size:13px">— หมดแล้ว —</div>'
+        : '<div style="text-align:center;padding:14px"><button onclick="loadMoreFeed()" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 22px;font-size:14px;font-weight:700;color:var(--primary);cursor:pointer;font-family:inherit">โหลดเพิ่ม</button></div>';
+    }
+    container.innerHTML = html;
+    populateRelatedProducts(_feedDocs);
+    var _ids = _feedDocs.map(function(d){ return d.id; });
     hydrateMyReactions(_ids);
     subscribePostStats(_ids);
 
@@ -2989,7 +3006,10 @@ async function loadFeed(mode) {
     var _msg = (err && err.code === 'permission-denied' && !__feedMode.feedPublic)
       ? 'เข้าสู่ระบบหรือเข้าร่วมชุมชนนี้เพื่อดูฟีด'
       : 'โหลด Feed ไม่ได้ กรุณาลองใหม่';
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">' + _msg + '</div>';
+    if (!more) container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">' + _msg + '</div>';
+    else if (typeof toast === 'function') toast(_msg);
+  } finally {
+    _feedLoading = false;
   }
 }
 
