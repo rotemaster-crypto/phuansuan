@@ -470,18 +470,14 @@ button .ic,a .ic{pointer-events:none}
 .ai-hist-ic{font-size:var(--fs-2xl);flex-shrink:0}
 .ai-hist-d{font-size:var(--fs-base);font-weight:700;color:var(--text)}
 .ai-hist-c{font-size:var(--fs-xs);color:var(--muted)}
-/* ── #4 Responsive: ขยายใช้พื้นที่จอคอม ── */
+/* ── Responsive: บนคอมทำเป็น "app column" กรอบเดียว chrome+content ตรงกัน (แนว IG/Messenger web) ── */
 @media (min-width:820px){
-  body{max-width:780px}
-  .bottom-nav{max-width:780px}
-  .cart-fab{max-width:560px}
+  html{background:#dfe3e8}                                    /* พื้นหลังหน้าเว็บต่างจากแอป → กรอบดูตั้งใจ */
+  body{max-width:660px;box-shadow:0 0 0 1px var(--border),0 10px 40px rgba(0,0,0,.07)}
+  .bottom-nav{max-width:660px}
+  .cart-fab{max-width:636px}
+  .line-oa-fab{right:calc(50% - 316px)}                      /* ยึดขอบขวาของคอลัมน์ 660 */
   .prod-grid{grid-template-columns:repeat(3,1fr)}
-  #screen-feed,#screen-community,#screen-profile{max-width:620px;margin-left:auto;margin-right:auto}
-}
-@media (min-width:1140px){
-  body{max-width:1000px}
-  .bottom-nav{max-width:1000px}
-  .prod-grid{grid-template-columns:repeat(4,1fr)}
 }
 </style>
 </head>
