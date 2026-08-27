@@ -68,8 +68,12 @@
 - **ทิศทาง (ตัดสิน 2026-08-27):** มินิแอปแยกต่อแบรนด์ก่อน · เปิดร้าน=ชุด "มาตรฐาน" · verify=ผสม เอกสาร+บัญชีตรงชื่อ (ดู memory [[n5-self-service-onboarding-design]])
 - **สถาปัตยกรรม:** rules ล็อกครบแล้ว (client สร้าง tenant ไม่ได้ `write:isAdmin` · `verified` client เขียนไม่ได้ · `private/*` function-only) → N5 = callable-driven ล้วน แทบไม่แตะ rules
 - **build order:** ① createShop callable → ② ฟอร์มเปิดร้าน (client) → ③ submitVerification+storage → ④ super-admin review UI → ⑤ badge หน้าร้าน
-- [x] **stage ① createShop** — ✅ 2026-08-27: callable server-validated (ชุดมาตรฐาน) · สร้าง tenant active/verified:false + settings(app/commerce/store) + PII→private/owner · ให้ claim towner/tadmin ทันที · กันสแปม ≤5 ร้าน/บัญชี · **e2e 8/8** (`tests/shop.test.js`, เพิ่มใน CI) · guard เขียว · ⚠️ **ยังไม่ deploy functions** (รอ wire client stage ②)
-- [ ] stage ②–⑤ (ฟอร์มเปิดร้าน / verify / review / badge)
+- [x] **stage ① createShop** — ✅ callable server-validated · tenant active/verified:false + settings + PII→private/owner · claim towner/tadmin ทันที · กันสแปม ≤5 · **e2e 8/8** (`tests/shop.test.js`)
+- [x] **stage ② ฟอร์มเปิดร้าน + verified badge (client)** — ✅ 2026-08-27: modal "เปิดร้านฟรี" ในโปรไฟล์ → createShop → พาไป admin.html · verified badge ข้างชื่อแบรนด์ (SVG seal ฟ้า+เช็ค อ่าน `settings/app.verified` ผ่าน applyBranding) · guard+frontend เขียว
+- [ ] **stage ③ submitVerification** — เจ้าของอัปโหลดเอกสาร(บัตร/ทะเบียน/selfie)+บัญชี → callable เขียน private/verification (pending) · Storage rules · e2e
+- [ ] **stage ④ super-admin review** — คิวตรวจ verification → `setTenantVerified` callable (เขียน tenant.verified + settings/app.verified public) → badge โผล่ · e2e
+- [ ] **stage ⑤** — badge หน้าร้าน (client ทำใน ② แล้ว รอ stage ④ เขียน flag)
+- ⚠️ deploy: stage ①+② ต้อง **deploy functions (createShop) + hosting**
 
 ---
 
