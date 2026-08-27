@@ -1841,7 +1841,7 @@ async function loadGroupFeed(gid) {
   try {
     var snap = await tdb().collection('posts').where('groupId', '==', gid).limit(50).get();
     var docs = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
-    docs = docs.filter(function(d){ return d.data.tenantId === tenantId(); });
+    docs = docs.filter(function(d){ return !d.data.tenantId || d.data.tenantId === tenantId(); });   // เก็บโพสต์ legacy ที่ไม่มี field (path scope แล้ว)
     docs.sort(function(a, b){
       var ta = (a.data.createdAt && a.data.createdAt.seconds) || 0;
       var tb = (b.data.createdAt && b.data.createdAt.seconds) || 0;
@@ -1908,10 +1908,13 @@ function openPostModalForGroup(gid) {
 }
 
 // ── Share ────────────────────────────────────────────────
-async function sharePost() {
-  var url = (location && location.origin) || 'https://phuansuan.web.app';
-  var text = 'มาเข้าชุมชนเพื่อนสวน — แชร์ปัญหาและความรู้การเกษตร 🌿';
-  try { if (navigator.share) { await navigator.share({ title: 'เพื่อนสวน', text: text, url: url }); return; } } catch (e) { return; }
+async function sharePost(postId) {
+  var base = (location && location.origin) || 'https://phuansuan.web.app';
+  var url = postId ? (base + '/?post=' + encodeURIComponent(postId)) : base;   // ลิงก์ถึงโพสต์นั้น (รองรับ deep-link ภายหลัง)
+  var text = 'มาดูโพสต์นี้ในชุมชนเพื่อนสวน 🌿';
+  try {
+    if (navigator.share) { await navigator.share({ title: 'เพื่อนสวน', text: text, url: url }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }   // ผู้ใช้กดยกเลิก = จบ · error อื่น → fallback copy
   try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว 📋'); }
   catch (e) { try { prompt('คัดลอกลิงก์นี้:', url); } catch (e2) {} }
 }
@@ -3095,7 +3098,8 @@ async function loadFeed(mode, more) {
       if (snap.docs.length) _feedCursor = snap.docs[snap.docs.length - 1];
     }
 
-    const batch = snap.docs.map(d => ({ id: d.id, data: d.data() })).filter(d => d.data.tenantId === tenantId());
+    // path เป็น tenants/{tid}/posts อยู่แล้ว → เก็บโพสต์ที่ไม่มี field tenantId (legacy/import) ด้วย · drop เฉพาะที่ tag ผิด tenant จริง
+    const batch = snap.docs.map(d => ({ id: d.id, data: d.data() })).filter(d => !d.data.tenantId || d.data.tenantId === tenantId());
     _feedDocs = more ? _feedDocs.concat(batch) : batch;
 
     if (mode === 'nearby') {
@@ -3436,7 +3440,7 @@ function renderPost(id, p, i) {
         <button class="pa" id="rx-btn-${id}" data-rx="" onclick="toggleReactPicker(event,'${id}',this)"><span class="pi" id="rx-ico-${id}"><svg class="ic"><use href="#i-thumb"/></svg></span><span id="rx-lbl-${id}">ถูกใจ</span></button>
         <button class="pa" onclick="helpPost('${id}',this)"><span class="pi"><svg class="ic"><use href="#i-check"/></svg></span>ช่วยได้</button>
         <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi"><svg class="ic"><use href="#i-chat"/></svg></span>แสดงความคิดเห็น</button>
-        <button class="pa" onclick="sharePost()"><span class="pi"><svg class="ic"><use href="#i-share"/></svg></span>แชร์</button>
+        <button class="pa" onclick="sharePost('${id}')"><span class="pi"><svg class="ic"><use href="#i-share"/></svg></span>แชร์</button>
       </div>
       <div class="comments-wrap" id="cmt-${id}" style="display:none">
         <div class="cmt-input-row">
@@ -4101,6 +4105,12 @@ function renderCheckoutSummary(){
   h += '<div class="sum-row total"><span>ยอดสุทธิ</span><span>'+baht(checkoutTotal())+'</span></div>';
   const ep = earnPointsPreview(cartSubtotal());
   if (ep > 0) h += '<div style="font-size:12.5px;color:#92400e;background:#fef3c7;border-radius:8px;padding:7px 10px;text-align:center;margin-top:8px;font-weight:700">⭐ ออเดอร์นี้จะได้รับ '+ep+' แต้ม เมื่อร้านยืนยันรับเงิน</div>';
+  // กันตั้งแต่หน้านี้: ถ้าร้านยังไม่ตั้งพร้อมเพย์ → ปิดปุ่มยืนยัน + แจ้งสุภาพ (ไม่ปล่อยให้กรอกครบแล้วเจอ dead-end)
+  var _cfg = commerceCfg(), _btn = document.getElementById('co-submit');
+  if (!_cfg.promptpayId || _cfg.promptpayId === '0000000000'){
+    h += '<div style="font-size:var(--fs-sm);color:#b91c1c;background:#fee2e2;border-radius:8px;padding:9px 11px;text-align:center;margin-top:8px;font-weight:600">ร้านนี้ยังไม่เปิดรับชำระเงินออนไลน์ — กรุณาติดต่อร้านโดยตรง</div>';
+    if (_btn){ _btn.disabled = true; _btn.textContent = 'ยังชำระเงินไม่ได้'; }
+  } else if (_btn){ _btn.disabled = false; _btn.textContent = 'ยืนยันสั่งซื้อ → ชำระเงิน'; }
   el.innerHTML = h;
 }
 
@@ -4111,7 +4121,7 @@ async function submitCheckout(){
   if (!name || !phone || !addr || !province){ toast('กรุณากรอก ชื่อผู้รับ / เบอร์โทร / ที่อยู่ / จังหวัด ให้ครบครับ'); return; }
   if (!/^[0-9]{9,10}$/.test(ppSan(phone))){ toast('เบอร์โทรไม่ถูกต้องครับ'); return; }
   const cfg = commerceCfg();
-  if (!cfg.promptpayId || cfg.promptpayId === '0000000000'){ toast('⚠️ ร้านยังไม่ได้ตั้งค่าพร้อมเพย์ (promptpayId ใน config.js) — แจ้งแอดมินครับ'); return; }
+  if (!cfg.promptpayId || cfg.promptpayId === '0000000000'){ toast('ร้านนี้ยังไม่เปิดรับชำระเงินออนไลน์ — กรุณาติดต่อร้านโดยตรงครับ'); return; }
   if (!db || !currentUser){ toast('ระบบยังไม่พร้อม ลองใหม่อีกครั้งครับ'); return; }
   const btn = document.getElementById('co-submit'); if(btn){ btn.disabled=true; btn.textContent='กำลังสร้างออเดอร์...'; }
   const shipping = { name:name, phone:phone, addressLine:addr, province:province, district:district, subdistrict:sub, postcode:postcode, note:note };

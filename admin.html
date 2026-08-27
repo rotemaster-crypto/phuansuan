@@ -3407,6 +3407,17 @@ async function loadBadges() {
         <td><button class="btn btn-danger" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="deleteBadge('${b.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
       }).join('');
 }
+// badges list = array ของ object ใน settings/badges.list — แก้แบบ atomic (transaction)
+// กัน race read-modify-write (แอดมิน 2 คนแก้พร้อมกันแล้ว list หาย) เหมือน team-admin ที่แก้แล้ว
+async function _badgeTxn(mutate) {
+  const ref = aDb().collection('settings').doc('badges');
+  await firebase.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const list = (snap.exists && Array.isArray(snap.data().list)) ? snap.data().list.slice() : [];
+    const next = mutate(list) || list;
+    tx.set(ref, { list: next, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  });
+}
 async function addBadge() {
   const name = document.getElementById('new-bdg-name').value.trim();
   if (!name) { toast('❌ กรอกชื่อตรา','error'); return; }
@@ -3420,9 +3431,7 @@ async function addBadge() {
     threshold: th
   };
   try {
-    const list = await _getBadgeList();
-    list.push(badge);
-    await aDb().collection('settings').doc('badges').set({ list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await _badgeTxn(list => { list.push(badge); return list; });
     toast('✅ เพิ่มตราแล้ว','success');
     document.getElementById('new-bdg-name').value = '';
     document.getElementById('new-bdg-emoji').value = '';
@@ -3433,9 +3442,7 @@ async function addBadge() {
 async function deleteBadge(id) {
   if (!confirm('ลบตรานี้? (สมาชิกที่ได้ไปแล้วจะไม่เห็นตรานี้อีก)')) return;
   try {
-    let list = await _getBadgeList();
-    list = list.filter(b => b.id !== id);
-    await aDb().collection('settings').doc('badges').set({ list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await _badgeTxn(list => list.filter(b => b.id !== id));
     toast('🗑️ ลบตราแล้ว','success');
     loadBadges();
   } catch(e) { toast('❌ '+e.message,'error'); }
@@ -3450,9 +3457,7 @@ async function seedDefaultBadges() {
     { id:'b'+(t+4), name:'ปราชญ์ชุมชน',   emoji:'⭐', metric:'points', threshold:1000 }
   ];
   try {
-    const list = await _getBadgeList();
-    defaults.forEach(d => list.push(d));
-    await aDb().collection('settings').doc('badges').set({ list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await _badgeTxn(list => { defaults.forEach(d => list.push(d)); return list; });
     toast('✅ เพิ่มชุดเริ่มต้นแล้ว','success');
     loadBadges();
   } catch(e) { toast('❌ '+e.message,'error'); }
@@ -3822,7 +3827,7 @@ async function loadBoceanRequests(){
     renderBoceanRequests();
   } catch(e){ box.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
 }
-const BOCEAN_META = { new:{t:'ใหม่',c:'#1877f2'}, contacted:{t:'ติดต่อแล้ว',c:'#f59e0b'}, approved:{t:'อนุมัติ',c:'#16a34a'}, rejected:{t:'ปฏิเสธ',c:'#888'} };
+const BOCEAN_META = { new:{t:'ใหม่',c:'#1877f2'}, contacted:{t:'ติดต่อแล้ว',c:'#f59e0b'}, approved:{t:'อนุมัติ',c:'#16a34a'}, provisioned:{t:'สร้างร้านแล้ว',c:'#7b61ff'}, rejected:{t:'ปฏิเสธ',c:'#888'} };
 function renderBoceanRequests(){
   const box = document.getElementById('bocean-req-list');
   if (!box) return;

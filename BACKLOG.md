@@ -157,17 +157,18 @@
 ### Admin — อื่นๆ
 - [x] ~~products bulk/sort~~ — ✅ 2026-08-27: sort dropdown (ล่าสุด/ชื่อ ก-ฮ/ราคา/สต็อกน้อย→มาก/ขายดี · pure `sortProducts` เทสผ่าน) + bulk select (checkbox + bar: เปิดขาย/ปิดขาย/ลบ · Firestore batch atomic) · ยังเหลือ: category hardcode (`catEmojiA`) · `PC_TIERS` hardcode · search แค่ชื่อ
 - [ ] courier: ไม่มี guard กันปิด mock (ไปโหมดจริง) ทั้งที่ `hasKey=false` · **S**
-- [x] ~~team admin race~~ — ✅ 2026-08-27: `addTeamAdmin`/`removeTeamAdmin` ใช้ `arrayUnion`/`arrayRemove` (atomic) แทน read-modify-write · rules ล็อกถูก (owner แก้ได้เฉพาะ adminLineIds · super admin เต็ม) · **เหลือ badges (2706) ยัง read-modify-write · team โชว์ UID ดิบ**
+- [x] ~~team admin race~~ — ✅ 2026-08-27: `addTeamAdmin`/`removeTeamAdmin` ใช้ `arrayUnion`/`arrayRemove` (atomic) · rules ล็อกถูก
+- [x] ~~badges race~~ — ✅ 2026-08-27: `addBadge`/`deleteBadge`/`seedDefaultBadges` ใช้ `runTransaction` (`_badgeTxn` helper) แทน read-modify-write → atomic กัน lost update (badges เป็น array of object ใช้ arrayUnion/Remove ไม่สะดวก → transaction)
 - [ ] team admin: โชว์ UID ดิบ ไม่มีชื่อ/avatar/เจ้าของ/โอนเจ้าของ · **S–M**
-- [ ] `admin.html:3359` bocean request status `'provisioned'` ไม่มีใน `BOCEAN_META` → badge สี undefined · **S**
+- [x] ~~bocean request 'provisioned' badge~~ — ✅ 2026-08-27: เพิ่ม `provisioned:{t:'สร้างร้านแล้ว',c:'#7b61ff'}` ใน BOCEAN_META (เดิม fallback grey + label ดิบ)
 
 ### Customer (index.html)
-- [ ] `index.html:2913` feed filter `tenantId===tenantId()` **ซ้ำซ้อน** (path per-tenant อยู่แล้ว) แต่ **drop โพสต์ที่ไม่มี field tenantId เงียบๆ** (โพสต์ legacy/import) → feed อาจโชว์ < 10 · ลบ filter หรือ backfill · **S**
+- [x] ~~feed drop โพสต์เงียบ~~ — ✅ 2026-08-27: filter feed หลัก + groups เป็น `!tenantId || tenantId===tenantId()` (เก็บโพสต์ legacy ที่ไม่มี field · path scope แล้ว) → feed ไม่โชว์ < 10
 - [x] ~~feed ไม่มี pagination~~ — ✅ 2026-08-27: cursor pagination (`orderBy createdAt desc .limit(postsPerPage)` + `startAfter`) + ปุ่ม "โหลดเพิ่ม" · nearby คง geo mode (bounded 100) · pinned/reactions/stats-subscribe คงเดิม · footer "— หมดแล้ว —"
   - leaderboard (top-N `.limit(100).slice(30)`) + my-posts (per-user `.limit(50)`) = **bounded by design** ไม่ใช่ scale issue จริง (ปล่อยไว้)
 - [ ] buyer เห็นสถานะออเดอร์เฉพาะเปิด modal เอง — ไม่มี affirmation หลังส่งสลิป / ไม่มี push ตอน admin confirm-ship / tracking โชว์เลขดิบไม่มีลิงก์ขนส่ง · **S**
-- [ ] `index.html:3911` checkout dead-end ถ้า promptpayId ไม่ตั้ง (บอกลูกค้า "แจ้งแอดมิน" — copy หยาบ) ควรซ่อน checkout · **S**
-- [ ] `index.html:1848` ปุ่มแชร์ไม่แชร์โพสต์นั้นจริง (ไม่ส่ง post id, แชร์ URL แอปกลางๆ) + swallow error · **S**
+- [x] ~~checkout dead-end~~ — ✅ 2026-08-27: กันตั้งแต่หน้า checkout (`renderCheckoutSummary` ปิดปุ่มยืนยัน + แจ้ง "ร้านยังไม่เปิดรับชำระออนไลน์ ติดต่อร้านโดยตรง" ถ้าไม่มีพร้อมเพย์) + backstop copy สุภาพ (เลิกอ้าง config.js)
+- [x] ~~ปุ่มแชร์โพสต์~~ — ✅ 2026-08-27: `sharePost(postId)` ส่ง URL `?post=id` (deep-link forward-compat) + fallback คัดลอกลิงก์เมื่อ share ล้ม (ไม่กลืน · AbortError=ยกเลิกเฉยๆ) · ปุ่มส่ง `${id}` · **เหลือ:** deep-link handler auto-open โพสต์จาก `?post=` (feature แยก)
 
 ---
 
