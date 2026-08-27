@@ -9,7 +9,21 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-27 (สิ้นเซสชันใหญ่)
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-27 (เซสชัน N0-N5)
+**local main = `2813517` · prod live ครบ (deploy มือ hosting+functions+rules+storage · login rotemaster พร้อม) · ยังไม่ push origin**
+
+**✅ เซสชันนี้ (deploy prod + commit ครบ):**
+- **N0** เอา 4 feature ออกจาก toggle (flag-off) · **N1** แยกหน้าตกแต่งร้าน/จัดส่ง
+- **N2** ใบส่งดึงเลขพัสดุ Shippop API (client · N2b label barcode รอ sandbox)
+- **N3** หมวดสินค้า 27 หมวดแนว Shopee (คงเกษตร) · admin โหลด config.js single-source
+- **N4** ไอคอน admin+feed → SVG minimal · reaction FB/IG (SVG วงกลมสี) · เก็บ content emoji
+- **N5 ครบ 5 stage** (self-service เปิดร้าน + verified badge): createShop/submitVerification/listPendingVerifications/setTenantVerified + client 2 ฝั่ง + e2e 16 เทสใหม่ (shop8/verify4/verifyadmin4) — ดู [[n5-self-service-onboarding-design]]
+- **tier** ทิ้งปราชญ์ → 🥉Bronze/🥈Silver/🥇Gold/🏅Platinum (แบรนด์ override เอง)
+
+**⚠️ ค้าง/รอบหน้า:** push origin (ยังไม่ push) · Facebook login พักไว้ · CI deploy ยังรอ secret `FIREBASE_SA_PHUANSUAN` (deploy มือไปก่อน) · N2b Shippop label · App Check · หมวดต่อแบรนด์ (settings per-tenant)
+
+---
+### (resume pointer เก่า — c97ff92)
 **origin/main = `c97ff92` · prod live ทุกอย่าง · deploy มือผ่าน `firebase deploy` (login rotemaster@gmail.com พร้อม)**
 
 **✅ ทำเสร็จ+deploy+verify prod เซสชันนี้:**
