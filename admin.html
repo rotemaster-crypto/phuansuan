@@ -61,6 +61,9 @@ body.in-brand .sb-section.brand-zone{display:block}
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .stat-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:16px 20px}
 .stat-icon{font-size:28px;margin-bottom:8px}.stat-val{font-size:28px;font-weight:800;color:var(--text)}.stat-label{font-size:13px;color:var(--muted);margin-top:2px}
+.stat-card.clickable{cursor:pointer;transition:box-shadow .15s}.stat-card.clickable:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.dash-alert{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:14px}
+.dash-alert:hover{background:var(--bg,#f7f8fa)}.da-go{color:var(--primary);font-weight:700;font-size:13px;white-space:nowrap}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .fg{margin-bottom:0}
@@ -339,6 +342,15 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <!-- DASHBOARD -->
 <div class="screen active" id="screen-dashboard">
   <div class="page-header"><div class="page-title">📊 ภาพรวมร้าน <span id="dash-brand" style="color:var(--muted);font-weight:400;font-size:16px"></span></div><div class="page-sub">สรุปหลังร้านของแบรนด์ที่กำลังดูแล</div></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val" id="ds-revenue">—</div><div class="stat-label">ยอดขายรวม (ยืนยันแล้ว)</div></div>
+    <div class="stat-card"><div class="stat-icon">🛒</div><div class="stat-val" id="ds-orders-today">—</div><div class="stat-label">ออเดอร์วันนี้</div></div>
+    <div class="stat-card clickable" onclick="showScreen('orders')"><div class="stat-icon">🧾</div><div class="stat-val" id="ds-slip">—</div><div class="stat-label">ค้างตรวจสลิป</div></div>
+    <div class="stat-card clickable" onclick="showScreen('products')"><div class="stat-icon">📦</div><div class="stat-val" id="ds-lowstock">—</div><div class="stat-label">สต็อกต่ำ/หมด</div></div>
+  </div>
+  <div class="card"><div class="card-title">⚠️ ต้องจัดการก่อน</div>
+    <div id="dash-alerts"><div class="empty-state" style="padding:10px">กำลังโหลด...</div></div>
+  </div>
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="ds-users">—</div><div class="stat-label">Users ทั้งหมด</div></div>
     <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-val" id="ds-posts">—</div><div class="stat-label">โพสทั้งหมด</div></div>
@@ -1372,7 +1384,62 @@ async function loadSidebarBranding() {
 }
 
 // ── Dashboard ─────────────────────────────────────────────
+// pure: คำนวณสรุปร้านจาก orders+products (เทสได้ ไม่แตะ DOM)
+function computeShopStats(orders, products, todayStr) {
+  const paid = { confirmed:1, shipped:1, completed:1 };
+  let revenue = 0, ordersToday = 0, slipPending = 0;
+  (orders || []).forEach(function(o) {
+    if (paid[o.status]) revenue += Number(o.total) || 0;
+    if (o.status === 'paid_review') slipPending++;
+    const ts = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate()
+      : (o.createdAt && o.createdAt.seconds ? new Date(o.createdAt.seconds * 1000) : null);
+    if (ts && ts.toDateString() === todayStr) ordersToday++;
+  });
+  const lowStock = (products || [])
+    .filter(function(p) { return p.stock != null && Number(p.stock) <= 5; })
+    .sort(function(a, b) { return (Number(a.stock)||0) - (Number(b.stock)||0); });
+  return { revenue: revenue, ordersToday: ordersToday, slipPending: slipPending, lowStock: lowStock };
+}
+function renderDashAlerts(st) {
+  const box = document.getElementById('dash-alerts');
+  if (!box) return;
+  let html = '';
+  if (st.slipPending > 0) {
+    html += '<div class="dash-alert" onclick="showScreen(\'orders\')"><span>🧾 มีสลิปรอตรวจ <b>' + st.slipPending + '</b> รายการ</span><span class="da-go">ไปตรวจ →</span></div>';
+  }
+  if (st.lowStock.length) {
+    html += '<div style="font-weight:700;margin:10px 0 6px;font-size:13px">📦 สต็อกใกล้หมด</div>';
+    html += st.lowStock.slice(0, 8).map(function(p) {
+      const n = Math.max(0, Math.floor(Number(p.stock) || 0));
+      const col = n === 0 ? '#e41e3f' : '#d97706';
+      return '<div class="dash-alert" onclick="showScreen(\'products\')"><span>' + escapeHtml(p.name || '(ไม่มีชื่อ)') + '</span><span style="color:' + col + ';font-weight:700">' + (n === 0 ? 'หมด' : ('เหลือ ' + n)) + '</span></div>';
+    }).join('');
+    if (st.lowStock.length > 8) html += '<div style="font-size:12px;color:var(--muted);margin-top:6px">และอีก ' + (st.lowStock.length - 8) + ' รายการ</div>';
+  }
+  if (!html) html = '<div class="empty-state" style="padding:10px;color:var(--muted)">✅ ไม่มีอะไรต้องจัดการด่วน</div>';
+  box.innerHTML = html;
+}
+async function loadShopStats() {
+  try {
+    const t = aTid();
+    const res = await Promise.all([ aDb().collection('orders').get(), aDb().collection('products').get() ]);
+    const orders = res[0].docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(o){ return !o.tenantId || o.tenantId === t; });
+    const products = res[1].docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    const st = computeShopStats(orders, products, new Date().toDateString());
+    document.getElementById('ds-revenue').textContent = baht(st.revenue);
+    document.getElementById('ds-orders-today').textContent = st.ordersToday;
+    document.getElementById('ds-slip').textContent = st.slipPending;
+    document.getElementById('ds-lowstock').textContent = st.lowStock.length;
+    renderDashAlerts(st);
+  } catch(e) {
+    console.error(e);
+    ['ds-revenue','ds-orders-today','ds-slip','ds-lowstock'].forEach(function(id){ const el=document.getElementById(id); if(el) el.textContent='—'; });
+    const al = document.getElementById('dash-alerts'); if (al) al.innerHTML = '<div class="empty-state" style="padding:10px">โหลดสรุปร้านไม่สำเร็จ — ลองรีเฟรช</div>';
+  }
+}
 async function loadDashboard() {
+  loadShopStats();
   try {
     const snap = await aDb().collection('users').get();
     const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));

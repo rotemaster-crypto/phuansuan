@@ -33,8 +33,8 @@
 ## 🟡 ทำงานได้แต่ไม่ครบ / หยาบ (thin / rough)
 
 ### Admin dashboard + super-admin (ที่ Roger ชี้)
-- [ ] `admin.html:1374` dashboard **บาง** — มีแค่ users/posts/points/login วันนี้ · **ขาด: ออเดอร์/ยอดขาย/ค้างตรวจสลิป/สต็อกต่ำ/สถิติ activity** (สิ่งที่เจ้าของร้านเปิด dashboard มาดู) · **M**
-- [ ] `admin.html:1376` dashboard scan ทั้ง users+posts collection (client-side) — ไม่ scale · **M** (= B6/audit)
+- [x] ~~`admin.html:1374` dashboard บาง~~ — ✅ 2026-08-27 เพิ่ม 💰ยอดขายรวม/🛒ออเดอร์วันนี้/🧾ค้างตรวจสลิป/📦สต็อกต่ำ + การ์ด "ต้องจัดการก่อน" (list สต็อกใกล้หมด + CTA สลิป คลิกไปหน้าที่เกี่ยว) · pure `computeShopStats()` (เทสด้วยมือผ่าน) · **ยังขาด: สถิติ activity (lucky draw/missions)** — เพิ่มตอนทำ Activity analytics
+- [ ] `admin.html` dashboard scan ทั้ง users+posts+**orders+products** collection (client-side) — ไม่ scale · **M** (= B6/audit · dashboard ใหม่เพิ่ม 2 scan → ทำ count()/agg เมื่อ data โต)
 - [ ] `admin.html:1314` sysoverview loop ทุก tenant × full users.get()+orders.get() — **พังเมื่อ tenant/data โต** + metric บาง (ไม่มี revenue/growth ต่อแบรนด์) · **M–L** (= B6/audit)
 
 ### Admin — orders
