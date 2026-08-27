@@ -65,3 +65,26 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SA_PHUANSUAN }}
           channelId: live
           projectId: phuansuan
+  # A7: functions deploy ก็ GATED หลัง test/guard ผ่านเหมือน hosting
+  # ใช้ service account ตัวเดียวกัน (SA ต้องมีสิทธิ์ Cloud Functions Admin + Service Account User)
+  deploy-functions:
+    needs: [ guard, functions-e2e, rules-test ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install functions deps (CLI ต้อง load module เพื่อค้น triggers)
+        run: npm install --prefix functions
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+      - name: Deploy functions
+        # SA ส่งผ่าน env (ไม่ interpolate ใน shell) → เขียนไฟล์ key → auth ด้วย GOOGLE_APPLICATION_CREDENTIALS
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/sa.json
+          SA_JSON: ${{ secrets.FIREBASE_SA_PHUANSUAN }}
+        run: |
+          printf '%s' "$SA_JSON" > "$GOOGLE_APPLICATION_CREDENTIALS"
+          firebase deploy --only functions --project phuansuan --force
+          rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
