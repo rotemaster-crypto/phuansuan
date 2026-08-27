@@ -473,10 +473,10 @@ button .ic,a .ic{pointer-events:none}
 /* ── Responsive: บนคอมทำเป็น "app column" กรอบเดียว chrome+content ตรงกัน (แนว IG/Messenger web) ── */
 @media (min-width:820px){
   html{background:#dfe3e8}                                    /* พื้นหลังหน้าเว็บต่างจากแอป → กรอบดูตั้งใจ */
-  body{max-width:660px;box-shadow:0 0 0 1px var(--border),0 10px 40px rgba(0,0,0,.07)}
-  .bottom-nav{max-width:660px}
-  .cart-fab{max-width:636px}
-  .line-oa-fab{right:calc(50% - 316px)}                      /* ยึดขอบขวาของคอลัมน์ 660 */
+  body{max-width:var(--app-width,660px);box-shadow:0 0 0 1px var(--border),0 10px 40px rgba(0,0,0,.07)}
+  .bottom-nav{max-width:var(--app-width,660px)}
+  .cart-fab{max-width:calc(var(--app-width,660px) - 24px)}
+  .line-oa-fab{right:calc(50% - var(--app-width,660px)/2 + 14px)}   /* ยึดขอบขวาของคอลัมน์ */
   .prod-grid{grid-template-columns:repeat(3,1fr)}
 }
 </style>
@@ -1119,6 +1119,7 @@ window.addEventListener('load', async () => {
     // Init Firebase
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
+    loadPlatformDesign();   // ดีไซน์ระบบ (platform-wide) — apply สด + live ทุกแบรนด์
 
     // ── ผู้ใช้เด้งกลับจาก Google/Facebook (signInWithRedirect) ──
     try {
@@ -1915,6 +1916,40 @@ async function sharePost() {
   catch (e) { try { prompt('คัดลอกลิงก์นี้:', url); } catch (e2) {} }
 }
 
+// ── Design tokens (control panel: font/ขนาด/ความกว้าง) — override CSS var สด ──
+var FONT_STACKS = {
+  shopee:  '"Helvetica Neue",Helvetica,Arial,sans-serif',
+  system:  '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif',
+  sarabun: '"Sarabun",sans-serif',
+  prompt:  '"Prompt",sans-serif',
+  noto:    '"Noto Sans Thai",sans-serif'
+};
+var GFONTS = { sarabun:'Sarabun:wght@400;500;600;700', prompt:'Prompt:wght@400;500;600;700', noto:'Noto+Sans+Thai:wght@400;500;600;700' };
+function loadWebFont(key){
+  if (!GFONTS[key] || document.getElementById('gfont-'+key)) return;
+  var l = document.createElement('link'); l.id='gfont-'+key; l.rel='stylesheet';
+  l.href = 'https://fonts.googleapis.com/css2?family='+GFONTS[key]+'&display=swap';
+  document.head.appendChild(l);
+}
+// ดีไซน์ระบบ (platform-wide standard · super-admin ตั้ง) — อ่านสด apply ทุกแบรนด์
+function loadPlatformDesign(){
+  try {
+    db.collection('platform').doc('design').onSnapshot(function(s){
+      if (s.exists) applyDesign(s.data());
+    }, function(){});
+  } catch(e){}
+}
+function applyDesign(d){
+  if (!d || typeof d!=='object') return;
+  var root = document.documentElement.style;
+  if (d.primary) root.setProperty('--primary', d.primary);
+  var w = parseInt(d.appWidth); if (w>=480 && w<=1200) root.setProperty('--app-width', w+'px');
+  if (d.fontFamily){ root.setProperty('--font-body', FONT_STACKS[d.fontFamily] || d.fontFamily); loadWebFont(d.fontFamily); }
+  if (d.fs && typeof d.fs==='object'){
+    var M = {xs:'--fs-xs',sm:'--fs-sm',base:'--fs-base',md:'--fs-md',lg:'--fs-lg',xl:'--fs-xl',xxl:'--fs-2xl'};
+    Object.keys(M).forEach(function(k){ var v=parseInt(d.fs[k]); if(v>=8 && v<=80) root.setProperty(M[k], v+'px'); });
+  }
+}
 // ── Branding (super admin แก้ได้, real-time) ─────────────
 function applyBranding(b) {
   if (!b) return;
@@ -1927,8 +1962,7 @@ function applyBranding(b) {
   var vb = document.getElementById('verified-badge');
   if (vb) vb.style.display = (b.verified === true) ? 'inline-flex' : 'none';
   document.title = name;
-  if (b.primaryColor) document.documentElement.style.setProperty('--primary', b.primaryColor);
-  if (b.accentColor) document.documentElement.style.setProperty('--accent', b.accentColor);
+  // สี/ธีม/ฟอนต์ = มาตรฐานระบบ (loadPlatformDesign) ไม่ใช้ต่อแบรนด์แล้ว — แบรนด์แสดงตัวตนผ่านแบนเนอร์+รูปสินค้า
   var lt = document.getElementById('lb-title');
   if (lt && b.leaderboardTitle) lt.textContent = b.leaderboardTitle;
   var sub = document.getElementById('login-tagline');

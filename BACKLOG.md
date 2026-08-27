@@ -57,6 +57,12 @@
 - [x] ~~font family เหมือน Shopee~~ — ✅ 2026-08-27: `--font-body:"Helvetica Neue",Helvetica,Arial,sans-serif` (อิง Shopee TH จริง) ทั้ง index+admin · ลบ Google Fonts Inter ออกจาก admin (ไม่ใช้แล้ว)
 - [x] ~~responsive คอม~~ — ✅ 2026-08-27: app column กรอบเดียว 660px (@820) · html bg #dfe3e8 + body เงา = กรอบแนว IG/Messenger web · chrome+content ตรงกันหมด · fab จัดตามคอลัมน์ · **verify จริงบน browser 1536px** (body=660, font=Helvetica Neue, base=16) · ลบ @1140 blow-up
 - **✅ N6 (UI มาตรฐาน) ครบ** — font scale+family อิง Shopee (index+admin) · responsive คอม · เปิดร้าน CTA subtle
+### N7 — ดีไซน์ระบบเป็นมาตรฐานเดียว คุมที่ super-admin (Roger 2026-08-27) · ดู [[prefer-config-panels-over-hardcode]]
+- **ทิศทาง:** ทุกแบรนด์ใช้ดีไซน์มาตรฐานเดียว (Shopee/Lazada) · แบรนด์แสดงตัวตนผ่าน**แบนเนอร์+รูปสินค้า** ไม่รีสกินสี/ฟอนต์เอง
+- [x] ~~ตัดการปรับแต่งภาพลักษณ์ออกจาก brand admin~~ — ✅ ลบ theme picker + สี (primary/accent/grad) + design card ออกจากหน้า "หน้าตา&โลโก้" (brand-zone) · saveAppearance/loadAppearance เลิกอ้าง theme/สี · เก็บ ชื่อ/โลโก้/shop/PDPA/terminology/feed mode
+- [x] ~~super-admin "ดีไซน์ระบบ"~~ — ✅ screen sys-only: font/primary(#1877f2)/ความกว้าง/ขนาดรายตำแหน่ง → เขียน global `platform/design` (root doc) · rules: อ่านทุกคน เขียน super-admin · rules 51/51
+- [x] ~~client อ่าน platform design สด~~ — ✅ `loadPlatformDesign()` onSnapshot `platform/design` → applyDesign (primary/font/ขนาด/ความกว้าง) live ทุกแบรนด์ · เอา per-brand color/design override ออกจาก applyBranding
+- [ ] verify สดกับ super-admin login (ปรับสไลเดอร์ในหลังบ้าน → ลูกค้าเห็นสด)
 - [x] เปิดร้าน CTA → ข้อความ subtle แบบ Shopee ใน profile (ไม่ใช่การ์ดปุ่มใหญ่)
 
 ## 🆕 งานใหม่จาก Roger (2026-08-27 รอบสอง) — เรียงตามที่สั่ง

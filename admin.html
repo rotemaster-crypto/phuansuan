@@ -257,6 +257,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item sys-only" onclick="showScreen('bocean',this)"><svg class="ic sb-ic"><use href="#i-inbox"/></svg> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
     <div class="sb-item sys-only" onclick="showScreen('shipbill',this)"><svg class="ic sb-ic"><use href="#i-truck"/></svg> ค่าส่ง & บิลแบรนด์</div>
     <div class="sb-item sys-only" onclick="showScreen('verifyqueue',this)"><svg class="ic sb-ic"><use href="#i-check"/></svg> ตรวจยืนยันตัวตน <span class="sb-badge" id="badge-verify" style="display:none">0</span></div>
+    <div class="sb-item sys-only" onclick="showScreen('systemdesign',this)"><svg class="ic sb-ic"><use href="#i-palette"/></svg> ดีไซน์ระบบ</div>
 
     <!-- ═══ เข้าจัดการร้านแบรนด์ (super เลือกแบรนด์ / brand-admin = แบรนด์ตัวเอง) ═══ -->
     <div class="sb-brandbar">
@@ -345,6 +346,45 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <div class="screen" id="screen-verifyqueue">
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-check"/></svg>ตรวจยืนยันตัวตนร้าน</div><div class="page-sub">ดูเอกสาร + เทียบชื่อบัญชีกับบัตร → อนุมัติ/ปฏิเสธ verified badge</div></div>
   <div id="verifyqueue-list"><div class="empty-state">กำลังโหลด...</div></div>
+</div>
+
+<!-- SYSTEM DESIGN (super-admin · platform-wide standard) -->
+<div class="screen" id="screen-systemdesign">
+  <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-palette"/></svg>ดีไซน์ระบบ (มาตรฐานทุกแบรนด์)</div><div class="page-sub">ตั้งฟอนต์ / ขนาด / สี / ความกว้าง มาตรฐาน (แนว Shopee/Lazada) — <b>ใช้กับทุกแบรนด์ · ลูกค้าเห็นผลสด ไม่ต้อง deploy</b></div></div>
+  <div class="card"><div class="card-title"><svg class="ic"><use href="#i-type"/></svg>ฟอนต์ · สี · ความกว้าง</div>
+    <div class="form-grid">
+      <div class="fg"><label>ฟอนต์</label>
+        <select id="dz-font">
+          <option value="shopee">Shopee (Helvetica Neue/Arial)</option>
+          <option value="system">System (Segoe/SF)</option>
+          <option value="sarabun">Sarabun (ไทย)</option>
+          <option value="prompt">Prompt (ไทย)</option>
+          <option value="noto">Noto Sans Thai</option>
+        </select>
+      </div>
+      <div class="fg"><label>สีหลัก (Primary)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="color" id="dz-primary" value="#1877f2" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)" oninput="document.getElementById('dz-primary-hex').value=this.value">
+          <input id="dz-primary-hex" value="#1877f2" style="flex:1" oninput="document.getElementById('dz-primary').value=this.value">
+        </div>
+      </div>
+      <div class="fg"><label>ความกว้างแอปบนคอม (px)</label><input type="number" id="dz-width" min="480" max="1200" placeholder="660"></div>
+    </div>
+    <div style="font-size:var(--fs-xs);font-weight:700;color:var(--muted);margin:14px 0 6px">ขนาดตัวอักษรแต่ละตำแหน่ง (px)</div>
+    <div class="form-grid">
+      <div class="fg"><label>เล็ก / ป้าย (xs)</label><input type="number" id="dz-fs-xs" min="8" max="80"></div>
+      <div class="fg"><label>รอง (sm)</label><input type="number" id="dz-fs-sm" min="8" max="80"></div>
+      <div class="fg"><label>เนื้อหา (base)</label><input type="number" id="dz-fs-base" min="8" max="80"></div>
+      <div class="fg"><label>เนื้อหาใหญ่ / body (md)</label><input type="number" id="dz-fs-md" min="8" max="80"></div>
+      <div class="fg"><label>ราคา / เน้น (lg)</label><input type="number" id="dz-fs-lg" min="8" max="80"></div>
+      <div class="fg"><label>หัวข้อย่อย (xl)</label><input type="number" id="dz-fs-xl" min="8" max="80"></div>
+      <div class="fg"><label>หัวข้อใหญ่ (2xl)</label><input type="number" id="dz-fs-xxl" min="8" max="80"></div>
+    </div>
+    <div class="save-row">
+      <button class="btn btn-ghost" onclick="resetSystemDesign()"><svg class="ic"><use href="#i-reset"/></svg> คืนค่ามาตรฐาน (Shopee)</button>
+      <button class="btn btn-primary" onclick="saveSystemDesign()"><svg class="ic"><use href="#i-save"/></svg> บันทึก (ทุกแบรนด์เห็นสด)</button>
+    </div>
+  </div>
 </div>
 
 <div class="screen" id="screen-tenants">
@@ -471,45 +511,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
     <button class="btn btn-primary" onclick="saveFeedMode()" style="margin-top:10px"><svg class="ic"><use href="#i-save"/></svg> บันทึกโหมดฟีด</button>
   </div>
-  <div class="card" id="theme-picker"><div class="card-title"><svg class="ic"><use href="#i-palette"/></svg>ธีมแอป (เลือกได้)</div>
-    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:12px">เลือกธีมสำเร็จรูป — เปลี่ยนสี/พื้นทั้งแอปของแบรนด์นี้ · กดดูพรีวิวสด แล้วกดบันทึกด้านล่าง</div>
-    <div id="theme-opts" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
-  </div>
-  <div class="card"><div class="card-title"><svg class="ic"><use href="#i-palette"/></svg>สี</div>
-    <div class="form-grid">
-      <div class="fg"><label>สีหลัก (Primary)</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="color" id="cfg-primary" value="#1877f2" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)">
-          <input id="cfg-primary-hex" value="#1877f2" style="flex:1" oninput="syncColor('primary')">
-        </div>
-      </div>
-      <div class="fg"><label>สีเสริม (Accent)</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="color" id="cfg-accent" value="#42b883" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)">
-          <input id="cfg-accent-hex" value="#42b883" style="flex:1" oninput="syncColor('accent')">
-        </div>
-      </div>
-      <div class="fg"><label>Cover Gradient สีต้น</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="color" id="cfg-grad1" value="#1877f2" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)">
-          <input id="cfg-grad1-hex" value="#1877f2" style="flex:1" oninput="syncColor('grad1')">
-        </div>
-      </div>
-      <div class="fg"><label>Cover Gradient สีปลาย</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="color" id="cfg-grad2" value="#42b883" style="width:50px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--border)">
-          <input id="cfg-grad2-hex" value="#42b883" style="flex:1" oninput="syncColor('grad2')">
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:12px">
-      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin-bottom:8px">Preview</div>
-      <div id="color-preview" style="height:44px;border-radius:10px;background:var(--primary);display:flex;align-items:center;padding:0 16px;gap:10px">
-        <span style="font-size:var(--fs-xl)" id="prev-emoji">🌿</span>
-        <span style="color:#fff;font-weight:800;font-size:var(--fs-md)" id="prev-name">เพื่อนสวน</span>
-      </div>
-    </div>
-  </div>
+  <div style="font-size:var(--fs-xs);color:var(--muted);padding:0 4px 4px">🎨 ธีม/สี/ฟอนต์ ใช้มาตรฐานระบบ (Shopee/Lazada) — ตั้งที่ super-admin "ดีไซน์ระบบ" · แบรนด์แสดงตัวตนผ่านแบนเนอร์ + รูปสินค้า</div>
   <div class="save-row">
     <button class="btn btn-ghost" onclick="loadAppearance()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
     <button class="btn btn-primary" onclick="saveAppearance()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
@@ -1442,7 +1444,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, shipping: loadShippingScreen, verify: loadVerification, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill, verifyqueue: loadVerifyQueue };
+  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, shipping: loadShippingScreen, verify: loadVerification, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill, verifyqueue: loadVerifyQueue, systemdesign: loadSystemDesign };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -1723,12 +1725,6 @@ async function loadAppearance() {
     const set = (id, val) => { if (val && document.getElementById(id)) document.getElementById(id).value = val; };
     set('cfg-appname', d.appName); set('cfg-subtitle', d.subtitle); set('cfg-logo', d.logoEmoji);
     set('cfg-shopname', d.shopName); set('cfg-lineoa', d.lineOaId); set('cfg-phone', d.phone);
-    if (d.primary) { document.getElementById('cfg-primary').value = d.primary; document.getElementById('cfg-primary-hex').value = d.primary; }
-    window.__selectedTheme = d.theme || 'classic'; renderThemeOpts();
-    if (d.accent)  { document.getElementById('cfg-accent').value  = d.accent;  document.getElementById('cfg-accent-hex').value  = d.accent;  }
-    if (d.grad1)   { document.getElementById('cfg-grad1').value   = d.grad1;   document.getElementById('cfg-grad1-hex').value   = d.grad1;   }
-    if (d.grad2)   { document.getElementById('cfg-grad2').value   = d.grad2;   document.getElementById('cfg-grad2-hex').value   = d.grad2;   }
-    updateColorPreview();
     loadTerms();
     loadAppPrivacy();
     loadFeedMode();
@@ -1743,15 +1739,9 @@ async function saveAppearance() {
       shopName: document.getElementById('cfg-shopname').value,
       lineOaId: document.getElementById('cfg-lineoa').value,
       phone: document.getElementById('cfg-phone').value,
-      theme: window.__selectedTheme || 'classic',
-      primary: document.getElementById('cfg-primary').value,
-      accent: document.getElementById('cfg-accent').value,
-      grad1: document.getElementById('cfg-grad1').value,
-      grad2: document.getElementById('cfg-grad2').value,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    }, { merge: true });   // สี/ธีม/ฟอนต์ = มาตรฐานระบบ (super-admin) ไม่เก็บต่อแบรนด์แล้ว
     toast('✅ บันทึกแล้ว','success');
-    document.documentElement.style.setProperty('--primary', document.getElementById('cfg-primary').value); document.documentElement.style.setProperty('--on-primary', __onColor(document.getElementById('cfg-primary').value));
     loadSidebarBranding();
   } catch(e) { toast('❌ '+e.message,'error'); }
 }
@@ -2028,6 +2018,45 @@ async function loadShopDecor() {
 }
 // N1: หน้า "จัดส่ง" แยกออกมา — โหลดผู้ส่ง+ค่าส่ง+ขนส่งพร้อมกัน
 function loadShippingScreen(){ loadStore(); loadShipping(); loadCourier(); }
+
+// ── ดีไซน์ระบบ (super-admin · platform-wide standard) ────────
+var DZ_DEFAULTS = { fontFamily:'shopee', primary:'#1877f2', appWidth:660, fs:{xs:12,sm:13,base:14,md:16,lg:18,xl:21,xxl:27} };
+var DZ_FONT_STACKS = { shopee:'"Helvetica Neue",Helvetica,Arial,sans-serif', system:'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif', sarabun:'"Sarabun",sans-serif', prompt:'"Prompt",sans-serif', noto:'"Noto Sans Thai",sans-serif' };
+var DZ_GFONTS = { sarabun:'Sarabun:wght@400;500;600;700', prompt:'Prompt:wght@400;500;600;700', noto:'Noto+Sans+Thai:wght@400;500;600;700' };
+var DZ_FS_KEYS = ['xs','sm','base','md','lg','xl','xxl'];
+var DZ_FS_VAR = {xs:'--fs-xs',sm:'--fs-sm',base:'--fs-base',md:'--fs-md',lg:'--fs-lg',xl:'--fs-xl',xxl:'--fs-2xl'};
+function dzLoadFont(k){ if(!DZ_GFONTS[k]||document.getElementById('gfont-'+k))return; var l=document.createElement('link');l.id='gfont-'+k;l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+DZ_GFONTS[k]+'&display=swap';document.head.appendChild(l); }
+function applyDesignLive(d){   // apply กับหน้า admin เอง (พรีวิวสด)
+  if(!d) return; var root=document.documentElement.style;
+  if(d.primary){ root.setProperty('--primary', d.primary); if(typeof __onColor==='function') root.setProperty('--on-primary', __onColor(d.primary)); }
+  if(d.fontFamily){ root.setProperty('--font-body', DZ_FONT_STACKS[d.fontFamily]||d.fontFamily); dzLoadFont(d.fontFamily); }
+  if(d.fs){ DZ_FS_KEYS.forEach(function(k){ var v=parseInt(d.fs[k]); if(v>=8&&v<=80) root.setProperty(DZ_FS_VAR[k],v+'px'); }); }
+}
+function platformDesignRef(){ return firebase.firestore().collection('platform').doc('design'); }
+function dzFill(d){
+  d=d||DZ_DEFAULTS;
+  document.getElementById('dz-font').value=d.fontFamily||'shopee';
+  var pc=d.primary||'#1877f2'; document.getElementById('dz-primary').value=pc; document.getElementById('dz-primary-hex').value=pc;
+  document.getElementById('dz-width').value=d.appWidth||660;
+  var fs=d.fs||DZ_DEFAULTS.fs;
+  DZ_FS_KEYS.forEach(function(k){ document.getElementById('dz-fs-'+k).value = fs[k]||DZ_DEFAULTS.fs[k]; });
+}
+function dzGather(){
+  var fs={}; DZ_FS_KEYS.forEach(function(k){ var v=parseInt(document.getElementById('dz-fs-'+k).value); fs[k]=(v>=8&&v<=80)?v:DZ_DEFAULTS.fs[k]; });
+  var w=parseInt(document.getElementById('dz-width').value); if(!(w>=480&&w<=1200)) w=DZ_DEFAULTS.appWidth;
+  var pc=(document.getElementById('dz-primary').value||'#1877f2');
+  return { fontFamily:document.getElementById('dz-font').value||'shopee', primary:pc, appWidth:w, fs:fs };
+}
+function loadSystemDesign(){ platformDesignRef().get().then(function(s){ var d=(s.exists&&s.data())||DZ_DEFAULTS; dzFill(d); applyDesignLive(d); }).catch(function(){ dzFill(DZ_DEFAULTS); }); }
+function resetSystemDesign(){ dzFill(DZ_DEFAULTS); applyDesignLive(DZ_DEFAULTS); }
+async function saveSystemDesign(){
+  var d=dzGather();
+  try{
+    await platformDesignRef().set(Object.assign({}, d, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), { merge:true });
+    applyDesignLive(d);
+    toast('✅ บันทึกดีไซน์ระบบแล้ว — ทุกแบรนด์เห็นสด','success');
+  }catch(e){ toast('❌ '+(e.code||e.message),'error'); }
+}
 
 // ── N5 stage ④: super-admin ตรวจยืนยันตัวตน ──────────────────
 async function loadVerifyQueue(){

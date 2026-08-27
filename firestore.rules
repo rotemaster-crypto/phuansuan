@@ -160,6 +160,12 @@ service cloud.firestore {
         && request.resource.data.phone.size() < 40;
     }
 
+    // ดีไซน์ระบบ (platform-wide standard) — ทุกแบรนด์อ่านได้ · เขียนเฉพาะ super-admin (ไม่มี PII/เศรษฐกิจ)
+    match /platform/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // (legacy top-level rules ลบออกแล้ว 2026-08-24 — ทุก path ใช้ tenants/{t}/... เท่านั้น)
     // backup: docs/_archive/firestore.rules_*.bak
 
