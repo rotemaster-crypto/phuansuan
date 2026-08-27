@@ -161,6 +161,13 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 .slip-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
 .slip-lightbox.open{display:flex}
 .slip-lightbox img{max-width:100%;max-height:100%;border-radius:10px}
+/* Activity detail/analytics modal — ใช้ซ้ำทุก engine (predictions/luckydraw/missions/earn) */
+.act-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px}
+.act-modal.open{display:flex}
+.act-box{background:var(--card);border-radius:14px;max-width:460px;width:100%;max-height:85vh;overflow:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.act-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-weight:800;font-size:16px}
+.act-x{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1}
+.act-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden}.act-bar>div{height:100%;background:var(--primary)}
 
 </style>
 </head>
@@ -1159,7 +1166,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg pd-rw-coupon"><label>ส่วนลด (50 หรือ 10%)</label><input id="pd-c-disc" placeholder="50 = ฿50 · 10% = 10%"></div>
       <div class="fg pd-rw-coupon"><label>โค้ด (เว้นว่าง=สุ่ม)</label><input id="pd-c-code" placeholder="WIN50"></div>
     </div>
-    <div class="save-row"><button class="btn btn-primary" onclick="addPrediction()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกิจกรรม</button></div>
+    <div id="pd-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px"></div>
+    <div class="save-row">
+      <button class="btn btn-primary" id="pd-submit" onclick="addPrediction()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกิจกรรม</button>
+      <button class="btn btn-ghost" id="pd-cancel" style="display:none" onclick="cancelPredictionEdit()">ยกเลิกแก้ไข</button>
+    </div>
   </div>
   <div class="card"><div class="card-title">📋 กิจกรรมทายผลทั้งหมด</div>
     <div id="predictions-list"><div class="empty-state">กำลังโหลด...</div></div>
@@ -1182,6 +1193,14 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <div class="slip-lightbox" id="slipLightbox" onclick="closeSlip()">
   <img id="slip-img" src="" alt="สลิปการโอนเงิน">
+</div>
+
+<!-- Activity detail/analytics modal (ใช้ซ้ำทุก engine) -->
+<div class="act-modal" id="actModal" onclick="if(event.target===this)closeActModal()">
+  <div class="act-box">
+    <div class="act-head"><span id="act-title">รายละเอียด</span><button class="act-x" onclick="closeActModal()">✕</button></div>
+    <div id="act-body"></div>
+  </div>
 </div>
 
 </div><!-- /main -->
@@ -2575,6 +2594,54 @@ function pdRewardUI(){
   document.querySelectorAll('.pd-rw-coupon').forEach(function(el){ el.style.display = isC ? '' : 'none'; });
   document.querySelectorAll('.pd-rw-points').forEach(function(el){ el.style.display = isC ? 'none' : ''; });
 }
+// helper กลาง: Firestore Timestamp → ค่า datetime-local (ใช้ตอน prefill edit)
+function _tsToLocal(ts){ if(!ts||!ts.seconds) return ''; var dt=new Date(ts.seconds*1000); var p=function(n){return String(n).padStart(2,'0');}; return dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate())+'T'+p(dt.getHours())+':'+p(dt.getMinutes()); }
+function openActModal(){ var m=document.getElementById('actModal'); if(m) m.classList.add('open'); }
+function closeActModal(){ var m=document.getElementById('actModal'); if(m) m.classList.remove('open'); }
+
+var _pdEditId = null;
+function _pdSetEditMode(on, entriesCount){
+  var btn = document.getElementById('pd-submit'), cancel = document.getElementById('pd-cancel'), banner = document.getElementById('pd-edit-banner');
+  var lock = on && entriesCount > 0;   // มีคนทายแล้ว → ล็อกโหมด/ตัวเลือก กันคำทายเดิมพัง (fail-safe)
+  document.getElementById('pd-mode').disabled = lock;
+  document.getElementById('pd-options').disabled = lock;
+  if (btn) btn.innerHTML = on ? '<svg class="ic"><use href="#i-check"/></svg> บันทึกการแก้ไข' : '<svg class="ic"><use href="#i-plus"/></svg> สร้างกิจกรรม';
+  if (cancel) cancel.style.display = on ? '' : 'none';
+  if (banner){ banner.style.display = on ? '' : 'none'; if (on) banner.textContent = entriesCount > 0 ? ('✏️ กำลังแก้ไข — โหมด/ตัวเลือกถูกล็อกเพราะมีคนทายแล้ว '+entriesCount+' คน') : '✏️ กำลังแก้ไขกิจกรรมนี้'; }
+}
+function cancelPredictionEdit(){
+  _pdEditId = null;
+  ['pd-name','pd-desc','pd-options'].forEach(function(id){ document.getElementById(id).value=''; });
+  _pdSetEditMode(false, 0);
+}
+async function openPredictionEdit(id){
+  try {
+    var ps = await aDb().collection('predictions').doc(id).get();
+    if (!ps.exists) return;
+    var p = ps.data();
+    if (p.status === 'settled'){ toast('❌ เฉลยแล้ว แก้ไม่ได้','error'); return; }
+    _pdEditId = id;
+    document.getElementById('pd-name').value = p.name || '';
+    document.getElementById('pd-desc').value = p.desc || '';
+    document.getElementById('pd-mode').value = p.mode || 'choice';
+    document.getElementById('pd-options').value = (p.options || []).join(', ');
+    document.getElementById('pd-close').value = _tsToLocal(p.closeAt);
+    document.getElementById('pd-cost').value = p.costPoints || 0;
+    document.getElementById('pd-max').value = String(p.maxEntries != null ? p.maxEntries : 1);
+    document.getElementById('pd-active').checked = p.active !== false;
+    document.getElementById('pd-reward').value = p.rewardType || 'points';
+    if (p.rewardType === 'coupon' && p.coupon){
+      document.getElementById('pd-c-label').value = p.coupon.label || '';
+      document.getElementById('pd-c-disc').value = p.coupon.discountText || '';
+      document.getElementById('pd-c-code').value = p.coupon.code || '';
+    } else {
+      document.getElementById('pd-points').value = p.rewardPoints || 0;
+    }
+    pdModeUI(); pdRewardUI();
+    _pdSetEditMode(true, p.entriesCount || 0);
+    document.getElementById('pd-name').scrollIntoView({ behavior:'smooth', block:'center' });
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
 async function addPrediction(){
   var name = document.getElementById('pd-name').value.trim();
   if (!name){ toast('❌ กรอกชื่อกิจกรรม','error'); return; }
@@ -2584,25 +2651,32 @@ async function addPrediction(){
   var closeVal = document.getElementById('pd-close').value;
   var closeAt = closeVal ? firebase.firestore.Timestamp.fromDate(new Date(closeVal)) : null;
   var rewardType = document.getElementById('pd-reward').value;
-  var doc = {
+  // เฉพาะ field ที่แก้ได้ — ตอน edit จะ "ไม่แตะ" status/correctAnswer/entriesCount/winnersCount/createdAt
+  var editable = {
     name: name, desc: document.getElementById('pd-desc').value.trim(),
     mode: mode, options: mode==='choice' ? options : [],
     closeAt: closeAt, costPoints: Math.max(0, Math.floor(Number(document.getElementById('pd-cost').value)||0)),
     maxEntries: Math.max(0, Math.floor(Number(document.getElementById('pd-max').value)||0)),
     active: document.getElementById('pd-active').checked,
-    rewardType: rewardType, status: 'open', correctAnswer: null, entriesCount: 0, winnersCount: 0,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    rewardType: rewardType
   };
   if (rewardType==='coupon'){
     var d = ldParseDiscount(document.getElementById('pd-c-disc').value);
-    doc.coupon = { label: document.getElementById('pd-c-label').value.trim()||name, discountText: d.text, discountType: d.type, discountValue: d.value, code: document.getElementById('pd-c-code').value.trim() };
+    editable.coupon = { label: document.getElementById('pd-c-label').value.trim()||name, discountText: d.text, discountType: d.type, discountValue: d.value, code: document.getElementById('pd-c-code').value.trim() };
   } else {
-    doc.rewardPoints = Math.max(0, Math.floor(Number(document.getElementById('pd-points').value)||0));
+    editable.rewardPoints = Math.max(0, Math.floor(Number(document.getElementById('pd-points').value)||0));
   }
   try {
-    await aDb().collection('predictions').add(doc);
-    toast('✅ สร้างกิจกรรมทายผลแล้ว','success');
-    document.getElementById('pd-name').value=''; document.getElementById('pd-desc').value=''; document.getElementById('pd-options').value='';
+    if (_pdEditId){
+      await aDb().collection('predictions').doc(_pdEditId).update(editable);
+      toast('✅ บันทึกการแก้ไขแล้ว','success');
+      cancelPredictionEdit();
+    } else {
+      var doc = Object.assign({ status:'open', correctAnswer:null, entriesCount:0, winnersCount:0, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, editable);
+      await aDb().collection('predictions').add(doc);
+      toast('✅ สร้างกิจกรรมทายผลแล้ว','success');
+      document.getElementById('pd-name').value=''; document.getElementById('pd-desc').value=''; document.getElementById('pd-options').value='';
+    }
     loadPredictions();
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
@@ -2620,8 +2694,13 @@ async function loadPredictions(){
       var badge = settled ? '<span class="oa-badge" style="background:#16a34a">เฉลยแล้ว</span>' : (p.active===false?'<span class="oa-badge" style="background:#888">ปิด</span>':'<span class="oa-badge" style="background:#1877f2">เปิดรับ</span>');
       var info = 'ทาย '+(p.entriesCount||0)+' คน'+(settled?(' · ผลที่ถูก: <b>'+escapeHtml(p.correctAnswer||'')+'</b> · ผู้ชนะ '+(p.winnersCount||0)+' คน'):'');
       var acts = '';
-      if (!settled) acts += '<button class="oa-btn oa-confirm" onclick="settlePredictionAdmin(\''+p._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> เฉลย + จ่ายรางวัล</button>';
-      else acts += '<button class="oa-btn oa-ship" onclick="settlePredictionAdmin(\''+p._id+'\',true)" title="จ่ายรางวัลผู้ชนะที่ตกค้าง"><svg class="ic"><use href="#i-refresh"/></svg> จ่ายรางวัลซ้ำ</button>';
+      if (!settled){
+        acts += '<button class="oa-btn oa-confirm" onclick="openPredictionStats(\''+p._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ดูผล + เฉลย</button>';
+        acts += '<button class="oa-btn" onclick="openPredictionEdit(\''+p._id+'\')" style="background:#f5a623;color:#fff"><svg class="ic"><use href="#i-edit"/></svg> แก้</button>';
+      } else {
+        acts += '<button class="oa-btn oa-confirm" onclick="openPredictionStats(\''+p._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ดูผล</button>';
+        acts += '<button class="oa-btn oa-ship" onclick="settlePredictionAdmin(\''+p._id+'\',true)" title="จ่ายรางวัลผู้ชนะที่ตกค้าง"><svg class="ic"><use href="#i-refresh"/></svg> จ่ายซ้ำ</button>';
+      }
       acts += '<button class="oa-btn oa-cancel" onclick="deletePrediction(\''+p._id+'\')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button>';
       return '<div class="oa-card">'+
         '<div class="oa-top"><span class="oa-id" style="font-weight:700">'+escapeHtml(p.name||'')+'</span>'+badge+'</div>'+
@@ -2636,26 +2715,86 @@ async function loadPredictions(){
     }).join('');
   } catch(e){ if(box) box.innerHTML='<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
 }
+// pure: นับการกระจายคำทายจาก entries (เทสได้ ไม่แตะ DOM). options = เติมตัวเลือกที่ 0 คน (choice mode)
+function tallyPredictionEntries(entries, options){
+  var total = 0, map = {};
+  (entries||[]).forEach(function(e){
+    total++;
+    var a = (e && e.answer != null && String(e.answer) !== '') ? String(e.answer) : '(ว่าง)';
+    map[a] = (map[a]||0) + 1;
+  });
+  (options||[]).forEach(function(o){ if (map[String(o)] == null) map[String(o)] = 0; });
+  var byAnswer = Object.keys(map).map(function(a){
+    return { answer:a, count:map[a], pct: total ? Math.round(map[a]*100/total) : 0 };
+  }).sort(function(x,y){ return y.count - x.count; });
+  return { total: total, byAnswer: byAnswer };
+}
+function _pdDistHtml(tally){
+  if (!tally.byAnswer.length) return '<div class="empty-state" style="padding:10px">ยังไม่มีคนทาย</div>';
+  return tally.byAnswer.map(function(r){
+    return '<div style="margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>'+escapeHtml(r.answer)+'</span><span style="color:var(--muted)">'+r.count+' คน · '+r.pct+'%</span></div>'+
+      '<div class="act-bar"><div style="width:'+r.pct+'%"></div></div>'+
+    '</div>';
+  }).join('');
+}
+async function openPredictionStats(id){
+  document.getElementById('act-title').textContent = 'ผลการทาย';
+  var body = document.getElementById('act-body');
+  body.innerHTML = '<div class="empty-state" style="padding:10px">กำลังโหลด...</div>';
+  openActModal();
+  try {
+    var pref = aDb().collection('predictions').doc(id);
+    var ps = await pref.get();
+    if (!ps.exists){ body.innerHTML = '<div class="empty-state">ไม่พบกิจกรรม</div>'; return; }
+    var p = ps.data();
+    var esnap = await pref.collection('entries').get();
+    var entries = esnap.docs.map(function(d){ return d.data(); });
+    var tally = tallyPredictionEntries(entries, p.mode==='choice' ? p.options : null);
+    var settled = p.status === 'settled';
+    var html = '<div style="font-weight:800;font-size:16px;margin-bottom:2px">'+escapeHtml(p.name||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:13px;margin-bottom:14px">'+(p.mode==='choice'?'เลือกตัวเลือก':'กรอกคำตอบเอง')+' · ผู้เล่น '+tally.total+' คน</div>'+
+      '<div style="font-weight:700;font-size:13px;margin-bottom:8px">การกระจายคำทาย</div>'+ _pdDistHtml(tally);
+    if (settled){
+      html += '<div class="oa-box" style="margin-top:14px;background:#f0fdf4;border:1px solid #16a34a"><div class="oa-line">✅ ผลที่ถูก: <b>'+escapeHtml(p.correctAnswer||'')+'</b></div><div class="oa-line">🏆 ผู้ชนะ '+(p.winnersCount||0)+' คน</div></div>';
+    } else {
+      var inputHtml = p.mode==='choice'
+        ? '<select id="act-settle-input" class="search-input" style="width:100%">'+ (p.options||[]).map(function(o){ return '<option value="'+escapeHtml(o)+'">'+escapeHtml(o)+'</option>'; }).join('') +'</select>'
+        : '<input id="act-settle-input" class="search-input" style="width:100%" placeholder="เช่น 2-1">';
+      html += '<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">'+
+        '<div style="font-weight:700;font-size:13px;margin-bottom:8px">เฉลยผล + จ่ายรางวัล</div>'+
+        inputHtml +
+        '<button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="settlePredictionFromModal(\''+id+'\')"><svg class="ic"><use href="#i-flag"/></svg> เฉลย + จ่ายรางวัลทั้งหมด</button>'+
+      '</div>';
+    }
+    body.innerHTML = html;
+  } catch(e){ body.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml((e&&e.message)||e)+'</div>'; }
+}
+// เรียก settlePrediction (server-authoritative + idempotent ฝั่ง fn) — ใช้ร่วมทั้ง modal และจ่ายซ้ำ
+async function _doSettlePrediction(id, correct){
+  var fn = firebase.app().functions('asia-southeast1').httpsCallable('settlePrediction');
+  var res = await fn({ tid: currentTenant, eventId: id, correctAnswer: correct });
+  var d = (res && res.data) || {};
+  toast('✅ เฉลยแล้ว · ผู้ชนะ '+(d.winners||0)+' คน · จ่ายรางวัล '+(d.granted||0),'success');
+  loadPredictions();
+}
+async function settlePredictionFromModal(id){
+  var el = document.getElementById('act-settle-input');
+  var correct = ((el && el.value) || '').trim();
+  if (!correct){ toast('❌ ต้องใส่/เลือกผล','error'); return; }
+  if (!confirm('เฉลยผลเป็น "'+correct+'" และจ่ายรางวัลให้ผู้ชนะทั้งหมด?')) return;
+  try { await _doSettlePrediction(id, correct); closeActModal(); }
+  catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
+}
+// จ่ายรางวัลซ้ำ (rerun) — ใช้ correctAnswer เดิม ไม่ถาม prompt
 async function settlePredictionAdmin(id, rerun){
   try {
     var ps = await aDb().collection('predictions').doc(id).get();
     if (!ps.exists) return;
-    var p = ps.data();
-    var correct = p.correctAnswer;
-    if (!rerun || !correct){
-      var hint = p.mode==='choice' ? (' ['+(p.options||[]).join(' / ')+']') : ' (เช่น 2-1)';
-      correct = prompt('ใส่ผลที่ถูกต้อง'+hint+':', correct||'');
-      if (correct === null) return;
-      correct = correct.trim();
-      if (!correct){ toast('❌ ต้องใส่ผล','error'); return; }
-      if (p.mode==='choice' && (p.options||[]).indexOf(correct) < 0){ toast('❌ ผลต้องตรงกับตัวเลือก','error'); return; }
-    }
-    if (!confirm('เฉลยผลเป็น "'+correct+'" และจ่ายรางวัลให้ผู้ชนะทั้งหมด?')) return;
-    var fn = firebase.app().functions('asia-southeast1').httpsCallable('settlePrediction');
-    var res = await fn({ tid: currentTenant, eventId: id, correctAnswer: correct });
-    var d = (res && res.data) || {};
-    toast('✅ เฉลยแล้ว · ผู้ชนะ '+(d.winners||0)+' คน · จ่ายรางวัล '+(d.granted||0),'success');
-    loadPredictions();
+    var correct = ps.data().correctAnswer;
+    if (!correct){ toast('❌ ยังไม่เคยเฉลย','error'); return; }
+    if (!confirm('จ่ายรางวัลซ้ำให้ผู้ชนะที่ตกค้าง?')) return;
+    await _doSettlePrediction(id, correct);
   } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
 }
 async function deletePrediction(id){

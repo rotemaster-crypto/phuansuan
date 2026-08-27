@@ -42,10 +42,12 @@
 - [ ] `admin.html:3370` orders `.get()` ทั้งหมดทุกครั้ง — ไม่มี pagination/date range · **M**
 - [ ] ไม่มี bulk action / export CSV / mark COD เก็บแล้ว / partial refund · **M**
 
-### Admin — Activity Engine (รูใหญ่สุดของ "engagement product")
-- [ ] **แก้ไขไม่ได้เลย** — lucky draw/missions/earn/predictions = สร้างใหม่+toggle+ลบ เท่านั้น (แก้ prize ต้องลบสร้างใหม่) · **M ต่ออัน**
-- [ ] **ไม่มีผล/analytics** — lucky draw ไม่โชว์การกระจายรางวัล/รายชื่อผู้ชนะ · missions ไม่โชว์จำนวนคนทำสำเร็จ · earn ไม่โชว์แต้มที่แจก · predictions ดูรายการคนทาย/คำตอบไม่ได้ · **L**
-- [ ] prediction settle เป็น `prompt()` (2578) ดูรายการก่อนเฉลยไม่ได้ · **S**
+### Admin — Activity Engine (edit + analytics · counter-on-doc · กำลังทำยาว 4 engine)
+> design: [[activity-engine-crud-analytics]] · modal กลาง `.act-modal` + convention `editId` (สร้างจาก predictions ใช้ซ้ำ 3 engine ที่เหลือ)
+- [x] ~~Predictions~~ — ✅ 2026-08-27: edit (prefill+update, ล็อกโหมด/ตัวเลือกเมื่อมีคนทายแล้ว, ไม่แตะ status/counter) + analytics modal (distribution answer→count/%) + เฉลยจาก dropdown/input แทน `prompt()` ตาบอด · pure `tallyPredictionEntries()` เทสผ่าน
+- [ ] **Lucky Draw** — edit (รวม prize array) + analytics จาก `prizes[].awarded`/`spins` (อ่าน doc, ไม่ต้องแตะ backend) · **M**
+- [ ] **Missions** — edit + เพิ่ม `claimCount` ใน `claimMission` fn (idempotent tx เดิม) + e2e + analytics · **M** (แตะ backend)
+- [ ] **Earn** — edit + เพิ่ม `grantCount`/`grantedPoints` ใน trigger จ่ายแต้ม + e2e + analytics · **M** (แตะ backend)
 
 ### Admin — อื่นๆ
 - [ ] products: category hardcode (`catEmojiA` 2169) · ไม่มี bulk/sort · search แค่ชื่อ · `PC_TIERS` (2177) hardcode 0/5/10/15 เสี่ยง drift กับ config.js · **M/S**
