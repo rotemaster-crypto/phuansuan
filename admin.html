@@ -364,6 +364,10 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-val" id="ds-points">—</div><div class="stat-label">แต้มรวมทั้งระบบ</div></div>
     <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="ds-today">—</div><div class="stat-label">Login วันนี้</div></div>
   </div>
+  <div class="card"><div class="card-title">🎮 Activity Engine (เอ็นเกจเมนต์)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">สรุปการเล่นเกม/ภารกิจสะสม · ดูรายละเอียด/แก้ไขได้ที่เมนู สุ่มจับรางวัล · ภารกิจ · ทายผล · แคมเปญแต้ม</div>
+    <div id="dash-activity" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px"><div class="empty-state" style="padding:10px">กำลังโหลด...</div></div>
+  </div>
   <div class="card"><div class="card-title">🔥 จุดไฟชุมชน</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ชุมชนที่มีคนคุยกันตั้งแต่วันแรก จะไม่ร้าง · ทำ checklist ให้ครบ + โพสต์เริ่มบทสนทนาได้ในคลิกเดียว (โพสต์ในนามแบรนด์)</div>
     <div id="kickstart-checklist" style="margin-bottom:14px"><div class="empty-state" style="padding:10px">กำลังโหลด...</div></div>
@@ -1470,8 +1474,48 @@ async function loadShopStats() {
     const al = document.getElementById('dash-alerts'); if (al) al.innerHTML = '<div class="empty-state" style="padding:10px">โหลดสรุปร้านไม่สำเร็จ — ลองรีเฟรช</div>';
   }
 }
+// pure: รวมสถิติ engagement จาก counter-on-doc ของ 4 engine (เทสได้)
+function computeActivityStats(luckyDraws, missions, earnCampaigns, predictions){
+  var spins=0, awarded=0, claims=0, earnPts=0, predEntries=0, predWinners=0;
+  (luckyDraws||[]).forEach(function(d){
+    spins += Math.max(0, Math.floor(Number(d.spins)||0));
+    (Array.isArray(d.prizes)?d.prizes:[]).forEach(function(p){
+      if (p && p.type !== 'nothing') awarded += Math.max(0, Math.floor(Number(p.awarded)||0));   // นับเฉพาะรางวัลจริง (ไม่นับช่อง 'ไม่ถูกรางวัล')
+    });
+  });
+  (missions||[]).forEach(function(m){ claims += Math.max(0, Math.floor(Number(m.claimCount)||0)); });
+  (earnCampaigns||[]).forEach(function(c){ earnPts += Math.max(0, Math.floor(Number(c.grantedPoints)||0)); });
+  (predictions||[]).forEach(function(p){
+    predEntries += Math.max(0, Math.floor(Number(p.entriesCount)||0));
+    predWinners += Math.max(0, Math.floor(Number(p.winnersCount)||0));
+  });
+  return { spins:spins, awarded:awarded, claims:claims, earnPts:earnPts, predEntries:predEntries, predWinners:predWinners };
+}
+async function loadActivityStats(){
+  var box = document.getElementById('dash-activity');
+  if (!box || !db) return;
+  try {
+    var res = await Promise.all([
+      aDb().collection('luckyDraws').get(), aDb().collection('missions').get(),
+      aDb().collection('earnCampaigns').get(), aDb().collection('predictions').get()
+    ]);
+    var toData = function(s){ return s.docs.map(function(d){ return d.data(); }); };
+    var st = computeActivityStats(toData(res[0]), toData(res[1]), toData(res[2]), toData(res[3]));
+    var tile = function(icon,val,label){ return '<div class="stat-card" style="text-align:center"><div class="stat-icon">'+icon+'</div><div class="stat-val">'+val+'</div><div class="stat-label">'+label+'</div></div>'; };
+    box.innerHTML =
+      tile('🎯', st.spins.toLocaleString(), 'หมุนสุ่มรวม') +
+      tile('🎁', st.awarded.toLocaleString(), 'รางวัลที่แจก') +
+      tile('✅', st.claims.toLocaleString(), 'ภารกิจสำเร็จ') +
+      tile('🏅', st.earnPts.toLocaleString(), 'แต้มจากแคมเปญ') +
+      tile('🔮', st.predEntries.toLocaleString(), 'ร่วมทายผล');
+  } catch(e){
+    console.error(e);
+    box.innerHTML = '<div class="empty-state" style="padding:10px">โหลดสถิติ activity ไม่สำเร็จ — ลองรีเฟรช</div>';
+  }
+}
 async function loadDashboard() {
   loadShopStats();
+  loadActivityStats();
   try {
     const snap = await aDb().collection('users').get();
     const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
