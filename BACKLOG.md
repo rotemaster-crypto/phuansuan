@@ -61,9 +61,9 @@
 - **✅ Activity Engine ครบทั้ง 4 engine** (edit + analytics + counter-on-doc) — modal `.act-modal` + convention `editId` ใช้ซ้ำทั้งชุด
 
 ### Admin — อื่นๆ
-- [ ] products: category hardcode (`catEmojiA` 2169) · ไม่มี bulk/sort · search แค่ชื่อ · `PC_TIERS` (2177) hardcode 0/5/10/15 เสี่ยง drift กับ config.js · **M/S**
+- [x] ~~products bulk/sort~~ — ✅ 2026-08-27: sort dropdown (ล่าสุด/ชื่อ ก-ฮ/ราคา/สต็อกน้อย→มาก/ขายดี · pure `sortProducts` เทสผ่าน) + bulk select (checkbox + bar: เปิดขาย/ปิดขาย/ลบ · Firestore batch atomic) · ยังเหลือ: category hardcode (`catEmojiA`) · `PC_TIERS` hardcode · search แค่ชื่อ
 - [ ] courier: ไม่มี guard กันปิด mock (ไปโหมดจริง) ทั้งที่ `hasKey=false` · **S**
-- [ ] badges (2706) + team admin (3044) = read-modify-write ทั้ง array → 2 แอดมินแก้พร้อมกันทับกัน · **S**
+- [x] ~~team admin race~~ — ✅ 2026-08-27: `addTeamAdmin`/`removeTeamAdmin` ใช้ `arrayUnion`/`arrayRemove` (atomic) แทน read-modify-write · rules ล็อกถูก (owner แก้ได้เฉพาะ adminLineIds · super admin เต็ม) · **เหลือ badges (2706) ยัง read-modify-write · team โชว์ UID ดิบ**
 - [ ] team admin: โชว์ UID ดิบ ไม่มีชื่อ/avatar/เจ้าของ/โอนเจ้าของ · **S–M**
 - [ ] `admin.html:3359` bocean request status `'provisioned'` ไม่มีใน `BOCEAN_META` → badge สี undefined · **S**
 
@@ -90,7 +90,8 @@
 ## 📋 ฟีเจอร์/ธุรกิจ (ตัดสินใจ/เลื่อน)
 - [ ] "ชาเลนจ์"/streak (ทำต่อเนื่อง N วัน) เป็น engine แยกจาก missions — ยังไม่มี · **M** (ของอยากได้เพิ่ม)
 - [ ] verify: เครื่องมือคิดราคาฝั่งแอดมิน ต้อง login กดลองสด (ยัง test สดไม่ได้)
-- [ ] ⚠️ verify: brand-admin ของ tenant ≠ phuansuan บน domain รวม — `aTid()` derive จาก hostname (admin.html:3023) → `lineAuth({tid})` อาจเช็คผิด tenant · **S ตรวจ / M ถ้าเป็นจริง**
+- [x] ~~brand-admin cross-tenant + single-point-of-failure~~ — ✅ 2026-08-27: พบว่า `adminTenant()` hardcode phuansuan → `lineAuth({tid:phuansuan})` เรียก resolveTid ก่อน → **phuansuan suspend = admin ทุกแบรนด์ login ไม่ได้** (เจอจริง!) · แก้: lineAuth แยกการตรวจ admin (isAdmin/tadmin ไม่ขึ้นกับ tenant status) ออกจาก membership claim → super/brand-admin login ได้แม้ login-tenant suspended · customer ยัง fail-closed · e2e 110/110 · brand-admin ถูก scope เป็นแบรนด์ตัวเอง (currentTenant จาก claim) ทำงานถูกอยู่แล้ว
+- [ ] login หลายช่องทาง: customer มี LINE+Google+Facebook (infra ครบ · เปิดผ่าน `APP_CONFIG.auth.providers`) — ต้อง enable provider ใน Firebase console + OAuth app · admin ยัง LINE-only
 - [ ] **Business (Phase 3):** dogfood DemeterRich + ลูกค้านำร่อง 1 ราย + วัดผล "ใช้จริง+สั่งผลิตเพิ่ม"
 - [ ] **Phase 5 (เลื่อนตั้งใจ):** ผู้ช่วยการตลาด AI (reuse Gemini) · เอกสารใบเสนอราคา (ใบส่งของมีแล้ว) · B2B/ราคาส่ง · reorder autopilot · PMS connector · payment gateway อัตโนมัติ · SaaS billing รายเดือน
 

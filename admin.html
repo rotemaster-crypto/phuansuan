@@ -966,9 +966,18 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="card-title" style="margin:0">📋 สินค้าทั้งหมด <span id="prod-count" style="color:var(--muted);font-weight:400;font-size:13px"></span></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input id="prod-search" placeholder="🔍 ค้นหาชื่อสินค้า" oninput="renderProducts()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+        <select id="prod-sort" onchange="onProductSort()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+          <option value="recent">ล่าสุด</option>
+          <option value="name">ชื่อ ก-ฮ</option>
+          <option value="price_asc">ราคาต่ำ→สูง</option>
+          <option value="price_desc">ราคาสูง→ต่ำ</option>
+          <option value="stock_asc">สต็อกน้อย→มาก</option>
+          <option value="sold">ขายดี</option>
+        </select>
         <button class="btn btn-ghost" id="price-migrate-btn" onclick="migratePrices()" title="แปลงราคาที่ยังเป็นข้อความ (เช่น '180 บาท') ให้เป็นตัวเลข"><svg class="ic"><use href="#i-hash"/></svg> แปลงราคาเป็นตัวเลข</button>
       </div>
     </div>
+    <div id="prod-bulk-bar"></div>
     <div id="products-list"><div class="empty-state">กำลังโหลด...</div></div>
   </div>
 </div>
@@ -2270,6 +2279,7 @@ async function migratePrices(){
   if (btn){ btn.disabled = false; }
 }
 let _products = [];
+let _prodSort = 'recent', _prodSelected = {};
 async function loadProducts() {
   const box = document.getElementById('products-list'); if (box) box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
   try {
@@ -2285,19 +2295,75 @@ function stockChip(p){
   const cls = n===0 ? 'out' : (n<=5 ? 'low' : 'ok');
   return '<span class="prod-stk '+cls+'">'+(n===0?'สินค้าหมด':('เหลือ '+n))+'</span>';
 }
+// pure: เรียงสินค้า (เทสได้)
+function _prodStockVal(p){ return (p.stock===null||p.stock===undefined) ? Infinity : Math.max(0, Math.floor(Number(p.stock)||0)); }
+function sortProducts(list, mode){
+  const a = list.slice();
+  const price = function(p){ return parsePrice(p.price); };
+  const num = function(v){ return Number(v)||0; };
+  const rec = function(x,y){ return ((y.createdAt&&y.createdAt.seconds)||0)-((x.createdAt&&x.createdAt.seconds)||0); };
+  if (mode==='name') a.sort(function(x,y){ return String(x.name||'').localeCompare(String(y.name||''),'th'); });
+  else if (mode==='price_asc') a.sort(function(x,y){ return price(x)-price(y); });
+  else if (mode==='price_desc') a.sort(function(x,y){ return price(y)-price(x); });
+  else if (mode==='stock_asc') a.sort(function(x,y){ return _prodStockVal(x)-_prodStockVal(y); });
+  else if (mode==='sold') a.sort(function(x,y){ return num(y.soldCount)-num(x.soldCount); });
+  else a.sort(rec);
+  return a;
+}
+function onProductSort(){ _prodSort = (document.getElementById('prod-sort')||{}).value || 'recent'; renderProducts(); }
+// ---- bulk select ----
+function toggleProductSelect(id, on){ if(on) _prodSelected[id]=true; else delete _prodSelected[id]; renderProductBulkBar(); }
+function clearProductSelection(){ _prodSelected = {}; renderProducts(); }
+function renderProductBulkBar(){
+  const bar = document.getElementById('prod-bulk-bar'); if(!bar) return;
+  const n = Object.keys(_prodSelected).length;
+  bar.innerHTML = n ? '<div style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+    '<span style="font-weight:700">เลือก '+n+' รายการ</span>'+
+    '<button onclick="bulkSetProductActive(true)" style="background:#fff;color:var(--primary);border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">เปิดขาย</button>'+
+    '<button onclick="bulkSetProductActive(false)" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit">ปิดขาย</button>'+
+    '<button onclick="bulkDeleteProducts()" style="background:#e41e3f;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🗑️ ลบ</button>'+
+    '<button onclick="clearProductSelection()" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit">ล้าง</button>'+
+  '</div>' : '';
+}
+async function bulkSetProductActive(active){
+  const ids = Object.keys(_prodSelected);
+  if(!ids.length){ toast('ยังไม่ได้เลือก','error'); return; }
+  try {
+    const batch = db.batch();
+    ids.forEach(function(id){ batch.update(aDb().collection('products').doc(id), { active: !!active }); });
+    await batch.commit();
+    toast('✅ '+(active?'เปิดขาย':'ปิดขาย')+' '+ids.length+' รายการ','success');
+    _prodSelected = {}; loadProducts();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function bulkDeleteProducts(){
+  const ids = Object.keys(_prodSelected);
+  if(!ids.length){ toast('ยังไม่ได้เลือก','error'); return; }
+  if(!confirm('ลบสินค้า '+ids.length+' รายการ? (กู้คืนไม่ได้)')) return;
+  try {
+    const batch = db.batch();
+    ids.forEach(function(id){ batch.delete(aDb().collection('products').doc(id)); });
+    await batch.commit();
+    toast('🗑️ ลบ '+ids.length+' รายการ','success');
+    _prodSelected = {}; loadProducts();
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
 function renderProducts() {
   const box = document.getElementById('products-list'); if (!box) return;
+  renderProductBulkBar();
   const q = (document.getElementById('prod-search')?.value || '').trim().toLowerCase();
-  const list = q ? _products.filter(function(p){ return String(p.name||'').toLowerCase().indexOf(q)>=0; }) : _products;
+  let list = q ? _products.filter(function(p){ return String(p.name||'').toLowerCase().indexOf(q)>=0; }) : _products;
+  list = sortProducts(list, _prodSort);
   const cnt = document.getElementById('prod-count'); if (cnt) cnt.textContent = '('+_products.length+' รายการ)';
   if (!list.length){ box.innerHTML = '<div class="empty-state">'+(q?'ไม่พบสินค้าที่ค้นหา':'ยังไม่มีสินค้า')+'</div>'; return; }
   box.innerHTML = list.map(function(p){
     const pr = parsePrice(p.price), co = parsePrice(p.cost);
     const off = p.active === false;
+    const chk = '<label style="display:flex;align-items:center;padding-right:6px;cursor:pointer"><input type="checkbox" class="prod-chk" '+(_prodSelected[p._id]?'checked':'')+' onchange="toggleProductSelect(\''+p._id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></label>';
     const thumb = p.image ? '<div class="prod-thumb" style="background-image:url(\''+escapeHtml(p.image)+'\')"></div>' : '<div class="prod-thumb">'+catEmojiA(p.category)+'</div>';
     const mg = (pr>0 && co>0) ? (' · กำไร '+marginBadge(pr, co)) : '';
     return '<div class="prod-card'+(off?' off':'')+'">'+
-      thumb+
+      chk+ thumb+
       '<div class="prod-meta">'+
         '<div class="prod-nm">'+(p.featured?'⭐ ':'')+escapeHtml(p.name||'')+(off?' <span class="pill pill-off">ปิดขาย</span>':'')+'</div>'+
         '<div class="prod-sub">'+
@@ -3526,20 +3592,15 @@ async function addTeamAdmin(){
   const id = (document.getElementById('team-newid').value||'').trim();
   if (!/^U[0-9a-f]{32}$/i.test(id)) { toast('LINE User ID ไม่ถูกต้อง (ขึ้นต้น U ตามด้วย 32 ตัว)','error'); return; }
   try {
-    const snap = await aDb().get(); const t = snap.data()||{};
-    const admins = t.adminLineIds || [];
-    if (admins.indexOf(id) >= 0) { toast('มีอยู่แล้ว','error'); return; }
-    admins.push(id);
-    await aDb().update({ adminLineIds: admins, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    // arrayUnion = atomic + idempotent (ไม่ read-modify-write ทั้ง array → กัน 2 คนแก้ทับกัน)
+    await aDb().update({ adminLineIds: firebase.firestore.FieldValue.arrayUnion(id), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     document.getElementById('team-newid').value='';
     toast('เพิ่มแอดมินแล้ว','success'); loadTeam();
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
 async function removeTeamAdmin(uid){
   try {
-    const snap = await aDb().get(); const t = snap.data()||{};
-    const admins = (t.adminLineIds||[]).filter(function(x){return x!==uid;});
-    await aDb().update({ adminLineIds: admins, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await aDb().update({ adminLineIds: firebase.firestore.FieldValue.arrayRemove(uid), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     toast('ลบแล้ว','success'); loadTeam();
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
