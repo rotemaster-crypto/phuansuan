@@ -55,7 +55,8 @@
 - [x] ~~สวีป font scale ทั้ง index.html~~ — ✅ 2026-08-27: **อิงจาก Shopee TH จริง** (inspect 941 element ด้วย browser) → สเกล 2xs11/xs12/sm13/base14/md16/lg18/xl21/2xl27/3xl34/4xl44 · Shopee: 12=meta 13=nav 14=secondary 16=body 18=ราคา 21=หัวย่อย 27=หัวใหญ่ · re-tokenize 378 จุด → var(--fs-*) เหลือ px=0 · guard/frontend เขียว
 - [x] ~~font sweep admin.html~~ — ✅ 2026-08-27: tokenize 229 จุด → var(--fs-*) สเกล Shopee เดียวกับ index · เหลือ px=0 · inject scale :root เข้า popup พิมพ์ (bill+ใบส่ง) กัน var ไม่ resolve
 - [x] ~~font family เหมือน Shopee~~ — ✅ 2026-08-27: `--font-body:"Helvetica Neue",Helvetica,Arial,sans-serif` (อิง Shopee TH จริง) ทั้ง index+admin · ลบ Google Fonts Inter ออกจาก admin (ไม่ใช้แล้ว)
-- [ ] responsive: ตอนนี้ body 480px→780px (@820), feed/prof 620px (@820) = แบบ A คอลัมน์กลาง · ขัดให้เนียนบนคอม (Roger เลือกแนวเมื่อดู)
+- [x] ~~responsive คอม~~ — ✅ 2026-08-27: app column กรอบเดียว 660px (@820) · html bg #dfe3e8 + body เงา = กรอบแนว IG/Messenger web · chrome+content ตรงกันหมด · fab จัดตามคอลัมน์ · **verify จริงบน browser 1536px** (body=660, font=Helvetica Neue, base=16) · ลบ @1140 blow-up
+- **✅ N6 (UI มาตรฐาน) ครบ** — font scale+family อิง Shopee (index+admin) · responsive คอม · เปิดร้าน CTA subtle
 - [x] เปิดร้าน CTA → ข้อความ subtle แบบ Shopee ใน profile (ไม่ใช่การ์ดปุ่มใหญ่)
 
 ## 🆕 งานใหม่จาก Roger (2026-08-27 รอบสอง) — เรียงตามที่สั่ง
