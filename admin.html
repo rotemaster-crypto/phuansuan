@@ -15,34 +15,37 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- N: font อิงจาก Shopee (Helvetica Neue/Arial + ฟอนต์ระบบไทย) — ไม่ต้องโหลด webfont -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--text)}
-:root{--primary:#faff69;--on-primary:#0a0a0a;--bg:#0a0a0a;--card:#1a1a1a;--card-elev:#242424;--border:#2a2a2a;--text:#ffffff;--muted:#888888;--danger:#e41e3f;--success:#22c55e;--warn:#f9a825}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:var(--fs-md);line-height:var(--lh-base)}
+:root{--primary:#faff69;--on-primary:#0a0a0a;--bg:#0a0a0a;--card:#1a1a1a;--card-elev:#242424;--border:#2a2a2a;--text:#ffffff;--muted:#888888;--danger:#e41e3f;--success:#22c55e;--warn:#f9a825;
+  /* type scale + font อิงจาก Shopee TH (เดียวกับ index) */
+  --fs-2xs:11px;--fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:16px;--fs-lg:18px;--fs-xl:21px;--fs-2xl:27px;--fs-3xl:34px;--fs-4xl:44px;--lh-base:1.5;--lh-tight:1.3;
+  --font-body:"Helvetica Neue",Helvetica,Arial,sans-serif}
 #loading-screen,#deny-screen{position:fixed;inset:0;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;text-align:center;padding:24px}
 #deny-screen{display:none}
 .spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.deny-icon{font-size:64px}.deny-title{font-size:24px;font-weight:800;color:var(--danger)}.deny-sub{font-size:15px;color:var(--muted)}
+.deny-icon{font-size:var(--fs-4xl)}.deny-title{font-size:var(--fs-2xl);font-weight:800;color:var(--danger)}.deny-sub{font-size:var(--fs-md);color:var(--muted)}
 #app{display:none}
 .sidebar{width:240px;background:var(--card);border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
 .main{margin-left:240px;min-height:100vh;padding:24px}
 .sb-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
 .sb-logo-icon{width:36px;height:36px;object-fit:contain}
-.sb-logo-text{font-size:17px;font-weight:800;color:var(--primary)}.sb-logo-sub{font-size:11px;color:var(--muted)}
+.sb-logo-text{font-size:var(--fs-lg);font-weight:800;color:var(--primary)}.sb-logo-sub{font-size:var(--fs-2xs);color:var(--muted)}
 .sb-admin{padding:12px 16px;background:#242424;margin:8px;border-radius:10px;display:flex;align-items:center;gap:8px}
-.sb-admin-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:var(--on-primary);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
-.sb-admin-name{font-size:13px;font-weight:700;color:var(--primary)}.sb-admin-role{font-size:11px;color:var(--muted)}
+.sb-admin-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:var(--on-primary);font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.sb-admin-name{font-size:var(--fs-sm);font-weight:700;color:var(--primary)}.sb-admin-role{font-size:var(--fs-2xs);color:var(--muted)}
 .sb-menu{padding:8px 0}
-.sb-section{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;padding:12px 16px 4px}
-.sb-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);transition:background 0.1s}
+.sb-section{font-size:var(--fs-2xs);font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;padding:12px 16px 4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:var(--fs-base);font-weight:600;color:var(--text);transition:background 0.1s}
 .sb-item:hover{background:var(--bg)}.sb-item.active{background:#242424;color:var(--primary);font-weight:700}
-.sb-item .si{font-size:18px;width:24px;text-align:center}
+.sb-item .si{font-size:var(--fs-lg);width:24px;text-align:center}
 .sb-ic{width:19px;height:19px;flex:none}
 .sb-item.active .sb-ic{color:var(--primary)}
 #brand-static .sb-ic{color:var(--primary)}
-.sb-badge{background:var(--danger);color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 6px;margin-left:auto}
+.sb-badge{background:var(--danger);color:#fff;font-size:var(--fs-2xs);font-weight:800;border-radius:10px;padding:2px 6px;margin-left:auto}
 .sys-only{display:none}
 body.is-super .sb-item.sys-only{display:flex}
 body.is-super .sb-section.sys-only{display:block}
@@ -51,37 +54,37 @@ body.is-super .sb-section.sys-only{display:block}
 body.in-brand .sb-item.brand-zone{display:flex}
 body.in-brand .sb-section.brand-zone{display:block}
 .sb-brandbar{padding:10px 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg);margin:6px 0}
-.sb-brandbar-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-#brand-switcher{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;background:var(--card);color:var(--text);cursor:pointer}
-#brand-static{font-size:14px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:6px}
+.sb-brandbar-h{font-size:var(--fs-2xs);font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+#brand-switcher{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-base);font-weight:700;background:var(--card);color:var(--text);cursor:pointer}
+#brand-static{font-size:var(--fs-base);font-weight:700;color:var(--primary);display:flex;align-items:center;gap:6px}
 #brand-exit{margin-top:8px;width:100%}
 .page-header{margin-bottom:24px}
-.page-title{font-size:24px;font-weight:800;color:var(--text)}.page-sub{font-size:14px;color:var(--muted);margin-top:4px}
+.page-title{font-size:var(--fs-2xl);font-weight:800;color:var(--text)}.page-sub{font-size:var(--fs-base);color:var(--muted);margin-top:4px}
 .card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
-.card-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title{font-size:var(--fs-md);font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .stat-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:16px 20px}
-.stat-icon{font-size:28px;margin-bottom:8px}.stat-icon .ic{color:var(--primary);width:1em;height:1em}.stat-val{font-size:28px;font-weight:800;color:var(--text)}.stat-label{font-size:13px;color:var(--muted);margin-top:2px}
+.stat-icon{font-size:var(--fs-3xl);margin-bottom:8px}.stat-icon .ic{color:var(--primary);width:1em;height:1em}.stat-val{font-size:var(--fs-3xl);font-weight:800;color:var(--text)}.stat-label{font-size:var(--fs-sm);color:var(--muted);margin-top:2px}
 .stat-card.clickable{cursor:pointer;transition:box-shadow .15s}.stat-card.clickable:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
-.dash-alert{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:14px}
-.dash-alert:hover{background:var(--bg,#f7f8fa)}.da-go{color:var(--primary);font-weight:700;font-size:13px;white-space:nowrap}
+.dash-alert{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:var(--fs-base)}
+.dash-alert:hover{background:var(--bg,#f7f8fa)}.da-go{color:var(--primary);font-weight:700;font-size:var(--fs-sm);white-space:nowrap}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .fg{margin-bottom:0}
-.fg label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
-.fg input,.fg select,.fg textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;background:var(--card);outline:none;color:var(--text)}
+.fg label{display:block;font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin-bottom:6px}
+.fg input,.fg select,.fg textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:var(--fs-base);font-family:inherit;background:var(--card);outline:none;color:var(--text)}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary)}
 .fg textarea{resize:vertical;min-height:80px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .toggle-row:last-child{border-bottom:none}
-.toggle-label{font-size:14px;font-weight:600;color:var(--text)}.toggle-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle-label{font-size:var(--fs-base);font-weight:600;color:var(--text)}.toggle-sub{font-size:var(--fs-xs);color:var(--muted);margin-top:2px}
 .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
 .toggle input{opacity:0;width:0;height:0}
 .toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:24px;cursor:pointer;transition:0.3s}
 .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:var(--card);border-radius:50%;transition:0.3s}
 .toggle input:checked + .toggle-slider{background:var(--primary)}
 .toggle input:checked + .toggle-slider:before{transform:translateX(20px)}
-.btn{padding:9px 18px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.15s}
+.btn{padding:9px 18px;border-radius:8px;border:none;font-size:var(--fs-base);font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.15s}
 .btn-primary{background:var(--primary);color:var(--on-primary)}.btn-danger{background:var(--danger);color:#fff}
 .btn-success{background:var(--success);color:#fff}.btn-ghost{background:var(--bg);color:var(--text)}
 .btn:active{opacity:0.8}
@@ -90,16 +93,16 @@ body.in-brand .sb-section.brand-zone{display:block}
 button .ic,a .ic{pointer-events:none}
 .save-row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 .table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th{text-align:left;padding:10px 12px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;border-bottom:2px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:var(--fs-base)}
+th{text-align:left;padding:10px 12px;font-size:var(--fs-xs);font-weight:800;color:var(--muted);text-transform:uppercase;border-bottom:2px solid var(--border)}
 td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
-.user-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:var(--on-primary);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
-.tier-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
+.user-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:var(--on-primary);font-size:var(--fs-sm);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;background-size:cover;background-position:center}
+.tier-chip{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:12px}
 .tc-bronze{background:#fce4ec;color:#880e4f}.tc-silver{background:#f5f5f5;color:#616161}
 .tc-gold{background:#fff8e1;color:#e65100}.tc-platinum{background:#e8eaf6;color:#3949ab}
-.tag-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#242424;color:var(--primary)}
-.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.tag-chip{display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-2xs);font-weight:700;padding:2px 8px;border-radius:10px;background:#242424;color:var(--primary)}
+.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:var(--fs-base)}
 /* Upload Zone */
 .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s;background:#fafafa}
 .upload-zone:hover{border-color:var(--primary);background:#242424}
@@ -107,25 +110,25 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 .upload-preview{width:80px;height:80px;border-radius:12px;object-fit:contain;border:2px solid var(--border);background:var(--card);display:none}
 .icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 .icon-item{text-align:center}
-.icon-item label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px}
-.icon-preview{width:56px;height:56px;border-radius:12px;object-fit:contain;border:2px solid var(--border);background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;margin:0 auto 6px;overflow:hidden}
+.icon-item label{font-size:var(--fs-xs);font-weight:700;color:var(--muted);display:block;margin-bottom:6px}
+.icon-preview{width:56px;height:56px;border-radius:12px;object-fit:contain;border:2px solid var(--border);background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2xl);cursor:pointer;margin:0 auto 6px;overflow:hidden}
 .icon-preview img{width:100%;height:100%;object-fit:contain}
 .color-swatch{width:32px;height:32px;border-radius:6px;border:2px solid var(--border);cursor:pointer;display:inline-block}
 /* Range slider */
 .range-row{display:flex;align-items:center;gap:12px}
 .range-row input[type=range]{flex:1;height:4px;accent-color:var(--primary)}
-.range-val{font-size:14px;font-weight:700;color:var(--primary);min-width:40px;text-align:right}
+.range-val{font-size:var(--fs-base);font-weight:700;color:var(--primary);min-width:40px;text-align:right}
 /* Points table */
 .pts-table{width:100%;border-collapse:collapse}
 .pts-table td{padding:8px 12px;border-bottom:1px solid var(--border)}
-.pts-table td:first-child{font-size:14px;font-weight:600;color:var(--text);width:60%}
-.pts-table input{width:80px;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:14px;text-align:center}
+.pts-table td:first-child{font-size:var(--fs-base);font-weight:600;color:var(--text);width:60%}
+.pts-table input{width:80px;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:var(--fs-base);text-align:center}
 /* Search */
 .search-row{display:flex;gap:10px;margin-bottom:16px}
-.search-input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:14px;font-family:inherit;outline:none}
+.search-input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 14px;font-size:var(--fs-base);font-family:inherit;outline:none}
 .search-input:focus{border-color:var(--primary)}
 /* Toast */
-.toast{position:fixed;bottom:24px;right:24px;background:#1c1e21;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;transform:translateY(100px);opacity:0;transition:all 0.3s;max-width:320px}
+.toast{position:fixed;bottom:24px;right:24px;background:#1c1e21;color:#fff;padding:12px 20px;border-radius:10px;font-size:var(--fs-base);font-weight:700;z-index:9999;transform:translateY(100px);opacity:0;transition:all 0.3s;max-width:320px}
 .toast.show{transform:translateY(0);opacity:1}.toast.success{background:var(--success)}.toast.error{background:var(--danger)}
 /* Upload progress */
 .upload-progress{height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px;display:none}
@@ -134,27 +137,27 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 @media(max-width:768px){.sidebar{width:100%;height:auto;position:relative}.main{margin-left:0}.stats-grid{grid-template-columns:repeat(2,1fr)}.form-grid,.form-grid-3{grid-template-columns:1fr}.icon-grid{grid-template-columns:repeat(3,1fr)}}
 /* ── ORDERS ADMIN (3.3) ── */
 .ord-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.ofb{padding:7px 14px;border-radius:18px;border:1px solid var(--border);background:var(--card);font-size:13px;font-weight:600;color:var(--text);cursor:pointer}
+.ofb{padding:7px 14px;border-radius:18px;border:1px solid var(--border);background:var(--card);font-size:var(--fs-sm);font-weight:600;color:var(--text);cursor:pointer}
 .ofb.active{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
 .oa-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
 .oa-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap}
-.oa-id{font-size:15px;font-weight:800;color:var(--text)}
-.oa-badge{color:#fff;font-size:12px;font-weight:700;padding:4px 11px;border-radius:11px}
+.oa-id{font-size:var(--fs-md);font-weight:800;color:var(--text)}
+.oa-badge{color:#fff;font-size:var(--fs-xs);font-weight:700;padding:4px 11px;border-radius:11px}
 .oa-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-bottom:12px}
 @media(max-width:680px){.oa-grid{grid-template-columns:1fr}}
 .oa-box{background:var(--bg,#f5f6f8);border-radius:10px;padding:11px 13px}
-.oa-h{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
-.oa-line{font-size:13px;color:var(--text);line-height:1.7}
-.oa-items{font-size:13px;line-height:1.8}
+.oa-h{font-size:var(--fs-xs);font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+.oa-line{font-size:var(--fs-sm);color:var(--text);line-height:1.7}
+.oa-items{font-size:var(--fs-sm);line-height:1.8}
 .oa-it-row{display:flex;justify-content:space-between;gap:8px}
 .oa-sum{border-top:1px dashed var(--border);margin-top:7px;padding-top:7px}
-.oa-sum .r{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
-.oa-sum .r.tot{font-size:15px;font-weight:800;color:var(--text)}
+.oa-sum .r{display:flex;justify-content:space-between;font-size:var(--fs-sm);color:var(--muted)}
+.oa-sum .r.tot{font-size:var(--fs-md);font-weight:800;color:var(--text)}
 .oa-slip{margin:6px 0}
 .oa-slip img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer}
-.oa-noslip{font-size:12px;color:var(--muted)}
+.oa-noslip{font-size:var(--fs-xs);color:var(--muted)}
 .oa-actions{display:flex;gap:9px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px}
-.oa-btn{border:none;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer}
+.oa-btn{border:none;border-radius:9px;padding:10px 16px;font-size:var(--fs-sm);font-weight:700;cursor:pointer}
 .oa-confirm{background:#42b883;color:#fff}
 .oa-ship{background:#7b61ff;color:#fff}
 .oa-done{background:#2e7d32;color:#fff}
@@ -166,8 +169,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 .act-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px}
 .act-modal.open{display:flex}
 .act-box{background:var(--card);border-radius:14px;max-width:460px;width:100%;max-height:85vh;overflow:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-.act-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-weight:800;font-size:16px}
-.act-x{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1}
+.act-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-weight:800;font-size:var(--fs-md)}
+.act-x{background:none;border:none;font-size:var(--fs-lg);cursor:pointer;color:var(--muted);line-height:1}
 .act-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden}.act-bar>div{height:100%;background:var(--primary)}
 
 </style>
@@ -231,7 +234,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
 <symbol id="i-printer" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
 </defs></svg>
-<div id="loading-screen"><div class="spinner"></div><div style="font-size:15px;color:var(--muted)">กำลังตรวจสอบสิทธิ์...</div></div>
+<div id="loading-screen"><div class="spinner"></div><div style="font-size:var(--fs-md);color:var(--muted)">กำลังตรวจสอบสิทธิ์...</div></div>
 <div id="deny-screen"><div class="deny-icon">🚫</div><div class="deny-title">ไม่มีสิทธิ์เข้าถึง</div><div class="deny-sub">หน้านี้สำหรับ Admin เท่านั้น</div><a href="/" style="margin-top:16px;color:var(--primary);font-weight:700;text-decoration:none">← กลับหน้าหลัก</a></div>
 <div class="toast" id="toast"></div>
 
@@ -239,7 +242,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <div class="sidebar">
   <div class="sb-logo">
     <img id="sb-logo-img" class="sb-logo-icon" src="" onerror="this.style.display='none';document.getElementById('sb-logo-emoji').style.display='block'" style="display:none">
-    <span id="sb-logo-emoji" style="font-size:28px">🌿</span>
+    <span id="sb-logo-emoji" style="font-size:var(--fs-3xl)">🌿</span>
     <div><div class="sb-logo-text" id="sb-app-name">เพื่อนสวน</div><div class="sb-logo-sub">Admin Dashboard</div></div>
   </div>
   <div class="sb-admin">
@@ -297,13 +300,13 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <div class="screen" id="screen-team">
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-users"/></svg>ทีมแอดมิน</div><div class="page-sub">เพิ่ม/ลบแอดมินร่วมของร้าน · เฉพาะเจ้าของร้าน (Owner) จัดการได้</div></div>
   <div class="card">
-    <div style="font-size:13px;color:var(--muted);margin-bottom:10px">เจ้าของร้าน (Owner): <b id="team-owner">-</b></div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:10px">เจ้าของร้าน (Owner): <b id="team-owner">-</b></div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input id="team-newid" placeholder="LINE User ID (Uxxxx...)" style="flex:1;padding:9px;border:1px solid var(--border);border-radius:8px">
       <button class="btn btn-primary" onclick="addTeamAdmin()">เพิ่ม</button>
     </div>
     <div id="team-list"><div class="empty-state">กำลังโหลด...</div></div>
-    <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">💡 คนที่เพิ่มใหม่ต้องเข้าสู่ระบบด้วย LINE 1 ครั้งให้สิทธิ์มีผล · หา LINE User ID ได้จากโปรไฟล์ในแอป</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:12px;line-height:1.6">💡 คนที่เพิ่มใหม่ต้องเข้าสู่ระบบด้วย LINE 1 ครั้งให้สิทธิ์มีผล · หา LINE User ID ได้จากโปรไฟล์ในแอป</div>
   </div>
 </div>
 <div class="screen" id="screen-sysoverview">
@@ -328,11 +331,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-truck"/></svg>ค่าส่ง & บิลแบรนด์</div><div class="page-sub">รวมต้นทุนค่าส่งจริง (Shippop) ต่อแบรนด์ต่อเดือน · สำหรับ Bocean ออกบิลเรียกเก็บกับแบรนด์ · ระบบเชื่อมขนส่งเป็นแค่ “ท่อ” หักเครดิต Shippop ของ Bocean</div></div>
   <div class="card">
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <label style="font-weight:700;font-size:14px">เดือน</label>
+      <label style="font-weight:700;font-size:var(--fs-base)">เดือน</label>
       <input type="month" id="sb-month" style="padding:8px;border:1px solid var(--border);border-radius:8px">
       <button class="btn btn-primary" onclick="loadShipBill()"><svg class="ic"><use href="#i-repeat"/></svg> ดึงยอด</button>
       <div style="flex:1"></div>
-      <div id="sb-grand" style="font-weight:800;font-size:14px;color:var(--muted)"></div>
+      <div id="sb-grand" style="font-weight:800;font-size:var(--fs-base);color:var(--muted)"></div>
     </div>
   </div>
   <div id="sb-list"><div class="empty-state">เลือกเดือนแล้วกด “ดึงยอด”</div></div>
@@ -349,13 +352,13 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="card">
     <div style="font-weight:800;margin-bottom:10px">➕ สร้าง Tenant ใหม่</div>
     <div class="form-grid">
-      <div><label style="font-size:13px;font-weight:700">Tenant ID (a-z 0-9 -)</label><input id="nt-tid" placeholder="mybrand" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
-      <div><label style="font-size:13px;font-weight:700">ชื่อแบรนด์</label><input id="nt-name" placeholder="ชื่อร้าน/แบรนด์" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
-      <div><label style="font-size:13px;font-weight:700">แพ็กเกจ</label><select id="nt-plan" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"><option value="free">free</option><option value="pro">pro</option><option value="enterprise">enterprise</option></select></div>
-      <div><label style="font-size:13px;font-weight:700">โดเมน</label><input id="nt-domain" placeholder="mybrand.web.app" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
-      <div><label style="font-size:13px;font-weight:700">Owner LINE ID</label><input id="nt-owner" placeholder="Uxxxxxxxx (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
-      <div><label style="font-size:13px;font-weight:700">แอดมินร่วม LINE IDs (คั่น ,)</label><input id="nt-admins" placeholder="Uaaa,Ubbb (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
-      <div><label style="font-size:13px;font-weight:700">ประเภทร้าน</label><select id="nt-mode" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"><option value="native">ร้านปกติ (ขายเอง + ตะกร้า)</option><option value="affiliate">Affiliate (ลิงก์ภายนอก)</option></select></div>
+      <div><label style="font-size:var(--fs-sm);font-weight:700">Tenant ID (a-z 0-9 -)</label><input id="nt-tid" placeholder="mybrand" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:var(--fs-sm);font-weight:700">ชื่อแบรนด์</label><input id="nt-name" placeholder="ชื่อร้าน/แบรนด์" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:var(--fs-sm);font-weight:700">แพ็กเกจ</label><select id="nt-plan" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"><option value="free">free</option><option value="pro">pro</option><option value="enterprise">enterprise</option></select></div>
+      <div><label style="font-size:var(--fs-sm);font-weight:700">โดเมน</label><input id="nt-domain" placeholder="mybrand.web.app" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:var(--fs-sm);font-weight:700">Owner LINE ID</label><input id="nt-owner" placeholder="Uxxxxxxxx (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:var(--fs-sm);font-weight:700">แอดมินร่วม LINE IDs (คั่น ,)</label><input id="nt-admins" placeholder="Uaaa,Ubbb (ไม่บังคับ)" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:var(--fs-sm);font-weight:700">ประเภทร้าน</label><select id="nt-mode" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px"><option value="native">ร้านปกติ (ขายเอง + ตะกร้า)</option><option value="affiliate">Affiliate (ลิงก์ภายนอก)</option></select></div>
     </div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="createTenant()">สร้าง Tenant</button>
   </div>
@@ -370,7 +373,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <!-- DASHBOARD -->
 <div class="screen active" id="screen-dashboard">
-  <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-chart"/></svg>ภาพรวมร้าน <span id="dash-brand" style="color:var(--muted);font-weight:400;font-size:16px"></span></div><div class="page-sub">สรุปหลังร้านของแบรนด์ที่กำลังดูแล</div></div>
+  <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-chart"/></svg>ภาพรวมร้าน <span id="dash-brand" style="color:var(--muted);font-weight:400;font-size:var(--fs-md)"></span></div><div class="page-sub">สรุปหลังร้านของแบรนด์ที่กำลังดูแล</div></div>
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-icon"><svg class="ic"><use href="#i-coins"/></svg></div><div class="stat-val" id="ds-revenue">—</div><div class="stat-label">ยอดขายรวม (ยืนยันแล้ว)</div></div>
     <div class="stat-card"><div class="stat-icon"><svg class="ic"><use href="#i-cart"/></svg></div><div class="stat-val" id="ds-orders-today">—</div><div class="stat-label">ออเดอร์วันนี้</div></div>
@@ -387,16 +390,16 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="stat-card"><div class="stat-icon"><svg class="ic"><use href="#i-calendar"/></svg></div><div class="stat-val" id="ds-today">—</div><div class="stat-label">Login วันนี้</div></div>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-gamepad"/></svg>Activity Engine (เอ็นเกจเมนต์)</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">สรุปการเล่นเกม/ภารกิจสะสม · ดูรายละเอียด/แก้ไขได้ที่เมนู สุ่มจับรางวัล · ภารกิจ · ทายผล · แคมเปญแต้ม</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:12px">สรุปการเล่นเกม/ภารกิจสะสม · ดูรายละเอียด/แก้ไขได้ที่เมนู สุ่มจับรางวัล · ภารกิจ · ทายผล · แคมเปญแต้ม</div>
     <div id="dash-activity" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px"><div class="empty-state" style="padding:10px">กำลังโหลด...</div></div>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-flame"/></svg>จุดไฟชุมชน</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ชุมชนที่มีคนคุยกันตั้งแต่วันแรก จะไม่ร้าง · ทำ checklist ให้ครบ + โพสต์เริ่มบทสนทนาได้ในคลิกเดียว (โพสต์ในนามแบรนด์)</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:12px">ชุมชนที่มีคนคุยกันตั้งแต่วันแรก จะไม่ร้าง · ทำ checklist ให้ครบ + โพสต์เริ่มบทสนทนาได้ในคลิกเดียว (โพสต์ในนามแบรนด์)</div>
     <div id="kickstart-checklist" style="margin-bottom:14px"><div class="empty-state" style="padding:10px">กำลังโหลด...</div></div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
-      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('intro')"><svg class="ic"><use href="#i-userplus"/></svg> โพสต์ชวนแนะนำตัว</button>
-      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('question')"><svg class="ic"><use href="#i-help"/></svg> โพสต์ถามปัญหายอดฮิต</button>
-      <button class="btn btn-ghost" style="font-size:13px" onclick="quickPost('promo')"><svg class="ic"><use href="#i-gift"/></svg> โพสต์โปรโมชันแรก</button>
+      <button class="btn btn-ghost" style="font-size:var(--fs-sm)" onclick="quickPost('intro')"><svg class="ic"><use href="#i-userplus"/></svg> โพสต์ชวนแนะนำตัว</button>
+      <button class="btn btn-ghost" style="font-size:var(--fs-sm)" onclick="quickPost('question')"><svg class="ic"><use href="#i-help"/></svg> โพสต์ถามปัญหายอดฮิต</button>
+      <button class="btn btn-ghost" style="font-size:var(--fs-sm)" onclick="quickPost('promo')"><svg class="ic"><use href="#i-gift"/></svg> โพสต์โปรโมชันแรก</button>
     </div>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-users"/></svg>Users ล่าสุด</div>
@@ -432,19 +435,19 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="form-grid">
       <div class="fg"><label>ชื่อแอป</label><input id="cfg-appname" value="เพื่อนสวน"></div>
       <div class="fg"><label>Subtitle</label><input id="cfg-subtitle" value="DemeterRich Community"></div>
-      <div class="fg"><label>Logo Emoji (ถ้าไม่มีรูป)</label><input id="cfg-logo" value="🌿" style="font-size:20px"></div>
+      <div class="fg"><label>Logo Emoji (ถ้าไม่มีรูป)</label><input id="cfg-logo" value="🌿" style="font-size:var(--fs-xl)"></div>
       <div class="fg"><label>ชื่อร้านค้า</label><input id="cfg-shopname" value="DemeterRich"></div>
       <div class="fg"><label>LINE OA ID</label><input id="cfg-lineoa" value="@demeterrich"></div>
       <div class="fg"><label>เบอร์โทร</label><input id="cfg-phone" value="099-999-9999"></div>
     </div>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-lock"/></svg>นโยบายความเป็นส่วนตัว (PDPA)</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">URL นโยบายของแบรนด์นี้ — จะแสดงเป็นลิงก์ตอนผู้ใช้ให้ความยินยอม (consent) · เว้นว่าง = ไม่มีลิงก์</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:10px">URL นโยบายของแบรนด์นี้ — จะแสดงเป็นลิงก์ตอนผู้ใช้ให้ความยินยอม (consent) · เว้นว่าง = ไม่มีลิงก์</div>
     <div class="fg"><label>Privacy Policy URL</label><input id="app-privacyurl" placeholder="https://brand.com/privacy"></div>
     <button class="btn btn-primary" onclick="saveAppPrivacy()" style="margin-top:8px"><svg class="ic"><use href="#i-save"/></svg> บันทึก URL นโยบาย</button>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-type"/></svg>คำศัพท์ร้าน (Terminology)</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ปรับคำให้เข้ากับธุรกิจคุณ — จะเปลี่ยนข้อความ AI/ปุ่ม/กล่องโพสต์ในแอปอัตโนมัติ</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:12px">ปรับคำให้เข้ากับธุรกิจคุณ — จะเปลี่ยนข้อความ AI/ปุ่ม/กล่องโพสต์ในแอปอัตโนมัติ</div>
     <div class="form-grid">
       <div class="fg"><label>สิ่งของหลัก (เช่น พืช)</label><input id="term-item" placeholder="พืช"></div>
       <div class="fg"><label>สถานที่ (เช่น สวน)</label><input id="term-place" placeholder="สวน"></div>
@@ -455,7 +458,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <button class="btn btn-primary" onclick="saveTerms()" style="margin-top:8px"><svg class="ic"><use href="#i-save"/></svg> บันทึกคำศัพท์</button>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-megaphone"/></svg>โหมดฟีด</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">กำหนดว่าใครเห็น/โพสต์ในฟีดได้ — ปรับได้ตามธรรมชาติของแบรนด์</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:12px">กำหนดว่าใครเห็น/โพสต์ในฟีดได้ — ปรับได้ตามธรรมชาติของแบรนด์</div>
     <div class="fg" style="margin-bottom:10px">
       <label><input type="checkbox" id="fm-feedPublic" checked> ฟีดสาธารณะ (ให้คนนอก/ยังไม่ล็อกอิน อ่านได้)</label>
     </div>
@@ -469,7 +472,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <button class="btn btn-primary" onclick="saveFeedMode()" style="margin-top:10px"><svg class="ic"><use href="#i-save"/></svg> บันทึกโหมดฟีด</button>
   </div>
   <div class="card" id="theme-picker"><div class="card-title"><svg class="ic"><use href="#i-palette"/></svg>ธีมแอป (เลือกได้)</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">เลือกธีมสำเร็จรูป — เปลี่ยนสี/พื้นทั้งแอปของแบรนด์นี้ · กดดูพรีวิวสด แล้วกดบันทึกด้านล่าง</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:12px">เลือกธีมสำเร็จรูป — เปลี่ยนสี/พื้นทั้งแอปของแบรนด์นี้ · กดดูพรีวิวสด แล้วกดบันทึกด้านล่าง</div>
     <div id="theme-opts" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-palette"/></svg>สี</div>
@@ -500,10 +503,10 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       </div>
     </div>
     <div style="margin-top:12px">
-      <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Preview</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin-bottom:8px">Preview</div>
       <div id="color-preview" style="height:44px;border-radius:10px;background:var(--primary);display:flex;align-items:center;padding:0 16px;gap:10px">
-        <span style="font-size:22px" id="prev-emoji">🌿</span>
-        <span style="color:#fff;font-weight:800;font-size:16px" id="prev-name">เพื่อนสวน</span>
+        <span style="font-size:var(--fs-xl)" id="prev-emoji">🌿</span>
+        <span style="color:#fff;font-weight:800;font-size:var(--fs-md)" id="prev-name">เพื่อนสวน</span>
       </div>
     </div>
   </div>
@@ -520,11 +523,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
       <div class="upload-zone" style="width:160px" onclick="document.getElementById('upload-logo').click()">
         <input type="file" id="upload-logo" accept="image/*" onchange="uploadIcon('logo',this)">
-        <div id="prev-logo" style="font-size:40px;margin-bottom:8px">🌿</div>
-        <div style="font-size:13px;color:var(--muted)">คลิกเพื่ออัพโหลด<br>PNG / JPG / SVG</div>
+        <div id="prev-logo" style="font-size:var(--fs-4xl);margin-bottom:8px">🌿</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted)">คลิกเพื่ออัพโหลด<br>PNG / JPG / SVG</div>
         <div class="upload-progress" id="prog-logo"><div class="upload-progress-bar" id="progbar-logo"></div></div>
       </div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.8">
+      <div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.8">
         แนะนำ: PNG พื้นหลังโปร่งใส<br>ขนาด 200×200px ขึ้นไป<br>ไฟล์ไม่เกิน 2MB
       </div>
     </div>
@@ -535,52 +538,52 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
         <label>หน้าหลัก</label>
         <div class="icon-preview" id="prev-nav-home" onclick="document.getElementById('upload-nav-home').click()">🏠</div>
         <input type="file" id="upload-nav-home" accept="image/*" style="display:none" onchange="uploadIcon('nav_home',this)">
-        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+        <div style="font-size:var(--fs-2xs);color:var(--muted)">แตะเพื่อเปลี่ยน</div>
       </div>
       <div class="icon-item">
         <label>ชุมชน</label>
         <div class="icon-preview" id="prev-nav-community" onclick="document.getElementById('upload-nav-community').click()">👥</div>
         <input type="file" id="upload-nav-community" accept="image/*" style="display:none" onchange="uploadIcon('nav_community',this)">
-        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+        <div style="font-size:var(--fs-2xs);color:var(--muted)">แตะเพื่อเปลี่ยน</div>
       </div>
       <div class="icon-item">
         <label>วิดีโอ</label>
         <div class="icon-preview" id="prev-nav-video" onclick="document.getElementById('upload-nav-video').click()">🎬</div>
         <input type="file" id="upload-nav-video" accept="image/*" style="display:none" onchange="uploadIcon('nav_video',this)">
-        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+        <div style="font-size:var(--fs-2xs);color:var(--muted)">แตะเพื่อเปลี่ยน</div>
       </div>
       <div class="icon-item">
         <label>โปรไฟล์</label>
         <div class="icon-preview" id="prev-nav-profile" onclick="document.getElementById('upload-nav-profile').click()">👤</div>
         <input type="file" id="upload-nav-profile" accept="image/*" style="display:none" onchange="uploadIcon('nav_profile',this)">
-        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+        <div style="font-size:var(--fs-2xs);color:var(--muted)">แตะเพื่อเปลี่ยน</div>
       </div>
       <div class="icon-item">
         <label>เมนู</label>
         <div class="icon-preview" id="prev-nav-menu" onclick="document.getElementById('upload-nav-menu').click()">☰</div>
         <input type="file" id="upload-nav-menu" accept="image/*" style="display:none" onchange="uploadIcon('nav_menu',this)">
-        <div style="font-size:11px;color:var(--muted)">แตะเพื่อเปลี่ยน</div>
+        <div style="font-size:var(--fs-2xs);color:var(--muted)">แตะเพื่อเปลี่ยน</div>
       </div>
     </div>
-    <div style="margin-top:12px;font-size:13px;color:var(--muted)">แนะนำ: PNG พื้นหลังโปร่งใส 64×64px — รูปจะถูกอัพโหลดและบันทึกอัตโนมัติ</div>
+    <div style="margin-top:12px;font-size:var(--fs-sm);color:var(--muted)">แนะนำ: PNG พื้นหลังโปร่งใส 64×64px — รูปจะถูกอัพโหลดและบันทึกอัตโนมัติ</div>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-camera"/></svg>รูปภาพอื่นๆ</div>
     <div class="form-grid">
       <div>
-        <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Default Post Cover</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin-bottom:8px">Default Post Cover</div>
         <div class="upload-zone" onclick="document.getElementById('upload-cover').click()">
           <input type="file" id="upload-cover" accept="image/*" onchange="uploadIcon('default_cover',this)">
-          <div id="prev-cover" style="font-size:36px;margin-bottom:6px">📸</div>
-          <div style="font-size:13px;color:var(--muted)">รูป placeholder ของโพส</div>
+          <div id="prev-cover" style="font-size:var(--fs-4xl);margin-bottom:6px">📸</div>
+          <div style="font-size:var(--fs-sm);color:var(--muted)">รูป placeholder ของโพส</div>
           <div class="upload-progress" id="prog-cover"><div class="upload-progress-bar" id="progbar-cover"></div></div>
         </div>
       </div>
       <div>
-        <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Login Screen Background</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin-bottom:8px">Login Screen Background</div>
         <div class="upload-zone" onclick="document.getElementById('upload-login-bg').click()">
           <input type="file" id="upload-login-bg" accept="image/*" onchange="uploadIcon('login_bg',this)">
-          <div id="prev-login-bg" style="font-size:36px;margin-bottom:6px">🌿</div>
-          <div style="font-size:13px;color:var(--muted)">รูปพื้นหลังหน้า login</div>
+          <div id="prev-login-bg" style="font-size:var(--fs-4xl);margin-bottom:6px">🌿</div>
+          <div style="font-size:var(--fs-sm);color:var(--muted)">รูปพื้นหลังหน้า login</div>
           <div class="upload-progress" id="prog-login-bg"><div class="upload-progress-bar" id="progbar-login-bg"></div></div>
         </div>
       </div>
@@ -676,7 +679,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <div id="grp-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeGrpEdit()">
   <div style="background:var(--card);border-radius:14px;max-width:420px;width:92%;max-height:86vh;overflow:auto;padding:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:17px;font-weight:800">✏️ แก้ไขกลุ่ม</div><div onclick="closeGrpEdit()" style="cursor:pointer;font-size:20px;color:#888">✕</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:var(--fs-lg);font-weight:800">✏️ แก้ไขกลุ่ม</div><div onclick="closeGrpEdit()" style="cursor:pointer;font-size:var(--fs-xl);color:#888">✕</div></div>
     <div class="form-grid">
       <div class="fg"><label>ชื่อกลุ่ม</label><input id="grp-e-name"></div>
       <div class="fg"><label>อีโมจิ</label><input id="grp-e-emoji" maxlength="4"></div>
@@ -695,7 +698,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div id="features-list">
       <div class="toggle-row"><div><div class="toggle-label">📍 Proximity Alert</div><div class="toggle-sub">แจ้งเตือนโรคระบาดในพื้นที่</div></div><label class="toggle"><input type="checkbox" id="feat-proximity" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🛒 ร้านค้า (Commerce)</div><div class="toggle-sub">เปิด-ปิดระบบร้านค้า + ตะกร้า</div></div><label class="toggle"><input type="checkbox" id="feat-product" checked><span class="toggle-slider"></span></label></div>
-      <div class="toggle-row"><div><div class="toggle-label">🧮 เครื่องมือคิดราคา–กำไร <span style="font-size:11px;color:var(--primary);font-weight:700">ใหม่</span></div><div class="toggle-sub">คิดต้นทุน–ราคา–margin (แอดมิน) · default ปิด — เปิดทีละแบรนด์</div></div><label class="toggle"><input type="checkbox" id="feat-pricing"><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><div><div class="toggle-label">🧮 เครื่องมือคิดราคา–กำไร <span style="font-size:var(--fs-2xs);color:var(--primary);font-weight:700">ใหม่</span></div><div class="toggle-sub">คิดต้นทุน–ราคา–margin (แอดมิน) · default ปิด — เปิดทีละแบรนด์</div></div><label class="toggle"><input type="checkbox" id="feat-pricing"><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">📖 Stories</div><div class="toggle-sub">Stories bar บนสุด Feed</div></div><label class="toggle"><input type="checkbox" id="feat-stories" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🏅 Point System</div><div class="toggle-sub">ระบบแต้มสะสม</div></div><label class="toggle"><input type="checkbox" id="feat-points" checked><span class="toggle-slider"></span></label></div>
       <div class="toggle-row"><div><div class="toggle-label">🏆 Leaderboard</div><div class="toggle-sub">ตารางอันดับ (ปราชญ์) ในแท็บชุมชน</div></div><label class="toggle"><input type="checkbox" id="feat-leaderboard" checked><span class="toggle-slider"></span></label></div>
@@ -757,7 +760,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>ชื่อร้านบนแบนเนอร์</label><input id="shop-banner-title-in" placeholder="DemeterRich"></div>
       <div class="fg"><label>คำโปรย</label><input id="shop-banner-tag-in" placeholder="ปุ๋ยเหลวคุณภาพเพื่อชาวสวน"></div>
       <div class="fg"><label>รูปปก (URL — เว้นว่าง = ใช้สีไล่เฉด)</label><input id="shop-cover-img" placeholder="https://..."></div>
-      <div class="fg"><label>หรืออัปโหลดรูปปก</label><input type="file" id="shop-cover-file" accept="image/*" onchange="uploadShopBanner(this)"><div id="shop-cover-prog" style="display:none;font-size:12px;color:var(--muted);margin-top:4px">กำลังอัปโหลด...</div></div>
+      <div class="fg"><label>หรืออัปโหลดรูปปก</label><input type="file" id="shop-cover-file" accept="image/*" onchange="uploadShopBanner(this)"><div id="shop-cover-prog" style="display:none;font-size:var(--fs-xs);color:var(--muted);margin-top:4px">กำลังอัปโหลด...</div></div>
       <div class="fg"><label>สีไล่เฉด 1</label><input type="color" id="shop-cover-c1" value="#1877f2"></div>
       <div class="fg"><label>สีไล่เฉด 2</label><input type="color" id="shop-cover-c2" value="#42b883"></div>
       <div class="fg"><label>สีตัวอักษรบนแบนเนอร์</label><input type="color" id="shop-banner-textcolor" value="#ffffff"></div>
@@ -814,7 +817,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <div class="screen" id="screen-shipping">
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-truck"/></svg>จัดส่ง</div><div class="page-sub">ข้อมูลผู้ส่ง · ค่าจัดส่ง · เชื่อมระบบขนส่ง</div></div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-building"/></svg>ข้อมูลร้านค้า (ผู้ส่ง)</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">ใช้เป็นที่อยู่ "ผู้ส่ง" บนใบปะหน้าพัสดุ + ข้อมูลติดต่อร้าน</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:8px">ใช้เป็นที่อยู่ "ผู้ส่ง" บนใบปะหน้าพัสดุ + ข้อมูลติดต่อร้าน</div>
     <div class="form-grid">
       <div class="fg"><label>ชื่อร้าน</label><input id="st-name" placeholder="เช่น เพชรพญา ฟาร์ม"></div>
       <div class="fg"><label>เบอร์โทรร้าน</label><input id="st-phone" placeholder="08x-xxx-xxxx"></div>
@@ -845,7 +848,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>✅ จัดส่งฟรีเมื่อซื้อครบยอด</label><label class="toggle"><input type="checkbox" id="ship-freeover" onchange="shipModeUI()"><span class="toggle-slider"></span></label></div>
       <div class="fg ship-freeover"><label>ซื้อครบกี่บาทถึงส่งฟรี</label><input type="number" id="ship-freemin" min="0" placeholder="เช่น 500"></div>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-top:4px">คิดค่าส่งฝั่งเซิร์ฟเวอร์อัตโนมัติตอนสั่งซื้อ · น้ำหนักดึงจากน้ำหนักสินค้าจริง</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">คิดค่าส่งฝั่งเซิร์ฟเวอร์อัตโนมัติตอนสั่งซื้อ · น้ำหนักดึงจากน้ำหนักสินค้าจริง</div>
     <div class="save-row">
       <button class="btn btn-ghost" onclick="loadShipping()"><svg class="ic"><use href="#i-reset"/></svg> รีเซ็ต</button>
       <button class="btn btn-primary" onclick="saveShipping()"><svg class="ic"><use href="#i-save"/></svg> บันทึกค่าจัดส่ง</button>
@@ -853,7 +856,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
 
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-package"/></svg>เชื่อมระบบขนส่ง (สร้างเลขพัสดุอัตโนมัติ)</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">เชื่อม API ขนส่งเพื่อสร้างเลขพัสดุ + ป้าย barcode จริงตอนยืนยันออเดอร์ · ยังไม่มี key ใช้ <b>โหมดทดสอบ</b> ลอง flow ได้เลย</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:10px">เชื่อม API ขนส่งเพื่อสร้างเลขพัสดุ + ป้าย barcode จริงตอนยืนยันออเดอร์ · ยังไม่มี key ใช้ <b>โหมดทดสอบ</b> ลอง flow ได้เลย</div>
     <div class="form-grid">
       <div class="fg"><label>เปิดใช้ระบบขนส่งอัตโนมัติ</label><label class="toggle"><input type="checkbox" id="cr-active"><span class="toggle-slider"></span></label></div>
       <div class="fg"><label>🧪 โหมดทดสอบ (เลขพัสดุจำลอง)</label><label class="toggle"><input type="checkbox" id="cr-mock" checked><span class="toggle-slider"></span></label></div>
@@ -871,7 +874,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg" style="grid-column:1/-1"><label>API Key <span id="cr-keystatus" style="color:var(--muted);font-weight:400"></span></label>
         <div style="display:flex;gap:8px"><input id="cr-apikey" type="password" placeholder="วาง API key ที่ได้จากผู้ให้บริการ" style="flex:1">
           <button class="btn btn-primary" onclick="saveCourierKey()" style="flex:none"><svg class="ic"><use href="#i-save"/></svg> บันทึก key</button></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">🔒 key เก็บฝั่งเซิร์ฟเวอร์ (client อ่านไม่ได้) · เว้นว่าง = ใช้โหมดทดสอบ</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">🔒 key เก็บฝั่งเซิร์ฟเวอร์ (client อ่านไม่ได้) · เว้นว่าง = ใช้โหมดทดสอบ</div>
       </div>
     </div>
     <div class="save-row">
@@ -886,11 +889,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-check"/></svg>ยืนยันตัวตนร้าน</div><div class="page-sub">ส่งเอกสารเพื่อรับเครื่องหมายร้านยืนยันตัวตน — ลูกค้าเชื่อมั่นมากขึ้น</div></div>
   <div id="verify-status" style="margin-bottom:16px"></div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-lock"/></svg>เอกสารยืนยันตัวตน</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">🔒 เอกสารเก็บเป็นความลับ เห็นเฉพาะทีมตรวจสอบ Bocean — ไม่แสดงต่อสาธารณะ</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:12px">🔒 เอกสารเก็บเป็นความลับ เห็นเฉพาะทีมตรวจสอบ Bocean — ไม่แสดงต่อสาธารณะ</div>
     <div class="form-grid">
-      <div class="fg"><label>บัตรประชาชน / เอกสารยืนยันตัวตน *</label><input type="file" id="vf-id" accept="image/*,application/pdf" onchange="uploadVerifyDoc(this,'idCard')"><div id="vf-id-state" style="font-size:12px;color:var(--muted);margin-top:4px"></div></div>
-      <div class="fg"><label>รูปถือบัตร (selfie) *</label><input type="file" id="vf-selfie" accept="image/*" onchange="uploadVerifyDoc(this,'selfie')"><div id="vf-selfie-state" style="font-size:12px;color:var(--muted);margin-top:4px"></div></div>
-      <div class="fg"><label>ทะเบียนพาณิชย์/นิติบุคคล (ถ้ามี)</label><input type="file" id="vf-reg" accept="image/*,application/pdf" onchange="uploadVerifyDoc(this,'registration')"><div id="vf-reg-state" style="font-size:12px;color:var(--muted);margin-top:4px"></div></div>
+      <div class="fg"><label>บัตรประชาชน / เอกสารยืนยันตัวตน *</label><input type="file" id="vf-id" accept="image/*,application/pdf" onchange="uploadVerifyDoc(this,'idCard')"><div id="vf-id-state" style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px"></div></div>
+      <div class="fg"><label>รูปถือบัตร (selfie) *</label><input type="file" id="vf-selfie" accept="image/*" onchange="uploadVerifyDoc(this,'selfie')"><div id="vf-selfie-state" style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px"></div></div>
+      <div class="fg"><label>ทะเบียนพาณิชย์/นิติบุคคล (ถ้ามี)</label><input type="file" id="vf-reg" accept="image/*,application/pdf" onchange="uploadVerifyDoc(this,'registration')"><div id="vf-reg-state" style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px"></div></div>
     </div>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-coins"/></svg>บัญชีรับเงิน (ชื่อต้องตรงกับเจ้าของในเอกสาร)</div>
@@ -907,21 +910,21 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <!-- PRODUCTS -->
 <style>
-.prod-sec{font-size:13px;font-weight:800;color:var(--primary);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px dashed var(--border)}
+.prod-sec{font-size:var(--fs-sm);font-weight:800;color:var(--primary);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px dashed var(--border)}
 .prod-sec:first-of-type{margin-top:4px}
-.prod-imgbox{width:88px;height:88px;flex:none;border:1.5px dashed var(--border);border-radius:10px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;line-height:1.4}
+.prod-imgbox{width:88px;height:88px;flex:none;border:1.5px dashed var(--border);border-radius:10px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;text-align:center;font-size:var(--fs-xs);color:var(--muted);cursor:pointer;line-height:1.4}
 .prod-imgbox.has{border-style:solid}
 .prod-imgbox.has span{display:none}
 .prod-card{display:flex;gap:12px;align-items:center;padding:11px;border:1px solid var(--border);border-radius:12px;margin-bottom:9px;background:var(--card)}
 .prod-card.off{opacity:.55}
-.prod-thumb{width:60px;height:60px;flex:none;border-radius:9px;background:var(--bg) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:26px}
+.prod-thumb{width:60px;height:60px;flex:none;border-radius:9px;background:var(--bg) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2xl)}
 .prod-meta{flex:1;min-width:0}
-.prod-nm{font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.prod-sub{font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.prod-nm{font-weight:700;font-size:var(--fs-base);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prod-sub{font-size:var(--fs-xs);color:var(--muted);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .prod-stk{font-weight:700}
 .prod-stk.ok{color:#16a34a}.prod-stk.low{color:#d97706}.prod-stk.out{color:#dc2626}
 .prod-acts{display:flex;gap:6px;flex:none}
-.pill{font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px}
+.pill{font-size:var(--fs-2xs);font-weight:700;border-radius:6px;padding:1px 7px}
 .pill-off{background:#fee2e2;color:#dc2626}
 .pill-un{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
 .ms-rw-coupon{display:none}
@@ -932,12 +935,12 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-plus"/></svg>เพิ่มสินค้าใหม่</div>
 
     <div style="background:var(--bg,#f6f7f9);border:1px dashed var(--border);border-radius:10px;padding:12px;margin-bottom:14px">
-      <label style="font-weight:700;font-size:13px;display:block;margin-bottom:6px">⚡ ดึงข้อมูลจากลิงก์ (Shopee / เว็บร้าน)</label>
+      <label style="font-weight:700;font-size:var(--fs-sm);display:block;margin-bottom:6px">⚡ ดึงข้อมูลจากลิงก์ (Shopee / เว็บร้าน)</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="pl-url" placeholder="วางลิงก์สินค้า เช่น https://shopee.co.th/..." style="flex:1;min-width:200px;padding:9px;border:1px solid var(--border);border-radius:8px">
         <button class="btn btn-ghost" onclick="fetchFromLink(this)"><svg class="ic"><use href="#i-download"/></svg> ดึงข้อมูล</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:5px">ดึงชื่อ/รูป/ราคา/รายละเอียดมาเติมฟอร์มให้อัตโนมัติ แล้วตรวจ/แก้ก่อนบันทึก · บางเว็บบล็อก อาจต้องกรอกเอง</div>
+      <div style="font-size:var(--fs-2xs);color:var(--muted);margin-top:5px">ดึงชื่อ/รูป/ราคา/รายละเอียดมาเติมฟอร์มให้อัตโนมัติ แล้วตรวจ/แก้ก่อนบันทึก · บางเว็บบล็อก อาจต้องกรอกเอง</div>
     </div>
 
     <div class="prod-sec">1) ข้อมูลพื้นฐาน</div>
@@ -946,7 +949,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div style="flex:1;min-width:0">
         <input type="file" id="new-prod-file" accept="image/*" style="display:none" onchange="uploadProdImg(this,'new-prod-img','new-prod-imgprev')">
         <input id="new-prod-img" placeholder="วางลิงก์รูป หรือกดกล่องซ้ายเพื่ออัปโหลด" oninput="prodPrev('new-prod-img','new-prod-imgprev')">
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">แนะนำรูปจัตุรัส 1:1 · ไม่เกิน 3MB</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">แนะนำรูปจัตุรัส 1:1 · ไม่เกิน 3MB</div>
       </div>
     </div>
     <div class="fg" style="margin-top:10px"><label>รูปเพิ่มเติม (แกลเลอรี) — วางลิงก์รูป บรรทัดละ 1 รูป · รูปแรกด้านบน = รูปปก</label><textarea id="new-prod-images" rows="2" placeholder="https://...jpg&#10;https://...jpg"></textarea></div>
@@ -980,10 +983,10 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="save-row"><button class="btn btn-ghost" onclick="resetProdForm()">ล้างฟอร์ม</button><button class="btn btn-primary" onclick="addProduct()"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มสินค้า</button></div>
   </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-download"/></svg>นำเข้าสินค้าจาก Shopee / CSV / Excel</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">อัปโหลดไฟล์ <b>.xlsx</b> ที่ export จาก Shopee Seller Center (หรือ .csv/Excel ทั่วไป) → ระบบจับคู่คอลัมน์อัตโนมัติ (ปรับได้) → ดูตัวอย่าง → นำเข้าเข้าแบรนด์ที่กำลังดูแล · แท็กในเซลล์ใช้ <b>;</b> คั่น<br>💡 Shopee: เข้า Seller Center → สินค้าของฉัน → ส่งออก/Export → ได้ไฟล์ .xlsx มาอัปที่นี่</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin-bottom:10px">อัปโหลดไฟล์ <b>.xlsx</b> ที่ export จาก Shopee Seller Center (หรือ .csv/Excel ทั่วไป) → ระบบจับคู่คอลัมน์อัตโนมัติ (ปรับได้) → ดูตัวอย่าง → นำเข้าเข้าแบรนด์ที่กำลังดูแล · แท็กในเซลล์ใช้ <b>;</b> คั่น<br>💡 Shopee: เข้า Seller Center → สินค้าของฉัน → ส่งออก/Export → ได้ไฟล์ .xlsx มาอัปที่นี่</div>
     <input type="file" id="csv-file" accept=".csv,.xlsx,.xls,text/csv" onchange="csvOnFile(this)">
     <div id="csv-config" style="display:none;margin-top:14px">
-      <div class="card-title" style="font-size:14px">จับคู่คอลัมน์</div>
+      <div class="card-title" style="font-size:var(--fs-base)">จับคู่คอลัมน์</div>
       <div class="form-grid" id="csv-map"></div>
       <div class="form-grid" style="margin-top:10px">
         <div class="fg"><label>หมวด default (ถ้าไม่ได้ map)</label>
@@ -997,10 +1000,10 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-      <div class="card-title" style="margin:0">📋 สินค้าทั้งหมด <span id="prod-count" style="color:var(--muted);font-weight:400;font-size:13px"></span></div>
+      <div class="card-title" style="margin:0">📋 สินค้าทั้งหมด <span id="prod-count" style="color:var(--muted);font-weight:400;font-size:var(--fs-sm)"></span></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="prod-search" placeholder="🔍 ค้นหาชื่อสินค้า" oninput="renderProducts()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-        <select id="prod-sort" onchange="onProductSort()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+        <input id="prod-search" placeholder="🔍 ค้นหาชื่อสินค้า" oninput="renderProducts()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-sm)">
+        <select id="prod-sort" onchange="onProductSort()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-sm)">
           <option value="recent">ล่าสุด</option>
           <option value="name">ชื่อ ก-ฮ</option>
           <option value="price_asc">ราคาต่ำ→สูง</option>
@@ -1018,13 +1021,13 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <div id="prodb-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeProdB()">
   <div style="background:var(--card);border-radius:14px;max-width:420px;width:92%;max-height:86vh;overflow:auto;padding:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:17px;font-weight:800">✏️ แก้ไขสินค้า</div><div onclick="closeProdB()" style="cursor:pointer;font-size:20px;color:#888">✕</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:var(--fs-lg);font-weight:800">✏️ แก้ไขสินค้า</div><div onclick="closeProdB()" style="cursor:pointer;font-size:var(--fs-xl);color:#888">✕</div></div>
     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
       <div class="prod-imgbox" id="prodb-imgprev" onclick="document.getElementById('prodb-file').click()" title="กดเพื่อเปลี่ยนรูป"><span>＋<br>เพิ่มรูป</span></div>
       <div style="flex:1;min-width:0">
         <input type="file" id="prodb-file" accept="image/*" style="display:none" onchange="uploadProdImg(this,'prodb-img','prodb-imgprev')">
         <input id="prodb-img" placeholder="ลิงก์รูป หรือกดกล่องเพื่ออัปโหลด" oninput="prodPrev('prodb-img','prodb-imgprev')">
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">รูปจัตุรัส 1:1 · ไม่เกิน 3MB</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">รูปจัตุรัส 1:1 · ไม่เกิน 3MB</div>
       </div>
     </div>
     <div class="fg" style="margin-top:10px"><label>รูปเพิ่มเติม (แกลเลอรี) — วางลิงก์รูป บรรทัดละ 1 รูป · รูปแรกด้านบน = รูปปก</label><textarea id="prodb-images" rows="2" placeholder="https://...jpg&#10;https://...jpg"></textarea></div>
@@ -1075,10 +1078,10 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>เปิดใช้งาน</label><label class="toggle"><input type="checkbox" id="ld-active" checked><span class="toggle-slider"></span></label></div>
       <div class="fg" style="grid-column:1/-1"><label>รางวัล (บรรทัดละ 1: ชื่อ | ส่วนลด | โค้ด | น้ำหนักโอกาส | สต็อก(ว่าง=ไม่จำกัด))</label>
         <textarea id="ld-prizes" rows="6" placeholder="ลด 50 บาท | 50 | SAVE50 | 10 | 100&#10;ลด 10% | 10% | TEN | 5 | 50&#10;ไม่ถูกรางวัล | | | 85 |"></textarea>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px"><b>ช่องส่วนลด:</b> ใส่ตัวเลข <code>50</code> = ลด ฿50 · <code>10%</code> = ลด 10% (ใช้ลดราคาจริงตอน checkout ได้) · ใส่ข้อความล้วนหรือเว้นว่าง = คูปองโชว์เฉยๆ ลดราคาไม่ได้ · ไม่ใส่ทั้งส่วนลด+โค้ด = ช่อง "ไม่ถูกรางวัล" · น้ำหนักยิ่งมากโอกาสยิ่งสูง · สต็อกว่าง = ไม่จำกัด</div>
+        <div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px"><b>ช่องส่วนลด:</b> ใส่ตัวเลข <code>50</code> = ลด ฿50 · <code>10%</code> = ลด 10% (ใช้ลดราคาจริงตอน checkout ได้) · ใส่ข้อความล้วนหรือเว้นว่าง = คูปองโชว์เฉยๆ ลดราคาไม่ได้ · ไม่ใส่ทั้งส่วนลด+โค้ด = ช่อง "ไม่ถูกรางวัล" · น้ำหนักยิ่งมากโอกาสยิ่งสูง · สต็อกว่าง = ไม่จำกัด</div>
       </div>
     </div>
-    <div id="ld-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px"></div>
+    <div id="ld-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:var(--fs-sm);margin-bottom:10px"></div>
     <div class="save-row">
       <button class="btn btn-primary" id="ld-submit" onclick="addLuckyDraw()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกล่องสุ่ม</button>
       <button class="btn btn-ghost" id="ld-cancel" style="display:none" onclick="cancelLuckyDrawEdit()">ยกเลิกแก้ไข</button>
@@ -1119,7 +1122,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg ms-rw-coupon"><label>ส่วนลด (50 หรือ 10%)</label><input id="ms-c-disc" placeholder="50 = ฿50 · 10% = 10%"></div>
       <div class="fg ms-rw-coupon"><label>โค้ด (เว้นว่าง=สุ่มให้)</label><input id="ms-c-code" placeholder="SAVE50"></div>
     </div>
-    <div id="ms-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px"></div>
+    <div id="ms-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:var(--fs-sm);margin-bottom:10px"></div>
     <div class="save-row">
       <button class="btn btn-primary" id="ms-submit" onclick="addMission()"><svg class="ic"><use href="#i-plus"/></svg> สร้างภารกิจ</button>
       <button class="btn btn-ghost" id="ms-cancel" style="display:none" onclick="cancelMissionEdit()">ยกเลิกแก้ไข</button>
@@ -1134,7 +1137,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-star"/></svg>แคมเปญแต้ม</div><div class="page-sub">ตั้งกติกาให้ลูกค้าได้แต้มอัตโนมัติ (ซื้อของ/โพสต์ในชุมชน) · ตั้งช่วงโปรฯ คูณแต้มได้ · ระบบให้แต้มฝั่งเซิร์ฟเวอร์อัตโนมัติ</div></div>
   <div class="card" style="border:1.5px solid #f59e0b;background:#fffbeb">
     <div class="card-title"><svg class="ic"><use href="#i-flame"/></svg>โปรฯ คูณแต้มทั้งร้าน</div>
-    <div style="font-size:13px;color:var(--muted);margin:-4px 0 12px">เปิดช่วงโปรฯ แล้วแต้มที่ลูกค้าได้ <b>ทุกทาง (ซื้อ + โพสต์)</b> จะถูกคูณอัตโนมัติในช่วงเวลาที่ตั้ง · คูณซ้อนกับตัวคูณของแต่ละแคมเปญ</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin:-4px 0 12px">เปิดช่วงโปรฯ แล้วแต้มที่ลูกค้าได้ <b>ทุกทาง (ซื้อ + โพสต์)</b> จะถูกคูณอัตโนมัติในช่วงเวลาที่ตั้ง · คูณซ้อนกับตัวคูณของแต่ละแคมเปญ</div>
     <div class="form-grid">
       <div class="fg" style="grid-column:1/-1"><label>ชื่อโปรฯ (โชว์ให้ลูกค้าเห็น)</label><input id="promo-label" placeholder="เช่น โปรฯ ปีใหม่ คูณแต้ม!"></div>
       <div class="fg"><label>คูณกี่เท่า</label><input type="number" id="promo-mult" min="1" step="0.5" value="2"></div>
@@ -1172,7 +1175,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>สิ้นสุด (เว้นว่าง=ไม่จำกัด)</label><input type="datetime-local" id="ec-end"></div>
       <div class="fg"><label>เปิดใช้งาน</label><label class="toggle"><input type="checkbox" id="ec-active" checked><span class="toggle-slider"></span></label></div>
     </div>
-    <div id="ec-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px"></div>
+    <div id="ec-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:var(--fs-sm);margin-bottom:10px"></div>
     <div class="save-row">
       <button class="btn btn-primary" id="ec-submit" onclick="addEarnCampaign()"><svg class="ic"><use href="#i-plus"/></svg> สร้างแคมเปญ</button>
       <button class="btn btn-ghost" id="ec-cancel" style="display:none" onclick="cancelEarnEdit()">ยกเลิกแก้ไข</button>
@@ -1219,7 +1222,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg pd-rw-coupon"><label>ส่วนลด (50 หรือ 10%)</label><input id="pd-c-disc" placeholder="50 = ฿50 · 10% = 10%"></div>
       <div class="fg pd-rw-coupon"><label>โค้ด (เว้นว่าง=สุ่ม)</label><input id="pd-c-code" placeholder="WIN50"></div>
     </div>
-    <div id="pd-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px"></div>
+    <div id="pd-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:var(--fs-sm);margin-bottom:10px"></div>
     <div class="save-row">
       <button class="btn btn-primary" id="pd-submit" onclick="addPrediction()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกิจกรรม</button>
       <button class="btn btn-ghost" id="pd-cancel" style="display:none" onclick="cancelPredictionEdit()">ยกเลิกแก้ไข</button>
@@ -1234,7 +1237,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-cart"/></svg>ออเดอร์</div><div class="page-sub">ตรวจสลิป ยืนยันรับเงิน และจัดส่ง</div></div>
   <div class="search-row" style="display:flex;gap:8px;align-items:center">
     <input class="search-input" id="ord-search" placeholder="🔍 ค้นหา: เลขออเดอร์ / ชื่อผู้รับ / เบอร์ / เลขพัสดุ" oninput="onOrderSearch()" style="flex:1">
-    <button class="btn btn-ghost" style="white-space:nowrap;font-size:13px" onclick="exportOrdersCsv()"><svg class="ic"><use href="#i-download"/></svg> Export CSV</button>
+    <button class="btn btn-ghost" style="white-space:nowrap;font-size:var(--fs-sm)" onclick="exportOrdersCsv()"><svg class="ic"><use href="#i-download"/></svg> Export CSV</button>
   </div>
   <div id="ord-bulk-bar"></div>
   <div class="ord-filter" id="ord-filter">
@@ -1413,9 +1416,9 @@ async function loadSysOverview(){
     if (box) box.innerHTML = ts.map(function(t){
       var sus = t.status==='suspended';
       return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px'+(t.id===currentTenant?';border-color:var(--primary)':'')+'">'+
-        '<div style="min-width:0"><div style="font-weight:700">'+escapeHtml(t.name||t.id)+' <span style="color:var(--muted);font-weight:400;font-size:12px">('+escapeHtml(t.id)+')</span></div>'+
-        '<div style="font-size:12px;'+(sus?'color:#888':'color:#16a34a')+';font-weight:700">'+(sus?'ระงับ':'ใช้งาน')+'</div></div>'+
-        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="onBrandSwitch(\''+t.id+'\')">ดูแลแบรนด์นี้ →</button>'+
+        '<div style="min-width:0"><div style="font-weight:700">'+escapeHtml(t.name||t.id)+' <span style="color:var(--muted);font-weight:400;font-size:var(--fs-xs)">('+escapeHtml(t.id)+')</span></div>'+
+        '<div style="font-size:var(--fs-xs);'+(sus?'color:#888':'color:#16a34a')+';font-weight:700">'+(sus?'ระงับ':'ใช้งาน')+'</div></div>'+
+        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="onBrandSwitch(\''+t.id+'\')">ดูแลแบรนด์นี้ →</button>'+
       '</div>';
     }).join('') || '<div class="empty-state">ยังไม่มีแบรนด์</div>';
     // รวมผู้ใช้ + ออเดอร์ทุกแบรนด์ (super อ่านข้ามแบรนด์ได้ผ่าน isAdmin)
@@ -1486,13 +1489,13 @@ function renderDashAlerts(st) {
     html += '<div class="dash-alert" onclick="showScreen(\'orders\')"><span>🧾 มีสลิปรอตรวจ <b>' + st.slipPending + '</b> รายการ</span><span class="da-go">ไปตรวจ →</span></div>';
   }
   if (st.lowStock.length) {
-    html += '<div style="font-weight:700;margin:10px 0 6px;font-size:13px">📦 สต็อกใกล้หมด</div>';
+    html += '<div style="font-weight:700;margin:10px 0 6px;font-size:var(--fs-sm)">📦 สต็อกใกล้หมด</div>';
     html += st.lowStock.slice(0, 8).map(function(p) {
       const n = Math.max(0, Math.floor(Number(p.stock) || 0));
       const col = n === 0 ? '#e41e3f' : '#d97706';
       return '<div class="dash-alert" onclick="showScreen(\'products\')"><span>' + escapeHtml(p.name || '(ไม่มีชื่อ)') + '</span><span style="color:' + col + ';font-weight:700">' + (n === 0 ? 'หมด' : ('เหลือ ' + n)) + '</span></div>';
     }).join('');
-    if (st.lowStock.length > 8) html += '<div style="font-size:12px;color:var(--muted);margin-top:6px">และอีก ' + (st.lowStock.length - 8) + ' รายการ</div>';
+    if (st.lowStock.length > 8) html += '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:6px">และอีก ' + (st.lowStock.length - 8) + ' รายการ</div>';
   }
   if (!html) html = '<div class="empty-state" style="padding:10px;color:var(--muted)">✅ ไม่มีอะไรต้องจัดการด่วน</div>';
   box.innerHTML = html;
@@ -1581,7 +1584,7 @@ async function loadDashboard() {
         <div style="font-weight:700">${escapeHtml(u.displayName||'ไม่ระบุ')}</div></div></td>
         <td><b>${(u.points||0).toLocaleString()}</b></td>
         <td><span class="tier-chip tc-${u.tier||'bronze'}">${tierEmoji(u.tier)} ${u.tier||'bronze'}</span></td>
-        <td style="color:var(--muted);font-size:13px">${fmtDate(u.lastLoginAt)}</td></tr>
+        <td style="color:var(--muted);font-size:var(--fs-sm)">${fmtDate(u.lastLoginAt)}</td></tr>
     `).join('') || '<tr><td colspan="4" class="empty-state">ไม่มีข้อมูล</td></tr>';
   } catch(err) { console.error(err); }
   loadKickstart();
@@ -1599,9 +1602,9 @@ async function loadKickstart(){
     ]);
     const row = (ok, label, screen) =>
       `<div onclick="showScreen('${screen}', document.querySelector('.sb-item[onclick*=&quot;${screen}&quot;]'))" style="display:flex;align-items:center;gap:10px;padding:7px 4px;cursor:pointer">
-        <span style="font-size:18px">${ok?'✅':'⬜'}</span>
+        <span style="font-size:var(--fs-lg)">${ok?'✅':'⬜'}</span>
         <span style="font-weight:${ok?'400':'700'};color:${ok?'var(--muted)':'var(--text)'}">${label}</span>
-        ${ok?'':'<span style="margin-left:auto;color:var(--primary);font-size:13px;font-weight:700">ตั้งค่า →</span>'}
+        ${ok?'':'<span style="margin-left:auto;color:var(--primary);font-size:var(--fs-sm);font-weight:700">ตั้งค่า →</span>'}
       </div>`;
     box.innerHTML =
       row(grp, 'สร้างกลุ่มชุมชนแรก', 'groups') +
@@ -1657,14 +1660,14 @@ function renderUsers(users) {
       <div class="user-av" style="${safeUrl(u.photoUrl)?`background-image:url(${safeUrl(u.photoUrl)})`:''}">
         ${safeUrl(u.photoUrl)?'':escapeHtml(u.displayName?.charAt(0)||'?')}</div>
       <div><div style="font-weight:700">${u.deletionRequested?'🗑️ ':''}${escapeHtml(u.displayName||'ไม่ระบุ')}</div>
-      <div style="font-size:11px;color:var(--muted)">${escapeHtml(u.lineUserId?.slice(0,20)||'')}</div></div></div></td>
-      <td><input type="number" value="${u.points||0}" style="width:80px;border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px" onchange="updateUserPoints('${u.id}',this.value)"></td>
-      <td><select onchange="updateUserTier('${u.id}',this.value)" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px">
+      <div style="font-size:var(--fs-2xs);color:var(--muted)">${escapeHtml(u.lineUserId?.slice(0,20)||'')}</div></div></div></td>
+      <td><input type="number" value="${u.points||0}" style="width:80px;border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:var(--fs-sm)" onchange="updateUserPoints('${u.id}',this.value)"></td>
+      <td><select onchange="updateUserTier('${u.id}',this.value)" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:var(--fs-sm)">
         ${['bronze','silver','gold','platinum'].map(t=>`<option value="${t}" ${(u.tier||'bronze')===t?'selected':''}>${tierEmoji(t)} ${t}</option>`).join('')}
       </select></td>
       <td>${u.postCount||0}</td>
-      <td style="color:var(--muted);font-size:13px">${fmtDate(u.lastLoginAt)}</td>
-      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="banUser('${u.id}')"><svg class="ic"><use href="#i-ban"/></svg> Ban</button></td></tr>
+      <td style="color:var(--muted);font-size:var(--fs-sm)">${fmtDate(u.lastLoginAt)}</td>
+      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="banUser('${u.id}')"><svg class="ic"><use href="#i-ban"/></svg> Ban</button></td></tr>
   `).join('') || '<tr><td colspan="6" class="empty-state">ไม่มี users</td></tr>';
 }
 function filterUsers() {
@@ -1695,11 +1698,11 @@ async function loadPosts() {
 }
 function renderPosts(posts) {
   document.getElementById('posts-table').innerHTML = posts.map(p => `
-    <tr><td><div style="font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.text||'(ไม่มีข้อความ)')}</div></td>
-    <td style="font-size:13px">${escapeHtml(p.authorName||'ไม่ระบุ')}</td>
+    <tr><td><div style="font-size:var(--fs-sm);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.text||'(ไม่มีข้อความ)')}</div></td>
+    <td style="font-size:var(--fs-sm)">${escapeHtml(p.authorName||'ไม่ระบุ')}</td>
     <td><span class="tag-chip">${escapeHtml(p.type||'โพส')}</span></td>
-    <td style="color:var(--muted);font-size:13px">${fmtDate(p.createdAt)}</td>
-    <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePost('${p.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>
+    <td style="color:var(--muted);font-size:var(--fs-sm)">${fmtDate(p.createdAt)}</td>
+    <td><button class="btn btn-danger" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="deletePost('${p.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>
   `).join('') || '<tr><td colspan="5" class="empty-state">ไม่มีโพส</td></tr>';
 }
 function filterPosts() {
@@ -1816,7 +1819,7 @@ function renderThemeOpts(){
       + '<span style="width:22px;height:22px;border-radius:50%;background:' + t.accent + ';display:inline-block"></span>'
       + '<span style="width:22px;height:22px;border-radius:6px;background:' + t.card + ';border:1px solid ' + t.border + ';display:inline-block"></span>'
       + '</div>'
-      + '<div style="font-size:13px;font-weight:700;color:' + t.text + '">' + t.label + (sel?' \u2713':'') + '</div>'
+      + '<div style="font-size:var(--fs-sm);font-weight:700;color:' + t.text + '">' + t.label + (sel?' \u2713':'') + '</div>'
       + '</div>';
   }).join('');
 }
@@ -2051,9 +2054,9 @@ async function renderVerifyRow(v){
   var b = v.bankAccount || {}, d = v.docs || {};
   var links = (await _vfDocLink(d.idCard,'บัตรประชาชน')) + (await _vfDocLink(d.selfie,'รูปถือบัตร')) + (await _vfDocLink(d.registration,'ทะเบียน'));
   return '<div class="card">'
-    + '<div style="font-weight:800;font-size:15px">'+escapeHtml(v.name||v.tid)+' <span style="color:var(--muted);font-weight:400;font-size:13px">('+escapeHtml(v.tid)+')</span></div>'
-    + '<div style="font-size:13px;margin:6px 0"><b>บัญชีรับเงิน:</b> '+escapeHtml(b.name||'-')+' · '+escapeHtml(b.number||'-')+' · '+escapeHtml(b.type||'')+'</div>'
-    + '<div style="font-size:13px;margin-bottom:12px">'+(links||'<span style="color:var(--muted)">ไม่มีเอกสาร</span>')+'</div>'
+    + '<div style="font-weight:800;font-size:var(--fs-md)">'+escapeHtml(v.name||v.tid)+' <span style="color:var(--muted);font-weight:400;font-size:var(--fs-sm)">('+escapeHtml(v.tid)+')</span></div>'
+    + '<div style="font-size:var(--fs-sm);margin:6px 0"><b>บัญชีรับเงิน:</b> '+escapeHtml(b.name||'-')+' · '+escapeHtml(b.number||'-')+' · '+escapeHtml(b.type||'')+'</div>'
+    + '<div style="font-size:var(--fs-sm);margin-bottom:12px">'+(links||'<span style="color:var(--muted)">ไม่มีเอกสาร</span>')+'</div>'
     + '<div style="display:flex;gap:8px">'
     +   '<button class="btn btn-primary" onclick="reviewVerify(\''+v.tid+'\',true)"><svg class="ic"><use href="#i-check"/></svg> อนุมัติ</button>'
     +   '<button class="btn btn-ghost" style="color:#dc2626" onclick="reviewVerify(\''+v.tid+'\',false)"><svg class="ic"><use href="#i-x"/></svg> ปฏิเสธ</button>'
@@ -2108,10 +2111,10 @@ async function loadVerification(){
   var badge = function(bg,fg,txt){ return '<div class="card" style="background:'+bg+';color:'+fg+';border:none">'+escapeHtml(txt)+'</div>'; };
   try {
     var d = await aDb().collection('private').doc('verification').get();
-    if (!d.exists){ box.innerHTML = '<div class="card" style="background:var(--bg)"><b>ยังไม่ได้ส่งเอกสาร</b><div style="font-size:13px;color:var(--muted);margin-top:4px">ส่งเอกสารด้านล่างเพื่อรับเครื่องหมายร้านยืนยันตัวตน</div></div>'; return; }
+    if (!d.exists){ box.innerHTML = '<div class="card" style="background:var(--bg)"><b>ยังไม่ได้ส่งเอกสาร</b><div style="font-size:var(--fs-sm);color:var(--muted);margin-top:4px">ส่งเอกสารด้านล่างเพื่อรับเครื่องหมายร้านยืนยันตัวตน</div></div>'; return; }
     var v = d.data(); var s = v.status||'pending';
     if (s==='approved') box.innerHTML = badge('#e9f7ef','#166534','✅ ยืนยันตัวตนแล้ว — ร้านของคุณมีเครื่องหมายน่าเชื่อถือแสดงต่อลูกค้า');
-    else if (s==='rejected') box.innerHTML = '<div class="card" style="background:#fee2e2;color:#991b1b;border:none"><b>❌ ไม่ผ่านการตรวจสอบ</b>'+(v.reviewNote?'<div style="font-size:13px;margin-top:4px">เหตุผล: '+escapeHtml(v.reviewNote)+'</div>':'')+'<div style="font-size:13px;margin-top:4px">แก้ไขแล้วส่งใหม่ได้</div></div>';
+    else if (s==='rejected') box.innerHTML = '<div class="card" style="background:#fee2e2;color:#991b1b;border:none"><b>❌ ไม่ผ่านการตรวจสอบ</b>'+(v.reviewNote?'<div style="font-size:var(--fs-sm);margin-top:4px">เหตุผล: '+escapeHtml(v.reviewNote)+'</div>':'')+'<div style="font-size:var(--fs-sm);margin-top:4px">แก้ไขแล้วส่งใหม่ได้</div></div>';
     else box.innerHTML = badge('#fff7e6','#a15c00','⏳ ส่งแล้ว — กำลังรอทีมตรวจสอบ Bocean (ปกติ 1–2 วันทำการ)');
   } catch(e){ box.innerHTML = '<div class="card" style="background:var(--bg);color:var(--muted)">โหลดสถานะไม่สำเร็จ ลองใหม่</div>'; }
 }
@@ -2143,7 +2146,7 @@ function renderCourierChecks(enabled){
   var box = document.getElementById('cr-couriers'); if(!box) return;
   box.innerHTML = COURIER_LIST.map(function(c){
     var on = enabled.indexOf(c.id) > -1;
-    return '<label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600"><input type="checkbox" class="cr-cbx" value="'+c.id+'"'+(on?' checked':'')+'> '+c.name+'</label>';
+    return '<label style="display:flex;align-items:center;gap:5px;font-size:var(--fs-sm);font-weight:600"><input type="checkbox" class="cr-cbx" value="'+c.id+'"'+(on?' checked':'')+'> '+c.name+'</label>';
   }).join('');
 }
 async function loadCourier(){
@@ -2438,10 +2441,10 @@ function renderProductBulkBar(){
   const n = Object.keys(_prodSelected).length;
   bar.innerHTML = n ? '<div style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
     '<span style="font-weight:700">เลือก '+n+' รายการ</span>'+
-    '<button onclick="bulkSetProductActive(true)" style="background:#fff;color:var(--primary);border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">เปิดขาย</button>'+
-    '<button onclick="bulkSetProductActive(false)" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit">ปิดขาย</button>'+
-    '<button onclick="bulkDeleteProducts()" style="background:#e41e3f;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button>'+
-    '<button onclick="clearProductSelection()" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit">ล้าง</button>'+
+    '<button onclick="bulkSetProductActive(true)" style="background:#fff;color:var(--primary);border:none;border-radius:8px;padding:6px 12px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit">เปิดขาย</button>'+
+    '<button onclick="bulkSetProductActive(false)" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:8px;padding:6px 12px;font-size:var(--fs-sm);cursor:pointer;font-family:inherit">ปิดขาย</button>'+
+    '<button onclick="bulkDeleteProducts()" style="background:#e41e3f;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button>'+
+    '<button onclick="clearProductSelection()" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:8px;padding:6px 12px;font-size:var(--fs-sm);cursor:pointer;font-family:inherit">ล้าง</button>'+
   '</div>' : '';
 }
 async function bulkSetProductActive(active){
@@ -2493,9 +2496,9 @@ function renderProducts() {
         '</div>'+
       '</div>'+
       '<div class="prod-acts">'+
-        '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="toggleProductActive(\''+p._id+'\','+(p.active!==false)+')" title="'+(off?'เปิดขาย':'ปิดขาย')+'">'+(off?'เปิด':'ปิด')+'</button>'+
-        '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="editProductB(\''+p._id+'\')"><svg class="ic"><use href="#i-edit"/></svg></button>'+
-        '<button class="btn btn-danger" style="padding:5px 9px;font-size:12px" onclick="deleteProduct(\''+p._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
+        '<button class="btn btn-ghost" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="toggleProductActive(\''+p._id+'\','+(p.active!==false)+')" title="'+(off?'เปิดขาย':'ปิดขาย')+'">'+(off?'เปิด':'ปิด')+'</button>'+
+        '<button class="btn btn-ghost" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="editProductB(\''+p._id+'\')"><svg class="ic"><use href="#i-edit"/></svg></button>'+
+        '<button class="btn btn-danger" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="deleteProduct(\''+p._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -2570,7 +2573,7 @@ function pricingCalc(){
     const profit = net - total;
     const m = net > 0 ? profit/net*100 : 0;
     const col = profit <= 0 ? '#dc2626' : (m >= 20 ? '#16a34a' : '#d97706');
-    return '<tr><td>'+t.label+(t.discount?' <span style="color:var(--muted);font-size:12px">−'+t.discount+'%</span>':'')+'</td>'
+    return '<tr><td>'+t.label+(t.discount?' <span style="color:var(--muted);font-size:var(--fs-xs)">−'+t.discount+'%</span>':'')+'</td>'
       + '<td>'+baht(net)+'</td>'
       + '<td style="color:'+col+';font-weight:700">'+(profit>=0?'+':'')+baht(profit)+'</td>'
       + '<td style="color:'+col+';font-weight:700">'+m.toFixed(0)+'%</td></tr>';
@@ -2585,11 +2588,11 @@ function pricingCalc(){
       + '<div class="stat-card"><div class="stat-label">คิดกำไรที่ราคา'+(priceInput>0?'':' (แนะนำ)')+'</div><div class="stat-val">'+baht(price)+'</div></div>'
     + '</div>'
     + '<div class="table-wrap"><table><thead><tr><th>ชั้นสมาชิก</th><th>ลูกค้าจ่ายสุทธิ</th><th>กำไร / ชิ้น</th><th>margin</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-    + '<div style="margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.95">'
+    + '<div style="margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:var(--fs-sm);line-height:1.95">'
       + '<div>🎯 <b>ราคาเท่าทุน</b> (ไม่มีส่วนลด): <b>'+baht(total)+'</b> — ต่ำกว่านี้ขาดทุนทันที</div>'
       + '<div>🛡️ <b>ราคาขั้นต่ำที่ปลอดภัย</b>: <b>'+baht(beMaxDisc)+'</b> — ต่ำกว่านี้ สมาชิกชั้นสูงสุด (ลด '+maxDisc+'%) จะทำให้ขาดทุน</div>'
     + '</div>'
-    + '<div style="margin-top:8px;font-size:12px;color:var(--muted)">* ส่วนลดต่อชั้นใช้ค่ามาตรฐานระบบ 0 / 5 / 10 / 15%</div>';
+    + '<div style="margin-top:8px;font-size:var(--fs-xs);color:var(--muted)">* ส่วนลดต่อชั้นใช้ค่ามาตรฐานระบบ 0 / 5 / 10 / 15%</div>';
 }
 /* ===== สุ่มจับรางวัล (Activity Engine) — admin ===== */
 // แปลงช่องส่วนลด: "50" = ลด ฿50 · "10%" = ลด 10% · ว่าง = คูปองโชว์อย่างเดียว (ใช้ลดราคาไม่ได้)
@@ -2706,14 +2709,14 @@ async function openLuckyDrawStats(id){
     if (!s.exists){ body.innerHTML = '<div class="empty-state">ไม่พบกล่องสุ่ม</div>'; return; }
     var v = s.data();
     var rows = tallyLuckyPrizes(v.prizes, v.spins);
-    var html = '<div style="font-weight:800;font-size:16px;margin-bottom:2px">'+escapeHtml(v.name||'')+'</div>'+
-      '<div style="color:var(--muted);font-size:13px;margin-bottom:14px">หมุนทั้งหมด '+(v.spins||0)+' ครั้ง · ค่าเข้า '+(v.costPoints||0)+' แต้ม/ครั้ง</div>'+
-      '<div style="font-weight:700;font-size:13px;margin-bottom:8px">การกระจายรางวัล</div>';
+    var html = '<div style="font-weight:800;font-size:var(--fs-md);margin-bottom:2px">'+escapeHtml(v.name||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:var(--fs-sm);margin-bottom:14px">หมุนทั้งหมด '+(v.spins||0)+' ครั้ง · ค่าเข้า '+(v.costPoints||0)+' แต้ม/ครั้ง</div>'+
+      '<div style="font-weight:700;font-size:var(--fs-sm);margin-bottom:8px">การกระจายรางวัล</div>';
     html += rows.length ? rows.map(function(r){
       var remain = r.remaining==null ? 'ไม่จำกัด' : (r.remaining+' เหลือ');
       var tag = r.type==='nothing' ? ' <span style="color:var(--muted)">(ไม่ถูกรางวัล)</span>' : '';
       return '<div style="margin-bottom:8px">'+
-        '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>'+escapeHtml(r.label)+tag+'</span><span style="color:var(--muted)">'+r.awarded+' ครั้ง · '+r.pct+'% · '+remain+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:3px"><span>'+escapeHtml(r.label)+tag+'</span><span style="color:var(--muted)">'+r.awarded+' ครั้ง · '+r.pct+'% · '+remain+'</span></div>'+
         '<div class="act-bar"><div style="width:'+r.pct+'%"></div></div>'+
       '</div>';
     }).join('') : '<div class="empty-state" style="padding:10px">ยังไม่มีรางวัล</div>';
@@ -2729,11 +2732,11 @@ async function loadLuckyDraws(){
       var v = d.data(); var prizes = Array.isArray(v.prizes)?v.prizes:[];
       var pz = prizes.filter(function(p){return p.type!=='nothing';}).map(function(p){ return escapeHtml(p.label)+(p.stock!=null?(' ('+(p.stock-(p.awarded||0))+' เหลือ)'):''); }).join(', ') || '—';
       var st = v.active!==false ? '<span style="color:#16a34a;font-weight:700">เปิด</span>' : '<span style="color:#dc2626;font-weight:700">ปิด</span>';
-      return '<tr><td style="font-weight:700">'+escapeHtml(v.name||'')+'</td><td>'+(v.costPoints||0)+' แต้ม</td><td style="font-size:12px">'+pz+'</td><td>'+(v.spins||0)+'</td><td>'+st+'</td>'+
-        '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="openLuckyDrawStats(\''+d.id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button> '+
-        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="openLuckyDrawEdit(\''+d.id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button> '+
-        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="toggleLuckyDraw(\''+d.id+'\','+(v.active!==false)+')">'+(v.active!==false?'ปิด':'เปิด')+'</button> '+
-        '<button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteLuckyDraw(\''+d.id+'\')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>';
+      return '<tr><td style="font-weight:700">'+escapeHtml(v.name||'')+'</td><td>'+(v.costPoints||0)+' แต้ม</td><td style="font-size:var(--fs-xs)">'+pz+'</td><td>'+(v.spins||0)+'</td><td>'+st+'</td>'+
+        '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="openLuckyDrawStats(\''+d.id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button> '+
+        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="openLuckyDrawEdit(\''+d.id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button> '+
+        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="toggleLuckyDraw(\''+d.id+'\','+(v.active!==false)+')">'+(v.active!==false?'ปิด':'เปิด')+'</button> '+
+        '<button class="btn btn-danger" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="deleteLuckyDraw(\''+d.id+'\')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>';
     }).join('');
   } catch(e){ document.getElementById('luckydraw-table').innerHTML = '<tr><td colspan="6" class="empty-state">Error: '+escapeHtml(e.message)+'</td></tr>'; }
 }
@@ -2834,10 +2837,10 @@ async function openMissionStats(id){
     var count = Math.max(0, Math.floor(Number(m.claimCount)||0));
     var typeLabel = MS_TYPE_LABEL[m.type] || m.type || '';
     var reward = m.rewardType==='coupon' ? ('🎟️ '+escapeHtml((m.coupon&&(m.coupon.discountText||m.coupon.label))||'คูปอง')) : ('🏅 '+(m.rewardPoints||0)+' แต้ม');
-    body.innerHTML = '<div style="font-weight:800;font-size:16px;margin-bottom:2px">'+escapeHtml(m.icon||'🎯')+' '+escapeHtml(m.name||'')+'</div>'+
-      '<div style="color:var(--muted);font-size:13px;margin-bottom:14px">'+escapeHtml(typeLabel)+' ครบ '+(m.goal||0)+' · รางวัล '+reward+'</div>'+
+    body.innerHTML = '<div style="font-weight:800;font-size:var(--fs-md);margin-bottom:2px">'+escapeHtml(m.icon||'🎯')+' '+escapeHtml(m.name||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:var(--fs-sm);margin-bottom:14px">'+escapeHtml(typeLabel)+' ครบ '+(m.goal||0)+' · รางวัล '+reward+'</div>'+
       '<div class="stat-card" style="text-align:center"><div class="stat-val" style="color:var(--primary)">'+count+'</div><div class="stat-label">คนทำสำเร็จ (รับรางวัลแล้ว)</div></div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:10px">นับจาก claimCount บน mission (server เพิ่มตอนจ่ายจริง · idempotent)</div>';
+      '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:10px">นับจาก claimCount บน mission (server เพิ่มตอนจ่ายจริง · idempotent)</div>';
   } catch(e){ body.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml((e&&e.message)||e)+'</div>'; }
 }
 async function loadCampaigns(){
@@ -2858,10 +2861,10 @@ async function loadCampaigns(){
           '<div class="prod-sub"><span>'+(MS_TYPE_LABEL[m.type]||m.type)+' ครบ '+(m.goal||0)+'</span> · <span>'+reward+'</span></div>'+
         '</div>'+
         '<div class="prod-acts">'+
-          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="openMissionStats(\''+m._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button>'+
-          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="openMissionEdit(\''+m._id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button>'+
-          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="toggleMission(\''+m._id+'\','+(m.active!==false)+')">'+(off?'เปิด':'ปิด')+'</button>'+
-          '<button class="btn btn-danger" style="padding:5px 9px;font-size:12px" onclick="deleteMission(\''+m._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="openMissionStats(\''+m._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button>'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="openMissionEdit(\''+m._id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button>'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="toggleMission(\''+m._id+'\','+(m.active!==false)+')">'+(off?'เปิด':'ปิด')+'</button>'+
+          '<button class="btn btn-danger" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="deleteMission(\''+m._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -2968,13 +2971,13 @@ async function openEarnStats(id){
     var c = s.data();
     var grantedPoints = Math.max(0, Math.floor(Number(c.grantedPoints)||0));
     var grantCount = Math.max(0, Math.floor(Number(c.grantCount)||0));
-    body.innerHTML = '<div style="font-weight:800;font-size:16px;margin-bottom:2px">'+escapeHtml(c.name||'')+'</div>'+
-      '<div style="color:var(--muted);font-size:13px;margin-bottom:14px">'+ecDesc(c)+ecWindow(c)+'</div>'+
+    body.innerHTML = '<div style="font-weight:800;font-size:var(--fs-md);margin-bottom:2px">'+escapeHtml(c.name||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:var(--fs-sm);margin-bottom:14px">'+ecDesc(c)+ecWindow(c)+'</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
         '<div class="stat-card" style="text-align:center"><div class="stat-val" style="color:var(--primary)">'+grantedPoints.toLocaleString()+'</div><div class="stat-label">แต้มที่แจกไปแล้ว</div></div>'+
         '<div class="stat-card" style="text-align:center"><div class="stat-val">'+grantCount.toLocaleString()+'</div><div class="stat-label">จำนวนครั้งที่แจก</div></div>'+
       '</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:10px">server เพิ่ม counter ตอนจ่ายจริง (คูณโปรฯ แล้ว) · counter-on-doc</div>';
+      '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:10px">server เพิ่ม counter ตอนจ่ายจริง (คูณโปรฯ แล้ว) · counter-on-doc</div>';
   } catch(e){ body.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml((e&&e.message)||e)+'</div>'; }
 }
 function ecDesc(c){
@@ -3043,10 +3046,10 @@ async function loadEarnCampaigns(){
           '<div class="prod-sub"><span>'+ecDesc(c)+'</span><span style="color:var(--muted)">'+ecWindow(c)+'</span></div>'+
         '</div>'+
         '<div class="prod-acts">'+
-          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="openEarnStats(\''+c._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button>'+
-          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="openEarnEdit(\''+c._id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button>'+
-          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="toggleEarnCampaign(\''+c._id+'\','+(c.active!==false)+')">'+(off?'เปิด':'ปิด')+'</button>'+
-          '<button class="btn btn-danger" style="padding:5px 9px;font-size:12px" onclick="deleteEarnCampaign(\''+c._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="openEarnStats(\''+c._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button>'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="openEarnEdit(\''+c._id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button>'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="toggleEarnCampaign(\''+c._id+'\','+(c.active!==false)+')">'+(off?'เปิด':'ปิด')+'</button>'+
+          '<button class="btn btn-danger" style="padding:5px 9px;font-size:var(--fs-xs)" onclick="deleteEarnCampaign(\''+c._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -3185,7 +3188,7 @@ async function loadPredictions(){
           (p.desc?'<div class="oa-line">'+escapeHtml(p.desc)+'</div>':'')+
           '<div class="oa-line">'+(p.mode==='choice'?('ตัวเลือก: '+escapeHtml((p.options||[]).join(' / '))):'กรอกคำตอบเอง')+'</div>'+
           '<div class="oa-line">รางวัล: '+reward+(p.costPoints?(' · ค่าเข้าร่วม '+p.costPoints+' แต้ม'):' · เล่นฟรี')+' · '+(!p.maxEntries?'เล่นไม่จำกัด':('เล่นได้ '+p.maxEntries+' ครั้ง/คน'))+'</div>'+
-          '<div class="oa-line" style="color:var(--muted);font-size:13px">'+info+'</div>'+
+          '<div class="oa-line" style="color:var(--muted);font-size:var(--fs-sm)">'+info+'</div>'+
         '</div>'+
         '<div class="oa-actions">'+acts+'</div>'+
       '</div>';
@@ -3210,7 +3213,7 @@ function _pdDistHtml(tally){
   if (!tally.byAnswer.length) return '<div class="empty-state" style="padding:10px">ยังไม่มีคนทาย</div>';
   return tally.byAnswer.map(function(r){
     return '<div style="margin-bottom:8px">'+
-      '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>'+escapeHtml(r.answer)+'</span><span style="color:var(--muted)">'+r.count+' คน · '+r.pct+'%</span></div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:3px"><span>'+escapeHtml(r.answer)+'</span><span style="color:var(--muted)">'+r.count+' คน · '+r.pct+'%</span></div>'+
       '<div class="act-bar"><div style="width:'+r.pct+'%"></div></div>'+
     '</div>';
   }).join('');
@@ -3229,9 +3232,9 @@ async function openPredictionStats(id){
     var entries = esnap.docs.map(function(d){ return d.data(); });
     var tally = tallyPredictionEntries(entries, p.mode==='choice' ? p.options : null);
     var settled = p.status === 'settled';
-    var html = '<div style="font-weight:800;font-size:16px;margin-bottom:2px">'+escapeHtml(p.name||'')+'</div>'+
-      '<div style="color:var(--muted);font-size:13px;margin-bottom:14px">'+(p.mode==='choice'?'เลือกตัวเลือก':'กรอกคำตอบเอง')+' · ผู้เล่น '+tally.total+' คน</div>'+
-      '<div style="font-weight:700;font-size:13px;margin-bottom:8px">การกระจายคำทาย</div>'+ _pdDistHtml(tally);
+    var html = '<div style="font-weight:800;font-size:var(--fs-md);margin-bottom:2px">'+escapeHtml(p.name||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:var(--fs-sm);margin-bottom:14px">'+(p.mode==='choice'?'เลือกตัวเลือก':'กรอกคำตอบเอง')+' · ผู้เล่น '+tally.total+' คน</div>'+
+      '<div style="font-weight:700;font-size:var(--fs-sm);margin-bottom:8px">การกระจายคำทาย</div>'+ _pdDistHtml(tally);
     if (settled){
       html += '<div class="oa-box" style="margin-top:14px;background:#f0fdf4;border:1px solid #16a34a"><div class="oa-line">✅ ผลที่ถูก: <b>'+escapeHtml(p.correctAnswer||'')+'</b></div><div class="oa-line">🏆 ผู้ชนะ '+(p.winnersCount||0)+' คน</div></div>';
     } else {
@@ -3239,7 +3242,7 @@ async function openPredictionStats(id){
         ? '<select id="act-settle-input" class="search-input" style="width:100%">'+ (p.options||[]).map(function(o){ return '<option value="'+escapeHtml(o)+'">'+escapeHtml(o)+'</option>'; }).join('') +'</select>'
         : '<input id="act-settle-input" class="search-input" style="width:100%" placeholder="เช่น 2-1">';
       html += '<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">'+
-        '<div style="font-weight:700;font-size:13px;margin-bottom:8px">เฉลยผล + จ่ายรางวัล</div>'+
+        '<div style="font-weight:700;font-size:var(--fs-sm);margin-bottom:8px">เฉลยผล + จ่ายรางวัล</div>'+
         inputHtml +
         '<button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="settlePredictionFromModal(\''+id+'\')"><svg class="ic"><use href="#i-flag"/></svg> เฉลย + จ่ายรางวัลทั้งหมด</button>'+
       '</div>';
@@ -3290,7 +3293,7 @@ async function loadGroups() {
       : snap.docs.map(doc => {
           const g = doc.data();
           return `<tr><td style="font-weight:700">${escapeHtml(g.emoji||'👥')} ${escapeHtml(g.name||'—')}</td><td>${g.memberCount||0}</td><td>${g.postCount||0}</td>
-          <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="editGroup('${doc.id}')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteGroup('${doc.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
+          <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="editGroup('${doc.id}')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button> <button class="btn btn-danger" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="deleteGroup('${doc.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
         }).join('');
   } catch(e) { tb.innerHTML = `<tr><td colspan="4" class="empty-state">Error: ${e.message}</td></tr>`; }
 }
@@ -3372,7 +3375,7 @@ async function loadBadges() {
     : list.map(b => {
         const th = (BDG_METRIC_LABEL[b.metric] || b.metric) + ' ≥ ' + (b.threshold||0);
         return `<tr><td style="font-weight:700">${escapeHtml(b.emoji||'🎖️')} ${escapeHtml(b.name||'—')}</td><td>${escapeHtml(th)}</td>
-        <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteBadge('${b.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
+        <td><button class="btn btn-danger" style="padding:5px 10px;font-size:var(--fs-xs)" onclick="deleteBadge('${b.id}')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>`;
       }).join('');
 }
 async function addBadge() {
@@ -3518,7 +3521,7 @@ function csvRenderPreview(){
     return '<tr>'+__csvFields.map(function(f){ return '<td>'+csvEsc(csvVal(r,f[0]))+'</td>'; }).join('')+'</tr>';
   }).join('');
   document.getElementById('csv-preview').innerHTML =
-    '<div style="font-size:12px;color:var(--muted);margin:6px 0">ตัวอย่าง '+rows.length+' / ทั้งหมด '+__csvRows.length+' แถว</div>'+
+    '<div style="font-size:var(--fs-xs);color:var(--muted);margin:6px 0">ตัวอย่าง '+rows.length+' / ทั้งหมด '+__csvRows.length+' แถว</div>'+
     '<div class="table-wrap"><table><thead><tr>'+th+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
   document.getElementById('csv-import-btn').textContent = '📥 นำเข้า '+__csvRows.length+' รายการ';
 }
@@ -3717,7 +3720,7 @@ async function loadTeam(){
     if (!admins.length){ box.innerHTML = '<div class="empty-state">ยังไม่มีแอดมินร่วม</div>'; return; }
     box.innerHTML = admins.map(function(uid){
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">'
-        + '<span style="font-family:monospace;font-size:13px;word-break:break-all">'+uid+'</span>'
+        + '<span style="font-family:monospace;font-size:var(--fs-sm);word-break:break-all">'+uid+'</span>'
         + '<button class="btn" style="background:#fee;color:#c00;flex-shrink:0;margin-left:8px" onclick="removeTeamAdmin(\''+uid+'\')">ลบ</button></div>';
     }).join('');
   } catch(e){ toast('โหลดทีมไม่สำเร็จ: '+e.message,'error'); }
@@ -3811,7 +3814,7 @@ function boceanCardHtml(r){
       row('ผู้ติดต่อ', r.contactName)+ row('โทร', r.phone)+ row('อีเมล', r.email)+
       row('LINE', r.lineId)+ row('ประเภทสินค้า', r.productType)+ row('โดเมนที่อยากได้', r.desiredDomain)+
       row('ข้อความ', r.message)+
-      '<div class="oa-line" style="color:var(--muted);font-size:12px;margin-top:5px">'+fmtDate(r.createdAt)+'</div>'+
+      '<div class="oa-line" style="color:var(--muted);font-size:var(--fs-xs);margin-top:5px">'+fmtDate(r.createdAt)+'</div>'+
     '</div>'+
     '<div class="oa-actions">'+acts+'</div>'+
   '</div>';
@@ -3862,7 +3865,7 @@ function tenantCardHtml(t){
       '<span class="oa-badge" style="background:'+stColor+'">'+stText+'</span></div>'+
     '<div class="oa-box" style="margin-top:8px">'+
       row('แพ็กเกจ', t.plan)+ row('โดเมน', (t.domains||[]).join(', '))+ row('Owner LINE', t.ownerLineId)+
-      '<div class="oa-line"><b>ลิงก์ใช้งาน:</b> <a href="'+liveUrl+'" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all">'+escapeHtml(liveUrl)+'</a> <button class="oa-btn" style="padding:2px 8px;font-size:12px;margin-left:6px" onclick="copyTenantLink(\''+t.id+'\')"><svg class="ic"><use href="#i-copy"/></svg> คัดลอก</button></div>'+
+      '<div class="oa-line"><b>ลิงก์ใช้งาน:</b> <a href="'+liveUrl+'" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all">'+escapeHtml(liveUrl)+'</a> <button class="oa-btn" style="padding:2px 8px;font-size:var(--fs-xs);margin-left:6px" onclick="copyTenantLink(\''+t.id+'\')"><svg class="ic"><use href="#i-copy"/></svg> คัดลอก</button></div>'+
     '</div>'+
     '<div class="oa-actions">'+acts+'</div>'+
   '</div>';
@@ -3917,7 +3920,7 @@ function shipBillCard(b){
     var dt = o.shippedAt ? new Date(o.shippedAt).toLocaleDateString('th-TH') : '-';
     return '<tr><td style="padding:4px 8px">'+dt+'</td><td style="padding:4px 8px">'+escapeHtml(o.orderId)+'</td><td style="padding:4px 8px">'+escapeHtml(o.courier||'')+'</td><td style="padding:4px 8px">'+escapeHtml(o.trackingNumber||o.shippopCode||'')+'</td><td style="padding:4px 8px;text-align:right">'+baht(o.price)+'</td></tr>';
   }).join('');
-  var table = '<div id="sbo-'+b.tid+'" style="display:none;margin-top:8px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'+
+  var table = '<div id="sbo-'+b.tid+'" style="display:none;margin-top:8px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:var(--fs-xs)">'+
     '<thead><tr style="color:var(--muted);text-align:left"><th style="padding:4px 8px">วันที่ส่ง</th><th style="padding:4px 8px">ออเดอร์</th><th style="padding:4px 8px">ขนส่ง</th><th style="padding:4px 8px">Tracking</th><th style="padding:4px 8px;text-align:right">ค่าส่ง</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>';
   var act = '<div class="oa-actions">'+
@@ -3948,12 +3951,12 @@ function printBill(tid){
   var b = (_shipbill.brands||[]).find(function(x){return x.tid===tid;}); if(!b) return;
   var rows = (b.orders||[]).map(function(o){ var dt=o.shippedAt?new Date(o.shippedAt).toLocaleDateString('th-TH'):'-'; return '<tr><td>'+dt+'</td><td>'+escapeHtml(o.orderId)+'</td><td>'+escapeHtml(o.courier||'')+'</td><td>'+escapeHtml(o.trackingNumber||o.shippopCode||'')+'</td><td style="text-align:right">'+baht(o.price)+'</td></tr>'; }).join('');
   var html = '<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>บิลค่าส่ง '+escapeHtml(b.name)+' '+escapeHtml(_shipbill.month)+'</title>'+
-    '<style>body{font-family:-apple-system,Arial,sans-serif;padding:24px;color:#111}h1{font-size:20px;margin:0 0 4px}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}tfoot td{font-weight:800}</style></head><body>'+
+    '<style>:root{--fs-2xs:11px;--fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:16px;--fs-lg:18px;--fs-xl:21px;--fs-2xl:27px;--fs-3xl:34px;--fs-4xl:44px}body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;padding:24px;color:#111}h1{font-size:var(--fs-xl);margin:0 0 4px}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:var(--fs-sm)}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}tfoot td{font-weight:800}</style></head><body>'+
     '<h1>บิลค่าส่ง — '+escapeHtml(b.name)+'</h1>'+
-    '<div style="color:#555;font-size:13px">แบรนด์: '+escapeHtml(b.tid)+' · เดือน: '+escapeHtml(_shipbill.month)+' · '+b.count+' พัสดุ</div>'+
+    '<div style="color:#555;font-size:var(--fs-sm)">แบรนด์: '+escapeHtml(b.tid)+' · เดือน: '+escapeHtml(_shipbill.month)+' · '+b.count+' พัสดุ</div>'+
     '<table><thead><tr><th>วันที่ส่ง</th><th>ออเดอร์</th><th>ขนส่ง</th><th>Tracking</th><th style="text-align:right">ค่าส่ง</th></tr></thead>'+
     '<tbody>'+rows+'</tbody><tfoot><tr><td colspan="4" style="text-align:right">รวมทั้งสิ้น</td><td style="text-align:right">'+baht(b.total)+'</td></tr></tfoot></table>'+
-    '<p style="margin-top:20px;font-size:12px;color:#666">ออกโดย Bocean · ต้นทุนค่าจัดส่งจริงจาก Shippop (ยังไม่รวมส่วนต่าง/ค่าบริการ)</p>'+
+    '<p style="margin-top:20px;font-size:var(--fs-xs);color:#666">ออกโดย Bocean · ต้นทุนค่าจัดส่งจริงจาก Shippop (ยังไม่รวมส่วนต่าง/ค่าบริการ)</p>'+
     '</body></html>';
   var w = window.open('', '_blank'); if(!w){ toast('เบราว์เซอร์บล็อกหน้าต่าง — อนุญาต popup ก่อน','error'); return; }
   w.document.write(html); w.document.close(); w.focus(); setTimeout(function(){ try{ w.print(); }catch(e){} }, 350);
@@ -4144,7 +4147,7 @@ function renderOrderBulkBar(){
   if (!bar) return;
   const n = Object.keys(_ordSelected).length;
   if (!n){ bar.innerHTML = ''; return; }
-  const btn = function(oc,txt,bg,fg){ return '<button onclick="'+oc+'" style="background:'+bg+';color:'+fg+';border:'+(bg==='transparent'?'1px solid #fff':'none')+';border-radius:8px;padding:6px 11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">'+txt+'</button>'; };
+  const btn = function(oc,txt,bg,fg){ return '<button onclick="'+oc+'" style="background:'+bg+';color:'+fg+';border:'+(bg==='transparent'?'1px solid #fff':'none')+';border-radius:8px;padding:6px 11px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit">'+txt+'</button>'; };
   bar.innerHTML = '<div style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
     '<span style="font-weight:700">เลือก '+n+'</span>'+
     btn("bulkOrderStatus('confirmed','ยืนยันรับเงิน')",'<svg class="ic"><use href="#i-check"/></svg> ยืนยันรับเงิน','#fff','var(--primary)')+
@@ -4206,7 +4209,7 @@ function renderAdminOrders(){
     html = list.map(orderCardHtml).join('');
   }
   // footer: จำนวน + โหลดเพิ่ม (ไม่ silent truncate — บอกชัดว่าโหลดมาเท่าไหร่/ครบยัง)
-  html += '<div style="text-align:center;padding:14px;color:var(--muted);font-size:13px">'+
+  html += '<div style="text-align:center;padding:14px;color:var(--muted);font-size:var(--fs-sm)">'+
     'แสดง '+list.length+' รายการ · โหลดมา '+adminOrders.length+
     (_ordEnd ? ' · ครบแล้ว' : ' · <a href="#" onclick="loadOrders(true);return false" style="color:var(--primary);font-weight:700">โหลดเพิ่ม</a>')+
   '</div>';
@@ -4252,7 +4255,7 @@ function orderCardHtml(o){
         '<div class="oa-line">📞 '+escapeHtml(sh.phone||'-')+'</div>'+
         '<div class="oa-line">📍 '+(addr||'-')+'</div>'+
         (sh.note?'<div class="oa-line">📝 '+escapeHtml(sh.note)+'</div>':'')+
-        '<div class="oa-line" style="color:var(--muted);font-size:12px;margin-top:5px">'+fmtDate(o.createdAt)+'</div>'+
+        '<div class="oa-line" style="color:var(--muted);font-size:var(--fs-xs);margin-top:5px">'+fmtDate(o.createdAt)+'</div>'+
         track+
       '</div>'+
       '<div class="oa-box"><div class="oa-h">🛒 รายการ</div>'+
@@ -4332,24 +4335,24 @@ async function printDeliveryNote(id){
   var html = ''+
 '<!doctype html><html><head><meta charset="utf-8"><title>ใบส่งสินค้า #'+data.oid+'</title>'+
 '<style id="pagestyle">@page{size:4in 6in;margin:3mm}</style>'+
-'<style>*{font-family:"Sarabun","Segoe UI",sans-serif;box-sizing:border-box}body{margin:0;background:#eee;color:#000}'+
-'.bar{background:#1f2937;color:#fff;padding:10px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px}'+
-'.bar select,.bar input{padding:6px 9px;border-radius:6px;border:1px solid #555;font-size:13px}'+
-'.bar .grow{flex:1}.bar button{padding:8px 18px;border:none;border-radius:6px;background:#22c55e;color:#fff;font-weight:800;font-size:14px;cursor:pointer}'+
+'<style>:root{--fs-2xs:11px;--fs-xs:12px;--fs-sm:13px;--fs-base:14px;--fs-md:16px;--fs-lg:18px;--fs-xl:21px;--fs-2xl:27px;--fs-3xl:34px;--fs-4xl:44px}*{font-family:"Sarabun","Segoe UI",sans-serif;box-sizing:border-box}body{margin:0;background:#eee;color:#000}'+
+'.bar{background:#1f2937;color:#fff;padding:10px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:var(--fs-sm)}'+
+'.bar select,.bar input{padding:6px 9px;border-radius:6px;border:1px solid #555;font-size:var(--fs-sm)}'+
+'.bar .grow{flex:1}.bar button{padding:8px 18px;border:none;border-radius:6px;background:#22c55e;color:#fff;font-weight:800;font-size:var(--fs-base);cursor:pointer}'+
 '.wrap{padding:16px;display:flex;justify-content:center}'+
 '.lbl{background:#fff;width:190mm;max-width:100%;border:2px solid #000;padding:8mm}'+
 '.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:6px}'+
-'.hd .courier{font-size:22px;font-weight:900}.hd .oid{font-size:14px;text-align:right}'+
-'.awb{border:1px dashed #000;padding:6px 10px;margin-top:8px;font-size:15px;font-weight:700}'+
+'.hd .courier{font-size:var(--fs-xl);font-weight:900}.hd .oid{font-size:var(--fs-base);text-align:right}'+
+'.awb{border:1px dashed #000;padding:6px 10px;margin-top:8px;font-size:var(--fs-md);font-weight:700}'+
 '.blk{border:1px solid #000;padding:8px 10px;margin-top:8px}'+
-'.blk h3{margin:0 0 3px;font-size:12px;letter-spacing:1px}'+
-'.to .name{font-size:20px;font-weight:900}.to .addr{font-size:16px;line-height:1.5;margin-top:2px}'+
+'.blk h3{margin:0 0 3px;font-size:var(--fs-xs);letter-spacing:1px}'+
+'.to .name{font-size:var(--fs-xl);font-weight:900}.to .addr{font-size:var(--fs-md);line-height:1.5;margin-top:2px}'+
 '.cod{border:2px solid #000;padding:8px 10px;margin-top:8px;text-align:center}'+
-'.cod .amt{font-size:26px;font-weight:900}'+
-'.items{font-size:13px;margin-top:8px;border-top:1px solid #000;padding-top:6px}'+
+'.cod .amt{font-size:var(--fs-2xl);font-weight:900}'+
+'.items{font-size:var(--fs-sm);margin-top:8px;border-top:1px solid #000;padding-top:6px}'+
 '@media print{body{background:#fff}.noprint{display:none!important}.wrap{padding:0}.lbl{border:2px solid #000;width:auto}'+
-'body.sticker .lbl{width:auto;padding:3mm;border-width:1px}body.sticker .hd .courier{font-size:18px}body.sticker .to .name{font-size:18px}body.sticker .cod .amt{font-size:22px}}'+
-'body.sticker .lbl{width:4in;padding:3mm}body.sticker .hd .courier{font-size:19px}body.sticker .to .name{font-size:18px}'+
+'body.sticker .lbl{width:auto;padding:3mm;border-width:1px}body.sticker .hd .courier{font-size:var(--fs-lg)}body.sticker .to .name{font-size:var(--fs-lg)}body.sticker .cod .amt{font-size:var(--fs-xl)}}'+
+'body.sticker .lbl{width:4in;padding:3mm}body.sticker .hd .courier{font-size:var(--fs-xl)}body.sticker .to .name{font-size:var(--fs-lg)}'+
 '</style></head><body>'+
 '<div class="bar noprint">'+
   '<label>ขนส่ง: <select id="courier"></select></label>'+
@@ -4383,7 +4386,7 @@ async function printDeliveryNote(id){
 '   "<div class=\\"hd\\"><div class=\\"courier\\">"+esc(courier)+"</div><div class=\\"oid\\">ออเดอร์ #"+esc(D.oid)+"<br>"+esc(D.date)+"</div></div>"'+
 '   +"<div class=\\"awb\\">เลขพัสดุ (AWB): "+(awb?esc(awb):"________________________")+"</div>"'+
 '   +"<div class=\\"blk\\"><h3>ผู้ส่ง FROM</h3><div><b>"+esc(sName)+"</b>"+(sPhone?(" · โทร "+esc(sPhone)):"")+"</div>"+(sAddr?("<div>"+esc(sAddr)+"</div>"):"")+"</div>"'+
-'   +"<div class=\\"blk to\\"><h3>ผู้รับ TO</h3><div class=\\"name\\">"+esc(sh.name||D.userName||"-")+"</div><div class=\\"addr\\">โทร "+esc(sh.phone||"-")+"<br>"+(addr||"-")+"</div>"+(sh.note?("<div style=\\"font-size:13px;margin-top:3px\\">📝 "+esc(sh.note)+"</div>"):"")+"</div>"'+
+'   +"<div class=\\"blk to\\"><h3>ผู้รับ TO</h3><div class=\\"name\\">"+esc(sh.name||D.userName||"-")+"</div><div class=\\"addr\\">โทร "+esc(sh.phone||"-")+"<br>"+(addr||"-")+"</div>"+(sh.note?("<div style=\\"font-size:var(--fs-sm);margin-top:3px\\">📝 "+esc(sh.note)+"</div>"):"")+"</div>"'+
 '   +cod'+
 '   +"<div class=\\"items\\"><b>รายการ:</b> "+esc(items)+"</div>";'+
 '  try{localStorage.setItem(SK,JSON.stringify({name:document.getElementById("s-name").value,phone:sPhone,addr:sAddr}));}catch(e){}'+
@@ -4392,7 +4395,7 @@ async function printDeliveryNote(id){
 'if(D.bookedCourier){var _cn=COURIER_MAP[String(D.bookedCourier).toUpperCase()]||D.bookedCourier;if(!Array.prototype.some.call(cs.options,function(o){return o.value===_cn;})){var _o=document.createElement("option");_o.value=_cn;_o.textContent=_cn;cs.appendChild(_o);}cs.value=_cn;}'+
 'if(D.bookedAwb){document.getElementById("awb").value=D.bookedAwb;}'+
 'if(D.labelUrl&&/^https?:\\/\\//.test(D.labelUrl)){var _lb=document.createElement("button");_lb.textContent="\\ud83d\\udcc4 ใบปะหน้า Shippop (จริง)";_lb.style.cssText="background:#0ea5e9";_lb.onclick=function(){window.open(D.labelUrl,"_blank");};var _bar=document.querySelector(".bar");_bar.insertBefore(_lb,_bar.querySelector("button"));}'+
-'if(D.bookedAwb){var _bd=document.createElement("span");_bd.textContent="\\u2713 ดึงเลขพัสดุจากการจองอัตโนมัติแล้ว";_bd.style.cssText="color:#22c55e;font-size:12px;font-weight:700;margin-left:8px";document.querySelector(".bar").appendChild(_bd);}'+
+'if(D.bookedAwb){var _bd=document.createElement("span");_bd.textContent="\\u2713 ดึงเลขพัสดุจากการจองอัตโนมัติแล้ว";_bd.style.cssText="color:#22c55e;font-size:var(--fs-xs);font-weight:700;margin-left:8px";document.querySelector(".bar").appendChild(_bd);}'+
 'try{var sv=JSON.parse(localStorage.getItem(SK)||"{}");var snd=D.sender||{};document.getElementById("s-name").value=snd.name||sv.name||D.shopName;document.getElementById("s-phone").value=snd.phone||sv.phone||"";document.getElementById("s-addr").value=snd.addr||sv.addr||"";}catch(e){document.getElementById("s-name").value=(D.sender&&D.sender.name)||D.shopName;}'+
 'function applySize(v){document.body.className=v==="sticker"?"sticker":"";document.getElementById("pagestyle").textContent=v==="sticker"?"@page{size:4in 6in;margin:3mm}":"@page{size:A4;margin:12mm}";}'+
 'document.getElementById("size").addEventListener("change",function(){applySize(this.value);});applySize("sticker");'+
