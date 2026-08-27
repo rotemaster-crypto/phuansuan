@@ -9,14 +9,29 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer)
-- Hardening (audit) เสร็จ: door-open ปิด + order state machine + guard/CLAUDE.md · test เขียว (e2e 110 + rules 51 + frontend 5 + guard 9)
-- ✅ **push แล้ว 2026-08-27** (origin/main = 06c8b98) · gate เขียว (e2e 110 + rules + guard + frontend) · **แต่ deploy FAIL** → โค้ดยังไม่ขึ้น prod (ดู 🔴 deploy-infra ล่าง)
-- ✅ **ทำเสร็จ session นี้ (2026-08-27):** XSS admin+index ครบ · คอมเมนต์โหลดได้ · dashboard เจ้าของร้าน · **Activity Engine ครบ 4 engine** (edit+analytics+counter-on-doc) · .gitattributes กัน EOL flip
-- ⚠️ **ยัง verify สดไม่ได้** (ต้อง login admin/LINE): dashboard, activity edit/analytics — ทดสอบ static+unit+e2e ผ่านหมด แต่ DOM-wiring ยังไม่ได้กดจริง
-- ⚠️ **B5 ก่อน OAuth ใช้งานจริง:** prod `tenant.domains` ต้องครบ (web.app + firebaseapp.com + custom)
-- ⚠️ **ก่อน push/deploy:** (1) push→main = deploy จริง · (2) prod `tenant.domains` ต้องครบ (web.app + firebaseapp.com) ไม่งั้น OAuth join พัง (B5)
-- แผนฟีเจอร์เสร็จถึง Phase 4 (Activity Engine ทำงานได้) — ที่เหลือคือ **ทำงานได้แต่ไม่ครบ/หยาบ/ไม่ปลอดภัย** ด้านล่าง
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-27 (สิ้นเซสชันใหญ่)
+**origin/main = `c97ff92` · prod live ทุกอย่าง · deploy มือผ่าน `firebase deploy` (login rotemaster@gmail.com พร้อม)**
+
+**✅ ทำเสร็จ+deploy+verify prod เซสชันนี้:**
+- XSS admin+index ครบ + guard A2 ครอบ 2 ไฟล์ · คอมเมนต์ไม่โหลด→`loadComments` (verify คอมเมนต์จริง)
+- Dashboard เจ้าของร้าน (shop stats + "ต้องจัดการก่อน" + Activity stats) — verify prod
+- **Activity Engine ครบ 4 engine** (predictions/luckydraw/missions/earn): edit + analytics + counter-on-doc + e2e — verify prod
+- Orders: search + cursor pagination + Export CSV (injection-safe) + bulk select + **bulk status change** (money op, server-validated)
+- Feed cursor pagination + โหลดเพิ่ม (verify prod: 9→12, no-dup)
+- Products bulk/sort · Team-admin race fix (arrayUnion/Remove) · lineAuth single-point-of-failure fix (e2e 110/110)
+- SW v2 · **.gitattributes (LF)** · **`no-cache` บน HTML** (แก้ต้นเหตุ stale-after-deploy) · CI `deploy-functions` job
+
+**🔧 prod incidents ที่แก้ (ops):**
+- tenant `phuansuan` เคย `status:suspended` → admin/callable ล่มทั้งหมด → PATCH เป็น active (ecofora/phetpaya ด้วย) · ทั้ง 3 active
+- แก้ผ่าน Firestore/Identity-Toolkit REST + gcloud token (`CLOUDSDK_PYTHON`→Python315) · classifier บล็อก prod-write → รันได้เมื่อ user ยืนยัน
+
+**⚠️ ค้าง/ต้องรู้ (รอบหน้าอ่านตรงนี้):**
+- **CI deploy ยัง fail** — secret `FIREBASE_SA_PHUANSUAN` ไม่ได้ตั้ง (ดู 🔴 deploy-infra) → deploy มือไปก่อน
+- **Facebook login:** infra ครบ (LINE+Google ใช้ได้แล้ว) · รอ user สร้าง FB app + enable ใน Firebase Console → แล้ว flip `config.js` `auth.providers.facebook:true`
+- authorized domains ครบแล้ว (phuansuan/office/bocean × web.app+firebaseapp.com)
+- **หมายเหตุ verify prod:** cache แก้เป็น no-cache แล้ว → deploy ใหม่ fresh ทันที (ไม่ต้อง clear cache แล้ว) · แต่ browser ที่ cache ก่อนแก้ต้อง Ctrl+Shift+R ครั้งเดียว
+
+**🟡 งานถัดไป (เลือกจากนี่):** badges race (read-modify-write เหมือน team ที่แก้แล้ว) · sysoverview scale (loop ทุก tenant × full get) · products category dynamic + PC_TIERS จาก config · orders mark-COD/partial-refund · streak engine
 
 ---
 
