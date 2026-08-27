@@ -1191,6 +1191,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <div class="screen" id="screen-orders">
   <div class="page-header"><div class="page-title">🛒 ออเดอร์</div><div class="page-sub">ตรวจสลิป ยืนยันรับเงิน และจัดส่ง</div></div>
+  <div class="search-row"><input class="search-input" id="ord-search" placeholder="🔍 ค้นหา: เลขออเดอร์ / ชื่อผู้รับ / เบอร์ / เลขพัสดุ" oninput="onOrderSearch()"></div>
   <div class="ord-filter" id="ord-filter">
     <button class="ofb active" data-st="all" onclick="filterOrders('all',this)">ทั้งหมด</button>
     <button class="ofb" data-st="paid_review" onclick="filterOrders('paid_review',this)">รอตรวจสลิป</button>
@@ -3528,6 +3529,8 @@ const ORDER_META = {
 
 let adminOrders = [];
 let adminOrderFilter = 'all';
+let _ordCursor = null, _ordEnd = false, _ordSearch = '';
+const ORD_BATCH = 25;
 
 let boceanReqs = [];
 async function loadBoceanRequests(){
@@ -3801,20 +3804,40 @@ async function provisionFromRequest(reqId){
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
 
-async function loadOrders(){
+// server-side cursor pagination (orderBy createdAt desc) — เลิก .get() ทั้ง collection (ไม่ scale)
+// more=true → โหลด batch ถัดไป (ออเดอร์เก่ากว่า) ต่อท้าย; ไม่ส่ง → โหลดใหม่ตั้งแต่ต้น
+async function loadOrders(more){
   const box = document.getElementById('orders-admin-list');
   if (!box || !db) return;
-  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  if (!more){ adminOrders = []; _ordCursor = null; _ordEnd = false; box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>'; }
   try {
-    const snap = await aDb().collection('orders').get();
+    let q = aDb().collection('orders').orderBy('createdAt','desc').limit(ORD_BATCH);
+    if (more && _ordCursor) q = q.startAfter(_ordCursor);
+    const snap = await q.get();
+    if (snap.size < ORD_BATCH) _ordEnd = true;
+    if (snap.docs.length) _ordCursor = snap.docs[snap.docs.length - 1];
     const t = aTid();
-    adminOrders = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
-      .filter(function(o){ return !o.tenantId || o.tenantId === t; });
-    adminOrders.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
+    const batch = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(o){ return !o.tenantId || o.tenantId === t; });   // redundant guard (per-tenant path อยู่แล้ว)
+    adminOrders = adminOrders.concat(batch);
     const pend = adminOrders.filter(function(o){ return o.status==='paid_review'; }).length;
     const badge = document.getElementById('badge-orders'); if (badge) badge.textContent = pend;
     renderAdminOrders();
   } catch(e){ box.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
+}
+
+function onOrderSearch(){
+  _ordSearch = (document.getElementById('ord-search')||{}).value || '';
+  renderAdminOrders();
+}
+// pure: ออเดอร์ตรงคำค้นไหม (เลขออเดอร์/ชื่อ/เบอร์/เลขพัสดุ) — เทสได้
+function orderMatchesSearch(o, q){
+  q = String(q||'').trim().toLowerCase();
+  if (!q) return true;
+  const sh = o.shipping || {};
+  const hay = [o.id||'', String(o.id||'').slice(-6), sh.name||'', o.userName||'', sh.phone||'', o.trackingNumber||'']
+    .join(' ').toLowerCase();
+  return hay.indexOf(q) > -1;
 }
 
 function filterOrders(st, el){
@@ -3827,9 +3850,23 @@ function filterOrders(st, el){
 function renderAdminOrders(){
   const box = document.getElementById('orders-admin-list');
   if (!box) return;
-  const list = adminOrders.filter(function(o){ return adminOrderFilter==='all' || o.status===adminOrderFilter; });
-  if (!list.length){ box.innerHTML = '<div class="empty-state">ไม่มีออเดอร์ในหมวดนี้</div>'; return; }
-  box.innerHTML = list.map(orderCardHtml).join('');
+  const list = adminOrders.filter(function(o){
+    return (adminOrderFilter==='all' || o.status===adminOrderFilter) && orderMatchesSearch(o, _ordSearch);
+  });
+  let html;
+  if (!list.length){
+    html = '<div class="empty-state">'+
+      (_ordSearch ? ('ไม่พบออเดอร์ที่ค้นหา'+(!_ordEnd?' ในที่โหลดมา — กด "โหลดเพิ่ม" เพื่อค้นออเดอร์เก่ากว่า':'')) : 'ไม่มีออเดอร์ในหมวดนี้')+
+    '</div>';
+  } else {
+    html = list.map(orderCardHtml).join('');
+  }
+  // footer: จำนวน + โหลดเพิ่ม (ไม่ silent truncate — บอกชัดว่าโหลดมาเท่าไหร่/ครบยัง)
+  html += '<div style="text-align:center;padding:14px;color:var(--muted);font-size:13px">'+
+    'แสดง '+list.length+' รายการ · โหลดมา '+adminOrders.length+
+    (_ordEnd ? ' · ครบแล้ว' : ' · <a href="#" onclick="loadOrders(true);return false" style="color:var(--primary);font-weight:700">โหลดเพิ่ม</a>')+
+  '</div>';
+  box.innerHTML = html;
 }
 
 function orderCardHtml(o){

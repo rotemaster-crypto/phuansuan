@@ -45,8 +45,9 @@
 - [ ] `admin.html:1314` sysoverview loop ทุก tenant × full users.get()+orders.get() — **พังเมื่อ tenant/data โต** + metric บาง (ไม่มี revenue/growth ต่อแบรนด์) · **M–L** (= B6/audit)
 
 ### Admin — orders
-- [ ] orders **ไม่มี search** (order id/ชื่อ/เบอร์/tracking) มีแค่ filter tab สถานะ · **M**
-- [ ] `admin.html:3370` orders `.get()` ทั้งหมดทุกครั้ง — ไม่มี pagination/date range · **M**
+- [x] ~~orders search~~ — ✅ 2026-08-27: search เลขออเดอร์/ชื่อ/เบอร์/tracking (client-side, pure `orderMatchesSearch` เทสผ่าน) + status tab เดิม
+- [x] ~~orders `.get()` ทั้ง collection~~ — ✅ 2026-08-27: server cursor pagination (`orderBy createdAt desc .limit(25)` + `startAfter`) + ปุ่ม "โหลดเพิ่ม" · footer โชว์ "แสดง X · โหลดมา Y · ครบแล้ว/โหลดเพิ่ม" (ไม่ silent truncate)
+  - หมายเหตุ: search/status filter ทำบน batch ที่โหลดมา (Firestore substring ไม่ได้) → ค้นไม่เจอบอกให้โหลดเพิ่ม · badge paid_review นับจากที่โหลด (paid_review = ล่าสุด อยู่ batch แรก) · date-range ยังไม่มี
 - [ ] ไม่มี bulk action / export CSV / mark COD เก็บแล้ว / partial refund · **M**
 
 ### Admin — Activity Engine (edit + analytics · counter-on-doc · กำลังทำยาว 4 engine)
