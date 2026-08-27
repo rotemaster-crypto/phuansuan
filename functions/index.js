@@ -117,9 +117,9 @@ exports.lineAuth = onCall(async (req) => {
 
   // 3) ออก custom token — uid = LINE userId + claim admin + tenants + tadmin/towner
   const isAdmin = profile.userId === ADMIN_LINE_ID;
-  const tid = await resolveTid(req.data?.tid);
 
   // หา tenant ที่ user เป็น owner/admin → claim tadmin (จัดการได้) + towner (เจ้าของ)
+  // (ไม่ขึ้นกับสถานะ tenant ที่ใช้ login — สแกนทุก tenant)
   const tadmin = {};
   const towner = {};
   try {
@@ -133,14 +133,24 @@ exports.lineAuth = onCall(async (req) => {
   } catch (e) {
     console.warn("tadmin lookup failed:", e && e.message);
   }
+  const isTenantAdmin = Object.keys(tadmin).length > 0;
 
-  // B5 note: membership ที่นี่ (tenants[tid]) มาจาก tid ฝั่ง client เช่นกัน แต่ tid ของ
-  //   browser มาจากโดเมน (config.js) — จะส่ง tid ผิดต้องผ่าน XSS (ปิดแล้ว A2) หรือ client
-  //   ที่ไม่ใช่ browser (ต้อง App Check). ไม่ gate ด้วย origin ที่นี่เพราะเสี่ยงทำ login พัง
-  //   ทั้งระบบถ้า tenant.domains ไม่ครบ (path login หลัก) — closure เต็มรอ App Check
-  const token = await admin
-    .auth()
-    .createCustomToken(profile.userId, { admin: isAdmin, tenants: { [tid]: true }, tadmin: tadmin, towner: towner });
+  // resolve login-tenant สำหรับ membership claim — แต่ "อย่าให้ tenant ที่ suspended/หาย
+  // มาบล็อก admin login" (จุดเปราะ single-point-of-failure: super admin/brand-admin ต้อง
+  //   login ได้เสมอเพื่อเข้าไปกู้/จัดการ แม้ tenant ที่ใช้ login ถูก suspend — admin ops
+  //   ใช้สิทธิ์ canManage(claim) ไม่ใช่ membership tenants[tid])
+  let tid = null, tenantOk = false;
+  try { tid = await resolveTid(req.data?.tid); tenantOk = true; }
+  catch (e) { tenantOk = false; }
+  // customer ธรรมดา (ไม่ใช่ admin) + login-tenant ใช้ไม่ได้ → บล็อกเหมือนเดิม (fail-closed)
+  if (!isAdmin && !isTenantAdmin && !tenantOk) {
+    throw new HttpsError("failed-precondition", "ไม่พบร้าน (tenant) หรือถูกระงับ");
+  }
+
+  // B5 note: membership (tenants[tid]) ให้เฉพาะ tenant ที่ active จริง (tenantOk)
+  const claims = { admin: isAdmin, tadmin: tadmin, towner: towner };
+  if (tenantOk && tid) claims.tenants = { [tid]: true };
+  const token = await admin.auth().createCustomToken(profile.userId, claims);
 
   return {
     token,
@@ -150,10 +160,11 @@ exports.lineAuth = onCall(async (req) => {
       pictureUrl: profile.pictureUrl || "",
     },
     isAdmin,
-    isTenantAdmin: Object.keys(tadmin).length > 0,
+    isTenantAdmin,
     adminTenants: tadmin,
     ownerTenants: towner,
-    tid,
+    tid: tenantOk ? tid : null,
+    tenantOk,
   };
 });
 
