@@ -11,7 +11,7 @@
 
 ## 📍 สถานะปัจจุบัน (resume pointer)
 - Hardening (audit) เสร็จ: door-open ปิด + order state machine + guard/CLAUDE.md · test เขียว (e2e 110 + rules 51 + frontend 5 + guard 9)
-- ✅ **push แล้ว 2026-08-27** (origin/main = 06c8b98) → CI deploy รัน (gate e2e/rules/guard) · e2e local 110/110 เขียว
+- ✅ **push แล้ว 2026-08-27** (origin/main = 06c8b98) · gate เขียว (e2e 110 + rules + guard + frontend) · **แต่ deploy FAIL** → โค้ดยังไม่ขึ้น prod (ดู 🔴 deploy-infra ล่าง)
 - ✅ **ทำเสร็จ session นี้ (2026-08-27):** XSS admin+index ครบ · คอมเมนต์โหลดได้ · dashboard เจ้าของร้าน · **Activity Engine ครบ 4 engine** (edit+analytics+counter-on-doc) · .gitattributes กัน EOL flip
 - ⚠️ **ยัง verify สดไม่ได้** (ต้อง login admin/LINE): dashboard, activity edit/analytics — ทดสอบ static+unit+e2e ผ่านหมด แต่ DOM-wiring ยังไม่ได้กดจริง
 - ⚠️ **B5 ก่อน OAuth ใช้งานจริง:** prod `tenant.domains` ต้องครบ (web.app + firebaseapp.com + custom)
@@ -21,6 +21,11 @@
 ---
 
 ## 🔴 ต้องแก้ (security / broken) — ทำก่อน
+
+### 🚧 deploy-infra — CI deploy พังมาตลอด (เพิ่งเจอ 2026-08-27) · โค้ดยังไม่เคยขึ้น prod ผ่าน CI
+- [ ] **secret `FIREBASE_SA_PHUANSUAN` ไม่ได้ตั้ง** (`gh secret list` ว่างเปล่า) → job `deploy` (hosting) fail ทันที "Input required and not supplied: firebaseServiceAccount" · **ต้องตั้ง secret** (`firebase init hosting:github` หรือ manual: SA JSON → GitHub repo Settings→Secrets ชื่อ `FIREBASE_SA_PHUANSUAN`) แล้ว `gh run rerun <id> --failed`
+- [ ] **workflow ไม่ deploy Functions เลย** — `firebase-deploy.yml` มีแค่ `action-hosting-deploy` (hosting) · backend changes (claimCount/earn counters ฯลฯ) ไม่ขึ้น prod · ต้อง deploy มือ (`firebase deploy --only functions --project phuansuan`) **หรือ** เพิ่ม job `deploy-functions` ใน workflow (SA ต้องมีสิทธิ์ Cloud Functions Admin + Service Account User)
+- หมายเหตุ: นี่เป็น infra gap เดิม (secret ไม่เคยมี) ไม่ใช่จากงาน 2026-08-27 · ต้องใช้สิทธิ์ Firebase/GitHub ของ Roger (agent ทำเองไม่ได้)
 
 ### ~~XSS ที่ A2 แก้ไม่ครบ~~ — ✅ ปิดครบแล้ว 2026-08-27 (admin.html + index.html)
 - admin.html: banUser JS-injection, photo url(), displayName/lineUserId, posts moderate, icon img, admin avatar + เพิ่ม `safeUrl()` + ขยาย `tools/guard.mjs` A2 ให้สแกน admin.html
