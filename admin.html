@@ -253,6 +253,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item sys-only" onclick="showScreen('tenants',this)"><svg class="ic sb-ic"><use href="#i-building"/></svg> จัดการแบรนด์</div>
     <div class="sb-item sys-only" onclick="showScreen('bocean',this)"><svg class="ic sb-ic"><use href="#i-inbox"/></svg> คำขอเปิดร้าน <span class="sb-badge" id="badge-bocean">0</span></div>
     <div class="sb-item sys-only" onclick="showScreen('shipbill',this)"><svg class="ic sb-ic"><use href="#i-truck"/></svg> ค่าส่ง & บิลแบรนด์</div>
+    <div class="sb-item sys-only" onclick="showScreen('verifyqueue',this)"><svg class="ic sb-ic"><use href="#i-check"/></svg> ตรวจยืนยันตัวตน <span class="sb-badge" id="badge-verify" style="display:none">0</span></div>
 
     <!-- ═══ เข้าจัดการร้านแบรนด์ (super เลือกแบรนด์ / brand-admin = แบรนด์ตัวเอง) ═══ -->
     <div class="sb-brandbar">
@@ -335,6 +336,12 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     </div>
   </div>
   <div id="sb-list"><div class="empty-state">เลือกเดือนแล้วกด “ดึงยอด”</div></div>
+</div>
+
+<!-- VERIFY QUEUE (N5 stage ④ · super-admin) -->
+<div class="screen" id="screen-verifyqueue">
+  <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-check"/></svg>ตรวจยืนยันตัวตนร้าน</div><div class="page-sub">ดูเอกสาร + เทียบชื่อบัญชีกับบัตร → อนุมัติ/ปฏิเสธ verified badge</div></div>
+  <div id="verifyqueue-list"><div class="empty-state">กำลังโหลด...</div></div>
 </div>
 
 <div class="screen" id="screen-tenants">
@@ -1432,7 +1439,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, shipping: loadShippingScreen, verify: loadVerification, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill };
+  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, shipping: loadShippingScreen, verify: loadVerification, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill, verifyqueue: loadVerifyQueue };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -2019,6 +2026,51 @@ async function loadShopDecor() {
 // N1: หน้า "จัดส่ง" แยกออกมา — โหลดผู้ส่ง+ค่าส่ง+ขนส่งพร้อมกัน
 function loadShippingScreen(){ loadStore(); loadShipping(); loadCourier(); }
 
+// ── N5 stage ④: super-admin ตรวจยืนยันตัวตน ──────────────────
+async function loadVerifyQueue(){
+  var box = document.getElementById('verifyqueue-list'); if (!box) return;
+  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('listPendingVerifications');
+    var list = ((await fn({})).data || {}).pending || [];
+    var badge = document.getElementById('badge-verify');
+    if (badge){ badge.textContent = list.length; badge.style.display = list.length ? '' : 'none'; }
+    if (!list.length){ box.innerHTML = '<div class="card" style="text-align:center;color:var(--muted)">ไม่มีคำขอรอตรวจ</div>'; return; }
+    var rows = await Promise.all(list.map(renderVerifyRow));
+    box.innerHTML = rows.join('');
+  } catch(e){ box.innerHTML = '<div class="card" style="color:#dc2626">โหลดไม่สำเร็จ: '+escapeHtml(e.code||e.message)+'</div>'; }
+}
+async function _vfDocLink(path, label){
+  if (!path) return '';
+  try { var url = await storage.ref(path).getDownloadURL();
+    var u = safeUrl(url); if (!u) return '';
+    return '<a href="'+u+'" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;margin-right:14px">📄 '+escapeHtml(label)+'</a>';
+  } catch(e){ return '<span style="color:var(--muted);margin-right:14px">'+escapeHtml(label)+' (เปิดไม่ได้)</span>'; }
+}
+async function renderVerifyRow(v){
+  var b = v.bankAccount || {}, d = v.docs || {};
+  var links = (await _vfDocLink(d.idCard,'บัตรประชาชน')) + (await _vfDocLink(d.selfie,'รูปถือบัตร')) + (await _vfDocLink(d.registration,'ทะเบียน'));
+  return '<div class="card">'
+    + '<div style="font-weight:800;font-size:15px">'+escapeHtml(v.name||v.tid)+' <span style="color:var(--muted);font-weight:400;font-size:13px">('+escapeHtml(v.tid)+')</span></div>'
+    + '<div style="font-size:13px;margin:6px 0"><b>บัญชีรับเงิน:</b> '+escapeHtml(b.name||'-')+' · '+escapeHtml(b.number||'-')+' · '+escapeHtml(b.type||'')+'</div>'
+    + '<div style="font-size:13px;margin-bottom:12px">'+(links||'<span style="color:var(--muted)">ไม่มีเอกสาร</span>')+'</div>'
+    + '<div style="display:flex;gap:8px">'
+    +   '<button class="btn btn-primary" onclick="reviewVerify(\''+v.tid+'\',true)"><svg class="ic"><use href="#i-check"/></svg> อนุมัติ</button>'
+    +   '<button class="btn btn-ghost" style="color:#dc2626" onclick="reviewVerify(\''+v.tid+'\',false)"><svg class="ic"><use href="#i-x"/></svg> ปฏิเสธ</button>'
+    + '</div></div>';
+}
+async function reviewVerify(tid, approve){
+  var note = '';
+  if (!approve){ note = prompt('เหตุผลที่ปฏิเสธ (จะแสดงให้ร้านเห็น):',''); if (note === null) return; }
+  else if (!confirm('อนุมัติร้านนี้? ร้านจะได้เครื่องหมายยืนยันตัวตนแสดงต่อลูกค้า')) return;
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('setTenantVerified');
+    await fn({ tid: tid, approve: approve, note: note });
+    toast(approve ? '✅ อนุมัติแล้ว' : 'ปฏิเสธแล้ว', 'success');
+    loadVerifyQueue();
+  } catch(e){ toast('❌ '+(e.code||e.message), 'error'); }
+}
+
 // ── N5 stage ③: ยืนยันตัวตนร้าน (เจ้าของส่งเอกสาร+บัญชี) ──────────
 var _vfDocs = { idCard:'', selfie:'', registration:'' };
 async function uploadVerifyDoc(input, key){
@@ -2472,10 +2524,10 @@ async function toggleProductActive(id, cur){
 /* ===== เครื่องมือคิดราคา–กำไร (Phase 2) ===== */
 // ส่วนลดต่อชั้นสมาชิก = ค่ามาตรฐานระบบ (ตรงกับ config.js: bronze/silver/gold/platinum)
 const PC_TIERS = [
-  { label: 'มือใหม่', discount: 0 },
-  { label: 'เงิน',    discount: 5 },
-  { label: 'ทอง',     discount: 10 },
-  { label: 'ปราชญ์',  discount: 15 }
+  { label: 'Bronze',   discount: 0 },
+  { label: 'Silver',   discount: 5 },
+  { label: 'Gold',     discount: 10 },
+  { label: 'Platinum', discount: 15 }
 ];
 // ป้ายกำไรขั้นต้น (ราคา vs ต้นทุน) — เขียว≥20% ส้ม≥5% แดง<5%
 function marginBadge(price, cost){

@@ -308,6 +308,52 @@ exports.submitVerification = onCall(async (req) => {
   return { ok: true, status: "pending" };
 });
 
+// ── N5 stage ④: super-admin ตรวจ/อนุมัติ verification ─────────
+function requireSuperAdmin(req) {
+  const uid = req.auth && req.auth.uid;
+  if (!uid || !(req.auth.token && req.auth.token.admin === true)) {
+    throw new HttpsError("permission-denied", "เฉพาะผู้ดูแลระบบ Bocean");
+  }
+  return uid;
+}
+// รายการร้านที่รอตรวจ (iterate — เลี่ยง collectionGroup index; สเกลเล็ก พอสำหรับ launch)
+exports.listPendingVerifications = onCall(async (req) => {
+  requireSuperAdmin(req);
+  const fs = admin.firestore();
+  const tsnap = await fs.collection("tenants").get();
+  const out = [];
+  for (const t of tsnap.docs) {
+    const vd = await t.ref.collection("private").doc("verification").get();
+    if (vd.exists && vd.data().status === "pending") {
+      const v = vd.data();
+      out.push({
+        tid: t.id, name: (t.data() && t.data().name) || t.id,
+        bankAccount: v.bankAccount || {}, docs: v.docs || {},
+        submittedAt: v.submittedAt ? v.submittedAt.toMillis() : null,
+      });
+    }
+  }
+  return { pending: out };
+});
+// อนุมัติ/ปฏิเสธ — เขียน tenant.verified + settings/app.verified (flag public ให้ลูกค้าอ่าน badge)
+exports.setTenantVerified = onCall(async (req) => {
+  const uid = requireSuperAdmin(req);
+  const tid = String((req.data && req.data.tid) || "").trim();
+  if (!tid) throw new HttpsError("invalid-argument", "ต้องระบุ tid");
+  const approve = !!(req.data && req.data.approve);
+  const note = String((req.data && req.data.note) || "").trim().slice(0, 300);
+  const tr = troot(tid);
+  const snap = await tr.get();
+  if (!snap.exists) throw new HttpsError("not-found", "ไม่พบร้าน");
+  const now = FieldValue.serverTimestamp();
+  await tr.set({ verified: approve, updatedAt: now }, { merge: true });
+  await tr.collection("settings").doc("app").set({ verified: approve }, { merge: true });   // public flag → badge
+  await tr.collection("private").doc("verification").set({
+    status: approve ? "approved" : "rejected", reviewedBy: uid, reviewedAt: now, reviewNote: note,
+  }, { merge: true });
+  return { ok: true, tid: tid, verified: approve };
+});
+
 // ── dailyLoginBonus ───────────────────────────────────────
 // ให้แต้มเข้าระบบรายวัน "ฝั่ง server" (idempotent ต่อวันตามเขตเวลาไทย)
 // ย้ายมาจาก client (index.html) ที่เดิม increment points เอง → กันปั๊มแต้ม (A5)
