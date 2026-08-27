@@ -50,7 +50,8 @@
 - [x] ~~orders `.get()` ทั้ง collection~~ — ✅ 2026-08-27: server cursor pagination (`orderBy createdAt desc .limit(25)` + `startAfter`) + ปุ่ม "โหลดเพิ่ม" · footer โชว์ "แสดง X · โหลดมา Y · ครบแล้ว/โหลดเพิ่ม" (ไม่ silent truncate)
   - หมายเหตุ: search/status filter ทำบน batch ที่โหลดมา (Firestore substring ไม่ได้) → ค้นไม่เจอบอกให้โหลดเพิ่ม · badge paid_review นับจากที่โหลด (paid_review = ล่าสุด อยู่ batch แรก) · date-range ยังไม่มี
 - [x] ~~export CSV + bulk select~~ — ✅ 2026-08-27: Export CSV (ที่แสดง/ที่เลือก) · pure `ordersToCsv()` เทสผ่าน · **CSV injection-safe** (field `=+-@` นำหน้า `'`) + BOM ให้ Excel อ่านไทย · checkbox เลือกหลายรายการ + bulk bar
-- [ ] bulk **status change** (confirm/ship หลายรายการ) — hold: money op ต้อง UX ระวัง (loop setOrderStatus + confirm ยอด) · mark COD เก็บแล้ว · partial refund · **M**
+- [x] ~~bulk status change~~ — ✅ 2026-08-27: bulk ยืนยันรับเงิน (confirm dialog โชว์ยอดรวม)/จัดส่ง/ปิดออเดอร์/ยกเลิก ผ่าน setOrderStatus + adminCancelOrder (validate transition ฝั่ง server) · per-order try/catch → ข้ามอันที่ transition ไม่ได้ + สรุป · ยกเลิก→คืนสต็อก+reload products
+- [ ] mark COD เก็บแล้ว · partial refund · **M**
 
 ### Admin — Activity Engine (edit + analytics · counter-on-doc · กำลังทำยาว 4 engine)
 > design: [[activity-engine-crud-analytics]] · modal กลาง `.act-modal` + convention `editId` (สร้างจาก predictions ใช้ซ้ำ 3 engine ที่เหลือ)

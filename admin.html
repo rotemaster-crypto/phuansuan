@@ -4009,11 +4009,46 @@ function renderOrderBulkBar(){
   const bar = document.getElementById('ord-bulk-bar');
   if (!bar) return;
   const n = Object.keys(_ordSelected).length;
-  bar.innerHTML = n ? '<div style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-    '<span style="font-weight:700">เลือก '+n+' รายการ</span>'+
-    '<button onclick="exportSelectedOrders()" style="background:#fff;color:var(--primary);border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">⬇️ Export ที่เลือก</button>'+
-    '<button onclick="clearOrderSelection()" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit">ล้าง</button>'+
-  '</div>' : '';
+  if (!n){ bar.innerHTML = ''; return; }
+  const btn = function(oc,txt,bg,fg){ return '<button onclick="'+oc+'" style="background:'+bg+';color:'+fg+';border:'+(bg==='transparent'?'1px solid #fff':'none')+';border-radius:8px;padding:6px 11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">'+txt+'</button>'; };
+  bar.innerHTML = '<div style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+    '<span style="font-weight:700">เลือก '+n+'</span>'+
+    btn("bulkOrderStatus('confirmed','ยืนยันรับเงิน')",'✅ ยืนยันรับเงิน','#fff','var(--primary)')+
+    btn("bulkOrderStatus('shipped','จัดส่งแล้ว')",'🚚 จัดส่งแล้ว','#fff','var(--primary)')+
+    btn("bulkOrderStatus('completed','ปิดออเดอร์')",'🏁 ปิดออเดอร์','#fff','var(--primary)')+
+    btn("bulkOrderStatus('cancelled','ยกเลิก')",'❌ ยกเลิก','#e41e3f','#fff')+
+    btn("exportSelectedOrders()",'⬇️ Export','transparent','#fff')+
+    btn("clearOrderSelection()",'ล้าง','transparent','#fff')+
+  '</div>';
+}
+// bulk เปลี่ยนสถานะ (money op) — ผ่าน setOrderStatus/adminCancelOrder ที่ validate ฝั่ง server
+// per-order try/catch → transition ไม่ได้ = ข้าม (server เป็นคนตัดสิน ไม่มีทางหลุด invalid)
+async function bulkOrderStatus(to, label){
+  const ids = Object.keys(_ordSelected);
+  if (!ids.length){ toast('ยังไม่ได้เลือก','error'); return; }
+  const sel = adminOrders.filter(function(o){ return _ordSelected[o.id]; });
+  let msg;
+  if (to === 'confirmed'){
+    const total = sel.reduce(function(s,o){ return s + (Number(o.total)||0); }, 0);
+    msg = 'ยืนยันรับเงิน '+ids.length+' รายการ (รวม '+baht(total)+')?\nเฉพาะออเดอร์ที่ยัง "รอตรวจสลิป/รอชำระ" จะเปลี่ยน';
+  } else if (to === 'cancelled'){
+    msg = 'ยกเลิก '+ids.length+' รายการ? ระบบจะคืนสต็อกให้อัตโนมัติ';
+  } else {
+    msg = label+' '+ids.length+' รายการ? (เฉพาะออเดอร์ที่สถานะเปลี่ยนได้)';
+  }
+  if (!confirm(msg)) return;
+  const fnName = (to === 'cancelled') ? 'adminCancelOrder' : 'setOrderStatus';
+  const fn = firebase.app().functions('asia-southeast1').httpsCallable(fnName);
+  let ok = 0, skip = 0;
+  for (let i = 0; i < ids.length; i++){
+    try {
+      const payload = (to === 'cancelled') ? { tid: currentTenant, orderId: ids[i] } : { tid: currentTenant, orderId: ids[i], to: to };
+      await fn(payload); ok++;
+    } catch(e){ skip++; }
+  }
+  toast((ok?'✅ ':'⚠️ ')+label+' '+ok+' รายการ'+(skip?(' · ข้าม '+skip+' (สถานะไม่ตรง)'):''), ok?'success':'error');
+  _ordSelected = {}; loadOrders();
+  if (to === 'cancelled' && typeof loadProducts === 'function') loadProducts();   // สต็อกเปลี่ยน
 }
 
 function filterOrders(st, el){
