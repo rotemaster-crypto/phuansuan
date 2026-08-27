@@ -31,7 +31,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 
 /* ── TOPBAR ── */
 .topbar{background:#fff;border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 12px;gap:8px;position:sticky;top:0;z-index:200}
-.tb-logo{font-size:26px;font-weight:800;color:var(--primary);font-family:Georgia,serif;flex:1}
+.tb-brand{flex:1;display:flex;align-items:center;gap:4px;min-width:0}
+.tb-logo{font-size:26px;font-weight:800;color:var(--primary);font-family:Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vbadge{display:none;align-items:center;flex-shrink:0}
+.vbadge-ic{width:17px;height:17px}
 .tb-btn{width:38px;height:38px;border-radius:50%;background:#e4e6eb;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;position:relative;flex-shrink:0}
 .tb-badge{position:absolute;top:1px;right:1px;background:#e41e3f;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 4px;border:1.5px solid #fff;min-width:16px;text-align:center;line-height:14px}
 
@@ -509,6 +512,7 @@ button .ic,a .ic{pointer-events:none}
 <symbol id="rx-haha" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFCC4D"/><path fill="#664500" d="M18 29.5c-4.7 0-7.6-3.2-7.6-5.7 0-.9.7-1.3 1.9-1.3h11.4c1.2 0 1.9.4 1.9 1.3 0 2.5-2.9 5.7-7.6 5.7z"/><path fill="#fff" d="M12.4 23.1c1.3-.4 3.3-.6 5.6-.6s4.3.2 5.6.6c-.3-.7-1.2-1-2.6-1h-6c-1.4 0-2.3.3-2.6 1z"/><path fill="none" stroke="#664500" stroke-width="1.7" stroke-linecap="round" d="M11.6 14.9c.7-1.3 2.4-1.5 3.4-.5M24.4 14.9c-.7-1.3-2.4-1.5-3.4-.5"/></symbol>
 <symbol id="rx-wow" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFCC4D"/><ellipse cx="18" cy="23.5" rx="3.2" ry="4.3" fill="#664500"/><ellipse cx="12.8" cy="17" rx="1.7" ry="2.3" fill="#664500"/><ellipse cx="23.2" cy="17" rx="1.7" ry="2.3" fill="#664500"/><path fill="none" stroke="#664500" stroke-width="1.4" stroke-linecap="round" d="M10.4 12.6c1-1.1 2.8-1.3 4-.4M25.6 12.6c-1-1.1-2.8-1.3-4-.4"/></symbol>
 <symbol id="rx-sad" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFCC4D"/><ellipse cx="12.8" cy="17.5" rx="1.6" ry="2.1" fill="#664500"/><ellipse cx="23.2" cy="17.5" rx="1.6" ry="2.1" fill="#664500"/><path fill="none" stroke="#664500" stroke-width="1.7" stroke-linecap="round" d="M12.8 26.5c1.6-2.2 8.8-2.2 10.4 0"/><path fill="none" stroke="#664500" stroke-width="1.4" stroke-linecap="round" d="M10.2 14c1.1-1.1 3-1.3 4.2-.5M25.8 14c-1.1-1.1-3-1.3-4.2-.5"/><path fill="#5DADEC" d="M12.4 20.6c.9 0 1.6 1.4 1.6 2.3a1.6 1.6 0 0 1-3.2 0c0-.9.7-2.3 1.6-2.3z"/></symbol>
+<symbol id="s-verified" viewBox="0 0 24 24"><path fill="#1B9AF0" d="M12 1.5l2.6 2 3.2-.3 1 3.1 2.7 1.8-1.2 3 .0.1 1.2 3-2.7 1.8-1 3.1-3.2-.3-2.6 2-2.6-2-3.2.3-1-3.1L1.9 15l1.2-3-1.2-3 2.7-1.8 1-3.1 3.2.3 2.6-2z"/><path fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M7.8 12.2l2.8 2.8 5.4-5.8"/></symbol>
 </defs></svg>
 
 <!-- ══ LOADING SCREEN ══ -->
@@ -549,7 +553,10 @@ button .ic,a .ic{pointer-events:none}
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="tb-logo" id="app-logo">เพื่อนสวน</div>
+  <div class="tb-brand">
+    <div class="tb-logo" id="app-logo">เพื่อนสวน</div>
+    <span class="vbadge" id="verified-badge" title="ร้านนี้ยืนยันตัวตนกับ Bocean แล้ว"><svg class="vbadge-ic"><use href="#s-verified"/></svg></span>
+  </div>
   <button class="tb-btn" onclick="openNotifs()"><svg class="ic" style="width:20px;height:20px"><use href="#i-bell"/></svg><span class="tb-badge" id="notif-badge" style="display:none">0</span></button>
   <button class="tb-btn commerce-entry" onclick="openCart()"><svg class="ic" style="width:20px;height:20px"><use href="#i-cart"/></svg><span class="tb-badge cart-badge" id="cart-badge" style="display:none">0</span></button>
 </div>
@@ -639,6 +646,11 @@ button .ic,a .ic{pointer-events:none}
       <button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">ดูทั้งหมด →</button>
     </div>
     <div id="pf-orders" style="margin-top:8px"><div style="font-size:13px;color:var(--muted)">กำลังโหลด...</div></div>
+  </div>
+  <div class="crops-card" style="text-align:center">
+    <div class="sec-title" style="justify-content:center"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-cart"/></svg> เปิดร้านของคุณเอง</div>
+    <div style="font-size:13px;color:var(--muted);margin:4px 0 12px">ขายสินค้าบน Bocean ฟรี — เปิดได้ทันที ไม่ต้องรออนุมัติ แล้วยืนยันตัวตนทีหลังเพื่อรับเครื่องหมายร้านน่าเชื่อถือ</div>
+    <button class="submit-btn" onclick="openShopForm()"><svg class="ic"><use href="#i-cart"/></svg> เปิดร้านฟรี</button>
   </div>
   <div class="crops-card">
     <div class="sec-title">โพสของฉัน</div>
@@ -801,6 +813,37 @@ button .ic,a .ic{pointer-events:none}
       <input id="edit-province" maxlength="60" placeholder="เช่น อ.บ้านโป่ง ราชบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;box-sizing:border-box">
       <button class="submit-btn" id="edit-save-btn" onclick="saveProfileEdit()" style="margin-top:16px"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
       <button class="ob-skip" onclick="document.getElementById('editProfileModal').classList.remove('open')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OPEN SHOP MODAL (N5 stage ②) ══ -->
+<div class="overlay" id="openShopModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="border-radius:16px 16px 0 0;max-height:90vh;overflow:auto">
+    <div class="modal-body" style="padding-top:22px">
+      <div class="ob-title">เปิดร้านฟรีบน Bocean</div>
+      <div class="ob-sub" style="margin-bottom:12px">กรอกข้อมูลร้าน แล้วเปิดได้ทันที — ยืนยันตัวตนทีหลังในหลังร้านเพื่อรับเครื่องหมายร้านน่าเชื่อถือ</div>
+      <div class="co-form">
+        <div class="co-field"><label class="co-label">ชื่อร้าน *</label><input class="co-input" id="cs-name" maxlength="60" placeholder="เช่น สวนคุณสมชาย"></div>
+        <div class="co-field"><label class="co-label">ชื่อ-นามสกุลเจ้าของ (จริง) *</label><input class="co-input" id="cs-owner" maxlength="80" placeholder="ชื่อจริงตามบัตรประชาชน"></div>
+        <div class="co-row2">
+          <div class="co-field"><label class="co-label">เบอร์โทร *</label><input class="co-input" id="cs-phone" inputmode="numeric" maxlength="10" placeholder="08xxxxxxxx"></div>
+          <div class="co-field"><label class="co-label">อีเมล *</label><input class="co-input" id="cs-email" type="email" placeholder="you@email.com"></div>
+        </div>
+        <div class="co-field"><label class="co-label">หมวดสินค้าหลัก *</label><select class="co-select" id="cs-category"></select></div>
+        <div class="co-field"><label class="co-label">พร้อมเพย์ / เลขบัญชีรับเงิน *</label><input class="co-input" id="cs-promptpay" inputmode="numeric" maxlength="15" placeholder="เบอร์พร้อมเพย์ หรือเลขบัญชี (ชื่อตรงเจ้าของ)"></div>
+        <div class="co-field"><label class="co-label">ที่อยู่ร้าน (สำหรับส่งของ)</label><input class="co-input" id="cs-addr" maxlength="200" placeholder="บ้านเลขที่ / ถนน (ไม่บังคับ)"></div>
+        <div class="co-row2">
+          <div class="co-field"><label class="co-label">จังหวัด</label><input class="co-input" id="cs-province" maxlength="60"></div>
+          <div class="co-field"><label class="co-label">รหัสไปรษณีย์</label><input class="co-input" id="cs-postcode" inputmode="numeric" maxlength="5"></div>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--muted);margin-top:6px;cursor:pointer">
+          <input type="checkbox" id="cs-terms" style="margin-top:3px;flex-shrink:0">
+          <span>ยอมรับ<b>ข้อตกลงการใช้งาน</b> และยืนยันว่าข้อมูลข้างต้นเป็นความจริง</span>
+        </label>
+      </div>
+      <button class="submit-btn" id="cs-submit-btn" onclick="submitCreateShop()" style="margin-top:16px"><svg class="ic"><use href="#i-cart"/></svg> เปิดร้าน</button>
+      <button class="ob-skip" onclick="document.getElementById('openShopModal').classList.remove('open')">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -1877,6 +1920,9 @@ function applyBranding(b) {
   var emoji = b.logoEmoji || C.app.logoEmoji;
   var el = document.getElementById('app-logo');
   if (el) el.textContent = emoji + ' ' + name;
+  // N5: verified badge ข้างชื่อแบรนด์ (อ่าน flag public จาก settings/app · server เป็นคนตั้ง)
+  var vb = document.getElementById('verified-badge');
+  if (vb) vb.style.display = (b.verified === true) ? 'inline-flex' : 'none';
   document.title = name;
   if (b.primaryColor) document.documentElement.style.setProperty('--primary', b.primaryColor);
   if (b.accentColor) document.documentElement.style.setProperty('--accent', b.accentColor);
@@ -2582,6 +2628,48 @@ function requireLogin(){
   if (!isGuest()) return true;
   showLoginPrompt();
   return false;
+}
+
+// ── N5 stage ②: เปิดร้านเอง (self-service) ────────────────────
+function openShopForm(){
+  if (!requireLogin()) return;   // guest → prompt login ก่อน
+  var sel = document.getElementById('cs-category');
+  if (sel && !sel.options.length){
+    var cats = (APP_CONFIG.productCategories || []);
+    sel.innerHTML = '<option value="">— เลือกหมวด —</option>' +
+      cats.map(function(c){ return '<option value="'+c.id+'">'+c.emoji+' '+c.name+'</option>'; }).join('');
+  }
+  document.getElementById('openShopModal').classList.add('open');
+}
+async function submitCreateShop(){
+  if (!requireLogin()) return;
+  var v = function(id){ var e=document.getElementById(id); return e ? (e.value||'').trim() : ''; };
+  var data = {
+    name: v('cs-name'), ownerName: v('cs-owner'), phone: v('cs-phone'), email: v('cs-email'),
+    category: v('cs-category'), promptpayId: v('cs-promptpay'),
+    store: { addressLine: v('cs-addr'), province: v('cs-province'), postcode: v('cs-postcode') },
+    acceptedTerms: document.getElementById('cs-terms').checked,
+  };
+  // client validate เบื้องต้น (server เป็นตัวตัดสินจริง — createShop)
+  if (data.name.length < 2) return toast('กรอกชื่อร้าน');
+  if (data.ownerName.length < 2) return toast('กรอกชื่อ-นามสกุลเจ้าของ');
+  if (!/^[0-9]{9,10}$/.test(data.phone)) return toast('เบอร์โทรไม่ถูกต้อง');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return toast('อีเมลไม่ถูกต้อง');
+  if (!data.category) return toast('เลือกหมวดสินค้าหลัก');
+  if (!/^[0-9]{8,15}$/.test(data.promptpayId.replace(/[-\s]/g,''))) return toast('พร้อมเพย์/บัญชีไม่ถูกต้อง');
+  if (!data.acceptedTerms) return toast('กรุณายอมรับข้อตกลง');
+  var btn = document.getElementById('cs-submit-btn');
+  var old = btn.innerHTML; btn.disabled = true; btn.textContent = 'กำลังเปิดร้าน...';
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('createShop');
+    await fn(data);
+    toast('เปิดร้านสำเร็จ! กำลังพาไปหลังร้าน...', 'success');
+    document.getElementById('openShopModal').classList.remove('open');
+    setTimeout(function(){ window.location.href = '/admin.html'; }, 1200);
+  } catch(e){
+    btn.disabled = false; btn.innerHTML = old;
+    toast('เปิดร้านไม่สำเร็จ: ' + ((e && e.message) || 'ลองใหม่'), 'error');
+  }
 }
 function showLoginPrompt(){
   var m = document.getElementById('loginPrompt'); if (m) m.classList.add('open');
