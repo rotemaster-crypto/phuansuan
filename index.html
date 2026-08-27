@@ -2743,7 +2743,42 @@ function switchFeedTab(el){
 }
 function toggleComments(id){
   const el=document.getElementById(id);
-  el.style.display=el.style.display==='none'?'block':'none';
+  if(!el) return;
+  const willShow = el.style.display==='none';
+  el.style.display = willShow ? 'block' : 'none';
+  if (willShow) {
+    const postId = id.indexOf('cmt-')===0 ? id.slice(4) : id;
+    loadComments(postId);
+  }
+}
+// โหลด+render คอมเมนต์จริงจาก subcollection (เดิม toggle แค่ display → คอมเมนต์คนอื่นไม่เคยโผล่)
+async function loadComments(postId){
+  const box = document.getElementById('cmts-' + postId);
+  if (!box || !db) return;
+  box.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">กำลังโหลด...</div>';
+  try {
+    const snap = await tdb().collection('posts').doc(postId).collection('comments')
+      .orderBy('createdAt','asc').limit(200).get();
+    if (snap.empty) { box.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">ยังไม่มีความคิดเห็น</div>'; return; }
+    box.innerHTML = snap.docs.map(function(d){
+      const c = d.data();
+      const nm = escapeHtml(c.authorName) || 'ผู้ใช้';
+      const av = safeUrl(c.authorPhoto);
+      const initials = escapeHtml((c.authorName || '?').charAt(0));
+      return '<div class="cmt" style="margin-top:8px">'+
+        '<div class="cmt-av" style="'+(av?"background-image:url('"+av+"');background-size:cover;background-position:center":'')+'">'+
+          (av?'':initials)+'</div>'+
+        '<div><div class="cmt-bubble">'+
+          '<div class="cmt-name">'+nm+'</div>'+
+          '<div class="cmt-text">'+escapeHtml(c.text)+'</div>'+
+        '</div></div>'+
+      '</div>';
+    }).join('');
+  } catch(e){
+    console.error(e);
+    box.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">โหลดความคิดเห็นไม่สำเร็จ — '+
+      '<a href="#" onclick="loadComments(\''+postId+'\');return false" style="color:var(--primary)">ลองใหม่</a></div>';
+  }
 }
 function openPostModal(){
   if (!requireLogin()) return; // guard-post
@@ -3280,6 +3315,7 @@ async function addComment(postId) {
     // แสดงความคิดเห็น
     const cmtsEl = document.getElementById('cmts-' + postId);
     if (cmtsEl) {
+      if (!cmtsEl.querySelector('.cmt')) cmtsEl.innerHTML = '';   // เคลียร์ placeholder ว่าง/loading/error ก่อน append จริง
       const initials = currentUser.displayName?.charAt(0) || 'ฉ';
       cmtsEl.innerHTML += `
         <div class="cmt" style="margin-top:8px">

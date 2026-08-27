@@ -11,7 +11,8 @@
 
 ## 📍 สถานะปัจจุบัน (resume pointer)
 - Hardening (audit) เสร็จ: door-open ปิด + order state machine + guard/CLAUDE.md · test เขียว (e2e 110 + rules 51 + frontend 5 + guard 9)
-- ⚠️ **main ยังไม่ push** — ahead origin ~32 commits (งาน hardening + doc + backlog นี้)
+- ✅ **🔴 เคลียร์หมดแล้ว (2026-08-27):** XSS admin.html+index.html ปิดครบ + guard A2 ครอบ 2 ไฟล์ · คอมเมนต์โหลดแล้ว → **งานถัดไปเริ่มที่ 🟡** (แนะนำ: dashboard เจ้าของร้าน / คอมเมนต์ pagination / Activity Engine แก้ไขได้)
+- ⚠️ **main ยังไม่ push** — ahead origin ~34 commits (งาน hardening + doc + XSS + comments)
 - ⚠️ **ก่อน push/deploy:** (1) push→main = deploy จริง · (2) prod `tenant.domains` ต้องครบ (web.app + firebaseapp.com) ไม่งั้น OAuth join พัง (B5)
 - แผนฟีเจอร์เสร็จถึง Phase 4 (Activity Engine ทำงานได้) — ที่เหลือคือ **ทำงานได้แต่ไม่ครบ/หยาบ/ไม่ปลอดภัย** ด้านล่าง
 
@@ -24,8 +25,8 @@
 - index.html: affiliate `href` (javascript: scheme) → safeUrl + fallback ปุ่มปกติ · shop banner CSS injection → safeUrl · profile cover concat → safeUrl · img src escapeHtml-only 6 จุด → safeUrl+fallback emoji
 - guard เขียว (9 กฎ, A2 ครอบ index+admin) · frontend test 5/5
 
-### Broken (ฟีเจอร์พัง)
-- [ ] `index.html:2744,3247,3267` — **คอมเมนต์ไม่โหลดเลย** · `toggleComments` แค่ toggle display, คอมเมนต์ของคนอื่น (และของเราจาก session ก่อน) ไม่เคย render — มีแค่ optimistic self-comment ตอนโพสต์ · เพิ่ม loader query `posts/{id}/comments` (escape) · **M** ← รูใหญ่สุดฝั่ง user
+### ~~Broken (ฟีเจอร์พัง)~~ — ✅ ปิดแล้ว 2026-08-27
+- ~~คอมเมนต์ไม่โหลดเลย~~ · เพิ่ม `loadComments(postId)` query `posts/{id}/comments` (orderBy createdAt, escape+safeUrl) เรียกตอน `toggleComments` เปิด · empty/error state ตาม §3 · optimistic append เคลียร์ placeholder ก่อน · rules read คอมเมนต์อนุญาตอยู่แล้ว (เท่ากับสิทธิ์ดูโพสต์)
 
 ---
 
