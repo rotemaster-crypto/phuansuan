@@ -191,6 +191,87 @@ exports.claimTenant = onCall(async (req) => {
   return { ok: true, tid: tid };
 });
 
+// ── createShop (N5 stage ①): เปิดร้านเอง (self-service) ───────
+//  server-authoritative: client สร้าง tenant ตรงไม่ได้ (rules tenants write:isAdmin)
+//  เปิดได้ทันทีไม่ต้องรอ admin — status active, verified:false (ยืนยันตัวตนทีหลัง)
+//  PII (ชื่อจริง/เบอร์/อีเมล) เก็บ private/owner (rules ปิด) ไม่ไว้บน tenant doc (A8)
+const RESERVED_TIDS = { office: 1, phuansuan: 1, bocean: 1, admin: 1, api: 1, www: 1, app: 1, static: 1, assets: 1 };
+function slugTid(name) {
+  const b = String(name || "").toLowerCase().normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24);
+  return b || "shop";
+}
+async function genUniqueTid(name) {
+  const base = slugTid(name);
+  for (let i = 0; i < 6; i++) {
+    const cand = (i === 0 && !RESERVED_TIDS[base]) ? base : base + "-" + crypto.randomBytes(2).toString("hex");
+    if (RESERVED_TIDS[cand]) continue;
+    const s = await admin.firestore().collection("tenants").doc(cand).get();
+    if (!s.exists) return cand;
+  }
+  return base + "-" + crypto.randomBytes(4).toString("hex");
+}
+function isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || "")); }
+
+exports.createShop = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อนเปิดร้าน");
+  const d = req.data || {};
+  const name = String(d.name || "").trim();
+  const ownerName = String(d.ownerName || "").trim();
+  const contactName = String(d.contactName || ownerName).trim();
+  const phone = String(d.phone || "").trim();
+  const email = String(d.email || "").trim();
+  const category = String(d.category || "").trim();
+  const promptpayId = String(d.promptpayId || "").trim();
+  const promptpayName = String(d.promptpayName || ownerName).trim();
+  const store = (d.store && typeof d.store === "object") ? d.store : {};
+  const acceptedTerms = d.acceptedTerms === true;
+
+  // validate ชุด "มาตรฐาน" (fail-safe: ค่าไม่ครบ = throw ไม่เดา)
+  if (name.length < 2) throw new HttpsError("invalid-argument", "ต้องระบุชื่อร้าน (อย่างน้อย 2 ตัวอักษร)");
+  if (ownerName.length < 2) throw new HttpsError("invalid-argument", "ต้องระบุชื่อ-นามสกุลเจ้าของร้าน");
+  if (!/^[0-9+\-\s]{6,20}$/.test(phone)) throw new HttpsError("invalid-argument", "เบอร์โทรไม่ถูกต้อง");
+  if (!isEmail(email)) throw new HttpsError("invalid-argument", "อีเมลไม่ถูกต้อง");
+  if (!category) throw new HttpsError("invalid-argument", "ต้องเลือกหมวดสินค้าหลัก");
+  if (!/^[0-9]{8,15}$/.test(promptpayId.replace(/[-\s]/g, ""))) throw new HttpsError("invalid-argument", "พร้อมเพย์/เลขบัญชีรับเงินไม่ถูกต้อง");
+  if (!acceptedTerms) throw new HttpsError("invalid-argument", "ต้องยอมรับข้อตกลงการใช้งาน");
+
+  // กันสแปม: จำกัดจำนวนร้านต่อเจ้าของ (App Check = closure เต็ม ทำภายหลัง)
+  const ownedSnap = await admin.firestore().collection("tenants").where("ownerLineId", "==", uid).get();
+  if (ownedSnap.size >= 5) throw new HttpsError("resource-exhausted", "เปิดร้านได้สูงสุด 5 ร้านต่อบัญชี");
+
+  const tid = await genUniqueTid(name);
+  const now = FieldValue.serverTimestamp();
+  const tr = troot(tid);
+  // tenant doc = เฉพาะ field ที่ปลอดภัยต่อ read (ownerLineId ใช้ให้ lineAuth ออก towner claim)
+  await tr.set({
+    name: name, category: category, status: "active", verified: false, plan: "free",
+    ownerLineId: uid, adminLineIds: [uid], domains: [], createdAt: now, updatedAt: now,
+  });
+  await Promise.all([
+    tr.collection("settings").doc("app").set({ appName: name, createdAt: now }),
+    tr.collection("settings").doc("commerce").set({ enabled: true, promptpayId: promptpayId, promptpayName: promptpayName }),
+    tr.collection("settings").doc("store").set({
+      name: name, phone: phone,
+      addressLine: String(store.addressLine || ""), subdistrict: String(store.subdistrict || ""),
+      district: String(store.district || ""), province: String(store.province || ""), postcode: String(store.postcode || ""),
+    }),
+    // PII เจ้าของ (ชื่อจริง/อีเมล) — private เท่านั้น (rules ปิด · ใช้ตอน verify name-match)
+    tr.collection("private").doc("owner").set({ ownerName: ownerName, contactName: contactName, phone: phone, email: email, createdAt: now }),
+  ]);
+  // ให้สิทธิ์เจ้าของทันที (merge — ไม่ทับ admin/tenant อื่น) → เข้าจัดการได้โดยไม่ต้อง re-login
+  try {
+    const rec = await admin.auth().getUser(uid);
+    const prev = rec.customClaims || {};
+    const tadmin = Object.assign({}, prev.tadmin || {}, { [tid]: true });
+    const towner = Object.assign({}, prev.towner || {}, { [tid]: true });
+    await admin.auth().setCustomUserClaims(uid, Object.assign({}, prev, { tadmin: tadmin, towner: towner }));
+  } catch (e) { console.warn("createShop setClaims:", e && e.message); }
+
+  return { ok: true, tid: tid };
+});
+
 // ── dailyLoginBonus ───────────────────────────────────────
 // ให้แต้มเข้าระบบรายวัน "ฝั่ง server" (idempotent ต่อวันตามเขตเวลาไทย)
 // ย้ายมาจาก client (index.html) ที่เดิม increment points เอง → กันปั๊มแต้ม (A5)

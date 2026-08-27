@@ -65,8 +65,11 @@
 ### N5 — เปิดร้านเอง (self-service brand onboarding) + ยืนยันตัวตนร้าน · **L (ต้องออกแบบ)**
 - [ ] brand เปิดร้านได้เองไม่ต้องรอ admin อนุมัติ **แต่กรองข้อมูลจำเป็นเบื้องต้นก่อนเปิด** (ตอนนี้ flow ผ่าน `tenantRequests` + admin อนุมัติ — ดู `admin.html:3359` bocean request)
 - [ ] หลังเปิดแล้ว มี **ระบบยืนยันตัวตนร้าน** (verified badge) ให้ลูกค้ามั่นใจว่าผ่านการยืนยันกับเราแล้ว
-- **ทิศทาง (ตัดสิน 2026-08-27):** ทำแนว **มินิแอปแยกต่อแบรนด์ก่อน** — marketplace รวมทีหลัง (ดู memory platform-evolution-miniapp-first) → เฟสนี้ไม่ต้องมี cross-tenant browse
-- **ต้องออกแบบก่อน** (server-authoritative, rules, [[hold-architecture-no-shortcuts]]): ข้อมูลจำเป็น = อะไร · verify ด้วยวิธีไหน (เอกสาร/โทร/ดูเอง) · badge เก็บที่ไหน (`tenant.verified` server-only)
+- **ทิศทาง (ตัดสิน 2026-08-27):** มินิแอปแยกต่อแบรนด์ก่อน · เปิดร้าน=ชุด "มาตรฐาน" · verify=ผสม เอกสาร+บัญชีตรงชื่อ (ดู memory [[n5-self-service-onboarding-design]])
+- **สถาปัตยกรรม:** rules ล็อกครบแล้ว (client สร้าง tenant ไม่ได้ `write:isAdmin` · `verified` client เขียนไม่ได้ · `private/*` function-only) → N5 = callable-driven ล้วน แทบไม่แตะ rules
+- **build order:** ① createShop callable → ② ฟอร์มเปิดร้าน (client) → ③ submitVerification+storage → ④ super-admin review UI → ⑤ badge หน้าร้าน
+- [x] **stage ① createShop** — ✅ 2026-08-27: callable server-validated (ชุดมาตรฐาน) · สร้าง tenant active/verified:false + settings(app/commerce/store) + PII→private/owner · ให้ claim towner/tadmin ทันที · กันสแปม ≤5 ร้าน/บัญชี · **e2e 8/8** (`tests/shop.test.js`, เพิ่มใน CI) · guard เขียว · ⚠️ **ยังไม่ deploy functions** (รอ wire client stage ②)
+- [ ] stage ②–⑤ (ฟอร์มเปิดร้าน / verify / review / badge)
 
 ---
 
