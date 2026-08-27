@@ -121,7 +121,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .pa .pi{font-size:18px}
 .pa.liked{color:#e41e3f}
 .pa.helped{color:#2e7d32}
-.pa.liked .pi{filter:drop-shadow(0 0 2px #e41e3f)}
+.pa.liked .pi{filter:none}
+/* reaction icons (FB/IG-style) */
+.rxi{width:1.2em;height:1.2em;vertical-align:-.28em}
+.rx-mini{width:18px;height:18px;margin-right:-4px;border-radius:50%;box-shadow:0 0 0 1.5px var(--card)}
+.pa .pi .rxi{width:21px;height:21px;vertical-align:-.34em}
+#rx-picker .rx-opt{cursor:pointer;padding:2px;display:inline-flex;border-radius:50%}
+#rx-picker .rxi{width:36px;height:36px;vertical-align:middle;transition:transform .13s ease}
+#rx-picker .rx-opt:hover .rxi{transform:scale(1.28) translateY(-3px)}
 
 /* comments */
 .comments-wrap{padding:6px 16px 12px}
@@ -493,6 +500,15 @@ button .ic,a .ic{pointer-events:none}
 <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
 <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
 <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></symbol>
+<symbol id="i-thumb" viewBox="0 0 24 24"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4-7a2 2 0 0 1 2 2v3h5a2 2 0 0 1 2 2.3l-1.2 6A2 2 0 0 1 16.8 20H7"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+<symbol id="rx-like" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#1B74E4"/><path fill="#fff" d="M15.7 16.1l3.1-4.6c.4-.6 1.2-.8 1.8-.4.5.3.7.9.6 1.5l-.6 3.2h3.4c1.2 0 2.1 1.1 1.8 2.3l-1.2 4.9c-.2 1-1.1 1.6-2.1 1.6h-6.6V16.1z"/><rect x="9.7" y="15.8" width="3.6" height="9.2" rx="1.2" fill="#fff"/></symbol>
+<symbol id="rx-love" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#F04A6E"/><path fill="#fff" d="M18 26.2l-1.5-1.3c-3.8-3.5-6.4-5.8-6.4-8.8 0-2.4 1.9-4.2 4.2-4.2 1.4 0 2.7.6 3.7 1.7 1-1.1 2.3-1.7 3.7-1.7 2.3 0 4.2 1.8 4.2 4.2 0 3-2.6 5.3-6.4 8.8L18 26.2z"/></symbol>
+<symbol id="rx-haha" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFCC4D"/><path fill="#664500" d="M18 29.5c-4.7 0-7.6-3.2-7.6-5.7 0-.9.7-1.3 1.9-1.3h11.4c1.2 0 1.9.4 1.9 1.3 0 2.5-2.9 5.7-7.6 5.7z"/><path fill="#fff" d="M12.4 23.1c1.3-.4 3.3-.6 5.6-.6s4.3.2 5.6.6c-.3-.7-1.2-1-2.6-1h-6c-1.4 0-2.3.3-2.6 1z"/><path fill="none" stroke="#664500" stroke-width="1.7" stroke-linecap="round" d="M11.6 14.9c.7-1.3 2.4-1.5 3.4-.5M24.4 14.9c-.7-1.3-2.4-1.5-3.4-.5"/></symbol>
+<symbol id="rx-wow" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFCC4D"/><ellipse cx="18" cy="23.5" rx="3.2" ry="4.3" fill="#664500"/><ellipse cx="12.8" cy="17" rx="1.7" ry="2.3" fill="#664500"/><ellipse cx="23.2" cy="17" rx="1.7" ry="2.3" fill="#664500"/><path fill="none" stroke="#664500" stroke-width="1.4" stroke-linecap="round" d="M10.4 12.6c1-1.1 2.8-1.3 4-.4M25.6 12.6c-1-1.1-2.8-1.3-4-.4"/></symbol>
+<symbol id="rx-sad" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFCC4D"/><ellipse cx="12.8" cy="17.5" rx="1.6" ry="2.1" fill="#664500"/><ellipse cx="23.2" cy="17.5" rx="1.6" ry="2.1" fill="#664500"/><path fill="none" stroke="#664500" stroke-width="1.7" stroke-linecap="round" d="M12.8 26.5c1.6-2.2 8.8-2.2 10.4 0"/><path fill="none" stroke="#664500" stroke-width="1.4" stroke-linecap="round" d="M10.2 14c1.1-1.1 3-1.3 4.2-.5M25.8 14c-1.1-1.1-3-1.3-4.2-.5"/><path fill="#5DADEC" d="M12.4 20.6c.9 0 1.6 1.4 1.6 2.3a1.6 1.6 0 0 1-3.2 0c0-.9.7-2.3 1.6-2.3z"/></symbol>
 </defs></svg>
 
 <!-- ══ LOADING SCREEN ══ -->
@@ -542,7 +558,7 @@ button .ic,a .ic{pointer-events:none}
 <div class="screen" id="screen-feed">
   <div class="feed-tabs" id="feed-tabs">
     <div class="ftab active" onclick="switchFeedTab(this)">ฟีดของคุณ</div>
-    <div class="ftab" onclick="switchFeedTab(this)">ใกล้ฉัน 📍</div>
+    <div class="ftab" onclick="switchFeedTab(this)"><svg class="ic"><use href="#i-pin"/></svg> ใกล้ฉัน</div>
   </div>
 
 
@@ -637,7 +653,7 @@ button .ic,a .ic{pointer-events:none}
     <div style="font-size:13px;color:var(--muted);margin:2px 0 16px">สะสมแต้ม ไต่อันดับ รับสิทธิพิเศษ</div>
     <!-- ── แต้ม & ระดับของฉัน ── -->
     <div class="points-card" style="border:1px solid var(--border);border-bottom:1px solid var(--border);border-radius:12px;margin-bottom:20px">
-      <div class="pts-head"><div class="pts-title">🏅 แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
+      <div class="pts-head"><div class="pts-title"><svg class="ic"><use href="#i-award"/></svg> แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
       <div class="bar-bg"><div class="bar-fg" id="pts-bar" style="width:0%"></div></div>
       <div class="tier-lbs"><span id="tlb-bronze">มือใหม่</span><span id="tlb-silver">เงิน</span><span id="tier-label" class="tier-act">มือใหม่</span><span id="tlb-platinum">ปราชญ์</span></div>
       <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
@@ -662,7 +678,7 @@ button .ic,a .ic{pointer-events:none}
     </div>
     <!-- ── อันดับนักสะสมแต้ม ── -->
     <div id="community-lb-section">
-      <div id="lb-title" style="font-size:18px;font-weight:800;color:var(--text)">🏆 อันดับนักสะสมแต้ม</div>
+      <div id="lb-title" style="font-size:18px;font-weight:800;color:var(--text)">อันดับนักสะสมแต้ม</div>
       <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">ยิ่งมีส่วนร่วม ยิ่งไต่อันดับ</div>
       <div id="leaderboard-list">
         <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
@@ -696,7 +712,7 @@ button .ic,a .ic{pointer-events:none}
         <div class="modal-av">ฉ</div>
         <div>
           <div class="modal-uname">ชื่อของคุณ</div>
-          <div class="privacy-chip" style="cursor:default">🌍 โพสสาธารณะ</div>
+          <div class="privacy-chip" style="cursor:default;display:inline-flex;align-items:center;gap:5px"><svg class="ic"><use href="#i-globe"/></svg> โพสสาธารณะ</div>
         </div>
       </div>
       <div class="type-chips">
@@ -778,7 +794,7 @@ button .ic,a .ic{pointer-events:none}
 <div class="overlay" id="editProfileModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal" style="border-radius:16px 16px 0 0">
     <div class="modal-body" style="padding-top:22px">
-      <div class="ob-title">แก้ไขโปรไฟล์ ✏️</div>
+      <div class="ob-title">แก้ไขโปรไฟล์</div>
       <div class="ob-sub" style="margin-bottom:6px">แนะนำตัวเอง</div>
       <textarea id="edit-bio" maxlength="150" placeholder="เช่น ปลูกทุเรียนมา 10 ปี ที่จันทบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;resize:none;height:80px;box-sizing:border-box"></textarea>
       <div class="ob-sub" style="margin:14px 0 6px">ที่อยู่ (อำเภอ / จังหวัด)</div>
@@ -798,7 +814,7 @@ button .ic,a .ic{pointer-events:none}
       <div class="ob-sub">ยืนยันความยินยอมด้านล่าง แล้วเริ่มใช้งานได้เลย</div>
 
       <div id="ob-gps-wrap">
-      <div class="ob-title" style="font-size:17px">ตำแหน่งสวนของคุณ 📍</div>
+      <div class="ob-title" style="font-size:17px">ตำแหน่งสวนของคุณ</div>
       <div class="ob-sub">ใช้แสดงโพส "ใกล้ฉัน" และแจ้งเตือนโรคระบาดในพื้นที่ — เก็บเป็นพิกัดกว้างๆ ไม่เปิดเผยที่อยู่จริง</div>
       <button class="ob-gps" id="ob-gps-btn" onclick="requestGps()">
         <span class="ob-gps-ico" id="ob-gps-ico"><svg class="ic" style="width:24px;height:24px"><use href="#i-pin"/></svg></span>
@@ -831,7 +847,7 @@ button .ic,a .ic{pointer-events:none}
   <div id="shop-promo" style="display:none"><span class="pp-ico">📣</span><span class="pp-txt" id="shop-promo-txt"></span></div>
   <div class="shop-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
     <div>
-      <div class="shop-title">🛒 ร้านค้า</div>
+      <div class="shop-title">ร้านค้า</div>
       <div class="shop-sub" id="shop-sub">สินค้าจากร้าน</div>
     </div>
     <button class="ord-link" onclick="openMyOrders()"><svg class="ic"><use href="#i-package"/></svg> ออเดอร์</button>
@@ -1865,7 +1881,7 @@ function applyBranding(b) {
   if (b.primaryColor) document.documentElement.style.setProperty('--primary', b.primaryColor);
   if (b.accentColor) document.documentElement.style.setProperty('--accent', b.accentColor);
   var lt = document.getElementById('lb-title');
-  if (lt && b.leaderboardTitle) lt.textContent = '🏆 ' + b.leaderboardTitle;
+  if (lt && b.leaderboardTitle) lt.textContent = b.leaderboardTitle;
   var sub = document.getElementById('login-tagline');
   if (sub && b.subtitle) sub.textContent = b.subtitle;
   if (b.tierLabels) {
@@ -1949,15 +1965,21 @@ async function saveBranding() {
 
 // ── Reactions (หลายอีโมจิ) ───────────────────────────────
 const REACTIONS = [
-  { key:'like', emoji:'👍', label:'ถูกใจ' },
-  { key:'love', emoji:'❤️', label:'รักเลย' },
-  { key:'haha', emoji:'😆', label:'ฮา' },
-  { key:'wow',  emoji:'😮', label:'ว้าว' },
-  { key:'sad',  emoji:'😢', label:'เศร้า' },
+  { key:'like', emoji:'👍', svg:'rx-like', label:'ถูกใจ' },
+  { key:'love', emoji:'❤️', svg:'rx-love', label:'รักเลย' },
+  { key:'haha', emoji:'😆', svg:'rx-haha', label:'ฮา' },
+  { key:'wow',  emoji:'😮', svg:'rx-wow',  label:'ว้าว' },
+  { key:'sad',  emoji:'😢', svg:'rx-sad',  label:'เศร้า' },
 ];
-function reactionEmojis(p) {
+// ไอคอน reaction สไตล์ FB/IG (SVG วงกลมสี) แทน emoji เปล่า — key คงที่ ไม่มี user input
+function rxSvg(key, cls) {
+  var r = REACTIONS.filter(function (x) { return x.key === key; })[0];
+  if (!r) return '';
+  return '<svg class="rxi' + (cls ? ' ' + cls : '') + '"><use href="#' + r.svg + '"/></svg>';
+}
+function reactionIcons(p) {
   var rx = (p && p.reactions) || {};
-  return REACTIONS.filter(function (r) { return (rx[r.key] || 0) > 0; }).map(function (r) { return r.emoji; }).slice(0, 3).join('');
+  return REACTIONS.filter(function (r) { return (rx[r.key] || 0) > 0; }).map(function (r) { return rxSvg(r.key, 'rx-mini'); }).slice(0, 3).join('');
 }
 function ensureReactPicker() {
   if (document.getElementById('rx-picker')) return;
@@ -1965,7 +1987,7 @@ function ensureReactPicker() {
   pk.id = 'rx-picker';
   pk.style.cssText = 'position:fixed;z-index:9999;display:none;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:24px;padding:6px 8px;box-shadow:0 4px 16px rgba(0,0,0,.2)';
   pk.innerHTML = REACTIONS.map(function (r) {
-    return '<span onclick="setReaction(\'' + r.key + '\')" title="' + r.label + '" style="font-size:28px;cursor:pointer;padding:2px 4px;display:inline-block">' + r.emoji + '</span>';
+    return '<span class="rx-opt" onclick="setReaction(\'' + r.key + '\')" title="' + r.label + '">' + rxSvg(r.key) + '</span>';
   }).join('');
   document.body.appendChild(pk);
   document.addEventListener('click', function (e) {
@@ -1992,11 +2014,11 @@ function setReactBtn(btn, id, type) {
   var r = REACTIONS.filter(function (x) { return x.key === type; })[0];
   var ico = document.getElementById('rx-ico-' + id), lbl = document.getElementById('rx-lbl-' + id);
   if (type && r) {
-    if (ico) ico.textContent = r.emoji;
+    if (ico) ico.innerHTML = rxSvg(r.key);
     if (lbl) { lbl.textContent = r.label; lbl.style.color = 'var(--primary)'; }
     btn.classList.add('liked');
   } else {
-    if (ico) ico.textContent = '👍';
+    if (ico) ico.innerHTML = '<svg class="ic"><use href="#i-thumb"/></svg>';
     if (lbl) { lbl.textContent = 'ถูกใจ'; lbl.style.color = ''; }
     btn.classList.remove('liked');
   }
@@ -2041,7 +2063,7 @@ function updatePostStats(id, data){
   var el = document.getElementById('likes-' + id);
   if (el) el.textContent = data.likes || 0;
   var rxe = document.getElementById('rxe-' + id);
-  if (rxe) rxe.textContent = reactionEmojis(data);
+  if (rxe) rxe.innerHTML = reactionIcons(data);
   var cc = document.querySelector('[onclick="toggleComments(\'cmt-' + id + '\')"]');
   if (cc) cc.textContent = "ความคิดเห็น " + (data.comments || 0);
 }
@@ -2093,7 +2115,7 @@ async function saveProfileEdit() {
   } catch (err) {
     toast('บันทึกไม่สำเร็จ: ' + err.message);
   } finally {
-    btn.disabled = false; btn.textContent = '💾 บันทึก';
+    btn.disabled = false; btn.textContent = 'บันทึก';
   }
 }
 
@@ -2520,7 +2542,7 @@ async function saveOnboarding() {
   } catch (err) {
     toast('บันทึกไม่สำเร็จ: ' + err.message);
   } finally {
-    btn.disabled = false; btn.textContent = '✅ เริ่มใช้งาน';
+    btn.disabled = false; btn.textContent = 'เริ่มใช้งาน';
   }
 }
 
@@ -3155,7 +3177,7 @@ function applyShop(d) {
   if (d.priceColorOn && d.priceColor) R.setProperty("--shop-price", d.priceColor); else R.removeProperty("--shop-price");
   R.setProperty("--feat-w", (d.featCardWidth ? d.featCardWidth : 134) + "px");
   // หัวข้อร้าน + แถบหมวดหมู่
-  var st = document.querySelector("#screen-shop .shop-title"); if (st) st.textContent = d.shopTitle || "🛒 ร้านค้า";
+  var st = document.querySelector("#screen-shop .shop-title"); if (st) st.textContent = d.shopTitle || "ร้านค้า";
   var sscr = document.getElementById("screen-shop"); if (sscr) sscr.setAttribute("data-cardstyle", d.cardStyle || "brand");
   var cb = document.getElementById("cat-bar"); if (cb) cb.style.display = (d.catBarOn === false) ? "none" : "";
   // แบนเนอร์
@@ -3164,7 +3186,7 @@ function applyShop(d) {
     var on = d.bannerOn !== false;
     bn.style.display = on ? "flex" : "none";
     if (on) {
-      var title = d.bannerTitle || (APP_CONFIG.shop && APP_CONFIG.shop.name) || "🛒 ร้านค้า";
+      var title = d.bannerTitle || (APP_CONFIG.shop && APP_CONFIG.shop.name) || "ร้านค้า";
       var tag = d.bannerTagline || "";
       bn.style.color = d.bannerTextColor || "#fff";
       bn.style.minHeight = (d.bannerHeight ? d.bannerHeight : 118) + "px";
@@ -3200,7 +3222,7 @@ const FEATURE_LABELS = {
 function ensureAdminPanel() {
   if (!isAdmin() || document.getElementById('admin-fab')) return;
   const fab = document.createElement('div');
-  fab.id = 'admin-fab'; fab.textContent = '⚙️'; fab.title = 'Admin';
+  fab.id = 'admin-fab'; fab.innerHTML = '<svg class="ic" style="width:22px;height:22px"><use href="#i-sliders"/></svg>'; fab.title = 'Admin';
   fab.style.cssText = 'position:fixed;right:16px;bottom:84px;z-index:9998;width:48px;height:48px;border-radius:50%;background:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer';
   fab.onclick = openAdminPanel;
   document.body.appendChild(fab);
@@ -3281,13 +3303,12 @@ function renderPost(id, p, i) {
       <div class="rel-prod" id="rel-${id}"></div>
       <div class="pc-reactions">
         <div class="r-counts">
-          <div class="r-icons"><span class="ri ri-b">👍</span></div>
-          <span class="rx-emojis" id="rxe-${id}" style="margin-right:3px">${reactionEmojis(p)}</span><span id="likes-${id}">${p.likes || 0}</span>
+          <div class="r-icons" id="rxe-${id}" style="margin-right:4px">${reactionIcons(p)}</div><span id="likes-${id}">${p.likes || 0}</span>
         </div>
         <div class="c-count" onclick="toggleComments('cmt-${id}')">ความคิดเห็น ${p.comments || 0}</div>
       </div>
       <div class="pc-actions">
-        <button class="pa" id="rx-btn-${id}" data-rx="" onclick="toggleReactPicker(event,'${id}',this)"><span class="pi" id="rx-ico-${id}">👍</span><span id="rx-lbl-${id}">ถูกใจ</span></button>
+        <button class="pa" id="rx-btn-${id}" data-rx="" onclick="toggleReactPicker(event,'${id}',this)"><span class="pi" id="rx-ico-${id}"><svg class="ic"><use href="#i-thumb"/></svg></span><span id="rx-lbl-${id}">ถูกใจ</span></button>
         <button class="pa" onclick="helpPost('${id}',this)"><span class="pi"><svg class="ic"><use href="#i-check"/></svg></span>ช่วยได้</button>
         <button class="pa" onclick="toggleComments('cmt-${id}')"><span class="pi"><svg class="ic"><use href="#i-chat"/></svg></span>แสดงความคิดเห็น</button>
         <button class="pa" onclick="sharePost()"><span class="pi"><svg class="ic"><use href="#i-share"/></svg></span>แชร์</button>
@@ -3383,7 +3404,7 @@ async function uploadCoverPhoto(input) {
     const cv = document.getElementById('prof-cover');
     if (cv && safeUrl(url)) cv.style.backgroundImage = 'url(' + safeUrl(url) + ')';
   } catch (e) { toast('อัพโหลดไม่สำเร็จ: ' + e.message); }
-  if (btn) { btn.textContent = '📷 แก้ไขรูปหน้าปก'; btn.disabled = false; }
+  if (btn) { btn.textContent = 'แก้ไขรูปหน้าปก'; btn.disabled = false; }
 }
 
 // ── Time Formatter ────────────────────────────────────────
@@ -3575,7 +3596,7 @@ function renderFeatured(){
   var wrap = document.getElementById('feat-wrap'), row = document.getElementById('feat-row');
   if (!wrap || !row) return;
   var dec = APP_CONFIG.shopDecor || {};
-  var hd = wrap.querySelector('.feat-hd'); if (hd) hd.textContent = dec.featuredTitle || '🔥 สินค้าแนะนำ';
+  var hd = wrap.querySelector('.feat-hd'); if (hd) hd.textContent = dec.featuredTitle || 'สินค้าแนะนำ';
   if (dec.featuredOn === false){ wrap.style.display = 'none'; return; }
   var list = shopProducts.filter(function(p){ return p.featured; });
   if (!list.length){ wrap.style.display = 'none'; return; }
@@ -4214,7 +4235,7 @@ function relSectionHtml(list){
       '<button class="rel-add" onclick="addToCart(\''+p.id+'\')"><svg class="ic"><use href="#i-plus"/></svg> ใส่ตะกร้า</button>'+
     '</div>';
   }).join('');
-  return '<div class="rel-wrap"><div class="rel-title">🛒 สินค้าที่อาจช่วยได้</div><div class="rel-scroll">'+cards+'</div></div>';
+  return '<div class="rel-wrap"><div class="rel-title" style="display:flex;align-items:center;gap:5px"><svg class="ic"><use href="#i-cart"/></svg> สินค้าที่อาจช่วยได้</div><div class="rel-scroll">'+cards+'</div></div>';
 }
 </script>
 

@@ -139,13 +139,37 @@ if(!window.APP_CONFIG) window.APP_CONFIG = {
     { id: 'other',    name: 'อื่นๆ',    emoji: '🌱' },
   ],
 
-  // ── หมวดสินค้า ────────────────────────────────────────────
+  // ── หมวดสินค้า (แนว Shopee — แบรนด์หลากหลาย ตั้งต่อแบรนด์ทับได้) ──
+  // customer shop โชว์เฉพาะหมวดที่มีสินค้าจริง → รายการยาวไม่รก
+  // หมวดเกษตร (fertilizer/pesticide/hormone/organic/equipment) คงไว้ กันสินค้าเดิมกำพร้า
   productCategories: [
-    { id: 'fertilizer', name: 'ปุ๋ย',         emoji: '💊' },
-    { id: 'pesticide',  name: 'ยาฆ่าแมลง',    emoji: '🧴' },
-    { id: 'hormone',    name: 'ฮอร์โมน',      emoji: '💧' },
-    { id: 'organic',    name: 'อินทรีย์',     emoji: '🌱' },
-    { id: 'equipment',  name: 'อุปกรณ์',      emoji: '🔧' },
+    { id: 'fashion',    name: 'เสื้อผ้า/แฟชั่น',       emoji: '👕' },
+    { id: 'beauty',     name: 'ความงาม/เครื่องสำอาง',   emoji: '💄' },
+    { id: 'health',     name: 'สุขภาพ',               emoji: '🩺' },
+    { id: 'mombaby',    name: 'แม่และเด็ก',            emoji: '🍼' },
+    { id: 'home',       name: 'บ้าน/ครัว/ของใช้',      emoji: '🏠' },
+    { id: 'appliance',  name: 'เครื่องใช้ไฟฟ้า',        emoji: '🔌' },
+    { id: 'mobile',     name: 'มือถือ/แท็บเล็ต',        emoji: '📱' },
+    { id: 'computer',   name: 'คอมพิวเตอร์/ไอที',       emoji: '💻' },
+    { id: 'gadget',     name: 'แกดเจ็ต/เครื่องเสียง',    emoji: '🎧' },
+    { id: 'camera',     name: 'กล้อง/ถ่ายภาพ',          emoji: '📷' },
+    { id: 'food',       name: 'อาหาร/เครื่องดื่ม',       emoji: '🍜' },
+    { id: 'pet',        name: 'สัตว์เลี้ยง',            emoji: '🐾' },
+    { id: 'sport',      name: 'กีฬา/กลางแจ้ง',          emoji: '⚽' },
+    { id: 'auto',       name: 'ยานยนต์/อะไหล่',         emoji: '🚗' },
+    { id: 'tools',      name: 'เครื่องมือ/ช่าง',        emoji: '🛠️' },
+    { id: 'book',       name: 'หนังสือ/เครื่องเขียน',    emoji: '📚' },
+    { id: 'toy',        name: 'ของเล่น/เกม',            emoji: '🧸' },
+    { id: 'bag',        name: 'กระเป๋า',               emoji: '👜' },
+    { id: 'shoes',      name: 'รองเท้า',               emoji: '👟' },
+    { id: 'watch',      name: 'นาฬิกา/แว่นตา',          emoji: '⌚' },
+    { id: 'jewelry',    name: 'เครื่องประดับ',          emoji: '💍' },
+    { id: 'fertilizer', name: 'ปุ๋ย',                 emoji: '💊' },
+    { id: 'pesticide',  name: 'ยา/สารกำจัดศัตรูพืช',    emoji: '🧴' },
+    { id: 'hormone',    name: 'ฮอร์โมน/อาหารเสริมพืช',   emoji: '💧' },
+    { id: 'organic',    name: 'เกษตรอินทรีย์',          emoji: '🌱' },
+    { id: 'equipment',  name: 'อุปกรณ์การเกษตร',        emoji: '🔧' },
+    { id: 'other',      name: 'อื่นๆ',                emoji: '📦' },
   ],
 
   // ── AI ───────────────────────────────────────────────────

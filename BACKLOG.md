@@ -27,7 +27,7 @@
 
 **⚠️ ค้าง/ต้องรู้ (รอบหน้าอ่านตรงนี้):**
 - **CI deploy ยัง fail** — secret `FIREBASE_SA_PHUANSUAN` ไม่ได้ตั้ง (ดู 🔴 deploy-infra) → deploy มือไปก่อน
-- **Facebook login:** infra ครบ (LINE+Google ใช้ได้แล้ว) · รอ user สร้าง FB app + enable ใน Firebase Console → แล้ว flip `config.js` `auth.providers.facebook:true`
+- **Facebook login:** ⏸️ **พักไว้ (Roger: ยุ่งยาก 2026-08-27)** — infra ครบ (LINE+Google ใช้ได้แล้ว) · ถ้าจะทำ: user สร้าง FB app + enable ใน Firebase Console → แล้ว flip `config.js` `auth.providers.facebook:true`
 - authorized domains ครบแล้ว (phuansuan/office/bocean × web.app+firebaseapp.com)
 - **หมายเหตุ verify prod:** cache แก้เป็น no-cache แล้ว → deploy ใหม่ fresh ทันที (ไม่ต้อง clear cache แล้ว) · แต่ browser ที่ cache ก่อนแก้ต้อง Ctrl+Shift+R ครั้งเดียว
 
@@ -35,11 +35,46 @@
 
 ---
 
+## 🆕 งานใหม่จาก Roger (2026-08-27 รอบสอง) — เรียงตามที่สั่ง
+> 🔴 กอง deploy-infra ด้านล่าง = **บล็อกที่ agent ทำเองไม่ได้** (ต้องสิทธิ์ Firebase/GitHub ของ Roger) → งานที่ลงมือได้จริงคือกองนี้
+
+### N0 — เอา feature ออกจาก toggle (flag-off + เก็บโค้ด ตาม [[trim-features-flag-off]]) · **S**
+- [x] ~~เอา 4 อันออกจาก features toggle UI~~ — ✅ 2026-08-27: ลบ toggle-row (aiDiagnosis/communityGroups/weatherAlert/notifDisease) + เอา key ออกจาก `FEAT_MAP` · โค้ดข้างหลังคงไว้ · config flag `false` เดิม · `proximityAlert` คงไว้ · guard เขียว
+
+### N1 — แยก "ตกแต่งร้าน" กับ "จัดส่ง" ออกจากกันในหน้า control · **S–M**
+- [x] ~~แยก 2 หน้า~~ — ✅ 2026-08-27: sidebar 2 เมนู (`ตกแต่งร้าน`→shopdecor / `จัดส่ง`→shipping) · แยก screen `screen-shipping` (ผู้ส่ง+ค่าส่ง+เชื่อมขนส่ง) · `loadShippingScreen()` + loaders map · `loadShopDecor` เลิกโหลดข้อมูลจัดส่ง · guard+frontend เขียว
+
+### N2 — ใบส่งสินค้ายัง version เดิม ไม่ดึง Shippop API · **M**
+- [x] ~~ใบส่งไม่ดึงผลจอง API~~ — ✅ 2026-08-27: `printDeliveryNote` ดึง `courier`+`trackingNumber`/`shippopCode` ที่ `createShipment` (Shippop) จองไว้มาเติมอัตโนมัติ (map รหัส→ชื่อขนส่ง) + badge "ดึงเลขพัสดุจากการจองอัตโนมัติแล้ว" + ปุ่มเปิด `labelUrl` จริง (validate `^https?://`) เมื่อมี · guard+frontend เขียว
+- [ ] **N2b (รอ sandbox key):** backend ยังเขียน `labelUrl:""` เสมอ — ยังไม่ยิง Shippop label API ดึงรูปใบปะหน้า barcode ทางการ · ต้องเพิ่ม callable `getShipmentLabel` (key ฝั่ง server) + **verify กับ sandbox จริงก่อน** (ห้ามเดา contract) · ปุ่มฝั่ง client รองรับไว้แล้ว (โผล่เมื่อ labelUrl มีค่า)
+
+### N3 — หมวดหมู่สินค้ายังล็อคปุ๋ย/ยา (ระบบเก่า) → ใช้หมวด Shopee · **M**
+- [x] ~~ปลดล็อกหมวดเกษตร → Shopee ครบ~~ — ✅ 2026-08-27: `config.js` ขยายเป็น 27 หมวดแนว Shopee (แฟชั่น/ความงาม/มือถือ/บ้าน/อาหาร/สัตว์เลี้ยง...) **คงหมวดเกษตรเดิม 5 หมวด** → สินค้า phuansuan ไม่กำพร้า · customer shop โชว์เฉพาะหมวดที่มีสินค้า
+- [x] single-source: admin โหลด `config.js` · `catEmojiA` + select ทั้ง 3 → `populateCategorySelects()` อ่านจาก config (เลิก hardcode) · index derive อยู่แล้ว · guard+frontend เขียว · id ไม่ซ้ำ
+- **PC_TIERS** (`admin.html:2404`) = ส่วนลดตาม tier สมาชิก ไม่เกี่ยวหมวด — ไม่แตะ
+- **ค้าง (future):** หมวดต่อแบรนด์จริง (settings per-tenant) แทน global default
+
+### N4 — ไอคอนที่ไม่ minimal ทำให้ระบบดูแย่ · **M–L**
+- **ทิศทาง (Roger อนุมัติจาก preview 2026-08-27):** SVG line minimal · เก็บ emoji content (tier 🥇🥈🥉💎 / แบรนด์ 🌿🌱 / เนื้อโพสต์) · **reaction ทำสไตล์ FB/IG**
+- [x] ~~admin หัวข้อทั้งหมด~~ — ✅ 2026-08-27: แปลง 64 page-title/card-title emoji → SVG (เพิ่มไอคอน i-star/i-tag/i-chart/i-alert/i-flame/i-gamepad/i-lock/i-type/i-coins/i-calc) · เหลือ 🌿 แบรนด์ 2 จุด (ตั้งใจเก็บ) · guard+frontend เขียว
+- [x] ~~reaction feed สไตล์ FB/IG~~ — ✅ 2026-08-27: `index.html` reaction เป็น SVG วงกลมสี (rx-like/love/haha/wow/sad Twemoji-style) · ปุ่ม default = outline thumb (i-thumb) → กดแล้วเป็น reaction สี · picker hover ขยาย · ป้ายรวม stacked · lift `.pa.liked` red filter
+- [x] ~~ปุ่ม + feed chrome~~ — ✅ 2026-08-27: admin dashboard stat-icons 12 อัน + ปุ่ม bulk orders (5) + products bulk ลบ + พิมพ์บิล + "กำลังดูแล" · index: feed tab/pts-title/privacy-chip/shop-title/modal titles/admin FAB/cover/featured/rel-title/ปุ่ม save-start → SVG หรือตัด emoji (JS textContent เลี่ยง innerHTML+userdata) · เพิ่ม i-printer/i-calendar/i-globe/i-star/i-sliders · icon refs ครบ ไม่มี missing
+- **เก็บไว้ตั้งใจ (content ไม่ใช่ chrome):** toast ✅❌ · tier 🥇🥈🥉💎🏅 · แบรนด์ 🌿🌱 · หมวดสินค้า 💊🧴💧🔧 (=N3) · post-type chips 🦠💡⚠️📦 · celebration 🎉🙏👋 · reward 🎟️ · glyph พิมพ์ปกติ ✕←→ · ป๊อปอัปพิมพ์ใบส่ง (แยก doc ไม่มี sprite)
+- **N4 เสร็จ** (เหลือหมวดสินค้า emoji = ทำใน N3) · preview: artifact 7c887b0e-87cd-4c37-ace7-f15941b30596
+
+### N5 — เปิดร้านเอง (self-service brand onboarding) + ยืนยันตัวตนร้าน · **L (ต้องออกแบบ)**
+- [ ] brand เปิดร้านได้เองไม่ต้องรอ admin อนุมัติ **แต่กรองข้อมูลจำเป็นเบื้องต้นก่อนเปิด** (ตอนนี้ flow ผ่าน `tenantRequests` + admin อนุมัติ — ดู `admin.html:3359` bocean request)
+- [ ] หลังเปิดแล้ว มี **ระบบยืนยันตัวตนร้าน** (verified badge) ให้ลูกค้ามั่นใจว่าผ่านการยืนยันกับเราแล้ว
+- **ทิศทาง (ตัดสิน 2026-08-27):** ทำแนว **มินิแอปแยกต่อแบรนด์ก่อน** — marketplace รวมทีหลัง (ดู memory platform-evolution-miniapp-first) → เฟสนี้ไม่ต้องมี cross-tenant browse
+- **ต้องออกแบบก่อน** (server-authoritative, rules, [[hold-architecture-no-shortcuts]]): ข้อมูลจำเป็น = อะไร · verify ด้วยวิธีไหน (เอกสาร/โทร/ดูเอง) · badge เก็บที่ไหน (`tenant.verified` server-only)
+
+---
+
 ## 🔴 ต้องแก้ (security / broken) — ทำก่อน
 
 ### 🚧 deploy-infra — CI deploy พังมาตลอด (เพิ่งเจอ 2026-08-27) · โค้ดยังไม่เคยขึ้น prod ผ่าน CI
 - [ ] **secret `FIREBASE_SA_PHUANSUAN` ไม่ได้ตั้ง** (`gh secret list` ว่างเปล่า) → job `deploy` (hosting) fail ทันที "Input required and not supplied: firebaseServiceAccount" · **ต้องตั้ง secret** (`firebase init hosting:github` หรือ manual: SA JSON → GitHub repo Settings→Secrets ชื่อ `FIREBASE_SA_PHUANSUAN`) แล้ว `gh run rerun <id> --failed`
-- [ ] **workflow ไม่ deploy Functions เลย** — `firebase-deploy.yml` มีแค่ `action-hosting-deploy` (hosting) · backend changes (claimCount/earn counters ฯลฯ) ไม่ขึ้น prod · ต้อง deploy มือ (`firebase deploy --only functions --project phuansuan`) **หรือ** เพิ่ม job `deploy-functions` ใน workflow (SA ต้องมีสิทธิ์ Cloud Functions Admin + Service Account User)
+- [x] ~~workflow ไม่ deploy Functions~~ — แก้แล้ว: `firebase-deploy.yml` มี job `deploy-functions` (gated, ใช้ SA ตัวเดียวกัน) → **รอแค่ secret `FIREBASE_SA_PHUANSUAN` ตัวเดียวก็ deploy ทั้ง hosting+functions อัตโนมัติ** · SA ต้องมี Firebase Hosting Admin + Cloud Functions Admin + Cloud Run Admin + Artifact Registry Admin + Service Account User
 - หมายเหตุ: นี่เป็น infra gap เดิม (secret ไม่เคยมี) ไม่ใช่จากงาน 2026-08-27 · ต้องใช้สิทธิ์ Firebase/GitHub ของ Roger (agent ทำเองไม่ได้)
 
 ### ~~XSS ที่ A2 แก้ไม่ครบ~~ — ✅ ปิดครบแล้ว 2026-08-27 (admin.html + index.html)
