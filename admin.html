@@ -1078,7 +1078,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg ms-rw-coupon"><label>ส่วนลด (50 หรือ 10%)</label><input id="ms-c-disc" placeholder="50 = ฿50 · 10% = 10%"></div>
       <div class="fg ms-rw-coupon"><label>โค้ด (เว้นว่าง=สุ่มให้)</label><input id="ms-c-code" placeholder="SAVE50"></div>
     </div>
-    <div class="save-row"><button class="btn btn-primary" onclick="addMission()"><svg class="ic"><use href="#i-plus"/></svg> สร้างภารกิจ</button></div>
+    <div id="ms-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px"></div>
+    <div class="save-row">
+      <button class="btn btn-primary" id="ms-submit" onclick="addMission()"><svg class="ic"><use href="#i-plus"/></svg> สร้างภารกิจ</button>
+      <button class="btn btn-ghost" id="ms-cancel" style="display:none" onclick="cancelMissionEdit()">ยกเลิกแก้ไข</button>
+    </div>
   </div>
   <div class="card"><div class="card-title">📋 ภารกิจทั้งหมด</div>
     <div id="missions-list"><div class="empty-state">กำลังโหลด...</div></div>
@@ -2496,31 +2500,92 @@ function msRewardUI(){
   document.querySelectorAll('.ms-rw-coupon').forEach(function(el){ el.style.display = isC ? '' : 'none'; });
   document.querySelectorAll('.ms-rw-points').forEach(function(el){ el.style.display = isC ? 'none' : ''; });
 }
+var _msEditId = null;
+function _msSetEditMode(on){
+  var btn=document.getElementById('ms-submit'), cancel=document.getElementById('ms-cancel'), banner=document.getElementById('ms-edit-banner');
+  if (btn) btn.innerHTML = on ? '<svg class="ic"><use href="#i-check"/></svg> บันทึกการแก้ไข' : '<svg class="ic"><use href="#i-plus"/></svg> สร้างภารกิจ';
+  if (cancel) cancel.style.display = on ? '' : 'none';
+  if (banner){ banner.style.display = on ? '' : 'none'; if (on) banner.textContent = '✏️ กำลังแก้ไขภารกิจนี้ (จำนวนคนทำสำเร็จ/รางวัลที่แจกไปแล้ว ไม่ถูกแตะ)'; }
+}
+function cancelMissionEdit(){
+  _msEditId = null;
+  document.getElementById('ms-name').value=''; document.getElementById('ms-desc').value='';
+  _msSetEditMode(false);
+}
+async function openMissionEdit(id){
+  try {
+    var s = await aDb().collection('missions').doc(id).get();
+    if (!s.exists) return;
+    var m = s.data();
+    _msEditId = id;
+    document.getElementById('ms-name').value = m.name || '';
+    document.getElementById('ms-desc').value = m.desc || '';
+    document.getElementById('ms-type').value = m.type || 'posts';
+    document.getElementById('ms-goal').value = m.goal || 1;
+    document.getElementById('ms-icon').value = m.icon || '';
+    document.getElementById('ms-active').checked = m.active !== false;
+    document.getElementById('ms-reward').value = m.rewardType || 'points';
+    if (m.rewardType === 'coupon' && m.coupon){
+      document.getElementById('ms-c-label').value = m.coupon.label || '';
+      document.getElementById('ms-c-disc').value = m.coupon.discountText || '';
+      document.getElementById('ms-c-code').value = m.coupon.code || '';
+    } else {
+      document.getElementById('ms-points').value = m.rewardPoints || 0;
+    }
+    msRewardUI();
+    _msSetEditMode(true);
+    document.getElementById('ms-name').scrollIntoView({ behavior:'smooth', block:'center' });
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
 async function addMission(){
   var name = document.getElementById('ms-name').value.trim();
   if (!name){ toast('❌ กรอกชื่อภารกิจ','error'); return; }
   var rewardType = document.getElementById('ms-reward').value;
-  var doc = {
+  // เฉพาะ field config — ตอน edit ไม่แตะ claimCount/createdAt
+  var editable = {
     name: name, desc: document.getElementById('ms-desc').value.trim(),
     type: document.getElementById('ms-type').value,
     goal: Math.max(1, Math.floor(Number(document.getElementById('ms-goal').value)||1)),
     icon: document.getElementById('ms-icon').value.trim() || '🎯',
     active: document.getElementById('ms-active').checked,
-    rewardType: rewardType,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    rewardType: rewardType
   };
   if (rewardType === 'coupon'){
     var d = ldParseDiscount(document.getElementById('ms-c-disc').value);
-    doc.coupon = { label: document.getElementById('ms-c-label').value.trim() || name, discountText: d.text, discountType: d.type, discountValue: d.value, code: document.getElementById('ms-c-code').value.trim() };
+    editable.coupon = { label: document.getElementById('ms-c-label').value.trim() || name, discountText: d.text, discountType: d.type, discountValue: d.value, code: document.getElementById('ms-c-code').value.trim() };
   } else {
-    doc.rewardPoints = Math.max(0, Math.floor(Number(document.getElementById('ms-points').value)||0));
+    editable.rewardPoints = Math.max(0, Math.floor(Number(document.getElementById('ms-points').value)||0));
   }
   try {
-    await aDb().collection('missions').add(doc);
-    toast('✅ สร้างภารกิจแล้ว','success');
-    document.getElementById('ms-name').value=''; document.getElementById('ms-desc').value='';
+    if (_msEditId){
+      await aDb().collection('missions').doc(_msEditId).update(editable);
+      toast('✅ บันทึกการแก้ไขแล้ว','success');
+      cancelMissionEdit();
+    } else {
+      await aDb().collection('missions').add(Object.assign({ claimCount:0, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, editable));
+      toast('✅ สร้างภารกิจแล้ว','success');
+      document.getElementById('ms-name').value=''; document.getElementById('ms-desc').value='';
+    }
     loadCampaigns();
   } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function openMissionStats(id){
+  document.getElementById('act-title').textContent = 'ผลภารกิจ';
+  var body = document.getElementById('act-body');
+  body.innerHTML = '<div class="empty-state" style="padding:10px">กำลังโหลด...</div>';
+  openActModal();
+  try {
+    var s = await aDb().collection('missions').doc(id).get();
+    if (!s.exists){ body.innerHTML = '<div class="empty-state">ไม่พบภารกิจ</div>'; return; }
+    var m = s.data();
+    var count = Math.max(0, Math.floor(Number(m.claimCount)||0));
+    var typeLabel = MS_TYPE_LABEL[m.type] || m.type || '';
+    var reward = m.rewardType==='coupon' ? ('🎟️ '+escapeHtml((m.coupon&&(m.coupon.discountText||m.coupon.label))||'คูปอง')) : ('🏅 '+(m.rewardPoints||0)+' แต้ม');
+    body.innerHTML = '<div style="font-weight:800;font-size:16px;margin-bottom:2px">'+escapeHtml(m.icon||'🎯')+' '+escapeHtml(m.name||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:13px;margin-bottom:14px">'+escapeHtml(typeLabel)+' ครบ '+(m.goal||0)+' · รางวัล '+reward+'</div>'+
+      '<div class="stat-card" style="text-align:center"><div class="stat-val" style="color:var(--primary)">'+count+'</div><div class="stat-label">คนทำสำเร็จ (รับรางวัลแล้ว)</div></div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-top:10px">นับจาก claimCount บน mission (server เพิ่มตอนจ่ายจริง · idempotent)</div>';
+  } catch(e){ body.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml((e&&e.message)||e)+'</div>'; }
 }
 async function loadCampaigns(){
   msRewardUI();
@@ -2540,6 +2605,8 @@ async function loadCampaigns(){
           '<div class="prod-sub"><span>'+(MS_TYPE_LABEL[m.type]||m.type)+' ครบ '+(m.goal||0)+'</span> · <span>'+reward+'</span></div>'+
         '</div>'+
         '<div class="prod-acts">'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="openMissionStats(\''+m._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button>'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="openMissionEdit(\''+m._id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button>'+
           '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="toggleMission(\''+m._id+'\','+(m.active!==false)+')">'+(off?'เปิด':'ปิด')+'</button>'+
           '<button class="btn btn-danger" style="padding:5px 9px;font-size:12px" onclick="deleteMission(\''+m._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
         '</div>'+

@@ -670,6 +670,7 @@ exports.claimMission = onCall(async (req) => {
       reward = { type: "points", points: pts };
     }
     tx.set(claimRef, claim);
+    tx.update(mRef, { claimCount: FieldValue.increment(1) });   // analytics counter — idempotent (มาถึงนี่ได้ครั้งเดียวต่อ user เพราะ guard cSnap.exists)
     return { ok: true, reward: reward, progress: progress, goal: goal };
   });
 });

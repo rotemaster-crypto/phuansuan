@@ -54,6 +54,8 @@ test('points: ถึงเป้า → รับแต้ม + claim ถูก�
   assert.equal(u.points, 1100);            // 1000 + 100
   const c = await read(`tenants/${TID}/users/${uid}/missionClaims/m1`);
   assert.equal(c.rewardType, 'points');
+  const m = await read(`tenants/${TID}/missions/m1`);
+  assert.equal(m.claimCount, 1);           // analytics counter เพิ่มขึ้น 1
 });
 
 // ── posts mission (progress จาก postCount) ──────────────────
@@ -86,6 +88,7 @@ test('รับซ้ำ → failed-precondition', async () => {
   await claim({ tid: TID, missionId: 'm1' });
   await expectFail({ tid: TID, missionId: 'm1' }, 'failed-precondition');
   assert.equal((await read(`tenants/${TID}/users/${uid}`)).points, 1100);   // ไม่ได้ +100 ซ้ำ
+  assert.equal((await read(`tenants/${TID}/missions/m1`)).claimCount, 1);    // counter ไม่นับซ้ำ (idempotent)
 });
 
 // ── รางวัลคูปอง ─────────────────────────────────────────────
