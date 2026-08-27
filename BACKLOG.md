@@ -70,7 +70,7 @@
 - **build order:** ① createShop callable → ② ฟอร์มเปิดร้าน (client) → ③ submitVerification+storage → ④ super-admin review UI → ⑤ badge หน้าร้าน
 - [x] **stage ① createShop** — ✅ callable server-validated · tenant active/verified:false + settings + PII→private/owner · claim towner/tadmin ทันที · กันสแปม ≤5 · **e2e 8/8** (`tests/shop.test.js`)
 - [x] **stage ② ฟอร์มเปิดร้าน + verified badge (client)** — ✅ 2026-08-27: modal "เปิดร้านฟรี" ในโปรไฟล์ → createShop → พาไป admin.html · verified badge ข้างชื่อแบรนด์ (SVG seal ฟ้า+เช็ค อ่าน `settings/app.verified` ผ่าน applyBranding) · guard+frontend เขียว
-- [ ] **stage ③ submitVerification** — เจ้าของอัปโหลดเอกสาร(บัตร/ทะเบียน/selfie)+บัญชี → callable เขียน private/verification (pending) · Storage rules · e2e
+- [x] **stage ③ submitVerification** — ✅ 2026-08-27: callable (owner/tadmin) เขียน `private/verification` pending (docs paths+bank) · path ต้องอยู่ใต้ `verifications/{tid}/` · **e2e 4/4** (`tests/verify.test.js`) · firestore rules: owner อ่าน private/verification ได้ (อื่นปิด) · storage rules: `verifications/{tid}/` อ่าน super-admin/owner เขียน owner (รูป/PDF ≤6MB, ไม่ public) · rules 51/51 · admin UI หน้า "ยืนยันตัวตน" (อัปโหลด+บัญชี+สถานะ)
 - [ ] **stage ④ super-admin review** — คิวตรวจ verification → `setTenantVerified` callable (เขียน tenant.verified + settings/app.verified public) → badge โผล่ · e2e
 - [ ] **stage ⑤** — badge หน้าร้าน (client ทำใน ② แล้ว รอ stage ④ เขียน flag)
 - ⚠️ deploy: stage ①+② ต้อง **deploy functions (createShop) + hosting**

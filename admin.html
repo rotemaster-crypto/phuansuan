@@ -266,6 +266,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item brand-zone" onclick="showScreen('products',this)"><svg class="ic sb-ic"><use href="#i-package"/></svg> สินค้า</div>
     <div class="sb-item brand-zone" onclick="showScreen('shopdecor',this)"><svg class="ic sb-ic"><use href="#i-store"/></svg> ตกแต่งร้าน</div>
     <div class="sb-item brand-zone" onclick="showScreen('shipping',this)"><svg class="ic sb-ic"><use href="#i-truck"/></svg> จัดส่ง</div>
+    <div class="sb-item brand-zone" onclick="showScreen('verify',this)"><svg class="ic sb-ic"><use href="#i-check"/></svg> ยืนยันตัวตน</div>
     <div class="sb-item brand-zone" id="sb-item-pricing" style="display:none" onclick="showScreen('pricing',this)"><svg class="ic sb-ic"><use href="#i-hash"/></svg> คิดราคา–กำไร</div>
     <div class="sb-item brand-zone" onclick="showScreen('luckydraw',this)"><svg class="ic sb-ic"><use href="#i-gift"/></svg> สุ่มจับรางวัล</div>
     <div class="sb-item brand-zone" onclick="showScreen('campaigns',this)"><svg class="ic sb-ic"><use href="#i-target"/></svg> ภารกิจ & แคมเปญ</div>
@@ -873,6 +874,30 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<!-- VERIFY IDENTITY (N5 stage ③) -->
+<div class="screen" id="screen-verify">
+  <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-check"/></svg>ยืนยันตัวตนร้าน</div><div class="page-sub">ส่งเอกสารเพื่อรับเครื่องหมายร้านยืนยันตัวตน — ลูกค้าเชื่อมั่นมากขึ้น</div></div>
+  <div id="verify-status" style="margin-bottom:16px"></div>
+  <div class="card"><div class="card-title"><svg class="ic"><use href="#i-lock"/></svg>เอกสารยืนยันตัวตน</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">🔒 เอกสารเก็บเป็นความลับ เห็นเฉพาะทีมตรวจสอบ Bocean — ไม่แสดงต่อสาธารณะ</div>
+    <div class="form-grid">
+      <div class="fg"><label>บัตรประชาชน / เอกสารยืนยันตัวตน *</label><input type="file" id="vf-id" accept="image/*,application/pdf" onchange="uploadVerifyDoc(this,'idCard')"><div id="vf-id-state" style="font-size:12px;color:var(--muted);margin-top:4px"></div></div>
+      <div class="fg"><label>รูปถือบัตร (selfie) *</label><input type="file" id="vf-selfie" accept="image/*" onchange="uploadVerifyDoc(this,'selfie')"><div id="vf-selfie-state" style="font-size:12px;color:var(--muted);margin-top:4px"></div></div>
+      <div class="fg"><label>ทะเบียนพาณิชย์/นิติบุคคล (ถ้ามี)</label><input type="file" id="vf-reg" accept="image/*,application/pdf" onchange="uploadVerifyDoc(this,'registration')"><div id="vf-reg-state" style="font-size:12px;color:var(--muted);margin-top:4px"></div></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title"><svg class="ic"><use href="#i-coins"/></svg>บัญชีรับเงิน (ชื่อต้องตรงกับเจ้าของในเอกสาร)</div>
+    <div class="form-grid">
+      <div class="fg"><label>ประเภท</label><select id="vf-bank-type"><option value="promptpay">พร้อมเพย์</option><option value="bank">บัญชีธนาคาร</option></select></div>
+      <div class="fg"><label>ชื่อบัญชี (ตามบัตร) *</label><input id="vf-bank-name" placeholder="ชื่อ-นามสกุล"></div>
+      <div class="fg"><label>เลขพร้อมเพย์ / เลขบัญชี *</label><input id="vf-bank-number" inputmode="numeric" placeholder="เบอร์พร้อมเพย์ หรือเลขบัญชี"></div>
+    </div>
+    <div class="save-row">
+      <button class="btn btn-primary" id="vf-submit-btn" onclick="submitBrandVerification()"><svg class="ic"><use href="#i-send"/></svg> ส่งยืนยันตัวตน</button>
+    </div>
+  </div>
+</div>
+
 <!-- PRODUCTS -->
 <style>
 .prod-sec{font-size:13px;font-weight:800;color:var(--primary);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px dashed var(--border)}
@@ -1407,7 +1432,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, shipping: loadShippingScreen, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill };
+  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, shipping: loadShippingScreen, verify: loadVerification, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -1993,6 +2018,51 @@ async function loadShopDecor() {
 }
 // N1: หน้า "จัดส่ง" แยกออกมา — โหลดผู้ส่ง+ค่าส่ง+ขนส่งพร้อมกัน
 function loadShippingScreen(){ loadStore(); loadShipping(); loadCourier(); }
+
+// ── N5 stage ③: ยืนยันตัวตนร้าน (เจ้าของส่งเอกสาร+บัญชี) ──────────
+var _vfDocs = { idCard:'', selfie:'', registration:'' };
+async function uploadVerifyDoc(input, key){
+  var file = input.files[0]; if (!file) return;
+  if (file.size > 6*1024*1024){ toast('❌ ไฟล์ใหญ่เกิน 6MB','error'); input.value=''; return; }
+  var st = document.getElementById('vf-'+(key==='idCard'?'id':key==='selfie'?'selfie':'reg')+'-state');
+  if (st){ st.textContent='กำลังอัปโหลด...'; st.style.color='var(--muted)'; }
+  try {
+    var ext = (file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
+    var ref = storage.ref('verifications/'+currentTenant+'/'+key+'_'+Date.now()+'.'+ext);
+    await ref.put(file);
+    _vfDocs[key] = ref.fullPath;   // เก็บ "path" ไม่ใช่ download URL (กันลิงก์หลุด)
+    if (st){ st.textContent='แนบแล้ว ✓'; st.style.color='#16a34a'; }
+  } catch(e){ if (st){ st.textContent='อัปโหลดไม่สำเร็จ: '+(e.code||e.message); st.style.color='#dc2626'; } }
+}
+async function submitBrandVerification(){
+  var name = (document.getElementById('vf-bank-name').value||'').trim();
+  var number = (document.getElementById('vf-bank-number').value||'').trim();
+  var type = document.getElementById('vf-bank-type').value;
+  if (!_vfDocs.idCard) return toast('❌ แนบรูปบัตรประชาชนก่อน','error');
+  if (!_vfDocs.selfie) return toast('❌ แนบรูปถือบัตร (selfie) ก่อน','error');
+  if (name.length < 2) return toast('❌ กรอกชื่อบัญชี (ตรงกับเจ้าของ)','error');
+  if (!/^[0-9\-\s]{6,20}$/.test(number)) return toast('❌ เลขบัญชี/พร้อมเพย์ไม่ถูกต้อง','error');
+  var btn = document.getElementById('vf-submit-btn'); var old = btn.innerHTML; btn.disabled=true; btn.textContent='กำลังส่ง...';
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('submitVerification');
+    await fn({ tid: currentTenant, docs: _vfDocs, bankName: name, bankNumber: number, bankType: type });
+    toast('✅ ส่งเอกสารแล้ว — รอทีมตรวจสอบ','success');
+    loadVerification();
+  } catch(e){ btn.disabled=false; btn.innerHTML=old; toast('❌ ส่งไม่สำเร็จ: '+(e.code||e.message),'error'); }
+}
+async function loadVerification(){
+  _vfDocs = { idCard:'', selfie:'', registration:'' };
+  var box = document.getElementById('verify-status'); if (!box) return;
+  var badge = function(bg,fg,txt){ return '<div class="card" style="background:'+bg+';color:'+fg+';border:none">'+escapeHtml(txt)+'</div>'; };
+  try {
+    var d = await aDb().collection('private').doc('verification').get();
+    if (!d.exists){ box.innerHTML = '<div class="card" style="background:var(--bg)"><b>ยังไม่ได้ส่งเอกสาร</b><div style="font-size:13px;color:var(--muted);margin-top:4px">ส่งเอกสารด้านล่างเพื่อรับเครื่องหมายร้านยืนยันตัวตน</div></div>'; return; }
+    var v = d.data(); var s = v.status||'pending';
+    if (s==='approved') box.innerHTML = badge('#e9f7ef','#166534','✅ ยืนยันตัวตนแล้ว — ร้านของคุณมีเครื่องหมายน่าเชื่อถือแสดงต่อลูกค้า');
+    else if (s==='rejected') box.innerHTML = '<div class="card" style="background:#fee2e2;color:#991b1b;border:none"><b>❌ ไม่ผ่านการตรวจสอบ</b>'+(v.reviewNote?'<div style="font-size:13px;margin-top:4px">เหตุผล: '+escapeHtml(v.reviewNote)+'</div>':'')+'<div style="font-size:13px;margin-top:4px">แก้ไขแล้วส่งใหม่ได้</div></div>';
+    else box.innerHTML = badge('#fff7e6','#a15c00','⏳ ส่งแล้ว — กำลังรอทีมตรวจสอบ Bocean (ปกติ 1–2 วันทำการ)');
+  } catch(e){ box.innerHTML = '<div class="card" style="background:var(--bg);color:var(--muted)">โหลดสถานะไม่สำเร็จ ลองใหม่</div>'; }
+}
 // ── ข้อมูลร้านค้า (settings/store) — ใช้เป็นผู้ส่งบนใบปะหน้า ──
 async function loadStore(){
   try {

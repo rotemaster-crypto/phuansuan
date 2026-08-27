@@ -272,6 +272,42 @@ exports.createShop = onCall(async (req) => {
   return { ok: true, tid: tid };
 });
 
+// ── submitVerification (N5 stage ③): เจ้าของส่งเอกสารยืนยันตัวตน ──
+//  ผสม "เอกสาร + บัญชีตรงชื่อ" — เก็บ private/verification (rules: read เฉพาะ canManage, write ผ่าน function เท่านั้น)
+//  ไฟล์เอกสารอยู่ Storage path verifications/{tid}/... (storage.rules: อ่าน super-admin/owner, ไม่ public)
+exports.submitVerification = onCall(async (req) => {
+  const tid = await resolveTid(req.data && req.data.tid);
+  requireAdmin(req, tid);   // เจ้าของ/แอดมินร้านนี้เท่านั้น (owner ได้ tadmin[tid] จาก createShop)
+  const d = req.data || {};
+  const bankName = String(d.bankName || "").trim();
+  const bankNumber = String(d.bankNumber || "").trim();
+  const bankType = String(d.bankType || "promptpay").trim();
+  const docs = (d.docs && typeof d.docs === "object") ? d.docs : {};
+  const idCard = String(docs.idCard || "").trim();
+  const selfie = String(docs.selfie || "").trim();
+  const registration = String(docs.registration || "").trim();
+
+  if (!idCard) throw new HttpsError("invalid-argument", "ต้องแนบรูปบัตรประชาชน/เอกสารยืนยันตัวตน");
+  if (!selfie) throw new HttpsError("invalid-argument", "ต้องแนบรูปถือบัตร (selfie) กันสวมรอย");
+  if (bankName.length < 2) throw new HttpsError("invalid-argument", "ต้องระบุชื่อบัญชีรับเงิน (ตรงกับเจ้าของ)");
+  if (!/^[0-9\-\s]{6,20}$/.test(bankNumber)) throw new HttpsError("invalid-argument", "เลขบัญชี/พร้อมเพย์ไม่ถูกต้อง");
+  // path ต้องอยู่ใต้ verifications/{tid}/ เท่านั้น (กันแนบ path ของร้านอื่น)
+  const prefix = "verifications/" + tid + "/";
+  [idCard, selfie, registration].forEach((p) => {
+    if (p && p.indexOf(prefix) !== 0) throw new HttpsError("invalid-argument", "path เอกสารไม่ถูกต้อง");
+  });
+
+  await troot(tid).collection("private").doc("verification").set({
+    status: "pending",
+    bankAccount: { name: bankName, number: bankNumber, type: bankType },
+    docs: { idCard: idCard, selfie: selfie, registration: registration },
+    submittedAt: FieldValue.serverTimestamp(),
+    submittedBy: req.auth.uid,
+    reviewedBy: null, reviewNote: "", reviewedAt: null,
+  }, { merge: true });
+  return { ok: true, status: "pending" };
+});
+
 // ── dailyLoginBonus ───────────────────────────────────────
 // ให้แต้มเข้าระบบรายวัน "ฝั่ง server" (idempotent ต่อวันตามเขตเวลาไทย)
 // ย้ายมาจาก client (index.html) ที่เดิม increment points เอง → กันปั๊มแต้ม (A5)

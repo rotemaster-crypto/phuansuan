@@ -55,6 +55,14 @@ service firebase.storage {
         && (isAdmin() || (signedIn() && request.auth.token.tadmin != null && request.auth.token.tadmin[tenant] == true));
     }
 
+    // เอกสารยืนยันตัวตนร้าน (N5) — PII: อ่านเฉพาะ super-admin/แอดมินร้านนั้น (ไม่ public) · รูปหรือ PDF ≤ 6MB
+    match /verifications/{tenant}/{fileName} {
+      allow read:  if isAdmin() || (signedIn() && request.auth.token.tadmin != null && request.auth.token.tadmin[tenant] == true);
+      allow write: if underLimit(6)
+        && request.resource.contentType.matches('image/.*|application/pdf')
+        && (isAdmin() || (signedIn() && request.auth.token.tadmin != null && request.auth.token.tadmin[tenant] == true));
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }
