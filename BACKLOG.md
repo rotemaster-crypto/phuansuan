@@ -52,8 +52,9 @@
 ## 🎨 UI มาตรฐาน (Roger 2026-08-27) — ดู [[ui-standards-font-responsive]]
 ### N6 — font scale + responsive (ทำแบบมีสถาปัตยกรรม incremental)
 - [x] type scale เป็น CSS var (`--fs-xs..--fs-2xl`) ใน `:root` + body base = `--fs-base` · **Profile เป็นตัวอย่าง** (class → var) — deploy แล้ว รอ Roger เคาะสเกล
-- [ ] สวีป font scale ที่เหลือทุกหน้า (feed/shop/community/community/modals) — inline font-size ~400 จุด snap เข้าสเกล (ทีละหน้า verify)
-- [ ] responsive: ตอนนี้ body 480px→780px (@820), feed/prof 620px (@820) = แบบ A คอลัมน์กลาง · ขัดให้เนียนบนคอม (Roger เลือกแนวเมื่อดู sample)
+- [x] ~~สวีป font scale ทั้ง index.html~~ — ✅ 2026-08-27: snap-to-scale deterministic 367 จุด → var(--fs-*) · เหลือ px=0 · 10 ขนาด canonical (2xs11/xs12/sm13/base15/md17/lg20/xl24/2xl30/3xl40/4xl48) · guard/frontend เขียว
+- [ ] font sweep **admin.html** ด้วย (ยังเป็น px ดิบ) — ทำแบบเดียวกัน
+- [ ] responsive: ตอนนี้ body 480px→780px (@820), feed/prof 620px (@820) = แบบ A คอลัมน์กลาง · ขัดให้เนียนบนคอม (Roger เลือกแนวเมื่อดู)
 - [x] เปิดร้าน CTA → ข้อความ subtle แบบ Shopee ใน profile (ไม่ใช่การ์ดปุ่มใหญ่)
 
 ## 🆕 งานใหม่จาก Roger (2026-08-27 รอบสอง) — เรียงตามที่สั่ง

@@ -29,24 +29,24 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:#1c1e21;max-width:480px;margin:0 auto;min-height:100vh;font-size:var(--fs-base);line-height:var(--lh-base)}
 :root{--primary:#1877f2;--accent:#42b883;--bg:#f0f2f5;--card:#fff;--border:#e4e6eb;--text:#1c1e21;--muted:#65676b;
   /* type scale มาตรฐาน (single source — เลิก magic number กระจาย) */
-  --fs-xs:12px;--fs-sm:13px;--fs-base:15px;--fs-md:17px;--fs-lg:20px;--fs-xl:24px;--fs-2xl:30px;--lh-base:1.5;--lh-tight:1.3}
+  --fs-2xs:11px;--fs-xs:12px;--fs-sm:13px;--fs-base:15px;--fs-md:17px;--fs-lg:20px;--fs-xl:24px;--fs-2xl:30px;--fs-3xl:40px;--fs-4xl:48px;--lh-base:1.5;--lh-tight:1.3}
 
 /* ── TOPBAR ── */
 .topbar{background:#fff;border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 12px;gap:8px;position:sticky;top:0;z-index:200}
 .tb-brand{flex:1;display:flex;align-items:center;gap:4px;min-width:0}
-.tb-logo{font-size:26px;font-weight:800;color:var(--primary);font-family:Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-logo{font-size:var(--fs-xl);font-weight:800;color:var(--primary);font-family:Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vbadge{display:none;align-items:center;flex-shrink:0}
 .vbadge-ic{width:17px;height:17px}
 .seller-entry{display:flex;align-items:center;gap:9px;padding:13px 16px;margin:10px 0;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--primary);font-size:var(--fs-sm);font-weight:600;cursor:pointer}
 .seller-entry .ic{width:18px;height:18px;flex-shrink:0}
 .seller-entry .se-arrow{margin-left:auto;color:var(--muted);font-size:var(--fs-md);font-weight:400}
 .seller-entry:hover{background:var(--bg)}
-.tb-btn{width:38px;height:38px;border-radius:50%;background:#e4e6eb;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;position:relative;flex-shrink:0}
-.tb-badge{position:absolute;top:1px;right:1px;background:#e41e3f;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 4px;border:1.5px solid #fff;min-width:16px;text-align:center;line-height:14px}
+.tb-btn{width:38px;height:38px;border-radius:50%;background:#e4e6eb;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:var(--fs-md);position:relative;flex-shrink:0}
+.tb-badge{position:absolute;top:1px;right:1px;background:#e41e3f;color:#fff;font-size:var(--fs-2xs);font-weight:800;border-radius:10px;padding:1px 4px;border:1.5px solid #fff;min-width:16px;text-align:center;line-height:14px}
 
 /* ── FEED TABS ── */
 .feed-tabs{background:#fff;display:flex;border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:199}
-.ftab{flex:1;padding:13px 0;text-align:center;font-size:15px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+.ftab{flex:1;padding:13px 0;text-align:center;font-size:var(--fs-base);font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
 .ftab.active{color:var(--primary);border-bottom-color:var(--primary)}
 
 /* ── STORIES ── */
@@ -55,79 +55,79 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .story{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0}
 .s-ring{width:60px;height:60px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
 .s-ring.mine{background:var(--border)}
-.s-inner{width:100%;height:100%;border-radius:50%;background:#e7f3ff;display:flex;align-items:center;justify-content:center;font-size:26px;border:2px solid #fff}
-.s-name{font-size:11px;color:var(--muted);max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.s-inner{width:100%;height:100%;border-radius:50%;background:#e7f3ff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xl);border:2px solid #fff}
+.s-name{font-size:var(--fs-2xs);color:var(--muted);max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
 
 /* ── CREATE POST ── */
 .create-post{background:#fff;padding:12px 16px;border-bottom:8px solid var(--bg)}
 .cp-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.cp-me{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cp-box{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:9px 16px;font-size:15px;color:var(--muted);cursor:pointer;text-align:left;font-family:inherit}
+.cp-me{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cp-box{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:9px 16px;font-size:var(--fs-base);color:var(--muted);cursor:pointer;text-align:left;font-family:inherit}
 .cp-divider{height:1px;background:var(--border);margin-bottom:8px}
 .cp-btns{display:flex}
-.cp-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 4px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted)}
+.cp-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 4px;border-radius:8px;cursor:pointer;font-size:var(--fs-sm);font-weight:700;color:var(--muted)}
 .cp-btn:active{background:var(--bg)}
 
 /* ── ALERT ── */
 .alert-wrap{padding:0}
-.alert-banner{background:#fff8e1;border-bottom:1px solid #f9a825;padding:10px 16px;display:flex;gap:8px;font-size:13px;color:#5d4037;line-height:1.4}
+.alert-banner{background:#fff8e1;border-bottom:1px solid #f9a825;padding:10px 16px;display:flex;gap:8px;font-size:var(--fs-sm);color:#5d4037;line-height:1.4}
 
 /* ── POST CARD ── */
 .post-card{background:#fff;margin-bottom:8px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .pc-head{padding:12px 16px 0;display:flex;align-items:flex-start;gap:10px}
-.pc-av{width:42px;height:42px;border-radius:50%;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pc-av{width:42px;height:42px;border-radius:50%;color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .av-blue{background:#1877f2}.av-orange{background:#e65100}.av-teal{background:#00695c}.av-purple{background:#6a1b9a}
 .pc-info{flex:1}
-.pc-name{font-size:15px;font-weight:700;color:var(--text);display:flex;flex-wrap:wrap;align-items:center;gap:5px}
-.expert-badge{background:#e7f3ff;color:#1877f2;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
-.pc-meta{font-size:13px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pc-name{font-size:var(--fs-base);font-weight:700;color:var(--text);display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.expert-badge{background:#e7f3ff;color:#1877f2;font-size:var(--fs-2xs);font-weight:700;padding:2px 8px;border-radius:12px}
+.pc-meta{font-size:var(--fs-sm);color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .pc-dot{width:3px;height:3px;background:var(--muted);border-radius:50%;display:inline-block;flex-shrink:0}
-.follow-link{color:var(--primary);font-weight:700;cursor:pointer;font-size:13px;background:none;border:none;font-family:inherit;padding:0}
+.follow-link{color:var(--primary);font-weight:700;cursor:pointer;font-size:var(--fs-sm);background:none;border:none;font-family:inherit;padding:0}
 .follow-link.following{color:var(--muted)}
-.pc-more{width:34px;height:34px;border-radius:50%;border:none;background:none;font-size:20px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-2px}
+.pc-more{width:34px;height:34px;border-radius:50%;border:none;background:none;font-size:var(--fs-lg);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-2px}
 .pc-more:hover{background:var(--bg)}
 
 /* tags */
 .pc-tags{padding:6px 16px 4px;display:flex;flex-wrap:wrap;gap:5px}
-.ptag{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
+.ptag{display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:12px}
 .pt-red{background:#fce4ec;color:#880e4f}
 .pt-green{background:#e8f5e9;color:#1b5e20}
 .pt-amber{background:#fff8e1;color:#e65100}
 .pt-blue{background:#e7f3ff;color:#1877f2}
 
 /* text */
-.pc-text{padding:6px 16px 10px;font-size:15px;line-height:1.5;color:var(--text)}
+.pc-text{padding:6px 16px 10px;font-size:var(--fs-base);line-height:1.5;color:var(--text)}
 .pc-text .more{color:var(--muted);cursor:pointer}
 
 /* image */
-.pc-img{width:100%;background:#e7f3ff;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:4/3;gap:8px;font-size:44px}
-.pc-img span{font-size:13px;color:var(--muted)}
+.pc-img{width:100%;background:#e7f3ff;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:4/3;gap:8px;font-size:var(--fs-3xl)}
+.pc-img span{font-size:var(--fs-sm);color:var(--muted)}
 
 /* ai */
 .ai-box{margin:0 16px 10px;background:#e7f3ff;border:1px solid #b3d4fb;border-radius:12px;padding:10px 12px}
-.ai-title{font-size:12px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:5px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em}
-.ai-body{font-size:14px;color:#0d47a1;line-height:1.5}
+.ai-title{font-size:var(--fs-xs);font-weight:800;color:var(--primary);display:flex;align-items:center;gap:5px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em}
+.ai-body{font-size:var(--fs-sm);color:#0d47a1;line-height:1.5}
 .ai-body strong{color:#b71c1c;font-weight:800}
 
 /* product */
 .prod-link{margin:0 16px 10px;display:flex;align-items:center;gap:8px;background:#f0fff0;border:1px solid #c8e6c9;border-radius:20px;padding:8px 14px;cursor:pointer}
-.prod-link-text{flex:1;font-size:13px;font-weight:700;color:#1b5e20}
-.prod-arrow{font-size:16px;color:var(--muted)}
+.prod-link-text{flex:1;font-size:var(--fs-sm);font-weight:700;color:#1b5e20}
+.prod-arrow{font-size:var(--fs-base);color:var(--muted)}
 
 /* reaction row */
 .pc-reactions{padding:6px 16px;display:flex;justify-content:space-between;align-items:center}
-.r-counts{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);cursor:pointer}
+.r-counts{display:flex;align-items:center;gap:5px;font-size:var(--fs-sm);color:var(--muted);cursor:pointer}
 .r-icons{display:flex}
-.ri{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-right:-3px;border:1.5px solid #fff}
+.ri{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2xs);margin-right:-3px;border:1.5px solid #fff}
 .ri-b{background:var(--primary)}.ri-r{background:#e41e3f}.ri-g{background:#2e7d32}
-.c-count{font-size:13px;color:var(--muted);cursor:pointer}
+.c-count{font-size:var(--fs-sm);color:var(--muted);cursor:pointer}
 .c-count:hover{text-decoration:underline}
 
 /* action bar */
 .pc-actions{border-top:1px solid var(--border);display:flex}
-.pa{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 2px;background:none;border:none;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.pa{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 2px;background:none;border:none;font-size:var(--fs-sm);font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
 .pa:hover{background:var(--bg);border-radius:6px}
-.pa .pi{font-size:18px}
+.pa .pi{font-size:var(--fs-md)}
 .pa.liked{color:#e41e3f}
 .pa.helped{color:#2e7d32}
 .pa.liked .pi{filter:none}
@@ -142,32 +142,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 /* comments */
 .comments-wrap{padding:6px 16px 12px}
 .cmt{display:flex;gap:8px;margin-bottom:8px}
-.cmt-av{width:32px;height:32px;border-radius:50%;background:#e4e6eb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--muted);flex-shrink:0}
+.cmt-av{width:32px;height:32px;border-radius:50%;background:#e4e6eb;display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:800;color:var(--muted);flex-shrink:0}
 .cmt-bubble{background:var(--bg);border-radius:18px;padding:8px 12px;flex:1}
-.cmt-name{font-size:13px;font-weight:800;color:var(--text)}
-.cmt-text{font-size:14px;color:var(--text);line-height:1.4;margin-top:2px}
+.cmt-name{font-size:var(--fs-sm);font-weight:800;color:var(--text)}
+.cmt-text{font-size:var(--fs-sm);color:var(--text);line-height:1.4;margin-top:2px}
 .cmt-acts{display:flex;gap:12px;margin-top:3px;padding-left:2px}
-.cmt-act{font-size:12px;color:var(--muted);cursor:pointer;font-weight:700;background:none;border:none;font-family:inherit;padding:0}
+.cmt-act{font-size:var(--fs-xs);color:var(--muted);cursor:pointer;font-weight:700;background:none;border:none;font-family:inherit;padding:0}
 .cmt-act:hover{text-decoration:underline}
 .cmt-input-row{display:flex;gap:8px;align-items:center;margin-top:6px}
-.cmt-me{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cmt-input{flex:1;background:var(--bg);border:none;border-radius:20px;padding:8px 14px;font-size:14px;font-family:inherit;outline:none;color:var(--text)}
-.cmt-send{background:var(--primary);color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cmt-me{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-size:var(--fs-sm);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cmt-input{flex:1;background:var(--bg);border:none;border-radius:20px;padding:8px 14px;font-size:var(--fs-sm);font-family:inherit;outline:none;color:var(--text)}
+.cmt-send{background:var(--primary);color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:var(--fs-base);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 /* ── PROFILE ── */
 .prof-cover{height:200px;background:linear-gradient(160deg,#1877f2 0%,#42b883 100%);position:relative;overflow:hidden;background-size:cover;background-position:center}
-.prof-cover-btn{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;z-index:20}
+.prof-cover-btn{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit;z-index:20}
 .prof-body{background:#fff;border-bottom:8px solid var(--bg);padding:0 16px 16px;position:relative}
 .prof-av-row{display:flex;align-items:flex-end;justify-content:space-between;margin-top:-48px;margin-bottom:10px;position:relative;z-index:10}
-.prof-av{width:90px;height:90px;border-radius:50%;background:#e7f3ff;border:4px solid #fff;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:800;color:var(--primary);position:relative;z-index:10;overflow:hidden;background-size:cover;background-position:center}
+.prof-av{width:90px;height:90px;border-radius:50%;background:#e7f3ff;border:4px solid #fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-3xl);font-weight:800;color:var(--primary);position:relative;z-index:10;overflow:hidden;background-size:cover;background-position:center}
 .prof-btns{display:flex;gap:8px;padding-bottom:6px}
-.prof-btn-p{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
-.prof-btn-s{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.prof-btn-p{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:var(--fs-sm);font-weight:800;cursor:pointer;font-family:inherit}
+.prof-btn-s{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:8px 14px;font-size:var(--fs-sm);font-weight:800;cursor:pointer;font-family:inherit}
 .prof-name{font-size:var(--fs-lg);font-weight:800;color:var(--text)}
 .prof-sub{font-size:var(--fs-sm);color:var(--muted);margin-top:2px}
 .prof-bio{font-size:var(--fs-base);color:var(--text);margin-top:6px;line-height:1.4}
 .prof-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.pb{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:12px}
+.pb{display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-xs);font-weight:700;padding:4px 10px;border-radius:12px}
 .pb-blue{background:#e7f3ff;color:#1877f2}
 .pb-gold{background:#fff8e1;color:#e65100}
 .pb-green{background:#e8f5e9;color:#1b5e20}
@@ -180,96 +180,96 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .pnav.active{color:var(--primary);border-bottom-color:var(--primary)}
 .points-card{background:#fff;padding:14px 16px;border-bottom:8px solid var(--bg)}
 .pts-head{display:flex;justify-content:space-between;margin-bottom:8px}
-.pts-title{font-size:15px;font-weight:800;color:var(--text)}
-.pts-val{font-size:18px;font-weight:800;color:var(--primary)}
+.pts-title{font-size:var(--fs-base);font-weight:800;color:var(--text)}
+.pts-val{font-size:var(--fs-md);font-weight:800;color:var(--primary)}
 .bar-bg{background:var(--bg);border-radius:20px;height:8px;overflow:hidden;margin-bottom:5px}
 .bar-fg{background:var(--primary);height:100%;border-radius:20px}
-.tier-lbs{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.tier-lbs{display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--muted)}
 .tier-act{color:var(--primary);font-weight:800}
 .crops-card{background:#fff;padding:14px 16px;border-bottom:8px solid var(--bg)}
 .sec-title{font-size:var(--fs-sm);font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
 .crops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .crop-item{background:var(--bg);border-radius:10px;padding:10px 6px;text-align:center}
-.crop-emoji{font-size:26px}
-.crop-name{font-size:12px;font-weight:700;color:var(--text);margin-top:4px}
-.crop-posts{font-size:11px;color:var(--muted)}
+.crop-emoji{font-size:var(--fs-xl)}
+.crop-name{font-size:var(--fs-xs);font-weight:700;color:var(--text);margin-top:4px}
+.crop-posts{font-size:var(--fs-2xs);color:var(--muted)}
 
 /* ── COMMUNITY ── */
 .comm-screen{padding:8px 0 72px}
-.comm-head-label{padding:10px 16px 4px;font-size:15px;font-weight:800;color:var(--text)}
-.comm-alert{background:#fff8e1;border-left:4px solid #f9a825;padding:10px 14px;margin:0 12px 8px;border-radius:0 8px 8px 0;font-size:13px;color:#5d4037;display:flex;gap:8px;line-height:1.4}
+.comm-head-label{padding:10px 16px 4px;font-size:var(--fs-base);font-weight:800;color:var(--text)}
+.comm-alert{background:#fff8e1;border-left:4px solid #f9a825;padding:10px 14px;margin:0 12px 8px;border-radius:0 8px 8px 0;font-size:var(--fs-sm);color:#5d4037;display:flex;gap:8px;line-height:1.4}
 .comm-card{background:#fff;border-radius:12px;margin:0 12px 8px;padding:14px;border:1px solid var(--border)}
 .cc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.cc-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.cc-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xl);flex-shrink:0}
 .cci-g{background:#e8f5e9}.cci-a{background:#fff8e1}.cci-b{background:#e7f3ff}
-.cc-name{font-size:15px;font-weight:700;color:var(--text)}
-.cc-sub{font-size:12px;color:var(--muted);margin-top:2px}
-.cc-stats{display:flex;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
-.cc-join{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-.cc-joined{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.cc-name{font-size:var(--fs-base);font-weight:700;color:var(--text)}
+.cc-sub{font-size:var(--fs-xs);color:var(--muted);margin-top:2px}
+.cc-stats{display:flex;gap:10px;font-size:var(--fs-xs);color:var(--muted);flex-wrap:wrap}
+.cc-join{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit}
+.cc-joined{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:7px 14px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit}
 
 /* ── POST MODAL ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:flex-end;justify-content:center}
 .overlay.open{display:flex}
 .modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
 .modal-top{display:flex;align-items:center;padding:14px 16px 12px;border-bottom:1px solid var(--border)}
-.modal-close{width:34px;height:34px;background:var(--bg);border:none;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:10px;font-weight:800}
-.modal-title{flex:1;font-size:17px;font-weight:800;text-align:center;color:var(--text)}
-.modal-submit{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.modal-close{width:34px;height:34px;background:var(--bg);border:none;border-radius:50%;font-size:var(--fs-base);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:10px;font-weight:800}
+.modal-title{flex:1;font-size:var(--fs-md);font-weight:800;text-align:center;color:var(--text)}
+.modal-submit{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:var(--fs-sm);font-weight:800;cursor:pointer;font-family:inherit}
 .modal-submit:disabled{opacity:0.5}
 .modal-body{padding:16px}
 .modal-user{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.modal-av{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center}
-.modal-uname{font-size:15px;font-weight:700;color:var(--text)}
-.privacy-chip{display:inline-flex;align-items:center;gap:3px;background:var(--bg);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:700;color:var(--text);margin-top:2px;cursor:pointer}
+.modal-av{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;font-size:var(--fs-base);font-weight:800;display:flex;align-items:center;justify-content:center}
+.modal-uname{font-size:var(--fs-base);font-weight:700;color:var(--text)}
+.privacy-chip{display:inline-flex;align-items:center;gap:3px;background:var(--bg);border-radius:6px;padding:3px 8px;font-size:var(--fs-xs);font-weight:700;color:var(--text);margin-top:2px;cursor:pointer}
 .type-chips{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .type-chips::-webkit-scrollbar{display:none}
-.type-chip{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;border:2px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:inherit}
+.type-chip{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;border:2px solid var(--border);background:#fff;font-size:var(--fs-sm);font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:inherit}
 .type-chip.sel{border-color:var(--primary);background:#e7f3ff;color:var(--primary)}
 .photo-area{border:2px dashed var(--border);border-radius:12px;padding:22px;text-align:center;cursor:pointer;margin-bottom:14px;background:#fafafa}
-.photo-area .ph-ico{font-size:34px;opacity:0.5}
-.photo-area span{display:block;font-size:14px;color:var(--muted);margin-top:6px}
+.photo-area .ph-ico{font-size:var(--fs-2xl);opacity:0.5}
+.photo-area span{display:block;font-size:var(--fs-sm);color:var(--muted);margin-top:6px}
 .fg{margin-bottom:12px}
-.fg label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px}
-.fg select,.fg textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;background:#fff;outline:none;color:var(--text)}
+.fg label{display:block;font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin-bottom:5px}
+.fg select,.fg textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:var(--fs-base);font-family:inherit;background:#fff;outline:none;color:var(--text)}
 .fg select:focus,.fg textarea:focus{border-color:var(--primary)}
 .fg textarea{resize:none;height:90px}
-.submit-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
-.pts-hint{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
+.submit-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:var(--fs-base);font-weight:800;cursor:pointer;font-family:inherit}
+.pts-hint{text-align:center;font-size:var(--fs-sm);color:var(--muted);margin-top:8px}
 
 /* ── COMMERCE (ร้านค้า + ตะกร้า) Phase 3.1 ── */
 #shop-banner{position:relative;min-height:118px;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px;color:#fff;background:linear-gradient(135deg,var(--primary,#1877f2),#42b883);background-size:cover;background-position:center}
 #shop-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.45))}
 #shop-banner .sb-inner{position:relative;z-index:1}
-#shop-banner .sb-title{font-size:21px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.35);line-height:1.2}
-#shop-banner .sb-tag{font-size:13px;opacity:.96;margin-top:3px;text-shadow:0 1px 3px rgba(0,0,0,.35)}
-#shop-promo{display:flex;align-items:center;gap:8px;background:#fff7e6;border-bottom:1px solid #ffe0a3;color:#a15c00;font-size:13px;font-weight:600;padding:9px 14px}
+#shop-banner .sb-title{font-size:var(--fs-lg);font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.35);line-height:1.2}
+#shop-banner .sb-tag{font-size:var(--fs-sm);opacity:.96;margin-top:3px;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+#shop-promo{display:flex;align-items:center;gap:8px;background:#fff7e6;border-bottom:1px solid #ffe0a3;color:#a15c00;font-size:var(--fs-sm);font-weight:600;padding:9px 14px}
 #shop-promo .pp-ico{flex:0 0 auto}
 #shop-promo .pp-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shop-head{padding:12px;background:#fff;border-bottom:8px solid var(--bg)}
-.shop-title{font-size:18px;font-weight:800;color:var(--text)}
-.shop-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.shop-title{font-size:var(--fs-md);font-weight:800;color:var(--text)}
+.shop-sub{font-size:var(--fs-sm);color:var(--muted);margin-top:2px}
 .cat-bar{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:#fff;border-bottom:1px solid var(--border);scrollbar-width:none;position:sticky;top:56px;z-index:150}
 .cat-bar::-webkit-scrollbar{display:none}
-.cat-chip{flex-shrink:0;padding:7px 14px;border-radius:18px;background:var(--bg);border:1px solid var(--border);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.cat-chip{flex-shrink:0;padding:7px 14px;border-radius:18px;background:var(--bg);border:1px solid var(--border);font-size:var(--fs-sm);font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
 .cat-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}
 /* การ์ดสินค้า — แนว "แบรนด์อบอุ่น" + ป้ายลด%/ยอดขาย · สีผูกแบรนด์ (ปรับที่ตกแต่งร้าน) */
 .prod-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 3px 12px -7px rgba(20,50,25,.22);transition:transform .12s ease,box-shadow .12s ease;cursor:pointer}
 .prod-card:active{transform:scale(.985)}
-.prod-img{aspect-ratio:4/3;background:linear-gradient(150deg,color-mix(in srgb,var(--primary) 12%,var(--card)),var(--bg));display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;position:relative}
+.prod-img{aspect-ratio:4/3;background:linear-gradient(150deg,color-mix(in srgb,var(--primary) 12%,var(--card)),var(--bg));display:flex;align-items:center;justify-content:center;font-size:var(--fs-3xl);overflow:hidden;position:relative}
 .prod-img img{width:100%;height:100%;object-fit:cover}
 .prod-body{padding:10px 11px 12px;display:flex;flex-direction:column;gap:3px;flex:1}
 .prod-cat{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--shop-price,var(--primary));font-weight:700}
 .prod-name{font-size:13.5px;font-weight:600;line-height:1.32;color:var(--text)}
-.prod-sold{font-size:11px;color:var(--muted);margin-top:1px}
+.prod-sold{font-size:var(--fs-2xs);color:var(--muted);margin-top:1px}
 .prod-foot{margin-top:auto;padding-top:7px;display:flex;align-items:flex-end;justify-content:space-between;gap:6px}
-.prod-price{font-size:17px;font-weight:800;color:var(--shop-price,var(--primary));line-height:1.1}
+.prod-price{font-size:var(--fs-md);font-weight:800;color:var(--shop-price,var(--primary));line-height:1.1}
 .prod-pricewrap{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}
-.prod-oldprice{font-size:11px;color:var(--muted);text-decoration:line-through}
-.disc-badge{position:absolute;top:7px;right:7px;background:var(--shop-disc,#ee4d2d);color:#fff;font-size:11px;font-weight:800;line-height:1.1;padding:3px 7px;border-radius:999px;z-index:2;box-shadow:0 2px 6px -1px rgba(0,0,0,.25)}
-.prod-badge{position:absolute;top:8px;left:0;background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:2px 8px 2px 7px;border-radius:0 999px 999px 0;z-index:2}
-.soldout-badge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);color:#333;font-size:14px;font-weight:800;z-index:3;letter-spacing:1px}
+.prod-oldprice{font-size:var(--fs-2xs);color:var(--muted);text-decoration:line-through}
+.disc-badge{position:absolute;top:7px;right:7px;background:var(--shop-disc,#ee4d2d);color:#fff;font-size:var(--fs-2xs);font-weight:800;line-height:1.1;padding:3px 7px;border-radius:999px;z-index:2;box-shadow:0 2px 6px -1px rgba(0,0,0,.25)}
+.prod-badge{position:absolute;top:8px;left:0;background:var(--primary);color:#fff;font-size:var(--fs-2xs);font-weight:700;padding:2px 8px 2px 7px;border-radius:0 999px 999px 0;z-index:2}
+.soldout-badge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);color:#333;font-size:var(--fs-sm);font-weight:800;z-index:3;letter-spacing:1px}
 .prod-card.is-out{opacity:.92}
 .prod-card.is-out .prod-img img{filter:grayscale(.4)}
 /* ===== รูปแบบการ์ด (preset เลือกต่อแบรนด์ที่ "ตกแต่งร้าน") — ค่าเริ่มต้น = อบอุ่น(brand) ด้านบน ===== */
@@ -284,65 +284,65 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 #screen-shop[data-cardstyle="market"] .prod-body{padding:8px 9px 10px}
 #screen-shop[data-cardstyle="market"] .prod-cat{display:none}
 #screen-shop[data-cardstyle="market"] .prod-name{font-size:12.5px;font-weight:500}
-#screen-shop[data-cardstyle="market"] .prod-price{color:var(--shop-disc,#ee4d2d);font-size:16px}
-#screen-shop[data-cardstyle="market"] .prod-add{background:var(--shop-disc,#ee4d2d);border-color:var(--shop-disc,#ee4d2d);color:#fff;width:28px;height:28px;font-size:16px}
+#screen-shop[data-cardstyle="market"] .prod-price{color:var(--shop-disc,#ee4d2d);font-size:var(--fs-base)}
+#screen-shop[data-cardstyle="market"] .prod-add{background:var(--shop-disc,#ee4d2d);border-color:var(--shop-disc,#ee4d2d);color:#fff;width:28px;height:28px;font-size:var(--fs-base)}
 #screen-shop[data-cardstyle="market"] .prod-add:active{opacity:.8}
 #screen-shop[data-cardstyle="market"] .disc-badge{top:0;right:0;border-radius:0 0 0 9px;box-shadow:none}
-.pd-img{width:100%;height:230px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:80px;overflow:hidden}
+.pd-img{width:100%;height:230px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:var(--fs-4xl);overflow:hidden}
 .pd-img img{width:100%;height:100%;object-fit:cover}
 .pd-info{padding:14px 16px}
-.pd-name{font-size:18px;font-weight:800;color:var(--text);line-height:1.3}
+.pd-name{font-size:var(--fs-md);font-weight:800;color:var(--text);line-height:1.3}
 .pd-pricerow{display:flex;align-items:baseline;gap:8px;margin-top:8px;flex-wrap:wrap}
-.pd-price{font-size:22px;font-weight:800;color:var(--shop-price,#ee4d2d)}
-.pd-old{font-size:14px;color:var(--muted);text-decoration:line-through}
-.pd-disc{background:var(--shop-discbg,#ffde00);color:var(--shop-disc,#ee4d2d);font-size:12px;font-weight:800;padding:2px 7px;border-radius:5px}
-.pd-sold{font-size:12px;color:var(--muted);margin-top:5px}
+.pd-price{font-size:var(--fs-lg);font-weight:800;color:var(--shop-price,#ee4d2d)}
+.pd-old{font-size:var(--fs-sm);color:var(--muted);text-decoration:line-through}
+.pd-disc{background:var(--shop-discbg,#ffde00);color:var(--shop-disc,#ee4d2d);font-size:var(--fs-xs);font-weight:800;padding:2px 7px;border-radius:5px}
+.pd-sold{font-size:var(--fs-xs);color:var(--muted);margin-top:5px}
 .pd-sec{margin-top:14px}
-.pd-sec-h{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
-.pd-desc{font-size:14px;color:var(--text);line-height:1.6;white-space:pre-wrap}
+.pd-sec-h{font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:6px}
+.pd-desc{font-size:var(--fs-sm);color:var(--text);line-height:1.6;white-space:pre-wrap}
 .pd-chips{display:flex;flex-wrap:wrap;gap:6px}
-.pd-chip{background:#f0f2f5;border-radius:14px;padding:4px 11px;font-size:12px;color:var(--text)}
-.pd-add{margin:14px 16px 4px;width:calc(100% - 32px);background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+.pd-chip{background:#f0f2f5;border-radius:14px;padding:4px 11px;font-size:var(--fs-xs);color:var(--text)}
+.pd-add{margin:14px 16px 4px;width:calc(100% - 32px);background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:var(--fs-base);font-weight:700;cursor:pointer}
 .feat-wrap{background:#fff;padding:12px 0 6px;border-bottom:8px solid var(--bg)}
-.feat-hd{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:800;color:var(--text);padding:0 12px 9px}
+.feat-hd{display:flex;align-items:center;gap:6px;font-size:var(--fs-base);font-weight:800;color:var(--text);padding:0 12px 9px}
 .feat-row{display:flex;gap:10px;overflow-x:auto;padding:0 12px 6px;scrollbar-width:none}
 .feat-row::-webkit-scrollbar{display:none}
 .feat-card{flex:0 0 var(--feat-w,134px);background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;cursor:pointer}
-.feat-card .fc-img{position:relative;height:100px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden}
+.feat-card .fc-img{position:relative;height:100px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:var(--fs-3xl);overflow:hidden}
 .feat-card .fc-img img{width:100%;height:100%;object-fit:cover}
 .feat-card .fc-body{padding:7px 9px}
-.feat-card .fc-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;height:31px;overflow:hidden}
-.feat-card .fc-price{font-size:14px;font-weight:800;color:var(--shop-price,#ee4d2d);margin-top:3px}
-.prod-add{border:1.5px solid var(--primary);background:transparent;color:var(--primary);width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
+.feat-card .fc-name{font-size:var(--fs-xs);font-weight:600;color:var(--text);line-height:1.3;height:31px;overflow:hidden}
+.feat-card .fc-price{font-size:var(--fs-sm);font-weight:800;color:var(--shop-price,#ee4d2d);margin-top:3px}
+.prod-add{border:1.5px solid var(--primary);background:transparent;color:var(--primary);width:34px;height:34px;border-radius:50%;font-size:var(--fs-md);cursor:pointer;flex-shrink:0;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
 .prod-add:active{background:var(--primary);color:#fff}
-.shop-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:14px;padding:40px 10px}
-.cart-fab{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:space-between;z-index:250;box-shadow:0 4px 14px rgba(24,119,242,.4)}
+.shop-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:40px 10px}
+.cart-fab{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px;font-size:var(--fs-base);font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:space-between;z-index:250;box-shadow:0 4px 14px rgba(24,119,242,.4)}
 .cart-fab.show{display:flex}
 .tb-btn .cart-badge{background:#fa3e3e}
-.line-oa-fab{position:fixed;bottom:128px;right:14px;z-index:260;background:#06C755;color:#fff;border:none;border-radius:26px;height:52px;padding:0 18px 0 14px;display:none;align-items:center;gap:8px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(6,199,85,.45)}
-.line-oa-fab .li{font-size:22px;line-height:1}
+.line-oa-fab{position:fixed;bottom:128px;right:14px;z-index:260;background:#06C755;color:#fff;border:none;border-radius:26px;height:52px;padding:0 18px 0 14px;display:none;align-items:center;gap:8px;font-size:var(--fs-base);font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(6,199,85,.45)}
+.line-oa-fab .li{font-size:var(--fs-lg);line-height:1}
 @media(min-width:481px){.line-oa-fab{right:calc(50% - 226px)}}
 .cart-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:flex-end;justify-content:center}
 .cart-modal.open{display:flex}
 .cart-sheet{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;max-height:90vh;display:flex;flex-direction:column}
 .cart-hd{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.cart-hd-t{font-size:17px;font-weight:800}
-.cart-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)}
+.cart-hd-t{font-size:var(--fs-md);font-weight:800}
+.cart-x{background:none;border:none;font-size:var(--fs-lg);cursor:pointer;color:var(--muted)}
 .cart-items{overflow-y:auto;padding:8px 16px;flex:1}
 .cart-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:center}
-.cart-emoji{width:46px;height:46px;border-radius:8px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden}
+.cart-emoji{width:46px;height:46px;border-radius:8px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xl);flex-shrink:0;overflow:hidden}
 .cart-emoji img{width:100%;height:100%;object-fit:cover}
 .cart-info{flex:1;min-width:0}
-.cart-nm{font-size:14px;font-weight:700;line-height:1.3}
-.cart-pr{font-size:13px;color:var(--primary);font-weight:700;margin-top:2px}
+.cart-nm{font-size:var(--fs-sm);font-weight:700;line-height:1.3}
+.cart-pr{font-size:var(--fs-sm);color:var(--primary);font-weight:700;margin-top:2px}
 .qty-ctrl{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.qty-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:#fff;font-size:16px;cursor:pointer;line-height:1}
-.qty-n{font-size:14px;font-weight:700;min-width:18px;text-align:center}
-.cart-empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:14px;line-height:1.8}
+.qty-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:#fff;font-size:var(--fs-base);cursor:pointer;line-height:1}
+.qty-n{font-size:var(--fs-sm);font-weight:700;min-width:18px;text-align:center}
+.cart-empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:var(--fs-sm);line-height:1.8}
 .cart-sum{padding:12px 16px;border-top:1px solid var(--border);background:#fafbfc}
-.sum-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;color:var(--muted)}
-.sum-row.total{font-size:17px;font-weight:800;color:var(--text);margin-top:6px;margin-bottom:0}
-.cart-co{width:100%;margin-top:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+.sum-row{display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:6px;color:var(--muted)}
+.sum-row.total{font-size:var(--fs-md);font-weight:800;color:var(--text);margin-top:6px;margin-bottom:0}
+.cart-co{width:100%;margin-top:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:var(--fs-base);font-weight:700;cursor:pointer}
 
 /* ── COMMERCE 3.2 (checkout / payment / orders) ── */
 .co-form{overflow-y:auto;padding:12px 16px;flex:1}
@@ -353,36 +353,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 .co-row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .co-summary{padding:10px 16px;border-top:1px solid var(--border);background:#fafbfc}
 .co-actions{padding:12px 16px;border-top:1px solid var(--border)}
-.btn-primary-lg{width:100%;background:var(--primary);color:#fff;border:none;border-radius:11px;padding:14px;font-size:16px;font-weight:700;cursor:pointer}
+.btn-primary-lg{width:100%;background:var(--primary);color:#fff;border:none;border-radius:11px;padding:14px;font-size:var(--fs-base);font-weight:700;cursor:pointer}
 .btn-primary-lg:disabled{opacity:.55;cursor:not-allowed}
 /* minimal outline icons (social style) — สืบสีจากตัวอักษร */
 .ic{width:1.05em;height:1.05em;flex:none;vertical-align:-0.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 button .ic,a .ic{pointer-events:none}
 /* payment */
 .pay-body{overflow-y:auto;padding:16px;flex:1;text-align:center}
-.pay-amt{font-size:30px;font-weight:800;color:var(--primary);margin:4px 0}
-.pay-oid{font-size:12px;color:var(--muted)}
+.pay-amt{font-size:var(--fs-2xl);font-weight:800;color:var(--primary);margin:4px 0}
+.pay-oid{font-size:var(--fs-xs);color:var(--muted)}
 .pay-pp{display:flex;align-items:center;justify-content:center;gap:7px;margin:10px 0 4px;font-weight:700;color:var(--text)}
 .pay-pp img{height:22px}
 .pay-qr{display:inline-flex;align-items:center;justify-content:center;min-height:180px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px;margin:8px auto}
 .pay-qr img{width:200px;height:200px;image-rendering:pixelated}
-.pay-hint{font-size:13px;color:var(--muted);line-height:1.7;margin:10px 4px}
-.pay-step{background:#f0f7ff;border:1px solid #cfe3ff;border-radius:10px;padding:10px 12px;font-size:13px;color:#1c3d5e;text-align:left;line-height:1.7;margin:6px 0}
-.slip-btn{width:100%;background:#fff;color:var(--primary);border:2px solid var(--primary);border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px}
-.pay-slip-status{font-size:13px;color:var(--primary);margin-top:8px;min-height:18px}
+.pay-hint{font-size:var(--fs-sm);color:var(--muted);line-height:1.7;margin:10px 4px}
+.pay-step{background:#f0f7ff;border:1px solid #cfe3ff;border-radius:10px;padding:10px 12px;font-size:var(--fs-sm);color:#1c3d5e;text-align:left;line-height:1.7;margin:6px 0}
+.slip-btn{width:100%;background:#fff;color:var(--primary);border:2px solid var(--primary);border-radius:11px;padding:13px;font-size:var(--fs-base);font-weight:700;cursor:pointer;margin-top:6px}
+.pay-slip-status{font-size:var(--fs-sm);color:var(--primary);margin-top:8px;min-height:18px}
 /* orders */
 .orders-list{overflow-y:auto;padding:12px 16px;flex:1}
 .ord-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}
 .ord-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.ord-id{font-size:13px;font-weight:800;color:var(--text)}
-.ord-badge{color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px}
-.ord-items{font-size:13px;color:var(--text);margin-bottom:6px}
+.ord-id{font-size:var(--fs-sm);font-weight:800;color:var(--text)}
+.ord-badge{color:#fff;font-size:var(--fs-2xs);font-weight:700;padding:3px 9px;border-radius:10px}
+.ord-items{font-size:var(--fs-sm);color:var(--text);margin-bottom:6px}
 .ord-bot{display:flex;align-items:center;justify-content:space-between}
-.ord-date{font-size:12px;color:var(--muted)}
-.ord-total{font-size:15px;font-weight:800;color:var(--primary)}
-.ord-track{font-size:12px;color:#7b61ff;margin-top:5px;font-weight:600}
-.ord-pay{width:100%;margin-top:9px;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:14px;font-weight:700;cursor:pointer}
-.ord-link{background:var(--bg);border:1px solid var(--border);border-radius:18px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;flex-shrink:0}
+.ord-date{font-size:var(--fs-xs);color:var(--muted)}
+.ord-total{font-size:var(--fs-base);font-weight:800;color:var(--primary)}
+.ord-track{font-size:var(--fs-xs);color:#7b61ff;margin-top:5px;font-weight:600}
+.ord-pay{width:100%;margin-top:9px;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:var(--fs-sm);font-weight:700;cursor:pointer}
+.ord-link{background:var(--bg);border:1px solid var(--border);border-radius:18px;padding:8px 13px;font-size:var(--fs-sm);font-weight:600;color:var(--text);cursor:pointer;flex-shrink:0}
 
 /* ── COMMERCE 3.4a (related products in feed) ── */
 .rel-wrap{margin:4px 12px 10px;background:#f7faff;border:1px solid #e3eeff;border-radius:12px;padding:10px}
@@ -390,21 +390,21 @@ button .ic,a .ic{pointer-events:none}
 .rel-scroll{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .rel-scroll::-webkit-scrollbar{display:none}
 .rel-card{flex:0 0 132px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px}
-.rel-img{height:64px;background:#f0f2f5;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden}
+.rel-img{height:64px;background:#f0f2f5;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2xl);overflow:hidden}
 .rel-img img{width:100%;height:100%;object-fit:cover}
-.rel-nm{font-size:12px;font-weight:700;line-height:1.3;height:31px;overflow:hidden}
-.rel-pr{font-size:13px;font-weight:800;color:var(--primary)}
-.rel-add{margin-top:2px;border:none;background:var(--primary);color:#fff;border-radius:7px;padding:7px;font-size:12px;font-weight:700;cursor:pointer}
+.rel-nm{font-size:var(--fs-xs);font-weight:700;line-height:1.3;height:31px;overflow:hidden}
+.rel-pr{font-size:var(--fs-sm);font-weight:800;color:var(--primary)}
+.rel-add{margin-top:2px;border:none;background:var(--primary);color:#fff;border-radius:7px;padding:7px;font-size:var(--fs-xs);font-weight:700;cursor:pointer}
 
 /* ── BOTTOM NAV ── */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;height:56px;z-index:300}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-top:3px solid transparent;position:relative;gap:2px}
 .bn.active{border-top-color:var(--primary)}
-.bn-ico{font-size:22px;color:var(--muted)}
+.bn-ico{font-size:var(--fs-lg);color:var(--muted)}
 .bn.active .bn-ico{color:var(--primary)}
-.bn-lbl{font-size:10px;color:var(--muted)}
+.bn-lbl{font-size:var(--fs-2xs);color:var(--muted)}
 .bn.active .bn-lbl{color:var(--primary);font-weight:700}
-.bn-badge{position:absolute;top:5px;right:calc(50% - 18px);background:#e41e3f;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 4px;min-width:16px;text-align:center}
+.bn-badge{position:absolute;top:5px;right:calc(50% - 18px);background:#e41e3f;color:#fff;font-size:var(--fs-2xs);font-weight:800;border-radius:10px;padding:1px 4px;min-width:16px;text-align:center}
 
 /* screens */
 .screen{display:none;padding-bottom:64px}
@@ -412,63 +412,63 @@ button .ic,a .ic{pointer-events:none}
 
 /* ── LOADING SCREEN ── */
 #loading-screen{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px}
-.ls-logo{font-size:64px}
-.ls-name{font-size:28px;font-weight:800;color:var(--primary)}
-.ls-sub{font-size:14px;color:var(--muted)}
+.ls-logo{font-size:var(--fs-4xl)}
+.ls-name{font-size:var(--fs-2xl);font-weight:800;color:var(--primary)}
+.ls-sub{font-size:var(--fs-sm);color:var(--muted)}
 .ls-spinner{width:36px;height:36px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin-top:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── LOGIN SCREEN ── */
 #login-screen{position:fixed;inset:0;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9998;padding:32px;text-align:center}
 #login-screen.show{display:flex}
-.login-logo{font-size:72px;margin-bottom:8px}
-.login-appname{font-size:32px;font-weight:800;color:var(--primary);margin-bottom:4px}
-.login-tagline{font-size:16px;color:var(--muted);margin-bottom:40px;line-height:1.5}
+.login-logo{font-size:var(--fs-4xl);margin-bottom:8px}
+.login-appname{font-size:var(--fs-2xl);font-weight:800;color:var(--primary);margin-bottom:4px}
+.login-tagline{font-size:var(--fs-base);color:var(--muted);margin-bottom:40px;line-height:1.5}
 .login-features{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin-bottom:40px}
 .lf-item{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 16px;text-align:left}
-.lf-icon{font-size:24px;flex-shrink:0}
-.lf-text{font-size:14px;color:var(--text);font-weight:600}
-.btn-line-login{width:100%;max-width:300px;background:#06C755;color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(6,199,85,0.35)}
+.lf-icon{font-size:var(--fs-xl);flex-shrink:0}
+.lf-text{font-size:var(--fs-sm);color:var(--text);font-weight:600}
+.btn-line-login{width:100%;max-width:300px;background:#06C755;color:#fff;border:none;border-radius:14px;padding:16px;font-size:var(--fs-md);font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(6,199,85,0.35)}
 .btn-line-login:active{opacity:0.85}
-.login-or{display:none;align-items:center;gap:10px;width:100%;max-width:300px;margin:14px 0;color:var(--muted);font-size:13px}
+.login-or{display:none;align-items:center;gap:10px;width:100%;max-width:300px;margin:14px 0;color:var(--muted);font-size:var(--fs-sm)}
 .login-or::before,.login-or::after{content:"";flex:1;height:1px;background:var(--border)}
-.btn-oauth{width:100%;max-width:300px;border-radius:14px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px}
+.btn-oauth{width:100%;max-width:300px;border-radius:14px;padding:14px;font-size:var(--fs-base);font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px}
 .btn-google{background:#fff;color:#3c4043;border:1.5px solid #dadce0}
 .btn-google:active{background:#f1f3f4}
 .btn-facebook{background:#1877f2;color:#fff;border:none}
 .btn-facebook:active{opacity:0.88}
-.login-browser-hint{max-width:300px;font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
-.login-terms{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6}
+.login-browser-hint{max-width:300px;font-size:var(--fs-xs);color:var(--muted);margin-top:12px;line-height:1.5}
+.login-terms{font-size:var(--fs-xs);color:var(--muted);margin-top:14px;line-height:1.6}
 
 /* ── ONBOARDING ── */
-.ob-step-label{font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
-.ob-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px}
-.ob-sub{font-size:14px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.ob-step-label{font-size:var(--fs-sm);font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+.ob-title{font-size:var(--fs-lg);font-weight:800;color:var(--text);margin-bottom:4px}
+.ob-sub{font-size:var(--fs-sm);color:var(--muted);margin-bottom:14px;line-height:1.5}
 .ob-crops{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
 .ob-chip{border:2px solid var(--border);border-radius:12px;background:#fff;padding:12px 4px;text-align:center;cursor:pointer;font-family:inherit}
-.ob-chip .oce{font-size:26px;display:block}
-.ob-chip .ocn{font-size:13px;font-weight:700;color:var(--text);margin-top:4px;display:block}
+.ob-chip .oce{font-size:var(--fs-xl);display:block}
+.ob-chip .ocn{font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-top:4px;display:block}
 .ob-chip.sel{border-color:var(--primary);background:#e7f3ff}
 .ob-chip.sel .ocn{color:var(--primary)}
 .ob-gps{width:100%;display:flex;align-items:center;gap:12px;border:2px solid var(--border);border-radius:12px;background:#fff;padding:14px;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:8px}
 .ob-gps.ok{border-color:#2e7d32;background:#e8f5e9}
-.ob-gps-ico{font-size:26px;flex-shrink:0}
-.ob-gps-t{font-size:14px;font-weight:800;color:var(--text)}
-.ob-gps-s{font-size:13px;color:var(--muted);margin-top:2px}
-.ob-skip{display:block;width:100%;background:none;border:none;color:var(--muted);font-size:14px;font-weight:700;padding:12px;cursor:pointer;font-family:inherit;text-align:center}
+.ob-gps-ico{font-size:var(--fs-xl);flex-shrink:0}
+.ob-gps-t{font-size:var(--fs-sm);font-weight:800;color:var(--text)}
+.ob-gps-s{font-size:var(--fs-sm);color:var(--muted);margin-top:2px}
+.ob-skip{display:block;width:100%;background:none;border:none;color:var(--muted);font-size:var(--fs-sm);font-weight:700;padding:12px;cursor:pointer;font-family:inherit;text-align:center}
 .ai-drop{display:block;border:2px dashed var(--border);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;background:var(--bg)}
 .ai-spin{animation:aispin 1.4s linear infinite;display:inline-block}
 @keyframes aispin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 .ai-res-card{border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-top:6px}
-.ai-res-head{padding:14px 16px;color:#fff;font-weight:800;font-size:17px}
+.ai-res-head{padding:14px 16px;color:#fff;font-weight:800;font-size:var(--fs-md)}
 .ai-res-row{padding:12px 16px;border-bottom:1px solid var(--border)}
 .ai-res-row:last-child{border-bottom:none}
-.ai-res-lb{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
-.ai-res-tx{font-size:15px;color:var(--text);line-height:1.5;margin-top:3px}
+.ai-res-lb{font-size:var(--fs-xs);font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.ai-res-tx{font-size:var(--fs-base);color:var(--text);line-height:1.5;margin-top:3px}
 .ai-hist-item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px}
-.ai-hist-ic{font-size:24px;flex-shrink:0}
-.ai-hist-d{font-size:14px;font-weight:700;color:var(--text)}
-.ai-hist-c{font-size:12px;color:var(--muted)}
+.ai-hist-ic{font-size:var(--fs-xl);flex-shrink:0}
+.ai-hist-d{font-size:var(--fs-sm);font-weight:700;color:var(--text)}
+.ai-hist-c{font-size:var(--fs-xs);color:var(--muted)}
 /* ── #4 Responsive: ขยายใช้พื้นที่จอคอม ── */
 @media (min-width:820px){
   body{max-width:780px}
@@ -595,8 +595,8 @@ button .ic,a .ic{pointer-events:none}
 
   <!-- Dynamic Feed -->
   <div id="feed-container">
-    <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px">
-      <div style="font-size:32px;margin-bottom:8px">🌿</div>
+    <div style="text-align:center;padding:40px;color:var(--muted);font-size:var(--fs-sm)">
+      <div style="font-size:var(--fs-2xl);margin-bottom:8px">🌿</div>
       กำลังโหลด Feed...
     </div>
   </div>
@@ -633,7 +633,7 @@ button .ic,a .ic{pointer-events:none}
   </div>
   <div class="crops-card">
     <div class="sec-title"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-pin"/></svg> ที่อยู่จัดส่ง</div>
-    <div style="font-size:12px;color:var(--muted);margin:2px 0 10px">ตั้งไว้ครั้งเดียว — เวลาสั่งของจะเติมให้อัตโนมัติ ไม่ต้องกรอกซ้ำ</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin:2px 0 10px">ตั้งไว้ครั้งเดียว — เวลาสั่งของจะเติมให้อัตโนมัติ ไม่ต้องกรอกซ้ำ</div>
     <div class="co-form">
       <div class="co-field"><label class="co-label">ชื่อผู้รับ</label><input class="co-input" id="pf-name" maxlength="80" placeholder="ชื่อ-นามสกุล"></div>
       <div class="co-field"><label class="co-label">เบอร์โทร</label><input class="co-input" id="pf-phone" inputmode="numeric" maxlength="10" placeholder="08xxxxxxxx"></div>
@@ -649,9 +649,9 @@ button .ic,a .ic{pointer-events:none}
   </div>
   <div class="crops-card">
     <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center"><span><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-package"/></svg> ประวัติการสั่งซื้อ</span>
-      <button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">ดูทั้งหมด →</button>
+      <button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit">ดูทั้งหมด →</button>
     </div>
-    <div id="pf-orders" style="margin-top:8px"><div style="font-size:13px;color:var(--muted)">กำลังโหลด...</div></div>
+    <div id="pf-orders" style="margin-top:8px"><div style="font-size:var(--fs-sm);color:var(--muted)">กำลังโหลด...</div></div>
   </div>
   <div class="seller-entry" onclick="openShopForm()">
     <svg class="ic"><use href="#i-cart"/></svg>
@@ -660,21 +660,21 @@ button .ic,a .ic{pointer-events:none}
   </div>
   <div class="crops-card">
     <div class="sec-title">โพสของฉัน</div>
-    <div id="my-posts"><div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">กำลังโหลด...</div></div>
+    <div id="my-posts"><div style="text-align:center;padding:20px;color:var(--muted);font-size:var(--fs-sm)">กำลังโหลด...</div></div>
   </div>
 </div>
 
 <!-- ══ COMMUNITY SCREEN ══ -->
 <div class="screen" id="screen-community">
   <div style="padding:14px 16px 84px">
-    <div style="font-size:22px;font-weight:800;color:var(--text)">🎯 กิจกรรม</div>
-    <div style="font-size:13px;color:var(--muted);margin:2px 0 16px">สะสมแต้ม ไต่อันดับ รับสิทธิพิเศษ</div>
+    <div style="font-size:var(--fs-lg);font-weight:800;color:var(--text)">🎯 กิจกรรม</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin:2px 0 16px">สะสมแต้ม ไต่อันดับ รับสิทธิพิเศษ</div>
     <!-- ── แต้ม & ระดับของฉัน ── -->
     <div class="points-card" style="border:1px solid var(--border);border-bottom:1px solid var(--border);border-radius:12px;margin-bottom:20px">
       <div class="pts-head"><div class="pts-title"><svg class="ic"><use href="#i-award"/></svg> แต้มสะสม</div><div class="pts-val" id="pts-val-display">0 แต้ม</div></div>
       <div class="bar-bg"><div class="bar-fg" id="pts-bar" style="width:0%"></div></div>
       <div class="tier-lbs"><span id="tlb-bronze">Bronze</span><span id="tlb-silver">Silver</span><span id="tier-label" class="tier-act">Bronze</span><span id="tlb-platinum">Platinum</span></div>
-      <div style="font-size:13px;color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
+      <div style="font-size:var(--fs-sm);color:var(--muted);margin-top:6px" id="pts-next-tier">กำลังโหลด...</div>
     </div>
     <!-- ── แคมเปญแต้ม (วิธีได้แต้ม) ── -->
     <div id="earn-section" style="margin-bottom:20px"></div>
@@ -688,18 +688,18 @@ button .ic,a .ic{pointer-events:none}
     <div id="mycoupons-section" style="margin-bottom:20px"></div>
     <!-- ── กลุ่มย่อย (ปิด default — เปิดต่อแบรนด์) ── -->
     <div id="community-groups-section" style="display:none;margin-bottom:22px">
-      <div style="font-size:18px;font-weight:800;color:var(--text)"><svg class="ic" style="width:16px;height:16px;vertical-align:-2px"><use href="#i-users"/></svg> กลุ่มย่อย</div>
-      <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">เข้าร่วมกลุ่มที่คุณสนใจ แล้วโพสต์คุยกันในกลุ่ม</div>
+      <div style="font-size:var(--fs-md);font-weight:800;color:var(--text)"><svg class="ic" style="width:16px;height:16px;vertical-align:-2px"><use href="#i-users"/></svg> กลุ่มย่อย</div>
+      <div style="font-size:var(--fs-sm);color:var(--muted);margin:2px 0 14px">เข้าร่วมกลุ่มที่คุณสนใจ แล้วโพสต์คุยกันในกลุ่ม</div>
       <div id="groups-list">
-        <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
+        <div style="text-align:center;color:var(--muted);padding:30px;font-size:var(--fs-sm)">กำลังโหลด...</div>
       </div>
     </div>
     <!-- ── อันดับนักสะสมแต้ม ── -->
     <div id="community-lb-section">
-      <div id="lb-title" style="font-size:18px;font-weight:800;color:var(--text)">อันดับนักสะสมแต้ม</div>
-      <div style="font-size:13px;color:var(--muted);margin:2px 0 14px">ยิ่งมีส่วนร่วม ยิ่งไต่อันดับ</div>
+      <div id="lb-title" style="font-size:var(--fs-md);font-weight:800;color:var(--text)">อันดับนักสะสมแต้ม</div>
+      <div style="font-size:var(--fs-sm);color:var(--muted);margin:2px 0 14px">ยิ่งมีส่วนร่วม ยิ่งไต่อันดับ</div>
       <div id="leaderboard-list">
-        <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
+        <div style="text-align:center;color:var(--muted);padding:30px;font-size:var(--fs-sm)">กำลังโหลด...</div>
       </div>
     </div>
   </div>
@@ -711,7 +711,7 @@ button .ic,a .ic{pointer-events:none}
     <div id="group-header" style="padding:16px"></div>
     <div style="padding:0 16px">
       <div id="group-feed">
-        <div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>
+        <div style="text-align:center;color:var(--muted);padding:30px;font-size:var(--fs-sm)">กำลังโหลด...</div>
       </div>
     </div>
   </div>
@@ -757,7 +757,7 @@ button .ic,a .ic{pointer-events:none}
         <label>รายละเอียด</label>
         <textarea id="modal-text" placeholder="บอกเล่าอาการที่เห็น หรือแชร์ประสบการณ์ของคุณ..."></textarea>
       </div>
-      <div id="post-uploading" style="display:none;text-align:center;padding:8px;font-size:14px;color:var(--muted)">⏳ กำลังโพส...</div>
+      <div id="post-uploading" style="display:none;text-align:center;padding:8px;font-size:var(--fs-sm);color:var(--muted)">⏳ กำลังโพส...</div>
       <button class="submit-btn" onclick="submitPost()" id="submit-btn"><svg class="ic"><use href="#i-send"/></svg> โพสเลย</button>
       <div class="pts-hint" id="pts-hint">✨ คุณจะได้รับ +10 แต้มสะสมจากการโพสนี้</div>
     </div>
@@ -770,7 +770,7 @@ button .ic,a .ic{pointer-events:none}
     <div class="modal-body" style="padding-top:18px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div class="ob-title" style="margin:0" id="t-ai-ob">🔬 หมอพืช AI</div>
-        <button onclick="closeAiDoctor()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">✕</button>
+        <button onclick="closeAiDoctor()" style="background:none;border:none;font-size:var(--fs-lg);color:var(--muted);cursor:pointer;line-height:1">✕</button>
       </div>
       <div class="ob-sub" style="margin-bottom:14px">ถ่ายหรือเลือกรูปใบ/ต้นที่มีปัญหา AI จะช่วยวินิจฉัยโรคและแนะนำวิธีรักษา 🌿 <b>ผลวิเคราะห์เป็นความลับ เห็นได้คนเดียว</b></div>
 
@@ -778,31 +778,31 @@ button .ic,a .ic{pointer-events:none}
         <label class="ai-drop" id="ai-drop">
           <input type="file" id="ai-file" accept="image/*" capture="environment" style="display:none" onchange="aiPreview(this)">
           <div id="ai-drop-empty">
-            <div style="font-size:46px">📷</div>
-            <div style="font-size:15px;font-weight:700;color:var(--text);margin-top:8px">แตะเพื่อถ่าย / เลือกรูป</div>
-            <div style="font-size:13px;color:var(--muted);margin-top:4px">เห็นใบหรือจุดที่เป็นโรคชัดๆ จะแม่นขึ้น</div>
+            <div style="font-size:var(--fs-4xl)">📷</div>
+            <div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-top:8px">แตะเพื่อถ่าย / เลือกรูป</div>
+            <div style="font-size:var(--fs-sm);color:var(--muted);margin-top:4px">เห็นใบหรือจุดที่เป็นโรคชัดๆ จะแม่นขึ้น</div>
           </div>
           <img id="ai-preview" style="display:none;width:100%;border-radius:12px;max-height:280px;object-fit:cover">
         </label>
 
         <div class="ob-sub" style="margin:14px 0 6px">พืชชนิดไหน?</div>
-        <select id="ai-crop" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;background:#fff"></select>
+        <select id="ai-crop" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:var(--fs-base);font-family:inherit;background:#fff"></select>
 
         <button class="submit-btn" id="ai-analyze-btn" onclick="runAiDoctor()" style="margin-top:16px"><svg class="ic"><use href="#i-scan"/></svg> วิเคราะห์เลย</button>
-        <div id="ai-quota" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px"></div>
+        <div id="ai-quota" style="font-size:var(--fs-xs);color:var(--muted);text-align:center;margin-top:8px"></div>
       </div>
 
       <div id="ai-loading" style="display:none;text-align:center;padding:40px 20px">
-        <div style="font-size:40px" class="ai-spin">🔬</div>
-        <div style="font-size:15px;font-weight:700;color:var(--text);margin-top:14px">กำลังวิเคราะห์...</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:4px">AI กำลังตรวจดูรูปของคุณ รอสักครู่</div>
+        <div style="font-size:var(--fs-3xl)" class="ai-spin">🔬</div>
+        <div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-top:14px">กำลังวิเคราะห์...</div>
+        <div style="font-size:var(--fs-sm);color:var(--muted);margin-top:4px">AI กำลังตรวจดูรูปของคุณ รอสักครู่</div>
       </div>
 
       <div id="ai-result" style="display:none"></div>
 
       <div id="ai-history-sec" style="margin-top:22px">
         <div class="sec-title" style="padding:0 0 8px">ประวัติการวิเคราะห์</div>
-        <div id="ai-history"><div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">ยังไม่มีประวัติ</div></div>
+        <div id="ai-history"><div style="font-size:var(--fs-sm);color:var(--muted);text-align:center;padding:10px">ยังไม่มีประวัติ</div></div>
       </div>
     </div>
   </div>
@@ -814,9 +814,9 @@ button .ic,a .ic{pointer-events:none}
     <div class="modal-body" style="padding-top:22px">
       <div class="ob-title">แก้ไขโปรไฟล์</div>
       <div class="ob-sub" style="margin-bottom:6px">แนะนำตัวเอง</div>
-      <textarea id="edit-bio" maxlength="150" placeholder="เช่น ปลูกทุเรียนมา 10 ปี ที่จันทบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;resize:none;height:80px;box-sizing:border-box"></textarea>
+      <textarea id="edit-bio" maxlength="150" placeholder="เช่น ปลูกทุเรียนมา 10 ปี ที่จันทบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:var(--fs-base);font-family:inherit;resize:none;height:80px;box-sizing:border-box"></textarea>
       <div class="ob-sub" style="margin:14px 0 6px">ที่อยู่ (อำเภอ / จังหวัด)</div>
-      <input id="edit-province" maxlength="60" placeholder="เช่น อ.บ้านโป่ง ราชบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;box-sizing:border-box">
+      <input id="edit-province" maxlength="60" placeholder="เช่น อ.บ้านโป่ง ราชบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:var(--fs-base);font-family:inherit;box-sizing:border-box">
       <button class="submit-btn" id="edit-save-btn" onclick="saveProfileEdit()" style="margin-top:16px"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
       <button class="ob-skip" onclick="document.getElementById('editProfileModal').classList.remove('open')">ยกเลิก</button>
     </div>
@@ -843,7 +843,7 @@ button .ic,a .ic{pointer-events:none}
           <div class="co-field"><label class="co-label">จังหวัด</label><input class="co-input" id="cs-province" maxlength="60"></div>
           <div class="co-field"><label class="co-label">รหัสไปรษณีย์</label><input class="co-input" id="cs-postcode" inputmode="numeric" maxlength="5"></div>
         </div>
-        <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--muted);margin-top:6px;cursor:pointer">
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:var(--fs-sm);color:var(--muted);margin-top:6px;cursor:pointer">
           <input type="checkbox" id="cs-terms" style="margin-top:3px;flex-shrink:0">
           <span>ยอมรับ<b>ข้อตกลงการใช้งาน</b> และยืนยันว่าข้อมูลข้างต้นเป็นความจริง</span>
         </label>
@@ -863,7 +863,7 @@ button .ic,a .ic{pointer-events:none}
       <div class="ob-sub">ยืนยันความยินยอมด้านล่าง แล้วเริ่มใช้งานได้เลย</div>
 
       <div id="ob-gps-wrap">
-      <div class="ob-title" style="font-size:17px">ตำแหน่งสวนของคุณ</div>
+      <div class="ob-title" style="font-size:var(--fs-md)">ตำแหน่งสวนของคุณ</div>
       <div class="ob-sub">ใช้แสดงโพส "ใกล้ฉัน" และแจ้งเตือนโรคระบาดในพื้นที่ — เก็บเป็นพิกัดกว้างๆ ไม่เปิดเผยที่อยู่จริง</div>
       <button class="ob-gps" id="ob-gps-btn" onclick="requestGps()">
         <span class="ob-gps-ico" id="ob-gps-ico"><svg class="ic" style="width:24px;height:24px"><use href="#i-pin"/></svg></span>
@@ -875,11 +875,11 @@ button .ic,a .ic{pointer-events:none}
       </div>
 
       <div style="background:var(--bg);border-radius:10px;padding:12px;margin-top:6px;text-align:left">
-        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer">
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:var(--fs-sm);cursor:pointer">
           <input type="checkbox" id="ob-consent-chk" style="margin-top:3px;flex-shrink:0">
           <span>ฉันยอมรับ <a id="ob-privacy-link" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;text-decoration:underline">นโยบายความเป็นส่วนตัว</a> และยินยอมให้เก็บ/ใช้ข้อมูลส่วนบุคคล</span>
         </label>
-        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer;margin-top:8px;color:var(--muted)">
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:var(--fs-sm);cursor:pointer;margin-top:8px;color:var(--muted)">
           <input type="checkbox" id="ob-mkt-chk" style="margin-top:3px;flex-shrink:0">
           <span>ยินยอมรับข่าวสาร/โปรโมชันผ่าน LINE (ไม่บังคับ)</span>
         </label>
@@ -917,10 +917,10 @@ button .ic,a .ic{pointer-events:none}
 <div class="cart-modal" id="loginPrompt" onclick="if(event.target===this)closeLoginPrompt()">
   <div class="cart-sheet">
     <div style="padding:24px 22px 30px;text-align:center">
-      <div style="font-size:42px">🔒</div>
-      <div style="font-size:18px;font-weight:800;margin-top:8px">เข้าสู่ระบบก่อนนะครับ</div>
-      <div style="font-size:14px;color:var(--muted);margin-top:8px;line-height:1.6" id="t-gate-msg">เข้าดูได้ทุกอย่างฟรี แต่ถ้าจะโพส คอมเมนต์ กดไลก์ ใช้ AI หมอพืช หรือสั่งซื้อสินค้า ต้องเข้าสู่ระบบก่อนนะครับ</div>
-      <button onclick="loginWithLine()" style="margin-top:18px;width:100%;background:#06c755;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer">เข้าสู่ระบบด้วย LINE</button>
+      <div style="font-size:var(--fs-3xl)">🔒</div>
+      <div style="font-size:var(--fs-md);font-weight:800;margin-top:8px">เข้าสู่ระบบก่อนนะครับ</div>
+      <div style="font-size:var(--fs-sm);color:var(--muted);margin-top:8px;line-height:1.6" id="t-gate-msg">เข้าดูได้ทุกอย่างฟรี แต่ถ้าจะโพส คอมเมนต์ กดไลก์ ใช้ AI หมอพืช หรือสั่งซื้อสินค้า ต้องเข้าสู่ระบบก่อนนะครับ</div>
+      <button onclick="loginWithLine()" style="margin-top:18px;width:100%;background:#06c755;color:#fff;border:none;border-radius:10px;padding:14px;font-size:var(--fs-base);font-weight:700;cursor:pointer">เข้าสู่ระบบด้วย LINE</button>
       <div class="login-or" id="gate-or-divider">หรือ</div>
       <button class="btn-oauth btn-google" id="btn-google-gate" onclick="loginWithGoogle()" style="display:none;margin-top:0">
         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-3.9 6.8-9.7 6.8-17.4z"/><path fill="#FBBC05" d="M10.4 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.9-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.3-5.7c-2 1.4-4.7 2.3-8.2 2.3-6.4 0-11.7-3.7-13.6-9.4l-7.9 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
@@ -931,7 +931,7 @@ button .ic,a .ic{pointer-events:none}
         เข้าสู่ระบบด้วย Facebook
       </button>
       <div class="login-browser-hint" id="gate-browser-hint" style="display:none">💡 เปิดเว็บนี้ในเบราว์เซอร์ (Chrome/Safari) เพื่อใช้ Google หรือ Facebook ได้</div>
-      <button onclick="closeLoginPrompt()" style="margin-top:14px;width:100%;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:8px">ไว้ก่อน</button>
+      <button onclick="closeLoginPrompt()" style="margin-top:14px;width:100%;background:none;border:none;color:var(--muted);font-size:var(--fs-sm);cursor:pointer;padding:8px">ไว้ก่อน</button>
     </div>
   </div>
 </div>
@@ -1030,7 +1030,7 @@ button .ic,a .ic{pointer-events:none}
       <span style="width:34px"></span>
     </div>
     <div class="modal-body" id="notif-list" style="padding:8px 0 16px">
-      <div style="text-align:center;color:var(--muted);padding:24px;font-size:14px">ยังไม่มีการแจ้งเตือน</div>
+      <div style="text-align:center;color:var(--muted);padding:24px;font-size:var(--fs-sm)">ยังไม่มีการแจ้งเตือน</div>
     </div>
   </div>
 </div>
@@ -1039,20 +1039,20 @@ button .ic,a .ic{pointer-events:none}
 <div class="overlay" id="moreMenuModal" onclick="if(event.target===this)closeMoreMenu()">
   <div class="modal" style="border-radius:16px 16px 0 0">
     <div class="modal-body" style="padding:10px 0 18px">
-      <div onclick="contactShop()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text)">
-        <span style="font-size:20px">🏪</span> ติดต่อร้าน DemeterRich
+      <div onclick="contactShop()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:var(--fs-base);color:var(--text)">
+        <span style="font-size:var(--fs-lg)">🏪</span> ติดต่อร้าน DemeterRich
       </div>
-      <div onclick="window.open('/bocean.html','_blank')" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text);border-top:1px solid var(--border)">
-        <span style="font-size:20px">🚀</span> เปิดร้านแบรนด์คุณกับ Bocean
+      <div onclick="window.open('/bocean.html','_blank')" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:var(--fs-base);color:var(--text);border-top:1px solid var(--border)">
+        <span style="font-size:var(--fs-lg)">🚀</span> เปิดร้านแบรนด์คุณกับ Bocean
       </div>
-      <div onclick="openMyData()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text);border-top:1px solid var(--border)">
-        <span style="font-size:20px">📋</span> ดูข้อมูลของฉัน
+      <div onclick="openMyData()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:var(--fs-base);color:var(--text);border-top:1px solid var(--border)">
+        <span style="font-size:var(--fs-lg)">📋</span> ดูข้อมูลของฉัน
       </div>
-      <div onclick="requestDeletion()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:var(--text);border-top:1px solid var(--border)">
-        <span style="font-size:20px">🗑️</span> ขอลบบัญชี/ข้อมูล
+      <div onclick="requestDeletion()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:var(--fs-base);color:var(--text);border-top:1px solid var(--border)">
+        <span style="font-size:var(--fs-lg)">🗑️</span> ขอลบบัญชี/ข้อมูล
       </div>
-      <div onclick="doLogout()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:15px;color:#e41e3f;border-top:1px solid var(--border)">
-        <span style="font-size:20px">🚪</span> ออกจากระบบ
+      <div onclick="doLogout()" style="display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-size:var(--fs-base);color:#e41e3f;border-top:1px solid var(--border)">
+        <span style="font-size:var(--fs-lg)">🚪</span> ออกจากระบบ
       </div>
     </div>
   </div>
@@ -1533,8 +1533,8 @@ function renderAiResult(result, quotaLeft, imgUrl) {
   if (result.treatment) html += `<div class="ai-res-row"><div class="ai-res-lb">วิธีรักษา / ป้องกัน</div><div class="ai-res-tx">${escapeHtml(result.treatment)}</div></div>`;
   if (result.advice) html += `<div class="ai-res-row"><div class="ai-res-lb">คำแนะนำเพิ่มเติม</div><div class="ai-res-tx">${escapeHtml(result.advice)}</div></div>`;
   html += '</div>';
-  html += '<div style="font-size:12px;color:var(--muted);text-align:center;margin:10px 0">⚠️ ผลจาก AI เป็นการประเมินเบื้องต้น ควรปรึกษาผู้เชี่ยวชาญหากอาการรุนแรง</div>';
-  if (typeof quotaLeft === 'number') html += `<div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px">เหลือโควต้าวันนี้ ${quotaLeft} ครั้ง</div>`;
+  html += '<div style="font-size:var(--fs-xs);color:var(--muted);text-align:center;margin:10px 0">⚠️ ผลจาก AI เป็นการประเมินเบื้องต้น ควรปรึกษาผู้เชี่ยวชาญหากอาการรุนแรง</div>';
+  if (typeof quotaLeft === 'number') html += `<div style="font-size:var(--fs-xs);color:var(--muted);text-align:center;margin-bottom:10px">เหลือโควต้าวันนี้ ${quotaLeft} ครั้ง</div>`;
   // ปุ่มแชร์ถามชุมชน (เก็บผลไว้ใช้เติม post modal)
   window._aiLastResult = { result: result, imgUrl: imgUrl, crop: document.getElementById('ai-crop').value };
   html += '<button class="submit-btn" onclick="shareAiToCommy()" style="background:#00b894"><svg class="ic"><use href="#i-chat"/></svg> แชร์ถามชุมชน</button>';
@@ -1565,7 +1565,7 @@ async function loadAiHistory() {
     docs = docs.filter(d => d.data.tenantId === tenantId());
     docs.sort((a, b) => (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0));
     if (docs.length === 0) {
-      box.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">ยังไม่มีประวัติ</div>';
+      box.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--muted);text-align:center;padding:10px">ยังไม่มีประวัติ</div>';
       return;
     }
     box.innerHTML = docs.map(d => {
@@ -1581,7 +1581,7 @@ async function loadAiHistory() {
       </div>`;
     }).join('');
   } catch (err) {
-    box.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:10px">โหลดประวัติไม่สำเร็จ</div>';
+    box.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--muted);text-align:center;padding:10px">โหลดประวัติไม่สำเร็จ</div>';
   }
 }
 
@@ -1632,17 +1632,17 @@ function renderNotifList() {
   var box = document.getElementById('notif-list');
   if (!box) return;
   if (!notifItems.length) {
-    box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:14px">ยังไม่มีการแจ้งเตือน</div>';
+    box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:var(--fs-sm)">ยังไม่มีการแจ้งเตือน</div>';
     return;
   }
   box.innerHTML = notifItems.map(function (x) {
     var ic = NOTIF_ICON[x.icon] || '🔔';
     var bg = x.read ? '#fff' : '#eaf3ff';
     return '<div style="display:flex;gap:10px;align-items:flex-start;padding:11px 16px;background:' + bg + ';border-bottom:1px solid var(--border)">'
-      + '<div style="font-size:20px;flex-shrink:0">' + ic + '</div>'
+      + '<div style="font-size:var(--fs-lg);flex-shrink:0">' + ic + '</div>'
       + '<div style="flex:1;min-width:0">'
-      + '<div style="font-size:14px;color:var(--text);line-height:1.4">' + escapeHtml(x.text || '') + '</div>'
-      + '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + notifAgo(x.createdAt) + '</div>'
+      + '<div style="font-size:var(--fs-sm);color:var(--text);line-height:1.4">' + escapeHtml(x.text || '') + '</div>'
+      + '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">' + notifAgo(x.createdAt) + '</div>'
       + '</div></div>';
   }).join('');
 }
@@ -1677,7 +1677,7 @@ function showInfoSheet(title, html){
     ov.addEventListener('click', function(e){ if (e.target===ov) ov.style.display='none'; });
     document.body.appendChild(ov);
   }
-  ov.innerHTML = '<div style="background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;max-height:85vh;overflow-y:auto;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:17px;font-weight:800">'+title+'</div><button id="info-sheet-x" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted)">\u00d7</button></div>'+html+'</div>';
+  ov.innerHTML = '<div style="background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;max-height:85vh;overflow-y:auto;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:var(--fs-md);font-weight:800">'+title+'</div><button id="info-sheet-x" style="background:none;border:none;font-size:var(--fs-xl);cursor:pointer;color:var(--muted)">\u00d7</button></div>'+html+'</div>';
   document.getElementById('info-sheet-x').addEventListener('click', function(){ ov.style.display='none'; });
   ov.style.display = 'flex';
 }
@@ -1695,9 +1695,9 @@ function openMyData(){
     ['\u0e23\u0e31\u0e1a\u0e02\u0e48\u0e32\u0e27\u0e2a\u0e32\u0e23\u0e01\u0e32\u0e23\u0e15\u0e25\u0e32\u0e14', c.marketing ? '\u0e22\u0e34\u0e19\u0e22\u0e2d\u0e21' : '\u0e44\u0e21\u0e48']
   ];
   var body = rows.map(function(r){
-    return '<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px"><span style="color:var(--muted)">'+escapeHtml(r[0])+'</span><span style="font-weight:700;text-align:right;word-break:break-all">'+escapeHtml(String(r[1]))+'</span></div>';
+    return '<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:var(--fs-sm)"><span style="color:var(--muted)">'+escapeHtml(r[0])+'</span><span style="font-weight:700;text-align:right;word-break:break-all">'+escapeHtml(String(r[1]))+'</span></div>';
   }).join('');
-  body += '<div style="font-size:12px;color:var(--muted);margin-top:12px">\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e17\u0e35\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e01\u0e47\u0e1a\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e04\u0e38\u0e13 \u00b7 \u0e41\u0e01\u0e49\u0e44\u0e02\u0e44\u0e14\u0e49\u0e17\u0e35\u0e48 "\u0e41\u0e01\u0e49\u0e44\u0e02\u0e42\u0e1b\u0e23\u0e44\u0e1f\u0e25\u0e4c"</div>';
+  body += '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:12px">\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e17\u0e35\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e01\u0e47\u0e1a\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a\u0e04\u0e38\u0e13 \u00b7 \u0e41\u0e01\u0e49\u0e44\u0e02\u0e44\u0e14\u0e49\u0e17\u0e35\u0e48 "\u0e41\u0e01\u0e49\u0e44\u0e02\u0e42\u0e1b\u0e23\u0e44\u0e1f\u0e25\u0e4c"</div>';
   showInfoSheet('\ud83d\udccb \u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19', body);
 }
 async function requestDeletion(){
@@ -1724,7 +1724,7 @@ async function doLogout() {
 async function loadLeaderboard() {
   var box = document.getElementById('leaderboard-list');
   if (!box || !db) return;
-  box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">กำลังโหลด...</div>';
+  box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:var(--fs-sm)">กำลังโหลด...</div>';
   try {
     var snap = await tdb().collection('users').orderBy('points', 'desc').limit(100).get();
     var tid = (typeof tenantId === 'function') ? tenantId() : null;
@@ -1745,27 +1745,27 @@ async function loadLeaderboard() {
         '<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;margin-bottom:8px;background:' + (isMe ? '#eaf3ff' : '#fff') + ';border:1px solid var(--border)">'
         + '<div style="width:30px;text-align:center;font-weight:800;color:var(--muted);flex-shrink:0;font-size:' + (rank <= 3 ? '20px' : '15px') + '">' + medal + '</div>'
         + av
-        + '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nm + (isMe ? ' <span style="color:var(--primary);font-size:12px">(คุณ)</span>' : '') + '</div>'
-        + '<div style="font-size:12px;color:var(--muted)">' + (t.emoji || '🏅') + ' ' + (t.label || u.tier || '') + '</div></div>'
-        + '<div style="text-align:right;flex-shrink:0"><div style="font-size:16px;font-weight:800;color:var(--primary)">' + (u.points || 0).toLocaleString() + '</div><div style="font-size:11px;color:var(--muted)">แต้ม</div></div>'
+        + '<div style="flex:1;min-width:0"><div style="font-size:var(--fs-base);font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nm + (isMe ? ' <span style="color:var(--primary);font-size:var(--fs-xs)">(คุณ)</span>' : '') + '</div>'
+        + '<div style="font-size:var(--fs-xs);color:var(--muted)">' + (t.emoji || '🏅') + ' ' + (t.label || u.tier || '') + '</div></div>'
+        + '<div style="text-align:right;flex-shrink:0"><div style="font-size:var(--fs-base);font-weight:800;color:var(--primary)">' + (u.points || 0).toLocaleString() + '</div><div style="font-size:var(--fs-2xs);color:var(--muted)">แต้ม</div></div>'
         + '</div>'
       );
     });
-    box.innerHTML = rows.length ? rows.join('') : '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">ยังไม่มีสมาชิก</div>';
+    box.innerHTML = rows.length ? rows.join('') : '<div style="text-align:center;color:var(--muted);padding:30px;font-size:var(--fs-sm)">ยังไม่มีสมาชิก</div>';
   } catch (e) {
     console.error('leaderboard:', e);
     if (e && e.code === 'permission-denied') {
       var _loginBtn = isGuest()
-        ? '<button onclick="showLoginPrompt()" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">เข้าสู่ระบบ</button>'
+        ? '<button onclick="showLoginPrompt()" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit">เข้าสู่ระบบ</button>'
         : '';
       box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px 20px">'
-        + '<div style="font-size:34px;margin-bottom:10px">🔒</div>'
-        + '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">อันดับปราชญ์แสดงสำหรับสมาชิก</div>'
-        + '<div style="font-size:13px;margin-bottom:14px">เข้าสู่ระบบเพื่อดูว่าใครแบ่งปันความรู้มากที่สุดในชุมชน</div>'
+        + '<div style="font-size:var(--fs-2xl);margin-bottom:10px">🔒</div>'
+        + '<div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-bottom:6px">อันดับปราชญ์แสดงสำหรับสมาชิก</div>'
+        + '<div style="font-size:var(--fs-sm);margin-bottom:14px">เข้าสู่ระบบเพื่อดูว่าใครแบ่งปันความรู้มากที่สุดในชุมชน</div>'
         + _loginBtn
         + '</div>';
     } else {
-      box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:14px">โหลดอันดับไม่สำเร็จ</div>';
+      box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:var(--fs-sm)">โหลดอันดับไม่สำเร็จ</div>';
     }
   }
 }
@@ -1783,13 +1783,13 @@ async function loadCommunityGroups() {
     var snap = await tdb().collection('groups').orderBy('order').get();
     __groups = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
     if (!__groups.length) {
-      box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:14px">ยังไม่มีกลุ่มในชุมชนนี้</div>';
+      box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:var(--fs-sm)">ยังไม่มีกลุ่มในชุมชนนี้</div>';
       return;
     }
     box.innerHTML = __groups.map(function(g){ return groupCardHtml(g.id, g.data); }).join('');
   } catch (e) {
     console.error('loadCommunityGroups:', e);
-    box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:14px">โหลดกลุ่มไม่สำเร็จ</div>';
+    box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:var(--fs-sm)">โหลดกลุ่มไม่สำเร็จ</div>';
   }
 }
 
@@ -1797,10 +1797,10 @@ function groupCardHtml(gid, g) {
   var joined = isInGroup(gid);
   var color = g.color || 'var(--primary)';
   return '<div onclick="openGroup(\'' + gid + '\')" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:10px;background:var(--card);border:1px solid var(--border);cursor:pointer">'
-    + '<div style="width:46px;height:46px;border-radius:12px;background:' + color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">' + (g.emoji || '👥') + '</div>'
-    + '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(g.name || '') + (joined ? ' <span style="color:var(--primary);font-size:12px">· เข้าร่วมแล้ว</span>' : '') + '</div>'
-    + '<div style="font-size:12px;color:var(--muted)">👤 ' + (g.memberCount || 0) + ' · 📝 ' + (g.postCount || 0) + '</div></div>'
-    + '<div style="color:var(--muted);font-size:18px">›</div>'
+    + '<div style="width:46px;height:46px;border-radius:12px;background:' + color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xl);flex-shrink:0">' + (g.emoji || '👥') + '</div>'
+    + '<div style="flex:1;min-width:0"><div style="font-size:var(--fs-base);font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(g.name || '') + (joined ? ' <span style="color:var(--primary);font-size:var(--fs-xs)">· เข้าร่วมแล้ว</span>' : '') + '</div>'
+    + '<div style="font-size:var(--fs-xs);color:var(--muted)">👤 ' + (g.memberCount || 0) + ' · 📝 ' + (g.postCount || 0) + '</div></div>'
+    + '<div style="color:var(--muted);font-size:var(--fs-md)">›</div>'
     + '</div>';
 }
 
@@ -1823,23 +1823,23 @@ function renderGroupHeader(gid, g) {
   var joined = isInGroup(gid);
   var color = g.color || 'var(--primary)';
   el.innerHTML =
-    '<button onclick="backToCommunity()" style="background:none;border:none;color:var(--primary);font-size:14px;font-weight:700;cursor:pointer;padding:0;margin-bottom:10px">← กลับชุมชน</button>'
+    '<button onclick="backToCommunity()" style="background:none;border:none;color:var(--primary);font-size:var(--fs-sm);font-weight:700;cursor:pointer;padding:0;margin-bottom:10px">← กลับชุมชน</button>'
     + '<div style="background:' + color + ';color:#fff;border-radius:14px;padding:16px">'
-    + '<div style="font-size:26px">' + (g.emoji || '👥') + '</div>'
-    + '<div style="font-size:20px;font-weight:800;margin-top:4px">' + escapeHtml(g.name || '') + '</div>'
-    + (g.description ? '<div style="font-size:13px;opacity:.9;margin-top:4px">' + escapeHtml(g.description) + '</div>' : '')
-    + '<div style="font-size:12px;opacity:.85;margin-top:8px">👤 ' + (g.memberCount || 0) + ' สมาชิก · 📝 ' + (g.postCount || 0) + ' โพสต์</div>'
+    + '<div style="font-size:var(--fs-xl)">' + (g.emoji || '👥') + '</div>'
+    + '<div style="font-size:var(--fs-lg);font-weight:800;margin-top:4px">' + escapeHtml(g.name || '') + '</div>'
+    + (g.description ? '<div style="font-size:var(--fs-sm);opacity:.9;margin-top:4px">' + escapeHtml(g.description) + '</div>' : '')
+    + '<div style="font-size:var(--fs-xs);opacity:.85;margin-top:8px">👤 ' + (g.memberCount || 0) + ' สมาชิก · 📝 ' + (g.postCount || 0) + ' โพสต์</div>'
     + '</div>'
     + '<div style="display:flex;gap:8px;margin-top:12px">'
-    + '<button onclick="toggleJoinGroup(\'' + gid + '\')" style="flex:1;background:' + (joined ? '#eaf3ff' : 'var(--primary)') + ';color:' + (joined ? 'var(--primary)' : '#fff') + ';border:1px solid var(--primary);border-radius:10px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' + (joined ? '<svg class="ic"><use href="#i-check"/></svg> เข้าร่วมแล้ว (แตะเพื่อออก)' : '<svg class="ic"><use href="#i-plus"/></svg> เข้าร่วมกลุ่ม') + '</button>'
-    + (joined ? '<button onclick="openPostModalForGroup(\'' + gid + '\')" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:11px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-edit"/></svg> โพสต์ในกลุ่ม</button>' : '')
+    + '<button onclick="toggleJoinGroup(\'' + gid + '\')" style="flex:1;background:' + (joined ? '#eaf3ff' : 'var(--primary)') + ';color:' + (joined ? 'var(--primary)' : '#fff') + ';border:1px solid var(--primary);border-radius:10px;padding:11px;font-size:var(--fs-base);font-weight:700;cursor:pointer;font-family:inherit">' + (joined ? '<svg class="ic"><use href="#i-check"/></svg> เข้าร่วมแล้ว (แตะเพื่อออก)' : '<svg class="ic"><use href="#i-plus"/></svg> เข้าร่วมกลุ่ม') + '</button>'
+    + (joined ? '<button onclick="openPostModalForGroup(\'' + gid + '\')" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:11px;font-size:var(--fs-base);font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-edit"/></svg> โพสต์ในกลุ่ม</button>' : '')
     + '</div>';
 }
 
 async function loadGroupFeed(gid) {
   var container = document.getElementById('group-feed');
   if (!container || !db) return;
-  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:var(--fs-sm)"><div style="font-size:var(--fs-2xl);margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
   try {
     var snap = await tdb().collection('posts').where('groupId', '==', gid).limit(50).get();
     var docs = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
@@ -1850,7 +1850,7 @@ async function loadGroupFeed(gid) {
       return tb - ta;
     });
     if (!docs.length) {
-      container.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">ยังไม่มีโพสต์ในกลุ่มนี้</div><div style="font-size:13px">เข้าร่วมแล้วเป็นคนแรกที่เริ่มบทสนทนา</div></div>';
+      container.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--muted)"><div style="font-size:var(--fs-3xl);margin-bottom:10px">💬</div><div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-bottom:6px">ยังไม่มีโพสต์ในกลุ่มนี้</div><div style="font-size:var(--fs-sm)">เข้าร่วมแล้วเป็นคนแรกที่เริ่มบทสนทนา</div></div>';
       return;
     }
     container.innerHTML = docs.map(function(d, i){ return renderPost(d.id, d.data, i); }).join('');
@@ -1967,29 +1967,29 @@ function renderAdminBranding() {
   var C = APP_CONFIG;
   function esc(v){ return String(v || '').replace(/"/g, '&quot;'); }
   function row(label, id, val) {
-    return '<div style="margin:8px 0"><div style="font-size:13px;color:#555;margin-bottom:3px">' + label + '</div>'
-      + '<input id="' + id + '" type="text" value="' + esc(val) + '" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:14px;box-sizing:border-box"></div>';
+    return '<div style="margin:8px 0"><div style="font-size:var(--fs-sm);color:#555;margin-bottom:3px">' + label + '</div>'
+      + '<input id="' + id + '" type="text" value="' + esc(val) + '" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:var(--fs-sm);box-sizing:border-box"></div>';
   }
-  box.innerHTML = '<div style="font-size:16px;font-weight:800;margin:16px 0 6px;border-top:1px solid #eee;padding-top:14px">🎨 แบรนด์</div>'
+  box.innerHTML = '<div style="font-size:var(--fs-base);font-weight:800;margin:16px 0 6px;border-top:1px solid #eee;padding-top:14px">🎨 แบรนด์</div>'
     + row('ชื่อแอป', 'br-name', b.appName || C.app.name)
     + row('คำโปรย', 'br-sub', b.subtitle || '')
     + row('อีโมจิโลโก้', 'br-emoji', b.logoEmoji || C.app.logoEmoji)
     + row('หัวข้อ Leaderboard', 'br-lb', b.leaderboardTitle || 'ปราชญ์ชาวสวน')
     + '<div style="display:flex;gap:18px;align-items:flex-end;margin:10px 0">'
-    +   '<div><div style="font-size:13px;color:#555;margin-bottom:3px">สีหลัก</div><input id="br-primary" type="color" value="' + esc(b.primaryColor || C.app.primaryColor || '#1877f2') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
-    +   '<div><div style="font-size:13px;color:#555;margin-bottom:3px">สีเสริม</div><input id="br-accent" type="color" value="' + esc(b.accentColor || C.app.accentColor || '#42b883') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
+    +   '<div><div style="font-size:var(--fs-sm);color:#555;margin-bottom:3px">สีหลัก</div><input id="br-primary" type="color" value="' + esc(b.primaryColor || C.app.primaryColor || '#1877f2') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
+    +   '<div><div style="font-size:var(--fs-sm);color:#555;margin-bottom:3px">สีเสริม</div><input id="br-accent" type="color" value="' + esc(b.accentColor || C.app.accentColor || '#42b883') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
     + '</div>'
-    + '<div style="font-size:14px;font-weight:700;margin:14px 0 4px;color:#333">ชื่อระดับ (Tier)</div>'
+    + '<div style="font-size:var(--fs-sm);font-weight:700;margin:14px 0 4px;color:#333">ชื่อระดับ (Tier)</div>'
     + row('ระดับ 1 (เริ่มต้น)', 'br-tier-bronze', (b.tierLabels && b.tierLabels.bronze) || C.tiers.bronze.label)
     + row('ระดับ 2', 'br-tier-silver', (b.tierLabels && b.tierLabels.silver) || C.tiers.silver.label)
     + row('ระดับ 3', 'br-tier-gold', (b.tierLabels && b.tierLabels.gold) || C.tiers.gold.label)
     + row('ระดับ 4 (สูงสุด)', 'br-tier-platinum', (b.tierLabels && b.tierLabels.platinum) || C.tiers.platinum.label)
-    + '<div style="font-size:14px;font-weight:700;margin:14px 0 4px;color:#333">ป้ายแท็บล่าง</div>'
+    + '<div style="font-size:var(--fs-sm);font-weight:700;margin:14px 0 4px;color:#333">ป้ายแท็บล่าง</div>'
     + row('แท็บ 1 (Community)', 'br-nav-feed', (b.navLabels && b.navLabels.feed) || 'ชุมชน')
     + row('แท็บ 2 (Activity)', 'br-nav-community', (b.navLabels && b.navLabels.community) || 'กิจกรรม')
     + row('แท็บ 3 (Market)', 'br-nav-shop', (b.navLabels && b.navLabels.shop) || 'ร้านค้า')
     + row('แท็บ 4 (Profile)', 'br-nav-profile', (b.navLabels && b.navLabels.profile) || 'โปรไฟล์')
-    + '<button onclick="saveBranding()" style="width:100%;margin-top:6px;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">บันทึกแบรนด์</button>';
+    + '<button onclick="saveBranding()" style="width:100%;margin-top:6px;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:var(--fs-base);font-weight:700;cursor:pointer">บันทึกแบรนด์</button>';
 }
 
 async function saveBranding() {
@@ -2208,12 +2208,12 @@ async function loadMyPosts() {
     let docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
     docs.sort((a, b) => (b.data.createdAt?.seconds || 0) - (a.data.createdAt?.seconds || 0));
     if (docs.length === 0) {
-      box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">ยังไม่มีโพส — ลองแชร์เรื่องราวใน'+T('itemPlace')+'ของคุณดูสิ! 🌱</div>';
+      box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:var(--fs-sm)">ยังไม่มีโพส — ลองแชร์เรื่องราวใน'+T('itemPlace')+'ของคุณดูสิ! 🌱</div>';
       return;
     }
     box.innerHTML = docs.map((d, i) => renderPost(d.id, d.data, i)).join('');
   } catch (err) {
-    box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">โหลดไม่สำเร็จ ลองใหม่อีกครั้ง</div>';
+    box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:var(--fs-sm)">โหลดไม่สำเร็จ ลองใหม่อีกครั้ง</div>';
   }
 }
 
@@ -2252,13 +2252,13 @@ async function saveMyAddress(){
 async function renderProfileOrders(){
   const box = document.getElementById('pf-orders');
   if (!box) return;
-  if (!currentUser || !db){ box.innerHTML = '<div style="font-size:13px;color:var(--muted)">เข้าสู่ระบบเพื่อดูประวัติ</div>'; return; }
+  if (!currentUser || !db){ box.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--muted)">เข้าสู่ระบบเพื่อดูประวัติ</div>'; return; }
   try {
     const snap = await tdb().collection('orders').where('userId','==',currentUser.uid).get();
     const tid = (typeof tenantId==='function')?tenantId():null;
     let docs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }).filter(function(o){ return !tid || o.tenantId===tid; });
     docs.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
-    if (!docs.length){ box.innerHTML = '<div style="font-size:13px;color:var(--muted)">ยังไม่มีประวัติการสั่งซื้อ</div>'; return; }
+    if (!docs.length){ box.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--muted)">ยังไม่มีประวัติการสั่งซื้อ</div>'; return; }
     box.innerHTML = docs.slice(0,3).map(function(o){
       const s = (typeof ORDER_STATUS!=='undefined' && ORDER_STATUS[o.status]) || {t:o.status, c:'#888'};
       const n = (o.items||[]).reduce(function(x,i){ return x+i.qty; }, 0);
@@ -2266,13 +2266,13 @@ async function renderProfileOrders(){
       const more = (o.items && o.items.length>1) ? (' +'+(o.items.length-1)) : '';
       const dt = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate().toLocaleDateString('th-TH') : '';
       return '<div onclick="openMyOrders()" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer">'+
-        '<div style="min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+first+more+'</div>'+
-        '<div style="font-size:11px;color:var(--muted)">'+dt+' · '+n+' ชิ้น</div></div>'+
-        '<div style="text-align:right;flex:none"><div style="font-size:13px;font-weight:800;color:var(--shop-price,var(--primary))">'+baht(o.total||0)+'</div>'+
-        '<span style="font-size:10px;color:#fff;background:'+s.c+';padding:1px 7px;border-radius:8px">'+s.t+'</span></div>'+
+        '<div style="min-width:0"><div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+first+more+'</div>'+
+        '<div style="font-size:var(--fs-2xs);color:var(--muted)">'+dt+' · '+n+' ชิ้น</div></div>'+
+        '<div style="text-align:right;flex:none"><div style="font-size:var(--fs-sm);font-weight:800;color:var(--shop-price,var(--primary))">'+baht(o.total||0)+'</div>'+
+        '<span style="font-size:var(--fs-2xs);color:#fff;background:'+s.c+';padding:1px 7px;border-radius:8px">'+s.t+'</span></div>'+
       '</div>';
-    }).join('') + (docs.length>3 ? '<div style="text-align:center;padding-top:8px"><button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer">ดูทั้งหมด '+docs.length+' ออเดอร์ →</button></div>' : '');
-  } catch(e){ box.innerHTML = '<div style="font-size:13px;color:var(--muted)">โหลดประวัติไม่สำเร็จ</div>'; }
+    }).join('') + (docs.length>3 ? '<div style="text-align:center;padding-top:8px"><button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:var(--fs-sm);font-weight:700;cursor:pointer">ดูทั้งหมด '+docs.length+' ออเดอร์ →</button></div>' : '');
+  } catch(e){ box.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--muted)">โหลดประวัติไม่สำเร็จ</div>'; }
 }
 
 // ── สุ่มจับรางวัล (Activity Engine) — user ────────────────
@@ -2285,15 +2285,15 @@ async function loadLuckyDrawsUser(){
     var draws = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
     if (!draws.length){ box.innerHTML=''; return; }
     var pts = (currentUser && currentUser.points) || 0;
-    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text)">🎯 สุ่มจับรางวัล</div>'+
-      '<div style="font-size:13px;color:var(--muted);margin:2px 0 12px">ใช้แต้มลุ้นคูปองส่วนลด</div>'+
+    box.innerHTML = '<div style="font-size:var(--fs-md);font-weight:800;color:var(--text)">🎯 สุ่มจับรางวัล</div>'+
+      '<div style="font-size:var(--fs-sm);color:var(--muted);margin:2px 0 12px">ใช้แต้มลุ้นคูปองส่วนลด</div>'+
       draws.map(function(v){
         var cost = v.costPoints||0; var can = !!currentUser && pts >= cost;
         var prizes = (Array.isArray(v.prizes)?v.prizes:[]).filter(function(p){return p.type!=='nothing';}).map(function(p){return escapeHtml(p.label);}).slice(0,4).join(' · ');
         return '<div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 3px 12px -8px rgba(20,50,25,.25)">'+
-          '<div style="font-size:16px;font-weight:800;color:var(--text)">'+escapeHtml(v.name||'สุ่มจับรางวัล')+'</div>'+
-          (prizes?'<div style="font-size:12px;color:var(--muted);margin:3px 0 10px">🎁 '+prizes+'</div>':'<div style="height:8px"></div>')+
-          '<button onclick="spinDraw(\''+v.id+'\','+cost+')" '+(can?'':'disabled')+' style="width:100%;background:'+(can?'var(--primary)':'#c9ccd1')+';color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:800;cursor:'+(can?'pointer':'not-allowed')+';font-family:inherit">'+
+          '<div style="font-size:var(--fs-base);font-weight:800;color:var(--text)">'+escapeHtml(v.name||'สุ่มจับรางวัล')+'</div>'+
+          (prizes?'<div style="font-size:var(--fs-xs);color:var(--muted);margin:3px 0 10px">🎁 '+prizes+'</div>':'<div style="height:8px"></div>')+
+          '<button onclick="spinDraw(\''+v.id+'\','+cost+')" '+(can?'':'disabled')+' style="width:100%;background:'+(can?'var(--primary)':'#c9ccd1')+';color:#fff;border:none;border-radius:10px;padding:12px;font-size:var(--fs-base);font-weight:800;cursor:'+(can?'pointer':'not-allowed')+';font-family:inherit">'+
           (currentUser?('ใช้ '+cost+' แต้ม ลุ้นรางวัล'+(can?'':' · แต้มไม่พอ')):'เข้าสู่ระบบเพื่อร่วมสนุก')+'</button></div>';
       }).join('');
   } catch(e){ box.innerHTML=''; }
@@ -2317,14 +2317,14 @@ async function spinDraw(drawId, cost){
 function showSpinResult(r){
   var body = document.getElementById('spin-result-body'); if (!body) return;
   if (r.win && r.coupon){
-    body.innerHTML = '<div style="font-size:52px">🎉</div><div style="font-size:20px;font-weight:800;color:var(--text);margin-top:6px">ยินดีด้วย!</div>'+
-      '<div style="font-size:16px;color:var(--primary);font-weight:700;margin-top:4px">'+escapeHtml(r.coupon.label||'รางวัล')+'</div>'+
-      (r.coupon.discountText?'<div style="font-size:13px;color:var(--muted);margin-top:2px">'+escapeHtml(r.coupon.discountText)+'</div>':'')+
-      '<div style="margin-top:12px;background:var(--bg);border:1px dashed var(--primary);border-radius:10px;padding:10px;font-size:16px;font-weight:800;letter-spacing:1px">'+escapeHtml(r.coupon.code||'')+'</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:8px">เก็บไว้ใน "คูปองของฉัน" · แจ้งโค้ดตอนสั่งซื้อ</div>';
+    body.innerHTML = '<div style="font-size:var(--fs-4xl)">🎉</div><div style="font-size:var(--fs-lg);font-weight:800;color:var(--text);margin-top:6px">ยินดีด้วย!</div>'+
+      '<div style="font-size:var(--fs-base);color:var(--primary);font-weight:700;margin-top:4px">'+escapeHtml(r.coupon.label||'รางวัล')+'</div>'+
+      (r.coupon.discountText?'<div style="font-size:var(--fs-sm);color:var(--muted);margin-top:2px">'+escapeHtml(r.coupon.discountText)+'</div>':'')+
+      '<div style="margin-top:12px;background:var(--bg);border:1px dashed var(--primary);border-radius:10px;padding:10px;font-size:var(--fs-base);font-weight:800;letter-spacing:1px">'+escapeHtml(r.coupon.code||'')+'</div>'+
+      '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:8px">เก็บไว้ใน "คูปองของฉัน" · แจ้งโค้ดตอนสั่งซื้อ</div>';
   } else {
-    body.innerHTML = '<div style="font-size:52px">🍀</div><div style="font-size:19px;font-weight:800;color:var(--text);margin-top:6px">ยังไม่ถูกรอบนี้</div>'+
-      '<div style="font-size:13px;color:var(--muted);margin-top:4px">สะสมแต้มแล้วลองใหม่นะ!</div>';
+    body.innerHTML = '<div style="font-size:var(--fs-4xl)">🍀</div><div style="font-size:var(--fs-lg);font-weight:800;color:var(--text);margin-top:6px">ยังไม่ถูกรอบนี้</div>'+
+      '<div style="font-size:var(--fs-sm);color:var(--muted);margin-top:4px">สะสมแต้มแล้วลองใหม่นะ!</div>';
   }
   var m = document.getElementById('spinModal'); if (m) m.classList.add('open');
 }
@@ -2353,7 +2353,7 @@ async function loadPredictionsUser(){
     }));
     var now = Date.now();
     ps.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
-    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">🔮 ทายผลลุ้นรางวัล</div>'+
+    box.innerHTML = '<div style="font-size:var(--fs-md);font-weight:800;color:var(--text);margin-bottom:10px">🔮 ทายผลลุ้นรางวัล</div>'+
       ps.map(function(p){ return predictionCard(p, stats[p.id]||{played:0,wins:0}, now); }).join('');
   } catch(e){ box.innerHTML=''; }
 }
@@ -2367,31 +2367,31 @@ function predictionCard(p, st, now){
   var reward = p.rewardType==='coupon' ? ('🎟️ '+escapeHtml((p.coupon&&(p.coupon.discountText||p.coupon.label))||'คูปอง')) : ('🏅 '+(p.rewardPoints||0)+' แต้ม');
   var limitTxt = max===0 ? 'เล่นไม่จำกัด' : ('เล่นได้ '+max+' ครั้ง');
   var head = '<div style="display:flex;justify-content:space-between;gap:8px;align-items:start">'+
-    '<div style="font-size:15px;font-weight:800;color:var(--text)">'+escapeHtml(p.name||'')+'</div>'+
-    (settled?'<span style="flex:none;font-size:11px;font-weight:700;color:#16a34a;border:1px solid #16a34a;border-radius:6px;padding:1px 7px">เฉลยแล้ว</span>':(closed?'<span style="flex:none;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:1px 7px">ปิดรับ</span>':''))+
+    '<div style="font-size:var(--fs-base);font-weight:800;color:var(--text)">'+escapeHtml(p.name||'')+'</div>'+
+    (settled?'<span style="flex:none;font-size:var(--fs-2xs);font-weight:700;color:#16a34a;border:1px solid #16a34a;border-radius:6px;padding:1px 7px">เฉลยแล้ว</span>':(closed?'<span style="flex:none;font-size:var(--fs-2xs);font-weight:700;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:1px 7px">ปิดรับ</span>':''))+
     '</div>';
-  var sub = (p.desc?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+escapeHtml(p.desc)+'</div>':'')+
-    '<div style="font-size:12px;color:var(--muted);margin-top:3px">รางวัล '+reward+(p.costPoints?(' · ค่าเข้าร่วม '+p.costPoints+' แต้ม'):' · เล่นฟรี')+' · '+limitTxt+'</div>';
+  var sub = (p.desc?'<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">'+escapeHtml(p.desc)+'</div>':'')+
+    '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:3px">รางวัล '+reward+(p.costPoints?(' · ค่าเข้าร่วม '+p.costPoints+' แต้ม'):' · เล่นฟรี')+' · '+limitTxt+'</div>';
   var body = '';
   if (settled){
-    body = '<div style="margin-top:8px;font-size:13px">ผลที่ถูก: <b style="color:var(--primary)">'+escapeHtml(p.correctAnswer||'')+'</b></div>'+
-      (played>0 ? ('<div style="font-size:13px;margin-top:2px">คุณเล่น '+played+' ครั้ง → '+(st.wins>0?('<b style="color:#16a34a">ถูก '+st.wins+' ครั้ง! ได้รับรางวัลแล้ว 🎉</b>'):'<span style="color:var(--muted)">ยังไม่ถูกรอบนี้</span>')+'</div>') : '<div style="font-size:13px;color:var(--muted);margin-top:2px">คุณไม่ได้ร่วมทาย</div>');
+    body = '<div style="margin-top:8px;font-size:var(--fs-sm)">ผลที่ถูก: <b style="color:var(--primary)">'+escapeHtml(p.correctAnswer||'')+'</b></div>'+
+      (played>0 ? ('<div style="font-size:var(--fs-sm);margin-top:2px">คุณเล่น '+played+' ครั้ง → '+(st.wins>0?('<b style="color:#16a34a">ถูก '+st.wins+' ครั้ง! ได้รับรางวัลแล้ว 🎉</b>'):'<span style="color:var(--muted)">ยังไม่ถูกรอบนี้</span>')+'</div>') : '<div style="font-size:var(--fs-sm);color:var(--muted);margin-top:2px">คุณไม่ได้ร่วมทาย</div>');
   } else if (closed){
-    body = '<div style="margin-top:8px;font-size:13px;color:var(--muted)">ปิดรับคำทายแล้ว'+(played>0?(' · คุณเล่นไป '+played+' ครั้ง'):'')+'</div>';
+    body = '<div style="margin-top:8px;font-size:var(--fs-sm);color:var(--muted)">ปิดรับคำทายแล้ว'+(played>0?(' · คุณเล่นไป '+played+' ครั้ง'):'')+'</div>';
   } else if (!canPlay){
-    body = '<div style="margin-top:8px;font-size:13px;color:var(--muted)">คุณเล่นครบ '+max+' ครั้งแล้ว · รอเฉลย</div>';
+    body = '<div style="margin-top:8px;font-size:var(--fs-sm);color:var(--muted)">คุณเล่นครบ '+max+' ครั้งแล้ว · รอเฉลย</div>';
   } else {
     // ยังเล่นได้ → แสดง UI ทาย (+ บอกจำนวนครั้งที่เล่นไปแล้ว)
-    var pinfo = played>0 ? ('<div style="font-size:12px;color:var(--muted);margin-top:8px">เล่นไปแล้ว '+played+' ครั้ง'+(max>0?(' (เหลือ '+(max-played)+' ครั้ง)'):'')+'</div>') : '';
+    var pinfo = played>0 ? ('<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:8px">เล่นไปแล้ว '+played+' ครั้ง'+(max>0?(' (เหลือ '+(max-played)+' ครั้ง)'):'')+'</div>') : '';
     body = pinfo;
     if (p.mode==='choice'){
       body += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+
-        (p.options||[]).map(function(o){ return '<button onclick="submitPredictionUser(\''+p.id+'\',\''+encodeURIComponent(o)+'\')" style="border:1.5px solid var(--primary);background:#fff;color:var(--primary);border-radius:9px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer">'+escapeHtml(o)+'</button>'; }).join('')+
+        (p.options||[]).map(function(o){ return '<button onclick="submitPredictionUser(\''+p.id+'\',\''+encodeURIComponent(o)+'\')" style="border:1.5px solid var(--primary);background:#fff;color:var(--primary);border-radius:9px;padding:8px 14px;font-weight:700;font-size:var(--fs-sm);cursor:pointer">'+escapeHtml(o)+'</button>'; }).join('')+
         '</div>';
     } else {
       body += '<div style="display:flex;gap:8px;margin-top:10px">'+
-        '<input id="pd-in-'+p.id+'" placeholder="กรอกคำทาย เช่น 2-1" style="flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:9px;font-size:14px">'+
-        '<button onclick="submitPredictionInput(\''+p.id+'\')" style="flex:none;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:8px 16px;font-weight:800;font-size:13px;cursor:pointer">ทาย</button>'+
+        '<input id="pd-in-'+p.id+'" placeholder="กรอกคำทาย เช่น 2-1" style="flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:9px;font-size:var(--fs-sm)">'+
+        '<button onclick="submitPredictionInput(\''+p.id+'\')" style="flex:none;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:8px 16px;font-weight:800;font-size:var(--fs-sm);cursor:pointer">ทาย</button>'+
         '</div>';
     }
   }
@@ -2433,20 +2433,20 @@ async function loadEarnCampaignsUser(){
     var promoBanner = '';
     if (promo.mult > 1){
       var until = promo.endAt ? (' · ถึง '+new Date(promo.endAt).toLocaleDateString('th-TH',{day:'numeric',month:'short'})) : '';
-      promoBanner = '<div style="background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;border-radius:12px;padding:11px 13px;margin-bottom:10px;font-weight:800;font-size:14px">🔥 '+escapeHtml(promo.label||'โปรฯ คูณแต้ม')+' — คูณแต้ม x'+promo.mult+' ทุกทาง!'+until+'</div>';
+      promoBanner = '<div style="background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;border-radius:12px;padding:11px 13px;margin-bottom:10px;font-weight:800;font-size:var(--fs-sm)">🔥 '+escapeHtml(promo.label||'โปรฯ คูณแต้ม')+' — คูณแต้ม x'+promo.mult+' ทุกทาง!'+until+'</div>';
     }
     if (!cs.length && !promoBanner){ box.innerHTML=''; return; }
-    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">⭐ วิธีได้แต้ม</div>'+ promoBanner +
+    box.innerHTML = '<div style="font-size:var(--fs-md);font-weight:800;color:var(--text);margin-bottom:10px">⭐ วิธีได้แต้ม</div>'+ promoBanner +
       cs.map(function(c){
-        var mult = (Number(c.multiplier)||1) > 1 ? ' <span style="background:#fef3c7;color:#92400e;font-weight:800;border-radius:6px;padding:1px 6px;font-size:12px">x'+c.multiplier+'</span>' : '';
+        var mult = (Number(c.multiplier)||1) > 1 ? ' <span style="background:#fef3c7;color:#92400e;font-weight:800;border-radius:6px;padding:1px 6px;font-size:var(--fs-xs)">x'+c.multiplier+'</span>' : '';
         var icon, title;
         if (c.trigger === 'post'){ icon='✍️'; title='โพสต์ในชุมชน รับโบนัส +'+(c.bonusPoints||0)+' แต้ม'; }
         else { icon='🛒'; title='ซื้อครบ ฿'+(c.ratePerBaht||0)+' รับ '+(c.ratePoints||0)+' แต้ม'+((c.minSpend||0)>0?' (ขั้นต่ำ ฿'+c.minSpend+')':''); }
         return '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px">'+
-          '<div style="font-size:24px;flex:none">'+icon+'</div>'+
+          '<div style="font-size:var(--fs-xl);flex:none">'+icon+'</div>'+
           '<div style="flex:1;min-width:0">'+
-            '<div style="font-size:14px;font-weight:700;color:var(--text)">'+escapeHtml(c.name||'')+mult+'</div>'+
-            '<div style="font-size:12px;color:var(--muted);margin-top:1px">'+title+'</div>'+
+            '<div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">'+escapeHtml(c.name||'')+mult+'</div>'+
+            '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:1px">'+title+'</div>'+
           '</div>'+
         '</div>';
       }).join('');
@@ -2470,7 +2470,7 @@ async function loadMissions(){
         purch = os.docs.filter(function(d){ return paid.indexOf((d.data()||{}).status)>-1; }).length; } catch(e){}
     }
     ms.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
-    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">🎯 ภารกิจ</div>'+
+    box.innerHTML = '<div style="font-size:var(--fs-md);font-weight:800;color:var(--text);margin-bottom:10px">🎯 ภารกิจ</div>'+
       ms.map(function(m){
         var goal = Math.max(1, m.goal||1);
         var prog = m.type==='points' ? (currentUser.points||0) : (m.type==='posts' ? (currentUser.postCount||0) : purch);
@@ -2478,17 +2478,17 @@ async function loadMissions(){
         var pct = Math.min(100, Math.round(prog/goal*100));
         var reward = m.rewardType==='coupon' ? ('🎟️ '+escapeHtml((m.coupon&&(m.coupon.discountText||m.coupon.label))||'คูปอง')) : ('🏅 '+(m.rewardPoints||0)+' แต้ม');
         var btn = isClaimed
-          ? '<button disabled style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:13px;background:var(--border);color:var(--muted)">✓ รับแล้ว</button>'
+          ? '<button disabled style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:var(--fs-sm);background:var(--border);color:var(--muted)">✓ รับแล้ว</button>'
           : (done
-            ? '<button onclick="claimMissionUser(\''+m.id+'\')" style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:800;font-size:13px;background:var(--primary);color:#fff;cursor:pointer">รับรางวัล</button>'
-            : '<button disabled style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:13px;background:var(--bg);color:var(--muted)">'+prog+'/'+goal+'</button>');
+            ? '<button onclick="claimMissionUser(\''+m.id+'\')" style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:800;font-size:var(--fs-sm);background:var(--primary);color:#fff;cursor:pointer">รับรางวัล</button>'
+            : '<button disabled style="flex:none;border:none;border-radius:9px;padding:8px 14px;font-weight:700;font-size:var(--fs-sm);background:var(--bg);color:var(--muted)">'+prog+'/'+goal+'</button>');
         return '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px">'+
           '<div style="display:flex;align-items:center;gap:10px">'+
-            '<div style="font-size:26px;flex:none">'+escapeHtml(m.icon||'🎯')+'</div>'+
+            '<div style="font-size:var(--fs-xl);flex:none">'+escapeHtml(m.icon||'🎯')+'</div>'+
             '<div style="flex:1;min-width:0">'+
-              '<div style="font-size:14px;font-weight:700;color:var(--text)">'+escapeHtml(m.name||'')+'</div>'+
-              (m.desc?'<div style="font-size:12px;color:var(--muted)">'+escapeHtml(m.desc)+'</div>':'')+
-              '<div style="font-size:12px;color:var(--muted);margin-top:2px">'+(MS_TYPE_TXT[m.type]||m.type)+' ครบ '+goal+' · รางวัล '+reward+'</div>'+
+              '<div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">'+escapeHtml(m.name||'')+'</div>'+
+              (m.desc?'<div style="font-size:var(--fs-xs);color:var(--muted)">'+escapeHtml(m.desc)+'</div>':'')+
+              '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:2px">'+(MS_TYPE_TXT[m.type]||m.type)+' ครบ '+goal+' · รางวัล '+reward+'</div>'+
             '</div>'+
             btn+
           '</div>'+
@@ -2519,12 +2519,12 @@ async function loadMyCoupons(){
     var cs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
     cs.sort(function(a,b){ return ((b.at&&b.at.seconds)||0)-((a.at&&a.at.seconds)||0); });
     if (!cs.length){ box.innerHTML=''; return; }
-    box.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:10px">🎟️ คูปองของฉัน</div>'+
+    box.innerHTML = '<div style="font-size:var(--fs-md);font-weight:800;color:var(--text);margin-bottom:10px">🎟️ คูปองของฉัน</div>'+
       cs.map(function(c){
         var used = c.used === true;
         return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;opacity:'+(used?'0.55':'1')+'">'+
-          '<div style="min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text)">'+escapeHtml(c.prizeLabel||c.drawName||'คูปอง')+(used?' <span style="font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:1px 6px;margin-left:4px">ใช้แล้ว</span>':'')+'</div>'+
-          (c.discountText?'<div style="font-size:12px;color:var(--muted)">'+escapeHtml(c.discountText)+'</div>':'')+'</div>'+
+          '<div style="min-width:0"><div style="font-size:var(--fs-sm);font-weight:700;color:var(--text)">'+escapeHtml(c.prizeLabel||c.drawName||'คูปอง')+(used?' <span style="font-size:var(--fs-2xs);font-weight:700;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:1px 6px;margin-left:4px">ใช้แล้ว</span>':'')+'</div>'+
+          (c.discountText?'<div style="font-size:var(--fs-xs);color:var(--muted)">'+escapeHtml(c.discountText)+'</div>':'')+'</div>'+
           '<div style="font-weight:800;letter-spacing:1px;flex:none;'+(used?'color:var(--muted);text-decoration:line-through':'color:var(--primary)')+'">'+escapeHtml(c.code||'')+'</div></div>';
       }).join('');
   } catch(e){ box.innerHTML=''; }
@@ -2812,7 +2812,7 @@ function applyFeedMode(){
     if (!note){
       note = document.createElement('div');
       note.id = 'broadcast-note';
-      note.style.cssText = 'text-align:center;color:var(--muted);font-size:13px;padding:14px;background:#fff;border-radius:12px;margin-bottom:10px';
+      note.style.cssText = 'text-align:center;color:var(--muted);font-size:var(--fs-sm);padding:14px;background:#fff;border-radius:12px;margin-bottom:10px';
       note.textContent = '📢 เฉพาะแบรนด์โพสต์ได้ — คุณคอมเมนต์/รีแอคได้';
       cp.parentNode.insertBefore(note, cp);
     }
@@ -2871,11 +2871,11 @@ function toggleComments(id){
 async function loadComments(postId){
   const box = document.getElementById('cmts-' + postId);
   if (!box || !db) return;
-  box.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">กำลังโหลด...</div>';
+  box.innerHTML = '<div style="color:var(--muted);font-size:var(--fs-sm);padding:8px 0">กำลังโหลด...</div>';
   try {
     const snap = await tdb().collection('posts').doc(postId).collection('comments')
       .orderBy('createdAt','asc').limit(200).get();
-    if (snap.empty) { box.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">ยังไม่มีความคิดเห็น</div>'; return; }
+    if (snap.empty) { box.innerHTML = '<div style="color:var(--muted);font-size:var(--fs-sm);padding:8px 0">ยังไม่มีความคิดเห็น</div>'; return; }
     box.innerHTML = snap.docs.map(function(d){
       const c = d.data();
       const nm = escapeHtml(c.authorName) || 'ผู้ใช้';
@@ -2892,7 +2892,7 @@ async function loadComments(postId){
     }).join('');
   } catch(e){
     console.error(e);
-    box.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">โหลดความคิดเห็นไม่สำเร็จ — '+
+    box.innerHTML = '<div style="color:var(--muted);font-size:var(--fs-sm);padding:8px 0">โหลดความคิดเห็นไม่สำเร็จ — '+
       '<a href="#" onclick="loadComments(\''+postId+'\');return false" style="color:var(--primary)">ลองใหม่</a></div>';
   }
 }
@@ -3051,7 +3051,7 @@ async function loadFeed(mode, more) {
   try { refreshManagerFlag(); } catch(e){}
   if (!more) {
     _feedDocs = []; _feedCursor = null; _feedEnd = false;
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px"><div style="font-size:32px;margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:var(--fs-sm)"><div style="font-size:var(--fs-2xl);margin-bottom:8px">🌿</div>กำลังโหลด...</div>';
   }
   try {
     const PAGE = mode === 'nearby' ? 100 : (APP_CONFIG.feed.postsPerPage || 10);
@@ -3072,10 +3072,10 @@ async function loadFeed(mode, more) {
       if (!loc) {
         container.innerHTML = `
           <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-            <div style="font-size:48px;margin-bottom:12px">📍</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่ได้ตั้งตำแหน่งสวน</div>
-            <div style="font-size:14px;margin-bottom:16px">ตั้งตำแหน่งเพื่อดูโพสใกล้บ้านคุณ</div>
-            <button onclick="maybeShowOnboarding(true)" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-pin"/></svg> ตั้งตำแหน่งเลย</button>
+            <div style="font-size:var(--fs-4xl);margin-bottom:12px">📍</div>
+            <div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่ได้ตั้งตำแหน่งสวน</div>
+            <div style="font-size:var(--fs-sm);margin-bottom:16px">ตั้งตำแหน่งเพื่อดูโพสใกล้บ้านคุณ</div>
+            <button onclick="maybeShowOnboarding(true)" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-pin"/></svg> ตั้งตำแหน่งเลย</button>
           </div>`;
         return;
       }
@@ -3092,15 +3092,15 @@ async function loadFeed(mode, more) {
       container.innerHTML = mode === 'nearby'
         ? `
         <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-          <div style="font-size:48px;margin-bottom:12px">🏞️</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสในรัศมี ${APP_CONFIG.feed.nearbyRadius || 15} กม.</div>
-          <div style="font-size:14px">เป็นคนแรกที่โพสในพื้นที่ของคุณ!</div>
+          <div style="font-size:var(--fs-4xl);margin-bottom:12px">🏞️</div>
+          <div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสในรัศมี ${APP_CONFIG.feed.nearbyRadius || 15} กม.</div>
+          <div style="font-size:var(--fs-sm)">เป็นคนแรกที่โพสในพื้นที่ของคุณ!</div>
         </div>`
         : `
         <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-          <div style="font-size:48px;margin-bottom:12px">🌱</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสเลย</div>
-          <div style="font-size:14px">เป็นคนแรกที่แชร์ปัญหาใน${T('itemPlace')}!</div>
+          <div style="font-size:var(--fs-4xl);margin-bottom:12px">🌱</div>
+          <div style="font-size:var(--fs-base);font-weight:700;color:var(--text);margin-bottom:8px">ยังไม่มีโพสเลย</div>
+          <div style="font-size:var(--fs-sm)">เป็นคนแรกที่แชร์ปัญหาใน${T('itemPlace')}!</div>
         </div>`;
       return;
     }
@@ -3108,8 +3108,8 @@ async function loadFeed(mode, more) {
     let html = _feedDocs.map((d, i) => renderPost(d.id, d.data, i)).join('');
     if (mode !== 'nearby') {
       html += _feedEnd
-        ? '<div style="text-align:center;padding:18px;color:var(--muted);font-size:13px">— หมดแล้ว —</div>'
-        : '<div style="text-align:center;padding:14px"><button onclick="loadMoreFeed()" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 22px;font-size:14px;font-weight:700;color:var(--primary);cursor:pointer;font-family:inherit">โหลดเพิ่ม</button></div>';
+        ? '<div style="text-align:center;padding:18px;color:var(--muted);font-size:var(--fs-sm)">— หมดแล้ว —</div>'
+        : '<div style="text-align:center;padding:14px"><button onclick="loadMoreFeed()" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 22px;font-size:var(--fs-sm);font-weight:700;color:var(--primary);cursor:pointer;font-family:inherit">โหลดเพิ่ม</button></div>';
     }
     container.innerHTML = html;
     populateRelatedProducts(_feedDocs);
@@ -3317,7 +3317,7 @@ function ensureAdminPanel() {
   if (!isAdmin() || document.getElementById('admin-fab')) return;
   const fab = document.createElement('div');
   fab.id = 'admin-fab'; fab.innerHTML = '<svg class="ic" style="width:22px;height:22px"><use href="#i-sliders"/></svg>'; fab.title = 'Admin';
-  fab.style.cssText = 'position:fixed;right:16px;bottom:84px;z-index:9998;width:48px;height:48px;border-radius:50%;background:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer';
+  fab.style.cssText = 'position:fixed;right:16px;bottom:84px;z-index:9998;width:48px;height:48px;border-radius:50%;background:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer';
   fab.onclick = openAdminPanel;
   document.body.appendChild(fab);
   const m = document.createElement('div');
@@ -3325,8 +3325,8 @@ function ensureAdminPanel() {
   m.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center';
   m.onclick = e => { if (e.target === m) closeAdminPanel(); };
   m.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:380px;width:90%;max-height:80vh;overflow:auto;padding:18px;font-family:inherit">'
-    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:18px;font-weight:800">⚙️ Admin Panel</div><div onclick="closeAdminPanel()" style="cursor:pointer;font-size:20px;color:#888">✕</div></div>'
-    + '<div style="font-size:12px;color:#888;margin-bottom:12px">tenant: ' + tenantId() + ' · เปิด/ปิด real-time</div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:var(--fs-md);font-weight:800">⚙️ Admin Panel</div><div onclick="closeAdminPanel()" style="cursor:pointer;font-size:var(--fs-lg);color:#888">✕</div></div>'
+    + '<div style="font-size:var(--fs-xs);color:#888;margin-bottom:12px">tenant: ' + tenantId() + ' · เปิด/ปิด real-time</div>'
     + '<div id="admin-toggles"></div>'
     + '</div>';
   document.body.appendChild(m);
@@ -3340,7 +3340,7 @@ function renderAdminToggles() {
   box.innerHTML = Object.keys(f).map(k => {
     const on = f[k] !== false;
     const label = FEATURE_LABELS[k] || k;
-    return '<label style="display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid #eee;font-size:15px"><span>' + label + '</span>'
+    return '<label style="display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid #eee;font-size:var(--fs-base)"><span>' + label + '</span>'
       + '<input type="checkbox" data-fk="' + k + '" ' + (on ? 'checked' : '') + ' style="width:20px;height:20px"></label>';
   }).join('');
   box.querySelectorAll('input[data-fk]').forEach(inp => {
@@ -3675,7 +3675,7 @@ function openProduct(id){
       desc + dis + crp +
     '</div>'+
     (p.stock === 0 ? '<button class="pd-add" disabled style="opacity:.5;cursor:not-allowed">สินค้าหมด</button>' : ((p.affiliate && safeUrl(p.url)) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+safeUrl(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()"><svg class="ic"><use href="#i-share"/></svg> ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()"><svg class="ic"><use href="#i-cart"/></svg> ใส่ตะกร้า</button>'))+
-    (p.stock!=null && p.stock>0 && p.stock<=5 ? '<div style="text-align:center;font-size:12px;color:#d97706;margin-top:6px">เหลือ '+p.stock+' ชิ้น</div>' : '')+
+    (p.stock!=null && p.stock>0 && p.stock<=5 ? '<div style="text-align:center;font-size:var(--fs-xs);color:#d97706;margin-top:6px">เหลือ '+p.stock+' ชิ้น</div>' : '')+
     '<div style="height:14px"></div>';
   var body = document.getElementById('pd-body'); if (body) body.innerHTML = html;
   var m = document.getElementById('prodDetailModal'); if (m) m.classList.add('open');
@@ -3803,15 +3803,15 @@ function selectCoupon(id){
 function renderCouponPicker(){
   const el = document.getElementById('co-coupon'); if(!el) return;
   if (!checkoutCoupons.length){ el.innerHTML=''; return; }
-  el.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">🎟️ ใช้คูปอง</div>'+
+  el.innerHTML = '<div style="font-size:var(--fs-sm);font-weight:700;color:var(--text);margin-bottom:6px">🎟️ ใช้คูปอง</div>'+
     '<div style="display:flex;flex-direction:column;gap:6px">'+
     checkoutCoupons.map(function(c){
       const on = !!(selectedCoupon && selectedCoupon.id===c.id), amt = couponDiscountFor(c);
       return '<button type="button" onclick="selectCoupon(\''+c.id+'\')" style="display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;'+
         'border:1.5px solid '+(on?'var(--primary)':'var(--border)')+';background:'+(on?'#f0f9f0':'#fff')+';border-radius:10px;padding:9px 11px;cursor:pointer">'+
-        '<span style="min-width:0;overflow:hidden"><span style="font-weight:700;font-size:13px;color:var(--text)">'+escapeHtml(c.prizeLabel||c.drawName||'คูปอง')+'</span>'+
-        (c.discountText?' <span style="font-size:12px;color:var(--muted)">'+escapeHtml(c.discountText)+'</span>':'')+'</span>'+
-        '<span style="flex:none;font-weight:800;font-size:13px;color:'+(on?'var(--primary)':'var(--muted)')+'">'+(on?'− '+baht(amt):'ใช้')+'</span>'+
+        '<span style="min-width:0;overflow:hidden"><span style="font-weight:700;font-size:var(--fs-sm);color:var(--text)">'+escapeHtml(c.prizeLabel||c.drawName||'คูปอง')+'</span>'+
+        (c.discountText?' <span style="font-size:var(--fs-xs);color:var(--muted)">'+escapeHtml(c.discountText)+'</span>':'')+'</span>'+
+        '<span style="flex:none;font-weight:800;font-size:var(--fs-sm);color:'+(on?'var(--primary)':'var(--muted)')+'">'+(on?'− '+baht(amt):'ใช้')+'</span>'+
         '</button>';
     }).join('')+'</div>';
 }
@@ -3924,7 +3924,7 @@ function toastCart(msg){
   if (!t){
     t = document.createElement('div');
     t.id = 'cart-toast';
-    t.style.cssText = 'position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#1c1e21;color:#fff;padding:10px 16px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:opacity .2s;max-width:90%;text-align:center';
+    t.style.cssText = 'position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#1c1e21;color:#fff;padding:10px 16px;border-radius:20px;font-size:var(--fs-sm);font-weight:600;z-index:500;opacity:0;transition:opacity .2s;max-width:90%;text-align:center';
     document.body.appendChild(t);
   }
   t.textContent = '✅ ' + msg;
@@ -3940,7 +3940,7 @@ function toast(msg, type){
   if (!t){
     t = document.createElement('div');
     t.id = 'app-toast';
-    t.style.cssText = 'position:fixed;bottom:130px;left:50%;transform:translateX(-50%);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;z-index:9000;opacity:0;transition:opacity .2s;max-width:90%;text-align:center;white-space:pre-line;box-shadow:0 4px 16px rgba(0,0,0,.25)';
+    t.style.cssText = 'position:fixed;bottom:130px;left:50%;transform:translateX(-50%);color:#fff;padding:11px 18px;border-radius:12px;font-size:var(--fs-sm);font-weight:600;z-index:9000;opacity:0;transition:opacity .2s;max-width:90%;text-align:center;white-space:pre-line;box-shadow:0 4px 16px rgba(0,0,0,.25)';
     document.body.appendChild(t);
   }
   var s = String(msg == null ? '' : msg);
@@ -3960,9 +3960,9 @@ function confirmModal(msg){
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px';
     var box = document.createElement('div');
     box.style.cssText = 'background:#fff;border-radius:14px;max-width:340px;width:100%;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.3)';
-    box.innerHTML = '<div id="_cm-msg" style="font-size:15px;color:#1c1e21;line-height:1.5;margin-bottom:18px;white-space:pre-line"></div>'
-      + '<div style="display:flex;gap:10px"><button id="_cm-no" style="flex:1;background:#e4e6eb;color:#1c1e21;border:none;border-radius:9px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>'
-      + '<button id="_cm-yes" style="flex:1;background:var(--primary,#1877f2);color:#fff;border:none;border-radius:9px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">ยืนยัน</button></div>';
+    box.innerHTML = '<div id="_cm-msg" style="font-size:var(--fs-base);color:#1c1e21;line-height:1.5;margin-bottom:18px;white-space:pre-line"></div>'
+      + '<div style="display:flex;gap:10px"><button id="_cm-no" style="flex:1;background:#e4e6eb;color:#1c1e21;border:none;border-radius:9px;padding:11px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>'
+      + '<button id="_cm-yes" style="flex:1;background:var(--primary,#1877f2);color:#fff;border:none;border-radius:9px;padding:11px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit">ยืนยัน</button></div>';
     box.querySelector('#_cm-msg').textContent = String(msg == null ? '' : msg);
     ov.appendChild(box); document.body.appendChild(ov);
     function done(v){ try { document.body.removeChild(ov); } catch(e){} resolve(v); }
@@ -4066,7 +4066,7 @@ function renderCheckoutSummary(){
   if (selectedCoupon && cd>0) h += '<div class="sum-row"><span>🎟️ คูปอง '+escapeHtml(selectedCoupon.discountText||'')+'</span><span>− '+baht(cd)+'</span></div>';
   h += '<div class="sum-row"><span>ค่าจัดส่ง</span><span>'+(shippingFee()===0?'<b style="color:#16a34a">ฟรี</b>':baht(shippingFee()))+'</span></div>';
   const fh = freeShipHint();
-  if (fh) h += '<div style="font-size:12px;color:#16a34a;font-weight:600;text-align:right;margin:-2px 0 4px">'+fh+'</div>';
+  if (fh) h += '<div style="font-size:var(--fs-xs);color:#16a34a;font-weight:600;text-align:right;margin:-2px 0 4px">'+fh+'</div>';
   h += '<div class="sum-row total"><span>ยอดสุทธิ</span><span>'+baht(checkoutTotal())+'</span></div>';
   const ep = earnPointsPreview(cartSubtotal());
   if (ep > 0) h += '<div style="font-size:12.5px;color:#92400e;background:#fef3c7;border-radius:8px;padding:7px 10px;text-align:center;margin-top:8px;font-weight:700">⭐ ออเดอร์นี้จะได้รับ '+ep+' แต้ม เมื่อร้านยืนยันรับเงิน</div>';
@@ -4120,14 +4120,14 @@ async function openPayment(order){
   const cfg = commerceCfg();
   document.getElementById('pay-ppname').textContent = cfg.promptpayName || '';
   const qrBox = document.getElementById('pay-qr');
-  qrBox.innerHTML = '<div style="color:var(--muted);font-size:13px">กำลังสร้าง QR...</div>';
+  qrBox.innerHTML = '<div style="color:var(--muted);font-size:var(--fs-sm)">กำลังสร้าง QR...</div>';
   const st = document.getElementById('pay-slip-status'); if(st) st.textContent = '';
   try {
     await ensureQrLib();
     const payload = ppPayload(cfg.promptpayId, amt);
     const qr = qrcode(0,'M'); qr.addData(payload); qr.make();
     qrBox.innerHTML = qr.createImgTag(5, 0);
-  } catch(e){ qrBox.innerHTML = '<div style="color:#e41e3f;font-size:13px">สร้าง QR ไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
+  } catch(e){ qrBox.innerHTML = '<div style="color:#e41e3f;font-size:var(--fs-sm)">สร้าง QR ไม่สำเร็จ: '+escapeHtml(e.message)+'</div>'; }
 }
 function closePayment(){ const m=document.getElementById('paymentModal'); if(m) m.classList.remove('open'); }
 
@@ -4186,7 +4186,7 @@ async function openMyOrders(){
       if (o.status==='shipped' && o.trackingNumber) extra = '<div class="ord-track">📮 พัสดุ: '+escapeHtml(o.trackingNumber)+'</div>';
       var sh = o.shipping || {};
       var canEditAddr = ['pending_payment','paid_review','confirmed'].indexOf(o.status) > -1;
-      var addrLine = (sh.name||sh.addressLine) ? ('<div style="font-size:12px;color:var(--muted);margin-top:4px">📍 '+escapeHtml([sh.name, sh.addressLine, sh.province].filter(Boolean).join(' '))+'</div>') : '';
+      var addrLine = (sh.name||sh.addressLine) ? ('<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">📍 '+escapeHtml([sh.name, sh.addressLine, sh.province].filter(Boolean).join(' '))+'</div>') : '';
       return '<div class="ord-card">'+
         '<div class="ord-top"><span class="ord-id">#'+o.id.slice(-6).toUpperCase()+'</span>'+
         '<span class="ord-badge" style="background:'+s.c+'">'+s.t+'</span></div>'+
@@ -4194,7 +4194,7 @@ async function openMyOrders(){
         addrLine +
         '<div class="ord-bot"><span class="ord-date">'+dt+'</span><span class="ord-total">'+baht(o.total||0)+'</span></div>'+
         extra +
-        (canEditAddr ? '<button onclick="editOrderAddress(\''+o.id+'\')" style="width:100%;margin-top:8px;background:#fff;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-weight:600;font-size:13px;cursor:pointer">✏️ แก้ไขที่อยู่จัดส่ง</button>' : '')+
+        (canEditAddr ? '<button onclick="editOrderAddress(\''+o.id+'\')" style="width:100%;margin-top:8px;background:#fff;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-weight:600;font-size:var(--fs-sm);cursor:pointer">✏️ แก้ไขที่อยู่จัดส่ง</button>' : '')+
         (o.status==='pending_payment' ? '<button class="ord-pay" onclick="resumePayment(\''+o.id+'\')">ชำระเงิน</button>' : '')+
       '</div>';
     }).join('');
@@ -4222,14 +4222,14 @@ async function editOrderAddress(id){
     const sh = o.shipping || {};
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
-    const f = function(label,key,val,ph){ return '<label style="display:block;font-size:12px;color:var(--muted);margin:8px 0 3px">'+label+'</label><input id="ea-'+key+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px">'; };
+    const f = function(label,key,val,ph){ return '<label style="display:block;font-size:var(--fs-xs);color:var(--muted);margin:8px 0 3px">'+label+'</label><input id="ea-'+key+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-sm)">'; };
     ov.innerHTML = '<div style="background:#fff;border-radius:16px 16px 0 0;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:18px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:17px;font-weight:800">✏️ แก้ไขที่อยู่จัดส่ง</div><div id="ea-x" style="cursor:pointer;font-size:22px;color:#888">✕</div></div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:var(--fs-md);font-weight:800">✏️ แก้ไขที่อยู่จัดส่ง</div><div id="ea-x" style="cursor:pointer;font-size:var(--fs-lg);color:#888">✕</div></div>'+
       f('ชื่อผู้รับ','name',sh.name)+ f('เบอร์โทร','phone',sh.phone)+ f('ที่อยู่','addressLine',sh.addressLine,'บ้านเลขที่ ถนน')+
       '<div style="display:flex;gap:8px"><div style="flex:1">'+f('ตำบล/แขวง','subdistrict',sh.subdistrict)+'</div><div style="flex:1">'+f('อำเภอ/เขต','district',sh.district)+'</div></div>'+
       '<div style="display:flex;gap:8px"><div style="flex:1">'+f('จังหวัด','province',sh.province)+'</div><div style="flex:1">'+f('รหัสไปรษณีย์','postcode',sh.postcode)+'</div></div>'+
       f('หมายเหตุถึงร้าน','note',sh.note)+
-      '<button id="ea-save" style="width:100%;margin-top:14px;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:12px;font-weight:800;font-size:15px;cursor:pointer">บันทึกที่อยู่</button>'+
+      '<button id="ea-save" style="width:100%;margin-top:14px;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:12px;font-weight:800;font-size:var(--fs-base);cursor:pointer">บันทึกที่อยู่</button>'+
     '</div>';
     document.body.appendChild(ov);
     const close = function(){ if(ov.parentNode) document.body.removeChild(ov); };
@@ -4410,11 +4410,11 @@ function relSectionHtml(list){
       + 'padding:12px 12px 12px 14px;display:flex;align-items:center;gap:10px;z-index:9999;animation:pwaUp .25s ease}'
       + '@keyframes pwaUp{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}'
       + '.pwa-bar img{width:40px;height:40px;border-radius:10px;flex-shrink:0}'
-      + '.pwa-bar .tx{flex:1;min-width:0}.pwa-bar .t1{font-size:14px;font-weight:800;color:#1c1e21;line-height:1.3}'
-      + '.pwa-bar .t2{font-size:12px;color:#65676b;line-height:1.3;margin-top:1px}'
-      + '.pwa-bar .go{background:#2f9e6e;color:#fff;border:none;border-radius:10px;padding:9px 15px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0}'
+      + '.pwa-bar .tx{flex:1;min-width:0}.pwa-bar .t1{font-size:var(--fs-sm);font-weight:800;color:#1c1e21;line-height:1.3}'
+      + '.pwa-bar .t2{font-size:var(--fs-xs);color:#65676b;line-height:1.3;margin-top:1px}'
+      + '.pwa-bar .go{background:#2f9e6e;color:#fff;border:none;border-radius:10px;padding:9px 15px;font-size:var(--fs-sm);font-weight:800;cursor:pointer;flex-shrink:0}'
       + '.pwa-bar .go:active{transform:scale(.96)}'
-      + '.pwa-bar .x{background:none;border:none;color:#8a8d91;font-size:20px;line-height:1;cursor:pointer;padding:4px;flex-shrink:0}';
+      + '.pwa-bar .x{background:none;border:none;color:#8a8d91;font-size:var(--fs-lg);line-height:1;cursor:pointer;padding:4px;flex-shrink:0}';
     document.head.appendChild(s);
     bar = document.createElement('div');
     bar.className = 'pwa-bar';
