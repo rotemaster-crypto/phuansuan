@@ -59,6 +59,9 @@ test('purchase: ยอด 500, กติกา 1 แต้ม/100฿ → +5 แ�
   assert.equal(o.pointsAwarded, true);
   assert.equal(o.pointsEarned, 5);
   assert.equal((await read(`tenants/${TID}/users/${uid}`)).points, 5);
+  const c = await waitUntil(`tenants/${TID}/earnCampaigns/c1`, (c) => (c.grantedPoints || 0) >= 5);
+  assert.equal(c.grantedPoints, 5);   // analytics counter = แต้มที่แคมเปญแจกจริง
+  assert.equal(c.grantCount, 1);
 });
 
 // ── multiplier x2 → 10 แต้ม ─────────────────────────────────
@@ -112,6 +115,9 @@ test('post: โบนัสแคมเปญ +5 บวกจากแต้ม�
   const u = await waitUntil(`tenants/${TID}/users/${uid}`, (u) => (u.postCount || 0) >= 1);
   assert.equal(u.postCount, 1);
   assert.equal(u.points, 15);   // 10 (perPost default) + 5 (โบนัสแคมเปญ)
+  const c = await waitUntil(`tenants/${TID}/earnCampaigns/c1`, (c) => (c.grantedPoints || 0) >= 5);
+  assert.equal(c.grantedPoints, 5);   // นับเฉพาะโบนัสแคมเปญ (ไม่รวม perPost)
+  assert.equal(c.grantCount, 1);
 });
 
 // ── โบนัสโพสต์ x3 → perPost(10) + 5*3 = 25 ───────────────────

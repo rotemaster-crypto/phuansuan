@@ -47,7 +47,8 @@
 - [x] ~~Predictions~~ — ✅ 2026-08-27: edit (prefill+update, ล็อกโหมด/ตัวเลือกเมื่อมีคนทายแล้ว, ไม่แตะ status/counter) + analytics modal (distribution answer→count/%) + เฉลยจาก dropdown/input แทน `prompt()` ตาบอด · pure `tallyPredictionEntries()` เทสผ่าน
 - [x] ~~Lucky Draw~~ — ✅ 2026-08-27: edit (serialize prizes→textarea, **คง awarded เดิมด้วย `_ldMergeAwarded` กัน stock พัง**, ไม่แตะ spins/createdAt) + analytics modal (`tallyLuckyPrizes`: การกระจายรางวัล awarded/spins %/remaining) · เทสผ่าน
 - [x] ~~Missions~~ — ✅ 2026-08-27: edit (ไม่แตะ claimCount/createdAt) + `claimCount` increment ใน `claimMission` (ใน tx เดียวกับ guard cSnap.exists = idempotent นับครั้งเดียว/user) + e2e (assert นับ 1 + ไม่นับซ้ำตอนรับซ้ำ) + analytics modal (คนทำสำเร็จ)
-- [ ] **Earn** — edit + เพิ่ม `grantCount`/`grantedPoints` ใน trigger จ่ายแต้ม + e2e + analytics · **M** (แตะ backend)
+- [x] ~~Earn~~ — ✅ 2026-08-27: edit (ไม่แตะ grantCount/grantedPoints/createdAt) + counter `grantCount`/`grantedPoints` ใน onOrderConfirmed (ใน guard pointsAwarded) + onPostCreated (per-campaign, คูณโปรฯ) + e2e (assert แต้มที่แจกถูกนับ) + analytics modal (แต้มที่แจก/จำนวนครั้ง)
+- **✅ Activity Engine ครบทั้ง 4 engine** (edit + analytics + counter-on-doc) — modal `.act-modal` + convention `editId` ใช้ซ้ำทั้งชุด
 
 ### Admin — อื่นๆ
 - [ ] products: category hardcode (`catEmojiA` 2169) · ไม่มี bulk/sort · search แค่ชื่อ · `PC_TIERS` (2177) hardcode 0/5/10/15 เสี่ยง drift กับ config.js · **M/S**

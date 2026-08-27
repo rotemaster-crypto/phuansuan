@@ -1414,14 +1414,15 @@ async function activeEarnCampaigns(tid, trigger, nowMs) {
   try {
     snap = await troot(tid).collection("earnCampaigns").where("trigger", "==", trigger).get();
   } catch (e) { return []; }
-  return snap.docs.map((d) => d.data()).filter((c) => {
+  return snap.docs.filter((d) => {
+    const c = d.data();
     if (c.active === false) return false;
     const s = c.startAt && typeof c.startAt.toMillis === "function" ? c.startAt.toMillis() : null;
     const e = c.endAt && typeof c.endAt.toMillis === "function" ? c.endAt.toMillis() : null;
     if (s !== null && nowMs < s) return false;
     if (e !== null && nowMs > e) return false;
     return true;
-  });
+  }).map((d) => Object.assign({ _ref: d.ref }, d.data()));   // แนบ _ref เพื่อเขียน analytics counter กลับ (counter-on-doc)
 }
 
 // โปรฯ คูณแต้มทั้งร้าน (settings/promo) — คูณแต้มทุกอย่าง (ซื้อ+โพสต์) ในช่วงเวลา
@@ -1452,11 +1453,13 @@ exports.onPostCreated = onDocumentCreated(
     const pts = post.imageUrl ? P.perPostWithImg : P.perPost;
     // โบนัสจากแคมเปญแต้ม trigger=post (บวกเพิ่มจากแต้มโพสต์ปกติ)
     let bonus = 0;
+    const contribs = [];   // {ref, raw} ต่อแคมเปญ (ไว้บันทึก analytics)
     const camps = await activeEarnCampaigns(tid, "post", Date.now());
     for (const c of camps) {
       const bp = Math.max(0, Math.floor(_num(c.bonusPoints, 0)));
       const mult = Math.max(1, _num(c.multiplier, 1));
-      bonus += Math.floor(bp * mult);
+      const raw = Math.floor(bp * mult);
+      if (raw > 0) { bonus += raw; contribs.push({ ref: c._ref, raw: raw }); }
     }
     // โปรฯ คูณทั้งร้าน คูณแต้มโพสต์ทั้งก้อน (perPost ปกติ + โบนัสแคมเปญ)
     const promo = await getPromoMultiplier(tid, Date.now());
@@ -1467,6 +1470,11 @@ exports.onPostCreated = onDocumentCreated(
       postCount: FieldValue.increment(1),
     });
     await updateTier(ref, tid);
+    // analytics counter ต่อแคมเปญ (counter-on-doc) — แต้มโบนัสที่แจก (คูณโปรฯ แล้ว)
+    for (const ct of contribs) {
+      const g = Math.floor(ct.raw * promo);
+      if (g > 0 && ct.ref) await ct.ref.update({ grantCount: FieldValue.increment(1), grantedPoints: FieldValue.increment(g) }).catch((e) => console.error("bg-write failed:", e && e.message));
+    }
     // A3: เก็บแต้มที่ให้จริงไว้บนโพสต์ เพื่อคืนได้เป๊ะตอนลบ (campaign/promo อาจเปลี่ยนภายหลัง)
     await event.data.ref.update({ pointsAwarded: total }).catch((e) => console.error("bg-write failed:", e && e.message));
     // group post counter (โพสต์ในกลุ่ม → นับให้กลุ่ม)
@@ -1624,13 +1632,15 @@ exports.onOrderConfirmed = onDocumentUpdated(
 
     const camps = await activeEarnCampaigns(tid, "purchase", Date.now());
     let pts = 0;
+    const contribs = [];   // {ref, raw} — แต้มก่อนคูณโปรฯ ต่อแคมเปญ (ไว้บันทึก analytics)
     for (const c of camps) {
       const per  = Math.max(1, Math.floor(_num(c.ratePerBaht, 0)));
       const rp   = Math.max(0, Math.floor(_num(c.ratePoints, 0)));
       const min  = Math.max(0, Math.floor(_num(c.minSpend, 0)));
       const mult = Math.max(1, _num(c.multiplier, 1));
       if (!rp || subtotal < min) continue;
-      pts += Math.floor(Math.floor(subtotal / per) * rp * mult);
+      const raw = Math.floor(Math.floor(subtotal / per) * rp * mult);
+      if (raw > 0) { pts += raw; contribs.push({ ref: c._ref, raw: raw }); }
     }
     // โปรฯ คูณทั้งร้าน คูณแต้มจากการซื้อทั้งหมด (สแต็กกับตัวคูณราย campaign)
     const promo = await getPromoMultiplier(tid, Date.now());
@@ -1641,6 +1651,11 @@ exports.onOrderConfirmed = onDocumentUpdated(
     const uref = troot(tid).collection("users").doc(uid);
     await uref.update({ points: FieldValue.increment(pts) });
     await updateTier(uref, tid);
+    // analytics counter ต่อแคมเปญ (counter-on-doc) — อยู่ในช่วง guard pointsAwarded = สอดคล้องกับแต้มที่ให้จริง
+    for (const ct of contribs) {
+      const g = Math.floor(ct.raw * promo);
+      if (g > 0 && ct.ref) await ct.ref.update({ grantCount: FieldValue.increment(1), grantedPoints: FieldValue.increment(g) }).catch((e) => console.error("bg-write failed:", e && e.message));
+    }
     await orderRef.update({ pointsAwarded: true, pointsEarned: pts }).catch((e) => console.error("bg-write failed:", e && e.message));
   }
 );

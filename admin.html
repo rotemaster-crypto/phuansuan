@@ -1131,7 +1131,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
       <div class="fg"><label>สิ้นสุด (เว้นว่าง=ไม่จำกัด)</label><input type="datetime-local" id="ec-end"></div>
       <div class="fg"><label>เปิดใช้งาน</label><label class="toggle"><input type="checkbox" id="ec-active" checked><span class="toggle-slider"></span></label></div>
     </div>
-    <div class="save-row"><button class="btn btn-primary" onclick="addEarnCampaign()"><svg class="ic"><use href="#i-plus"/></svg> สร้างแคมเปญ</button></div>
+    <div id="ec-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px"></div>
+    <div class="save-row">
+      <button class="btn btn-primary" id="ec-submit" onclick="addEarnCampaign()"><svg class="ic"><use href="#i-plus"/></svg> สร้างแคมเปญ</button>
+      <button class="btn btn-ghost" id="ec-cancel" style="display:none" onclick="cancelEarnEdit()">ยกเลิกแก้ไข</button>
+    </div>
   </div>
   <div class="card"><div class="card-title">📋 แคมเปญทั้งหมด</div>
     <div id="earn-list"><div class="empty-state">กำลังโหลด...</div></div>
@@ -2635,32 +2639,94 @@ function ecTs(id){
   var d = new Date(v);
   return isNaN(d.getTime()) ? null : firebase.firestore.Timestamp.fromDate(d);
 }
+var _ecEditId = null;
+function _ecSetEditMode(on){
+  var btn=document.getElementById('ec-submit'), cancel=document.getElementById('ec-cancel'), banner=document.getElementById('ec-edit-banner');
+  if (btn) btn.innerHTML = on ? '<svg class="ic"><use href="#i-check"/></svg> บันทึกการแก้ไข' : '<svg class="ic"><use href="#i-plus"/></svg> สร้างแคมเปญ';
+  if (cancel) cancel.style.display = on ? '' : 'none';
+  if (banner){ banner.style.display = on ? '' : 'none'; if (on) banner.textContent = '✏️ กำลังแก้ไขแคมเปญนี้ (แต้มที่แจกไปแล้วไม่ถูกแตะ)'; }
+}
+function cancelEarnEdit(){
+  _ecEditId = null;
+  document.getElementById('ec-name').value='';
+  _ecSetEditMode(false);
+}
+async function openEarnEdit(id){
+  try {
+    var s = await aDb().collection('earnCampaigns').doc(id).get();
+    if (!s.exists) return;
+    var c = s.data();
+    _ecEditId = id;
+    document.getElementById('ec-name').value = c.name || '';
+    document.getElementById('ec-trigger').value = c.trigger || 'purchase';
+    document.getElementById('ec-mult').value = String(c.multiplier || 1);
+    document.getElementById('ec-active').checked = c.active !== false;
+    document.getElementById('ec-start').value = _tsToLocal(c.startAt);
+    document.getElementById('ec-end').value = _tsToLocal(c.endAt);
+    if (c.trigger === 'purchase'){
+      document.getElementById('ec-rate-pts').value = c.ratePoints || 0;
+      document.getElementById('ec-rate-baht').value = c.ratePerBaht || 1;
+      document.getElementById('ec-min').value = c.minSpend || 0;
+    } else {
+      document.getElementById('ec-bonus').value = c.bonusPoints || 0;
+    }
+    earnTriggerUI();
+    _ecSetEditMode(true);
+    document.getElementById('ec-name').scrollIntoView({ behavior:'smooth', block:'center' });
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
 async function addEarnCampaign(){
   var name = document.getElementById('ec-name').value.trim();
   if (!name){ toast('❌ กรอกชื่อแคมเปญ','error'); return; }
   var trigger = document.getElementById('ec-trigger').value;
-  var doc = {
+  // เฉพาะ field config — ตอน edit ไม่แตะ grantCount/grantedPoints/createdAt
+  var editable = {
     name: name, trigger: trigger,
     multiplier: Math.max(1, Number(document.getElementById('ec-mult').value)||1),
     active: document.getElementById('ec-active').checked,
-    startAt: ecTs('ec-start'), endAt: ecTs('ec-end'),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    startAt: ecTs('ec-start'), endAt: ecTs('ec-end')
   };
   if (trigger === 'purchase'){
-    doc.ratePoints  = Math.max(0, Math.floor(Number(document.getElementById('ec-rate-pts').value)||0));
-    doc.ratePerBaht = Math.max(1, Math.floor(Number(document.getElementById('ec-rate-baht').value)||1));
-    doc.minSpend    = Math.max(0, Math.floor(Number(document.getElementById('ec-min').value)||0));
-    if (!doc.ratePoints){ toast('❌ ใส่จำนวนแต้มที่ได้','error'); return; }
+    editable.ratePoints  = Math.max(0, Math.floor(Number(document.getElementById('ec-rate-pts').value)||0));
+    editable.ratePerBaht = Math.max(1, Math.floor(Number(document.getElementById('ec-rate-baht').value)||1));
+    editable.minSpend    = Math.max(0, Math.floor(Number(document.getElementById('ec-min').value)||0));
+    if (!editable.ratePoints){ toast('❌ ใส่จำนวนแต้มที่ได้','error'); return; }
   } else {
-    doc.bonusPoints = Math.max(0, Math.floor(Number(document.getElementById('ec-bonus').value)||0));
-    if (!doc.bonusPoints){ toast('❌ ใส่แต้มโบนัสต่อโพสต์','error'); return; }
+    editable.bonusPoints = Math.max(0, Math.floor(Number(document.getElementById('ec-bonus').value)||0));
+    if (!editable.bonusPoints){ toast('❌ ใส่แต้มโบนัสต่อโพสต์','error'); return; }
   }
   try {
-    await aDb().collection('earnCampaigns').add(doc);
-    toast('✅ สร้างแคมเปญแล้ว','success');
-    document.getElementById('ec-name').value='';
+    if (_ecEditId){
+      await aDb().collection('earnCampaigns').doc(_ecEditId).update(editable);
+      toast('✅ บันทึกการแก้ไขแล้ว','success');
+      cancelEarnEdit();
+    } else {
+      await aDb().collection('earnCampaigns').add(Object.assign({ grantCount:0, grantedPoints:0, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, editable));
+      toast('✅ สร้างแคมเปญแล้ว','success');
+      document.getElementById('ec-name').value='';
+    }
     loadEarnCampaigns();
   } catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function openEarnStats(id){
+  document.getElementById('act-title').textContent = 'ผลแคมเปญแต้ม';
+  var body = document.getElementById('act-body');
+  body.innerHTML = '<div class="empty-state" style="padding:10px">กำลังโหลด...</div>';
+  openActModal();
+  try {
+    var s = await aDb().collection('earnCampaigns').doc(id).get();
+    if (!s.exists){ body.innerHTML = '<div class="empty-state">ไม่พบแคมเปญ</div>'; return; }
+    var c = s.data();
+    var grantedPoints = Math.max(0, Math.floor(Number(c.grantedPoints)||0));
+    var grantCount = Math.max(0, Math.floor(Number(c.grantCount)||0));
+    body.innerHTML = '<div style="font-weight:800;font-size:16px;margin-bottom:2px">'+escapeHtml(c.name||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:13px;margin-bottom:14px">'+ecDesc(c)+ecWindow(c)+'</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+        '<div class="stat-card" style="text-align:center"><div class="stat-val" style="color:var(--primary)">'+grantedPoints.toLocaleString()+'</div><div class="stat-label">แต้มที่แจกไปแล้ว</div></div>'+
+        '<div class="stat-card" style="text-align:center"><div class="stat-val">'+grantCount.toLocaleString()+'</div><div class="stat-label">จำนวนครั้งที่แจก</div></div>'+
+      '</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-top:10px">server เพิ่ม counter ตอนจ่ายจริง (คูณโปรฯ แล้ว) · counter-on-doc</div>';
+  } catch(e){ body.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml((e&&e.message)||e)+'</div>'; }
 }
 function ecDesc(c){
   var mult = (Number(c.multiplier)||1) > 1 ? ' <span class="pill" style="background:#fef3c7;color:#92400e">x'+c.multiplier+'</span>' : '';
@@ -2728,6 +2794,8 @@ async function loadEarnCampaigns(){
           '<div class="prod-sub"><span>'+ecDesc(c)+'</span><span style="color:var(--muted)">'+ecWindow(c)+'</span></div>'+
         '</div>'+
         '<div class="prod-acts">'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="openEarnStats(\''+c._id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button>'+
+          '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="openEarnEdit(\''+c._id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button>'+
           '<button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="toggleEarnCampaign(\''+c._id+'\','+(c.active!==false)+')">'+(off?'เปิด':'ปิด')+'</button>'+
           '<button class="btn btn-danger" style="padding:5px 9px;font-size:12px" onclick="deleteEarnCampaign(\''+c._id+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'+
         '</div>'+
