@@ -1,0 +1,11 @@
+# Deterministic line endings — repo stores LF for all text (checkout converts per-OS).
+# กัน EOL flip แบบที่เคยเกิดกับ admin.html (autocrlf อย่างเดียวไม่พอเมื่อ tool เขียน CRLF ปน)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
