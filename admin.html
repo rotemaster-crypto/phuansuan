@@ -1037,7 +1037,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
         <div style="font-size:12px;color:var(--muted);margin-top:4px"><b>ช่องส่วนลด:</b> ใส่ตัวเลข <code>50</code> = ลด ฿50 · <code>10%</code> = ลด 10% (ใช้ลดราคาจริงตอน checkout ได้) · ใส่ข้อความล้วนหรือเว้นว่าง = คูปองโชว์เฉยๆ ลดราคาไม่ได้ · ไม่ใส่ทั้งส่วนลด+โค้ด = ช่อง "ไม่ถูกรางวัล" · น้ำหนักยิ่งมากโอกาสยิ่งสูง · สต็อกว่าง = ไม่จำกัด</div>
       </div>
     </div>
-    <div class="save-row"><button class="btn btn-primary" onclick="addLuckyDraw()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกล่องสุ่ม</button></div>
+    <div id="ld-edit-banner" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px"></div>
+    <div class="save-row">
+      <button class="btn btn-primary" id="ld-submit" onclick="addLuckyDraw()"><svg class="ic"><use href="#i-plus"/></svg> สร้างกล่องสุ่ม</button>
+      <button class="btn btn-ghost" id="ld-cancel" style="display:none" onclick="cancelLuckyDrawEdit()">ยกเลิกแก้ไข</button>
+    </div>
   </div>
   <div class="card"><div class="card-title">📋 กล่องสุ่มทั้งหมด</div>
     <div class="table-wrap"><table>
@@ -2356,21 +2360,108 @@ function ldParsePrizes(text){
     };
   }).filter(Boolean).filter(function(p){ return p.weight > 0; });
 }
+// serialize prize กลับเป็นบรรทัด textarea (สำหรับ prefill edit)
+function _ldPrizeToLine(p){
+  var disc = p.discountType==='percent' ? (p.discountValue+'%') : (p.discountType==='fixed' ? String(p.discountValue) : (p.discountText||''));
+  return [p.label||'', disc, p.couponCode||'', p.weight||0, (p.stock==null?'':p.stock)].join(' | ');
+}
+// pure: คง awarded เดิมไว้ตอน edit (จับคู่ด้วย label+code) — กัน stock accounting พัง (awarded = server-managed)
+function _ldMergeAwarded(newPrizes, oldPrizes){
+  var byKey = {};
+  (oldPrizes||[]).forEach(function(p){ byKey[(p.label||'')+' '+(p.couponCode||'')] = Math.max(0, Math.floor(Number(p.awarded)||0)); });
+  return newPrizes.map(function(p){
+    var k = (p.label||'')+' '+(p.couponCode||'');
+    return Object.assign({}, p, { awarded: byKey[k] != null ? byKey[k] : 0 });
+  });
+}
+var _ldEditId = null, _ldEditOldPrizes = null;
+function _ldSetEditMode(on, spins){
+  var btn=document.getElementById('ld-submit'), cancel=document.getElementById('ld-cancel'), banner=document.getElementById('ld-edit-banner');
+  if (btn) btn.innerHTML = on ? '<svg class="ic"><use href="#i-check"/></svg> บันทึกการแก้ไข' : '<svg class="ic"><use href="#i-plus"/></svg> สร้างกล่องสุ่ม';
+  if (cancel) cancel.style.display = on ? '' : 'none';
+  if (banner){ banner.style.display = on ? '' : 'none'; if (on) banner.textContent = spins>0 ? ('✏️ กำลังแก้ไข — หมุนไปแล้ว '+spins+' ครั้ง · จำนวนที่แจก (awarded) ของรางวัลเดิมถูกเก็บไว้ให้อัตโนมัติ') : '✏️ กำลังแก้ไขกล่องสุ่มนี้'; }
+}
+function cancelLuckyDrawEdit(){
+  _ldEditId = null; _ldEditOldPrizes = null;
+  document.getElementById('ld-name').value=''; document.getElementById('ld-prizes').value='';
+  _ldSetEditMode(false, 0);
+}
+async function openLuckyDrawEdit(id){
+  try {
+    var s = await aDb().collection('luckyDraws').doc(id).get();
+    if (!s.exists) return;
+    var v = s.data();
+    _ldEditId = id; _ldEditOldPrizes = Array.isArray(v.prizes) ? v.prizes : [];
+    document.getElementById('ld-name').value = v.name || '';
+    document.getElementById('ld-cost').value = v.costPoints || 0;
+    document.getElementById('ld-active').checked = v.active !== false;
+    document.getElementById('ld-prizes').value = _ldEditOldPrizes.map(_ldPrizeToLine).join('\n');
+    _ldSetEditMode(true, v.spins || 0);
+    document.getElementById('ld-name').scrollIntoView({ behavior:'smooth', block:'center' });
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
 async function addLuckyDraw(){
   var name = document.getElementById('ld-name').value.trim();
   if (!name){ toast('❌ กรอกชื่อกิจกรรม','error'); return; }
   var prizes = ldParsePrizes(document.getElementById('ld-prizes').value);
   if (!prizes.length){ toast('❌ ใส่รางวัลอย่างน้อย 1 รายการ (น้ำหนัก > 0)','error'); return; }
   try {
-    await aDb().collection('luckyDraws').add({
-      name: name, costPoints: Math.max(0, Math.floor(Number(document.getElementById('ld-cost').value)||0)),
-      active: document.getElementById('ld-active').checked, prizes: prizes, spins: 0,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    toast('✅ สร้างกล่องสุ่มแล้ว','success');
-    document.getElementById('ld-name').value=''; document.getElementById('ld-prizes').value='';
+    if (_ldEditId){
+      prizes = _ldMergeAwarded(prizes, _ldEditOldPrizes);   // คง awarded เดิม — ไม่แตะ spins/createdAt
+      await aDb().collection('luckyDraws').doc(_ldEditId).update({
+        name: name, costPoints: Math.max(0, Math.floor(Number(document.getElementById('ld-cost').value)||0)),
+        active: document.getElementById('ld-active').checked, prizes: prizes
+      });
+      toast('✅ บันทึกการแก้ไขแล้ว','success');
+      cancelLuckyDrawEdit();
+    } else {
+      await aDb().collection('luckyDraws').add({
+        name: name, costPoints: Math.max(0, Math.floor(Number(document.getElementById('ld-cost').value)||0)),
+        active: document.getElementById('ld-active').checked, prizes: prizes, spins: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      toast('✅ สร้างกล่องสุ่มแล้ว','success');
+      document.getElementById('ld-name').value=''; document.getElementById('ld-prizes').value='';
+    }
     loadLuckyDraws();
   } catch(e){ toast('❌ '+e.message,'error'); }
+}
+// pure: การกระจายรางวัลจริงจาก awarded/spins (analytics — อ่าน doc ไม่ scan)
+function tallyLuckyPrizes(prizes, spins){
+  var total = Math.max(0, Math.floor(Number(spins)||0));
+  return (prizes||[]).map(function(p){
+    var awarded = Math.max(0, Math.floor(Number(p.awarded)||0));
+    var stock = (p.stock==null) ? null : Math.max(0, Math.floor(Number(p.stock)||0));
+    return {
+      label: p.label||'', type: p.type||'coupon', awarded: awarded,
+      pct: total ? Math.round(awarded*100/total) : 0,
+      remaining: (stock==null) ? null : Math.max(0, stock - awarded)
+    };
+  }).sort(function(a,b){ return b.awarded - a.awarded; });
+}
+async function openLuckyDrawStats(id){
+  document.getElementById('act-title').textContent = 'ผลกล่องสุ่ม';
+  var body = document.getElementById('act-body');
+  body.innerHTML = '<div class="empty-state" style="padding:10px">กำลังโหลด...</div>';
+  openActModal();
+  try {
+    var s = await aDb().collection('luckyDraws').doc(id).get();
+    if (!s.exists){ body.innerHTML = '<div class="empty-state">ไม่พบกล่องสุ่ม</div>'; return; }
+    var v = s.data();
+    var rows = tallyLuckyPrizes(v.prizes, v.spins);
+    var html = '<div style="font-weight:800;font-size:16px;margin-bottom:2px">'+escapeHtml(v.name||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:13px;margin-bottom:14px">หมุนทั้งหมด '+(v.spins||0)+' ครั้ง · ค่าเข้า '+(v.costPoints||0)+' แต้ม/ครั้ง</div>'+
+      '<div style="font-weight:700;font-size:13px;margin-bottom:8px">การกระจายรางวัล</div>';
+    html += rows.length ? rows.map(function(r){
+      var remain = r.remaining==null ? 'ไม่จำกัด' : (r.remaining+' เหลือ');
+      var tag = r.type==='nothing' ? ' <span style="color:var(--muted)">(ไม่ถูกรางวัล)</span>' : '';
+      return '<div style="margin-bottom:8px">'+
+        '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>'+escapeHtml(r.label)+tag+'</span><span style="color:var(--muted)">'+r.awarded+' ครั้ง · '+r.pct+'% · '+remain+'</span></div>'+
+        '<div class="act-bar"><div style="width:'+r.pct+'%"></div></div>'+
+      '</div>';
+    }).join('') : '<div class="empty-state" style="padding:10px">ยังไม่มีรางวัล</div>';
+    body.innerHTML = html;
+  } catch(e){ body.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml((e&&e.message)||e)+'</div>'; }
 }
 async function loadLuckyDraws(){
   try {
@@ -2382,7 +2473,9 @@ async function loadLuckyDraws(){
       var pz = prizes.filter(function(p){return p.type!=='nothing';}).map(function(p){ return escapeHtml(p.label)+(p.stock!=null?(' ('+(p.stock-(p.awarded||0))+' เหลือ)'):''); }).join(', ') || '—';
       var st = v.active!==false ? '<span style="color:#16a34a;font-weight:700">เปิด</span>' : '<span style="color:#dc2626;font-weight:700">ปิด</span>';
       return '<tr><td style="font-weight:700">'+escapeHtml(v.name||'')+'</td><td>'+(v.costPoints||0)+' แต้ม</td><td style="font-size:12px">'+pz+'</td><td>'+(v.spins||0)+'</td><td>'+st+'</td>'+
-        '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="toggleLuckyDraw(\''+d.id+'\','+(v.active!==false)+')">'+(v.active!==false?'ปิด':'เปิด')+'</button> '+
+        '<td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="openLuckyDrawStats(\''+d.id+'\')"><svg class="ic"><use href="#i-flag"/></svg> ผล</button> '+
+        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="openLuckyDrawEdit(\''+d.id+'\')"><svg class="ic"><use href="#i-edit"/></svg> แก้</button> '+
+        '<button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="toggleLuckyDraw(\''+d.id+'\','+(v.active!==false)+')">'+(v.active!==false?'ปิด':'เปิด')+'</button> '+
         '<button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteLuckyDraw(\''+d.id+'\')"><svg class="ic"><use href="#i-trash"/></svg> ลบ</button></td></tr>';
     }).join('');
   } catch(e){ document.getElementById('luckydraw-table').innerHTML = '<tr><td colspan="6" class="empty-state">Error: '+escapeHtml(e.message)+'</td></tr>'; }

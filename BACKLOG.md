@@ -45,7 +45,7 @@
 ### Admin — Activity Engine (edit + analytics · counter-on-doc · กำลังทำยาว 4 engine)
 > design: [[activity-engine-crud-analytics]] · modal กลาง `.act-modal` + convention `editId` (สร้างจาก predictions ใช้ซ้ำ 3 engine ที่เหลือ)
 - [x] ~~Predictions~~ — ✅ 2026-08-27: edit (prefill+update, ล็อกโหมด/ตัวเลือกเมื่อมีคนทายแล้ว, ไม่แตะ status/counter) + analytics modal (distribution answer→count/%) + เฉลยจาก dropdown/input แทน `prompt()` ตาบอด · pure `tallyPredictionEntries()` เทสผ่าน
-- [ ] **Lucky Draw** — edit (รวม prize array) + analytics จาก `prizes[].awarded`/`spins` (อ่าน doc, ไม่ต้องแตะ backend) · **M**
+- [x] ~~Lucky Draw~~ — ✅ 2026-08-27: edit (serialize prizes→textarea, **คง awarded เดิมด้วย `_ldMergeAwarded` กัน stock พัง**, ไม่แตะ spins/createdAt) + analytics modal (`tallyLuckyPrizes`: การกระจายรางวัล awarded/spins %/remaining) · เทสผ่าน
 - [ ] **Missions** — edit + เพิ่ม `claimCount` ใน `claimMission` fn (idempotent tx เดิม) + e2e + analytics · **M** (แตะ backend)
 - [ ] **Earn** — edit + เพิ่ม `grantCount`/`grantedPoints` ใน trigger จ่ายแต้ม + e2e + analytics · **M** (แตะ backend)
 
