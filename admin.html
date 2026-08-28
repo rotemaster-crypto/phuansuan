@@ -1028,7 +1028,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div class="card-title" style="margin:0">📋 สินค้าทั้งหมด <span id="prod-count" style="color:var(--muted);font-weight:400;font-size:var(--fs-sm)"></span></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="prod-search" placeholder="🔍 ค้นหาชื่อสินค้า" oninput="renderProducts()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-sm)">
+        <input id="prod-search" placeholder="🔍 ค้นหา: ชื่อ / หมวด / รายละเอียด" oninput="renderProducts()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-sm)">
         <select id="prod-sort" onchange="onProductSort()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-sm)">
           <option value="recent">ล่าสุด</option>
           <option value="name">ชื่อ ก-ฮ</option>
@@ -2648,7 +2648,10 @@ function renderProducts() {
   const box = document.getElementById('products-list'); if (!box) return;
   renderProductBulkBar();
   const q = (document.getElementById('prod-search')?.value || '').trim().toLowerCase();
-  let list = q ? _products.filter(function(p){ return String(p.name||'').toLowerCase().indexOf(q)>=0; }) : _products;
+  let list = q ? _products.filter(function(p){
+    var cat = catInfo(p.category, _brandCats); var catNm = cat ? cat.name : (p.category||'');
+    return (String(p.name||'')+' '+catNm+' '+(p.desc||'')).toLowerCase().indexOf(q) >= 0;   // ชื่อ+หมวด+รายละเอียด
+  }) : _products;
   list = sortProducts(list, _prodSort);
   const cnt = document.getElementById('prod-count'); if (cnt) cnt.textContent = '('+_products.length+' รายการ)';
   if (!list.length){ box.innerHTML = '<div class="empty-state">'+(q?'ไม่พบสินค้าที่ค้นหา':'ยังไม่มีสินค้า')+'</div>'; return; }

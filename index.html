@@ -903,6 +903,9 @@ button .ic,a .ic{pointer-events:none}
     </div>
     <button class="ord-link" onclick="openMyOrders()"><svg class="ic"><use href="#i-package"/></svg> ออเดอร์</button>
   </div>
+  <div style="padding:10px 12px 0;background:#fff">
+    <input id="shop-search" oninput="renderProducts()" placeholder="🔍 ค้นหาสินค้าในร้าน" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:var(--fs-base);font-family:inherit;box-sizing:border-box">
+  </div>
   <div class="cat-bar" id="cat-bar"></div>
   <div id="feat-wrap" class="feat-wrap" style="display:none"><div class="feat-hd">🔥 สินค้าแนะนำ</div><div class="feat-row" id="feat-row"></div></div>
   <div class="prod-grid" id="prod-grid">
@@ -3774,11 +3777,22 @@ function discPct(p){
   if (p.oldPrice && p.price && p.oldPrice > p.price) return Math.round((1 - p.price / p.oldPrice) * 100);
   return 0;
 }
+// pure: สินค้าตรงคำค้นไหม (ชื่อ + รายละเอียด) — เทสได้
+function productMatchesQuery(p, q){
+  q = String(q||'').trim().toLowerCase();
+  if (!q) return true;
+  return [(p.name||''), (p.desc||'')].join(' ').toLowerCase().indexOf(q) > -1;
+}
 function renderProducts(){
   const grid = document.getElementById('prod-grid');
   if (!grid) return;
-  const list = shopProducts.filter(p => activeCat==='all' || p.category===activeCat);
-  if (!list.length){ grid.innerHTML = '<div class="shop-empty">'+(shopProducts.length ? 'ยังไม่มีสินค้าในหมวดนี้' : 'ยังไม่มีสินค้าในร้านตอนนี้')+'</div>'; return; }
+  const q = (document.getElementById('shop-search')||{}).value || '';
+  const list = shopProducts.filter(p => (activeCat==='all' || p.category===activeCat) && productMatchesQuery(p, q));
+  if (!list.length){
+    const msg = q.trim() ? 'ไม่พบสินค้าที่ค้นหา "'+escapeHtml(q.trim())+'"'
+      : (shopProducts.length ? 'ยังไม่มีสินค้าในหมวดนี้' : 'ยังไม่มีสินค้าในร้านตอนนี้');
+    grid.innerHTML = '<div class="shop-empty">'+msg+'</div>'; return;
+  }
   grid.innerHTML = list.map(function(p){
     var dp = discPct(p);
     var badge = p.badge ? '<div class="prod-badge">'+escapeHtml(p.badge)+'</div>' : '';

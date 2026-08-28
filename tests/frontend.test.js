@@ -172,6 +172,17 @@ test('admin/orderInDateRange: ไม่มี createdAt → ตกช่วง�
   assert.equal(orderInDateRange({}, '', ''), true);
 });
 
+// ── productMatchesQuery (customer shop search) — ชื่อ+รายละเอียด ──
+test('frontend/productMatchesQuery: ค้นชื่อ/รายละเอียด · ว่าง=ผ่านหมด', () => {
+  const { productMatchesQuery } = load(['productMatchesQuery']);
+  const p = { name: 'เสื้อยืดคอกลม', desc: 'ผ้าฝ้าย 100%' };
+  assert.equal(productMatchesQuery(p, ''), true, 'ไม่ค้น=ผ่านหมด');
+  assert.equal(productMatchesQuery(p, 'เสื้อ'), true);
+  assert.equal(productMatchesQuery(p, 'ฝ้าย'), true, 'match รายละเอียด');
+  assert.equal(productMatchesQuery(p, 'กางเกง'), false);
+  assert.equal(productMatchesQuery({ name: 'X' }, 'x'), true, 'case-insensitive + ไม่มี desc');
+});
+
 // ── effectiveCats / platformCatOf (หมวด 2 ชั้น marketplace-ready) ──
 test('categories/effectiveCats: fallback brand→platform→config + normalize', () => {
   const { effectiveCats } = loadAdmin(['effectiveCats']);

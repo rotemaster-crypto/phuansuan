@@ -171,7 +171,8 @@
 - **✅ Activity Engine ครบทั้ง 4 engine** (edit + analytics + counter-on-doc) — modal `.act-modal` + convention `editId` ใช้ซ้ำทั้งชุด
 
 ### Admin — อื่นๆ
-- [x] ~~products bulk/sort~~ — ✅ 2026-08-27: sort dropdown (ล่าสุด/ชื่อ ก-ฮ/ราคา/สต็อกน้อย→มาก/ขายดี · pure `sortProducts` เทสผ่าน) + bulk select (checkbox + bar: เปิดขาย/ปิดขาย/ลบ · Firestore batch atomic) · ยังเหลือ: category hardcode (`catEmojiA`) · `PC_TIERS` hardcode · search แค่ชื่อ
+- [x] ~~products bulk/sort~~ — ✅ 2026-08-27: sort dropdown + bulk select (Firestore batch atomic) · pure `sortProducts`
+- [x] ~~product search~~ — ✅ 2026-08-28: **ลูกค้า** เพิ่ม text search ในร้าน (`#shop-search` + pure `productMatchesQuery` ชื่อ+รายละเอียด · empty state บอกคำค้น) — เดิมมีแค่ filter หมวด · **admin** ขยาย search เป็น ชื่อ+หมวด+รายละเอียด (เดิมชื่ออย่างเดียว) · frontend test · ยังเหลือ: `PC_TIERS` hardcode (ไม่เกี่ยวหมวด)
 - [x] ~~courier: ไม่มี guard กันปิด mock (ไปโหมดจริง) ทั้งที่ `hasKey=false`~~ — ✅ 2026-08-28: `saveCourier` เตือน (confirm) เมื่อปิดโหมดทดสอบแต่ยังไม่มี key · หมายเหตุ: เซิร์ฟเวอร์ fail-safe เป็น mock อยู่แล้วถ้าไม่มี key (`functions/index.js:1102`) → guard นี้เป็น UX กัน admin เข้าใจผิด
 - [x] ~~team admin race~~ — ✅ 2026-08-27: `addTeamAdmin`/`removeTeamAdmin` ใช้ `arrayUnion`/`arrayRemove` (atomic) · rules ล็อกถูก
 - [x] ~~badges race~~ — ✅ 2026-08-27: `addBadge`/`deleteBadge`/`seedDefaultBadges` ใช้ `runTransaction` (`_badgeTxn` helper) แทน read-modify-write → atomic กัน lost update (badges เป็น array of object ใช้ arrayUnion/Remove ไม่สะดวก → transaction)
