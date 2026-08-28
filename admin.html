@@ -1261,6 +1261,14 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <button class="ofb" data-st="completed" onclick="filterOrders('completed',this)">สำเร็จ</button>
     <button class="ofb" data-st="cancelled" onclick="filterOrders('cancelled',this)">ยกเลิก</button>
   </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:var(--fs-sm);color:var(--muted)">
+    <span>ช่วงวันที่:</span>
+    <input type="date" id="ord-from" onchange="onOrderDateChange()" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-sm)">
+    <span>ถึง</span>
+    <input type="date" id="ord-to" onchange="onOrderDateChange()" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:var(--fs-sm)">
+    <button class="btn btn-ghost" style="font-size:var(--fs-xs)" onclick="document.getElementById('ord-from').value='';document.getElementById('ord-to').value='';onOrderDateChange()">ล้างช่วงวัน</button>
+    <span style="font-size:var(--fs-2xs)">· กรองจากออเดอร์ที่โหลดมา</span>
+  </div>
   <div id="orders-admin-list"><div class="empty-state">กำลังโหลด...</div></div>
 </div>
 
@@ -3917,7 +3925,7 @@ const ORDER_META = {
 
 let adminOrders = [];
 let adminOrderFilter = 'all';
-let _ordCursor = null, _ordEnd = false, _ordSearch = '';
+let _ordCursor = null, _ordEnd = false, _ordSearch = '', _ordFrom = '', _ordTo = '';
 let _ordSelected = {};   // id -> true (bulk select)
 const ORD_BATCH = 25;
 
@@ -4228,8 +4236,23 @@ function orderMatchesSearch(o, q){
     .join(' ').toLowerCase();
   return hay.indexOf(q) > -1;
 }
+// pure: ออเดอร์อยู่ในช่วงวันไหม (from/to = 'YYYY-MM-DD' local · ''=ไม่จำกัด) — เทสได้
+function orderInDateRange(o, from, to){
+  if (!from && !to) return true;
+  var sec = (o.createdAt && o.createdAt.seconds) ? o.createdAt.seconds : null;
+  if (sec == null) return false;   // ไม่มีวันที่ = ตกช่วงเมื่อมีการกรอง
+  var ms = sec * 1000;
+  if (from){ var f = new Date(from + 'T00:00:00'); if (!isNaN(f) && ms < f.getTime()) return false; }
+  if (to){   var t = new Date(to   + 'T23:59:59.999'); if (!isNaN(t) && ms > t.getTime()) return false; }
+  return true;
+}
+function onOrderDateChange(){
+  _ordFrom = (document.getElementById('ord-from')||{}).value || '';
+  _ordTo   = (document.getElementById('ord-to')||{}).value || '';
+  renderAdminOrders();
+}
 function _visibleOrders(){
-  return adminOrders.filter(function(o){ return (adminOrderFilter==='all' || o.status===adminOrderFilter) && orderMatchesSearch(o, _ordSearch); });
+  return adminOrders.filter(function(o){ return (adminOrderFilter==='all' || o.status===adminOrderFilter) && orderMatchesSearch(o, _ordSearch) && orderInDateRange(o, _ordFrom, _ordTo); });
 }
 // ---- CSV export ----
 // escape 1 cell + กัน CSV formula injection (field ขึ้นต้น = + - @ → นำหน้าด้วย ')

@@ -148,3 +148,19 @@ test('admin/parseStreakMilestones: ว่าง → []; days<=0 ถูกตั�
   assert.equal(parseStreakMilestones('').length, 0);
   assert.equal(parseStreakMilestones('0:100\n-3:50').length, 0, 'days<=0 ตัดทิ้ง');
 });
+
+// ── orderInDateRange (admin.html) — กรองออเดอร์ตามช่วงวัน (local) ──
+test('admin/orderInDateRange: ในช่วง/นอกช่วง/ขอบเขตเปิด', () => {
+  const { orderInDateRange } = loadAdmin(['orderInDateRange']);
+  const o = { createdAt: { seconds: Math.floor(new Date('2026-06-15T12:00:00').getTime() / 1000) } };
+  assert.equal(orderInDateRange(o, '', ''), true, 'ไม่ใส่ช่วง = ผ่านหมด');
+  assert.equal(orderInDateRange(o, '2026-06-15', '2026-06-15'), true, 'วันเดียวกันครอบทั้งวัน');
+  assert.equal(orderInDateRange(o, '2026-06-16', ''), false, 'ก่อน from');
+  assert.equal(orderInDateRange(o, '', '2026-06-14'), false, 'หลัง to');
+  assert.equal(orderInDateRange(o, '2026-06-01', '2026-06-30'), true, 'อยู่ในช่วง');
+});
+test('admin/orderInDateRange: ไม่มี createdAt → ตกช่วงเมื่อกรอง, ผ่านเมื่อไม่กรอง', () => {
+  const { orderInDateRange } = loadAdmin(['orderInDateRange']);
+  assert.equal(orderInDateRange({}, '2026-06-01', ''), false);
+  assert.equal(orderInDateRange({}, '', ''), true);
+});

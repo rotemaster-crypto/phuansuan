@@ -19,8 +19,9 @@
 - 🟡 แอดมิน **team admin ชื่อ/avatar/เจ้าของ** — resolve LINE id→โปรไฟล์ · pure `teamMemberView` + admin.html test (B13 เริ่ม) · deploy+push แล้ว (`f42a77d`)
 - 🟡 แอดมิน **โอนเจ้าของ** — callable `transferOwnership` + e2e 6/6 + UI ปุ่ม · deploy functions+push แล้ว (`d04bccf`)
 - 🟡 ลูกค้า **แจ้งเตือนสถานะออเดอร์** — trigger `onOrderStatusNotify` · e2e 5/5 · deploy functions+push แล้ว (`0c0614f`)
-- 🆕 **streak engine (เช็คอินต่อเนื่อง)** — callable `claimStreak` server-authoritative + rules lock A5 + client card + admin config · e2e 6/6 · rules 53/53 · frontend 14/14 · ยังไม่ commit · **ต้อง deploy functions+rules+hosting**
-- guard 9/9 · frontend 14/14 · owner 6/6 · ordernotify 5/5 · streak 6/6 · rules 53/53 เขียว
+- 🆕 **streak engine (เช็คอินต่อเนื่อง)** — callable `claimStreak` + rules lock A5 + client + admin config · e2e 6/6 · deploy functions+rules+hosting+push แล้ว (`402d27c`)
+- 🟡 แอดมิน **orders date-range filter** — pure `orderInDateRange` + input ช่วงวัน · export เคารพช่วง · frontend test · ยังไม่ commit · **deploy hosting**
+- guard 9/9 · frontend 16/16 · owner 6/6 · ordernotify 5/5 · streak 6/6 · rules 53/53 เขียว
 
 **(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
 
@@ -153,7 +154,8 @@
 ### Admin — orders
 - [x] ~~orders search~~ — ✅ 2026-08-27: search เลขออเดอร์/ชื่อ/เบอร์/tracking (client-side, pure `orderMatchesSearch` เทสผ่าน) + status tab เดิม
 - [x] ~~orders `.get()` ทั้ง collection~~ — ✅ 2026-08-27: server cursor pagination (`orderBy createdAt desc .limit(25)` + `startAfter`) + ปุ่ม "โหลดเพิ่ม" · footer โชว์ "แสดง X · โหลดมา Y · ครบแล้ว/โหลดเพิ่ม" (ไม่ silent truncate)
-  - หมายเหตุ: search/status filter ทำบน batch ที่โหลดมา (Firestore substring ไม่ได้) → ค้นไม่เจอบอกให้โหลดเพิ่ม · badge paid_review นับจากที่โหลด (paid_review = ล่าสุด อยู่ batch แรก) · date-range ยังไม่มี
+  - หมายเหตุ: search/status filter ทำบน batch ที่โหลดมา (Firestore substring ไม่ได้) → ค้นไม่เจอบอกให้โหลดเพิ่ม · badge paid_review นับจากที่โหลด (paid_review = ล่าสุด อยู่ batch แรก)
+- [x] ~~date-range filter~~ — ✅ 2026-08-28: input ช่วงวัน (from/to) + ปุ่มล้าง · pure `orderInDateRange` (local day · ''=ไม่จำกัด · ไม่มี createdAt=ตกช่วง) ประกอบใน `_visibleOrders` → Export CSV เคารพช่วงวันอัตโนมัติ · frontend test 2 เคส · กรองบน batch ที่โหลดมา (โน้ตใน UI)
 - [x] ~~export CSV + bulk select~~ — ✅ 2026-08-27: Export CSV (ที่แสดง/ที่เลือก) · pure `ordersToCsv()` เทสผ่าน · **CSV injection-safe** (field `=+-@` นำหน้า `'`) + BOM ให้ Excel อ่านไทย · checkbox เลือกหลายรายการ + bulk bar
 - [x] ~~bulk status change~~ — ✅ 2026-08-27: bulk ยืนยันรับเงิน (confirm dialog โชว์ยอดรวม)/จัดส่ง/ปิดออเดอร์/ยกเลิก ผ่าน setOrderStatus + adminCancelOrder (validate transition ฝั่ง server) · per-order try/catch → ข้ามอันที่ transition ไม่ได้ + สรุป · ยกเลิก→คืนสต็อก+reload products
 - [ ] mark COD เก็บแล้ว · partial refund · **M**
