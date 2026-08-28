@@ -16,8 +16,9 @@
 - 🟡 ลูกค้า **ติดตามพัสดุ** — `courierTrack` ชื่อขนส่ง+ลิงก์ติดตามทางการ (safeUrl) / รหัสไม่รู้จัก→ปุ่มคัดลอกเลข · frontend test 4 เคส · **deploy+verify prod แล้ว** (`6b557d8`)
 - 🟡 แอดมิน **guard ขนส่ง** — เตือนเมื่อปิดโหมดทดสอบแต่ไม่มี key (server fail-safe เป็น mock อยู่แล้ว) · deploy prod แล้ว
 - 🟡 ลูกค้า **deep-link `?post=`** — `maybeOpenDeepLinkPost` เปิดโพสต์จากลิงก์แชร์อัตโนมัติ (scroll+ไฮไลต์ / prepend เมื่อ paginate หลุด) · deploy+push แล้ว (`9cb7da1`)
-- 🟡 แอดมิน **team admin ชื่อ/avatar/เจ้าของ** — resolve LINE id→โปรไฟล์ · pure `teamMemberView` + admin.html test (B13 เริ่ม) · ยังไม่ commit · **เหลือ:** โอนเจ้าของ (callable)
-- guard 9/9 · frontend 12/12 เขียว
+- 🟡 แอดมิน **team admin ชื่อ/avatar/เจ้าของ** — resolve LINE id→โปรไฟล์ · pure `teamMemberView` + admin.html test (B13 เริ่ม) · deploy+push แล้ว (`f42a77d`)
+- 🟡 แอดมิน **โอนเจ้าของ** — callable `transferOwnership` (server-authoritative) + e2e 6/6 + UI ปุ่ม · ยังไม่ commit · **ต้อง deploy functions**
+- guard 9/9 · frontend 12/12 · owner e2e 6/6 เขียว
 
 **(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
 
@@ -169,7 +170,7 @@
 - [x] ~~team admin race~~ — ✅ 2026-08-27: `addTeamAdmin`/`removeTeamAdmin` ใช้ `arrayUnion`/`arrayRemove` (atomic) · rules ล็อกถูก
 - [x] ~~badges race~~ — ✅ 2026-08-27: `addBadge`/`deleteBadge`/`seedDefaultBadges` ใช้ `runTransaction` (`_badgeTxn` helper) แทน read-modify-write → atomic กัน lost update (badges เป็น array of object ใช้ arrayUnion/Remove ไม่สะดวก → transaction)
 - [x] ~~team admin: โชว์ UID ดิบ ไม่มีชื่อ/avatar/เจ้าของ~~ — ✅ 2026-08-28: `loadTeam` resolve LINE id → ชื่อ/avatar ผ่าน `_lookupUserByLineId` (query users.lineUserId) · pure `teamMemberView` (ชื่อ/initial/isOwner/resolved) · มาร์ค badge "เจ้าของ" + ซ่อนปุ่มลบเจ้าของ · เตือน "ยังไม่เคยเข้าระบบ" เมื่อยังไม่มี user doc · owner display resolve ชื่อด้วย · **frontend test 3 เคส (เริ่ม coverage admin.html — B13)**
-- [ ] **team admin (เหลือ): โอนเจ้าของ** — ต้อง callable `transferOwnership` (เขียน `tenant.ownerLineId` + set/clear claim `towner` · เฉพาะเจ้าของ/super เรียก · target ต้องเป็นสมาชิก) + e2e · **S–M** (server-authoritative — ห้ามทำ client)
+- [x] ~~**team admin: โอนเจ้าของ**~~ — ✅ 2026-08-28: callable `transferOwnership` (server-authoritative) — เจ้าของ (`towner[tid]`)/super เท่านั้น · ผู้รับต้องเป็นแอดมินร่วมอยู่แล้ว (adminLineIds) กันโอนให้คนนอก · runTransaction เขียน `ownerLineId`+arrayUnion · best-effort อัปเดต claim ทันที (`_setOwnerClaim`: ผู้รับ+towner, ผู้ให้ถอด towner คง tadmin) · **e2e 6/6** (`tests/owner.test.js`) · UI ปุ่ม "ตั้งเป็นเจ้าของ" (เฉพาะ owner/super เห็น) + confirm · **ต้อง deploy functions ด้วย**
 - [x] ~~bocean request 'provisioned' badge~~ — ✅ 2026-08-27: เพิ่ม `provisioned:{t:'สร้างร้านแล้ว',c:'#7b61ff'}` ใน BOCEAN_META (เดิม fallback grey + label ดิบ)
 
 ### Customer (index.html)

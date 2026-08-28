@@ -272,6 +272,57 @@ exports.createShop = onCall(async (req) => {
   return { ok: true, tid: tid };
 });
 
+// ── transferOwnership: โอนความเป็นเจ้าของร้านให้แอดมินร่วมคนอื่น ──
+//  server-authoritative: ownerLineId = source of truth (lineAuth recompute claim towner ตอน login)
+//  เฉพาะเจ้าของปัจจุบัน (towner[tid]) หรือ super-admin (admin) เรียกได้
+//  ผู้รับต้องเป็นแอดมินร่วมอยู่แล้ว (adminLineIds) — กันโอนให้คนนอก
+//  อัปเดต claim ทันทีแบบ best-effort (pattern เดียวกับ createShop) · ผู้ให้คง tadmin (ยังเป็นแอดมิน)
+async function _setOwnerClaim(lineId, tid, makeOwner) {
+  try {
+    const rec = await admin.auth().getUser(lineId);   // uid = LINE userId
+    const prev = rec.customClaims || {};
+    const tadmin = Object.assign({}, prev.tadmin || {});
+    const towner = Object.assign({}, prev.towner || {});
+    if (makeOwner) { tadmin[tid] = true; towner[tid] = true; }
+    else { delete towner[tid]; }   // ถอดเจ้าของ · คง tadmin (ยังเป็นแอดมินร่วม)
+    await admin.auth().setCustomUserClaims(lineId, Object.assign({}, prev, { tadmin: tadmin, towner: towner }));
+  } catch (e) { console.warn("transferOwnership setClaims:", lineId, e && e.message); }
+}
+exports.transferOwnership = onCall(async (req) => {
+  const tid = await resolveTid(req.data && req.data.tid);
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  const token = (req.auth && req.auth.token) || {};
+  const isSuper = token.admin === true;
+  const isOwner = !!(token.towner && token.towner[tid] === true);
+  if (!isSuper && !isOwner) throw new HttpsError("permission-denied", "เฉพาะเจ้าของร้าน (หรือผู้ดูแล Bocean) เท่านั้นที่โอนเจ้าของได้");
+  const newOwner = String((req.data && req.data.newOwnerLineId) || "").trim();
+  if (!/^U[0-9a-f]{32}$/i.test(newOwner)) throw new HttpsError("invalid-argument", "LINE User ID ของผู้รับโอนไม่ถูกต้อง");
+
+  const tr = troot(tid);
+  let oldOwner = null;
+  await admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(tr);
+    if (!snap.exists) throw new HttpsError("not-found", "ไม่พบร้าน");
+    const t = snap.data() || {};
+    oldOwner = t.ownerLineId || null;
+    if (oldOwner === newOwner) throw new HttpsError("failed-precondition", "ผู้รับโอนเป็นเจ้าของอยู่แล้ว");
+    const admins = Array.isArray(t.adminLineIds) ? t.adminLineIds : [];
+    if (admins.indexOf(newOwner) === -1) throw new HttpsError("failed-precondition", "ผู้รับโอนต้องเป็นแอดมินร่วมของร้านก่อน (เพิ่มในทีมแอดมิน + ให้เขา login LINE 1 ครั้ง)");
+    tx.update(tr, {
+      ownerLineId: newOwner,
+      adminLineIds: FieldValue.arrayUnion(newOwner),   // idempotent (ควรมีอยู่แล้ว)
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
+
+  // อัปเดต claim ทันที (best-effort — ownerLineId เป็น source of truth, lineAuth recompute ตอน login)
+  await _setOwnerClaim(newOwner, tid, true);
+  if (oldOwner && oldOwner !== newOwner) await _setOwnerClaim(oldOwner, tid, false);
+
+  return { ok: true, tid: tid, newOwnerLineId: newOwner, previousOwnerLineId: oldOwner };
+});
+
 // ── submitVerification (N5 stage ③): เจ้าของส่งเอกสารยืนยันตัวตน ──
 //  ผสม "เอกสาร + บัญชีตรงชื่อ" — เก็บ private/verification (rules: read เฉพาะ canManage, write ผ่าน function เท่านั้น)
 //  ไฟล์เอกสารอยู่ Storage path verifications/{tid}/... (storage.rules: อ่าน super-admin/owner, ไม่ public)
