@@ -13,9 +13,9 @@
 <meta name="apple-mobile-web-app-title" content="เพื่อนสวน">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-<script src="config.js"></script>
-<script src="firebase-config.js"></script>
-<script src="themes.js"></script>
+<script src="/config.js"></script>
+<script src="/firebase-config.js"></script>
+<script src="/themes.js"></script>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -1089,7 +1089,7 @@ button .ic,a .ic{pointer-events:none}
   </div>
 </div>
 
-<script src="config.js"></script>
+<script src="/config.js"></script>
 <script>
 // ══════════════════════════════════════════════════════════
 //  PHUANSUAN — Main App Script
@@ -3263,12 +3263,26 @@ async function loadFeed(mode, more) {
 
 function tdb(){ return db.collection('tenants').doc(tenantId()); }
 var _liveDomains = null;   // map host→tid โหลดสดจาก platform/domains (BYOD · super ตั้ง) · fallback config.js
+// path segment แรกเป็น tid ได้ไหม (bocean.com/brandx) — slug + ไม่ใช่คำสงวน/โฟลเดอร์ระบบ
+function isPlausibleTid(seg){
+  var R = { s:1, admin:1, api:1, www:1, app:1, static:1, assets:1, icons:1, bocean:1, office:1, sw:1, index:1 };
+  return /^[a-z0-9][a-z0-9-]{1,30}$/.test(String(seg||'')) && !R[seg] && seg.indexOf('.') === -1;
+}
 function tenantId() {
   const t = APP_CONFIG.tenant || {};
+  // 1) ?t= override (explicit)
   try { const qp = new URLSearchParams(location.search).get('t'); if (qp) return qp; } catch(e){}
   const host = (typeof location !== 'undefined' && location.hostname) || '';
-  if (typeof _liveDomains !== 'undefined' && _liveDomains && _liveDomains[host]) return _liveDomains[host];   // โดเมนที่ super ผูกไว้ (live)
-  return (t.domains && t.domains[host]) || t.id || 'phuansuan';        // fallback: config.js static
+  // 2) hostname → tenant (custom domain / subdomain · live map ก่อน แล้ว config)
+  if (typeof _liveDomains !== 'undefined' && _liveDomains && _liveDomains[host]) return _liveDomains[host];
+  if (t.domains && t.domains[host]) return t.domains[host];
+  // 3) path segment แรก = tid (bocean.com/brandx) — เฉพาะโดเมนแพลตฟอร์มที่ host ไม่ผูกร้าน
+  try {
+    const seg = ((location.pathname || '/').split('/').filter(Boolean)[0]) || '';
+    if (isPlausibleTid(seg)) return seg;
+  } catch(e){}
+  // 4) default
+  return t.id || 'phuansuan';
 }
 // โหลด map โดเมน→tenant สด (ต้องเสร็จก่อน tdb()/loadPlatformDesign เพื่อ resolve ให้ถูกร้าน)
 async function loadLiveDomains(){

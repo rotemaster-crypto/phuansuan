@@ -87,6 +87,34 @@ test('frontend/tenantId: live domain map (BYOD) ชนะ config.js static', () 
   const { tenantId } = load(['tenantId'], { APP_CONFIG, location, _liveDomains });
   assert.equal(tenantId(), 'newbrand', 'live map ต้องมาก่อน static config');
 });
+test('frontend/tenantId: path bocean.com/brandx → tid=brandx (host ไม่ผูกร้าน)', () => {
+  const APP_CONFIG = { tenant: { id: 'phuansuan', domains: {} } };
+  const location = { search: '', hostname: 'bocean.com', pathname: '/brandx' };
+  const { tenantId, isPlausibleTid } = load(['tenantId', 'isPlausibleTid'], { APP_CONFIG, location });
+  assert.equal(tenantId(), 'brandx');
+});
+test('frontend/tenantId: path คำสงวน (/admin) → ไม่ใช่ tid → default', () => {
+  const APP_CONFIG = { tenant: { id: 'phuansuan', domains: {} } };
+  const location = { search: '', hostname: 'bocean.com', pathname: '/admin' };
+  const { tenantId, isPlausibleTid } = load(['tenantId', 'isPlausibleTid'], { APP_CONFIG, location });
+  assert.equal(tenantId(), 'phuansuan');
+});
+test('frontend/tenantId: ?t= ยังชนะ path', () => {
+  const APP_CONFIG = { tenant: { id: 'phuansuan', domains: {} } };
+  const location = { search: '?t=explicit', hostname: 'bocean.com', pathname: '/brandx' };
+  const { tenantId, isPlausibleTid } = load(['tenantId', 'isPlausibleTid'], { APP_CONFIG, location });
+  assert.equal(tenantId(), 'explicit');
+});
+test('frontend/isPlausibleTid: slug ผ่าน · คำสงวน/ไฟล์/format ผิด ไม่ผ่าน', () => {
+  const { isPlausibleTid } = load(['isPlausibleTid']);
+  assert.equal(isPlausibleTid('brandx'), true);
+  assert.equal(isPlausibleTid('my-shop-2'), true);
+  assert.equal(isPlausibleTid('admin'), false, 'คำสงวน');
+  assert.equal(isPlausibleTid('s'), false, 'OG prefix');
+  assert.equal(isPlausibleTid('config.js'), false, 'มีจุด (ไฟล์)');
+  assert.equal(isPlausibleTid('A'), false, 'สั้นไป/ตัวใหญ่');
+  assert.equal(isPlausibleTid(''), false);
+});
 
 // ── courierTrack — รหัสขนส่ง → ชื่อ + ลิงก์ติดตาม ──
 test('frontend/courierTrack: รหัสรู้จัก → ชื่อ + ลิงก์ต่อเลขพัสดุ', () => {
