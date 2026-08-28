@@ -835,7 +835,10 @@ button .ic,a .ic{pointer-events:none}
   <div class="modal" style="border-radius:16px 16px 0 0">
     <div class="modal-body" style="padding-top:22px">
       <div class="ob-title">แก้ไขโปรไฟล์</div>
-      <div class="ob-sub" style="margin-bottom:6px">แนะนำตัวเอง</div>
+      <div class="ob-sub" style="margin-bottom:6px">ชื่อที่แสดง</div>
+      <input id="edit-name" maxlength="80" placeholder="ชื่อของคุณ" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:var(--fs-md);font-family:inherit;box-sizing:border-box">
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin:5px 2px 0">ใช้ชื่อเดียวกันทุกแบรนด์ที่คุณเข้าร่วม</div>
+      <div class="ob-sub" style="margin:14px 0 6px">แนะนำตัวเอง</div>
       <textarea id="edit-bio" maxlength="150" placeholder="เช่น ปลูกทุเรียนมา 10 ปี ที่จันทบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:var(--fs-md);font-family:inherit;resize:none;height:80px;box-sizing:border-box"></textarea>
       <div class="ob-sub" style="margin:14px 0 6px">ที่อยู่ (อำเภอ / จังหวัด)</div>
       <input id="edit-province" maxlength="60" placeholder="เช่น อ.บ้านโป่ง ราชบุรี" style="width:100%;border:2px solid var(--border);border-radius:12px;padding:12px;font-size:var(--fs-md);font-family:inherit;box-sizing:border-box">
@@ -1337,6 +1340,14 @@ async function loadUserProfile() {
 
 async function saveUserToFirestore(user) {
   if (!db) return;
+  // umbrella (Option A): global identity = source of truth — ถ้าเคยแก้ชื่อเอง ใช้ชื่อ global (กัน LINE ทับตอน login ถัดไป)
+  try {
+    const _acct = await db.collection('accounts').doc(user.uid).get();
+    if (_acct.exists && _acct.data().displayName) {
+      user.displayName = _acct.data().displayName;
+      if (currentUser) currentUser.displayName = _acct.data().displayName;
+    }
+  } catch (_) {}
   try {
     const userRef = tdb().collection('users').doc(user.uid);
     const doc = await userRef.get();
@@ -2374,22 +2385,43 @@ function safeUrl(u) {
 // ── Edit Profile ──────────────────────────────────────────
 function openEditProfile() {
   if (!currentUser) return;
+  var nm = document.getElementById('edit-name'); if (nm) nm.value = currentUser.displayName || '';
   document.getElementById('edit-bio').value = currentUser.bio || '';
   document.getElementById('edit-province').value = currentUser.province || '';
   document.getElementById('editProfileModal').classList.add('open');
 }
 
+// อัปเดตชื่อ/ตัวย่อ avatar ทุกที่หลังแก้ชื่อ (ไม่ต้องเรียก updateUIWithUser ทั้งก้อน)
+function refreshIdentityUI() {
+  if (!currentUser) return;
+  var name = currentUser.displayName || 'ชื่อของคุณ';
+  var initials = currentUser.displayName ? currentUser.displayName.charAt(0) : 'ฉ';
+  var pn = document.getElementById('prof-name'); if (pn) pn.textContent = name;
+  document.querySelectorAll('.modal-uname').forEach(function (e) { e.textContent = name; });
+  ['cp-me-avatar', 'prof-avatar'].forEach(function (id) { var el = document.getElementById(id); if (el && !el.style.backgroundImage) el.textContent = initials; });
+  document.querySelectorAll('.modal-av,.cmt-me').forEach(function (el) { if (!el.style.backgroundImage) el.textContent = initials; });
+}
+
 async function saveProfileEdit() {
   if (!currentUser || !db) return;
+  const name = document.getElementById('edit-name').value.trim().slice(0, 80);
   const bio = document.getElementById('edit-bio').value.trim().slice(0, 150);
   const province = document.getElementById('edit-province').value.trim().slice(0, 60);
+  if (name.length < 2) { toast('กรุณาใส่ชื่อ (อย่างน้อย 2 ตัวอักษร)'); return; }
   const btn = document.getElementById('edit-save-btn');
   btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
   try {
-    await tdb().collection('users').doc(currentUser.uid).update({ bio: bio, province: province });
-    currentUser.bio = bio; currentUser.province = province;
+    // ชื่อ = identity ระดับ global (Option A) → เขียน accounts/{uid} (source of truth ข้ามแบรนด์)
+    await db.collection('accounts').doc(currentUser.uid).set({
+      displayName: name, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    // per-tenant: สำเนาชื่อ(denormalize) + bio/province (per-brand)
+    await tdb().collection('users').doc(currentUser.uid).update({ displayName: name, bio: bio, province: province });
+    currentUser.displayName = name; currentUser.bio = bio; currentUser.province = province;
     renderProfileInfo();
+    refreshIdentityUI();
     document.getElementById('editProfileModal').classList.remove('open');
+    toast('✅ บันทึกแล้ว');
   } catch (err) {
     toast('บันทึกไม่สำเร็จ: ' + err.message);
   } finally {
