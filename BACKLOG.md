@@ -36,7 +36,9 @@
 - **Umbrella brand switcher (แบบ A)** — 1 identity global + เศรษฐกิจแยกต่อแบรนด์ + "แบรนด์ของฉัน" สลับในไอคอนเดียว (แก้ปัญหาลูกค้าตาม 10 แบรนด์ต้องลง 10 PWA) · ดู [[umbrella-brand-switcher]]
   - ✅ rules root `accounts/{uid}` (+`/brands/{tid}`) own-only · rules test +5 (58/58)
   - ✅ client: `accounts` upsert + auto-follow ตอน login (`upsertAccount`) · sync ชื่อ/รูป LINE ลง per-brand · section "แบรนด์ของฉัน" ในโปรไฟล์ (`loadMyBrands`/`switchBrand` ผ่าน `?t=`) · pure `buildBrandEntry` + frontend test +2 (31/31) · guard 9/9 · syntax OK
-  - **ค้าง:** ยังไม่ commit/push/deploy (Roger trigger) · verify สดบน prod (login → เข้า 2 แบรนด์ → เช็ค switcher โผล่+สลับ+ข้อมูลแยก) · เฟสถัดไป: แต้ม/tier ใน switcher · CTA "เข้าร่วมแบรนด์นี้" ตอนเป็น guest · แก้ชื่อ global เอง · marketplace browse กลาง
+  - ✅ **UI:** ▾ บนหัว → bottom sheet (แต้ม/tier ต่อแบรนด์) โชว์ตั้งแต่ 1 แบรนด์ · โปรไฟล์ polish (avatar กลมกลางจอ ไม่มี cover · stat tiles ไอคอน · list-row menu "ทั่วไป" · ที่อยู่ → modal) · deploy+verify prod
+  - ✅ **ปิด loop (join):** `claimTenant` เชื่อโฮสต์ร่ม (`_hostMatchesPlatform` + `PLATFORM_HOSTS_DEFAULT` + `platform/domains.platformHosts/roots`) → Google/FB join แบรนด์ที่สลับไปได้ (LINE ผ่าน lineAuth อยู่แล้ว) · unit `tests/origin.test.js` 3/3 · deploy `functions:claimTenant`
+  - **ค้าง/เฟสถัดไป:** verify สด login จริง (LINE เข้า 2 แบรนด์ → สลับ+ข้อมูลแยก) · super ตั้ง `platform/domains.platformHosts` เพิ่มถ้ามี hosting host อื่นนอก default · แต้ม/tier เฉพาะเมื่อเปิด sheet (มีแล้ว) · แก้ชื่อ global เอง · marketplace browse กลาง
 
 **(pointer เก่า 2026-08-27 · เซสชัน N0-N7) origin/main = `63a67d4`**
 
