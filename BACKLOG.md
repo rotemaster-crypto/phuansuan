@@ -20,7 +20,8 @@
 - 🟡 แอดมิน **โอนเจ้าของ** — callable `transferOwnership` + e2e 6/6 + UI ปุ่ม · deploy functions+push แล้ว (`d04bccf`)
 - 🟡 ลูกค้า **แจ้งเตือนสถานะออเดอร์** — trigger `onOrderStatusNotify` · e2e 5/5 · deploy functions+push แล้ว (`0c0614f`)
 - 🆕 **streak engine (เช็คอินต่อเนื่อง)** — callable `claimStreak` + rules lock A5 + client + admin config · e2e 6/6 · deploy functions+rules+hosting+push แล้ว (`402d27c`)
-- 🟡 แอดมิน **orders date-range filter** — pure `orderInDateRange` + input ช่วงวัน · export เคารพช่วง · frontend test · ยังไม่ commit · **deploy hosting**
+- 🟡 แอดมิน **orders date-range filter** — pure `orderInDateRange` · export เคารพช่วง · deploy hosting+push แล้ว (`ce23af1`)
+- 🟡 แอดมิน **sysoverview count() aggregation** — `_collCount` (count+fallback) แก้ read-explosion B6/B7 · ยังไม่ commit · **deploy hosting**
 - guard 9/9 · frontend 16/16 · owner 6/6 · ordernotify 5/5 · streak 6/6 · rules 53/53 เขียว
 
 **(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
@@ -148,8 +149,8 @@
 ### Admin dashboard + super-admin (ที่ Roger ชี้)
 - [x] ~~`admin.html:1374` dashboard บาง~~ — ✅ 2026-08-27 เพิ่ม 💰ยอดขายรวม/🛒ออเดอร์วันนี้/🧾ค้างตรวจสลิป/📦สต็อกต่ำ + การ์ด "ต้องจัดการก่อน" (list สต็อกใกล้หมด + CTA สลิป) · pure `computeShopStats()` เทสผ่าน
 - [x] ~~dashboard ขาดสถิติ activity~~ — ✅ 2026-08-27 การ์ด "🎮 Activity Engine": หมุนสุ่มรวม/รางวัลที่แจก/ภารกิจสำเร็จ/แต้มจากแคมเปญ/ร่วมทายผล · pure `computeActivityStats()` เทสผ่าน · counter-on-doc (อ่าน config collections 4 อัน — เล็ก)
-- [ ] `admin.html` dashboard scan ทั้ง users+posts+**orders+products** collection (client-side) — ไม่ scale · **M** (= B6/audit · dashboard ใหม่เพิ่ม 2 scan → ทำ count()/agg เมื่อ data โต)
-- [ ] `admin.html:1314` sysoverview loop ทุก tenant × full users.get()+orders.get() — **พังเมื่อ tenant/data โต** + metric บาง (ไม่มี revenue/growth ต่อแบรนด์) · **M–L** (= B6/audit)
+- [~] `admin.html` dashboard scan — ✅ posts count → `count()` (B6) · **ยังเหลือ:** orders/products scan ยังดึงเต็ม (จำเป็น: computeShopStats ใช้ field revenue/low-stock) · users scan ยังดึงเต็ม (totalPoints/recent/todayLogins ใช้ docs) → ทำ agg (sum) เมื่อ data โต
+- [x] ~~`admin.html` sysoverview loop ทุก tenant × full users.get()+orders.get()~~ — ✅ 2026-08-28: เปลี่ยนเป็น **`count()` aggregation ฝั่งเซิร์ฟเวอร์** (helper `_collCount`: count() หลัก + fallback `.get().size` ไม่มี regression) · users/orders/tenantRequests counts อ่าน 1 หน่วย/count แทนดาวน์โหลดทั้ง collection ต่อ tenant · **แก้ read-explosion B6/B7** · metric revenue/growth ต่อแบรนด์ยังไม่มี (feature แยก)
 
 ### Admin — orders
 - [x] ~~orders search~~ — ✅ 2026-08-27: search เลขออเดอร์/ชื่อ/เบอร์/tracking (client-side, pure `orderMatchesSearch` เทสผ่าน) + status tab เดิม

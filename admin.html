@@ -1442,14 +1442,15 @@ async function loadSysOverview(){
       '</div>';
     }).join('') || '<div class="empty-state">ยังไม่มีแบรนด์</div>';
     // รวมผู้ใช้ + ออเดอร์ทุกแบรนด์ (super อ่านข้ามแบรนด์ได้ผ่าน isAdmin)
+    // B6/B7: นับด้วย count() aggregation ฝั่งเซิร์ฟเวอร์ (อ่าน 1 หน่วย/count) แทนดาวน์โหลดทั้ง collection
     var totU = 0, totO = 0;
     await Promise.all(ts.map(async function(t){
-      try { var u = await db.collection('tenants').doc(t.id).collection('users').get(); totU += u.size; } catch(e){}
-      try { var o = await db.collection('tenants').doc(t.id).collection('orders').get(); totO += o.size; } catch(e){}
+      try { totU += await _collCount(db.collection('tenants').doc(t.id).collection('users')); } catch(e){}
+      try { totO += await _collCount(db.collection('tenants').doc(t.id).collection('orders')); } catch(e){}
     }));
     setT('sys-users', totU.toLocaleString());
     setT('sys-orders', totO.toLocaleString());
-    try { var rq = await db.collection('tenantRequests').where('status','==','new').get(); setT('sys-reqs', rq.size); } catch(e){ setT('sys-reqs','—'); }
+    try { setT('sys-reqs', await _collCount(db.collection('tenantRequests').where('status','==','new'))); } catch(e){ setT('sys-reqs','—'); }
   } catch(e){ var box=document.getElementById('sys-brandlist'); if(box) box.innerHTML='<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
 }
 function showDeny() {
@@ -1469,6 +1470,13 @@ function toast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast show ' + type;
   setTimeout(() => t.className = 'toast', 2800);
+}
+
+// นับจำนวน doc แบบประหยัด: count() aggregation ฝั่งเซิร์ฟเวอร์ (อ่าน 1 หน่วย)
+// fallback .get().size ถ้า SDK เก่า/ไม่รองรับ count → ไม่มี regression (ตัวเลขเท่าเดิม)
+async function _collCount(ref) {
+  try { if (typeof ref.count === 'function') { const s = await ref.count().get(); return s.data().count; } } catch (e) {}
+  const g = await ref.get(); return g.size;
 }
 
 // ── Sidebar Branding ──────────────────────────────────────
@@ -1592,9 +1600,9 @@ async function loadDashboard() {
     document.getElementById('ds-today').textContent = todayLogins;
     document.getElementById('badge-users').textContent = users.length;
     try {
-      const ps = await aDb().collection('posts').get();
-      document.getElementById('ds-posts').textContent = ps.size;
-      document.getElementById('badge-posts').textContent = ps.size;
+      const pc = await _collCount(aDb().collection('posts'));   // B6: count() แทน .get() ทั้ง collection (ใช้แค่จำนวน)
+      document.getElementById('ds-posts').textContent = pc;
+      document.getElementById('badge-posts').textContent = pc;
     } catch { document.getElementById('ds-posts').textContent = '0'; }
     const sorted = [...users].sort((a,b) => (b.lastLoginAt?.seconds||0)-(a.lastLoginAt?.seconds||0)).slice(0,5);
     document.getElementById('recent-users-table').innerHTML = sorted.map(u => `
