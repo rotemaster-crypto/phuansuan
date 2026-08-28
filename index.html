@@ -631,9 +631,8 @@ button .ic,a .ic{pointer-events:none}
   <div class="prof-nav">
     <div class="pnav active">โพส</div>
   </div>
-  <div class="crops-card" id="my-brands-card" style="display:none">
-    <div class="sec-title"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-globe"/></svg> แบรนด์ของฉัน</div>
-    <div style="font-size:var(--fs-xs);color:var(--muted);margin:2px 0 10px">แบรนด์ที่คุณเคยเข้า — แตะเพื่อสลับ (แต้ม/ประวัติแยกกันแต่ละแบรนด์)</div>
+  <div class="crops-card" id="my-brands-card" style="display:none;padding-top:12px;padding-bottom:10px">
+    <div class="sec-title" style="margin-bottom:8px"><svg class="ic" style="width:16px;height:16px;vertical-align:-2px"><use href="#i-globe"/></svg> แบรนด์ของฉัน</div>
     <div id="my-brands"></div>
   </div>
   <div class="crops-card">
@@ -1425,22 +1424,21 @@ async function loadMyBrands() {
     if (items.length === 0) { card.style.display = 'none'; return; }   // ยังไม่เคยเข้าแบรนด์ใด
     items.sort(function (a, b) { return (b.lastSeenAt && b.lastSeenAt.seconds || 0) - (a.lastSeenAt && a.lastSeenAt.seconds || 0); });
     var cur = tenantId();
-    var rows = items.map(function (b) {
-      var active = b.tid === cur;
-      return '<button ' + (active ? 'disabled ' : 'onclick="switchBrand(\'' + b.tid + '\')" ')
-        + 'style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:' + (active ? '#eef4ff' : '#fff')
-        + ';border:1px solid ' + (active ? 'var(--primary)' : '#e3e6ea') + ';border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:'
-        + (active ? 'default' : 'pointer') + ';font-family:inherit">'
-        + '<span style="font-size:22px;line-height:1">' + escapeHtml(b.logoEmoji || '🌿') + '</span>'
-        + '<span style="flex:1;min-width:0"><span style="display:block;font-weight:700;font-size:var(--fs-base);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
-        + (escapeHtml(b.brandName) || escapeHtml(b.tid)) + '</span>'
-        + '<span style="font-size:var(--fs-xs);color:var(--muted)">' + (active ? 'กำลังดูอยู่' : 'แตะเพื่อสลับ') + '</span></span>'
-        + (active ? '<span style="color:var(--primary);font-size:var(--fs-lg)">✓</span>' : '<span style="color:var(--muted);font-size:var(--fs-lg)">›</span>')
-        + '</button>';
-    }).join('');
-    // แบรนด์เดียว: ยังโชว์การ์ด (ให้เห็นฟีเจอร์ + ยืนยันบัญชีถูกผูก) + ใบ้ให้เข้าแบรนด์อื่น
-    if (items.length === 1) rows += '<div style="font-size:var(--fs-xs);color:var(--muted);text-align:center;padding:4px 2px 2px">เข้าแบรนด์อื่นด้วยบัญชีนี้ แล้วจะมาอยู่ตรงนี้ให้สลับได้</div>';
-    box.innerHTML = rows;
+    // chip แนวนอนแบบ Shopee — โลโก้+ชื่อพอ · เลื่อนแนวนอน · ตัวปัจจุบันไฮไลต์
+    box.innerHTML = '<div style="display:flex;gap:8px;overflow-x:auto;padding:1px 0;scrollbar-width:none">'
+      + items.map(function (b) {
+          var active = b.tid === cur;
+          return '<button ' + (active ? 'disabled ' : 'onclick="switchBrand(\'' + b.tid + '\')" ')
+            + 'style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto;'
+            + 'padding:6px 12px;border-radius:999px;font-family:inherit;font-size:var(--fs-sm);'
+            + 'cursor:' + (active ? 'default' : 'pointer') + ';font-weight:' + (active ? '700' : '500') + ';'
+            + 'background:' + (active ? 'var(--primary)' : '#fff') + ';color:' + (active ? '#fff' : 'var(--text)')
+            + ';border:1px solid ' + (active ? 'var(--primary)' : '#e3e6ea') + '">'
+            + '<span style="font-size:15px;line-height:1">' + escapeHtml(b.logoEmoji || '🌿') + '</span>'
+            + '<span>' + (escapeHtml(b.brandName) || escapeHtml(b.tid)) + '</span>'
+            + '</button>';
+        }).join('')
+      + '</div>';
     card.style.display = '';
   } catch (e) { card.style.display = 'none'; }
 }
