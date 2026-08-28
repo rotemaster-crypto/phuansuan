@@ -3751,19 +3751,61 @@ function fmtDate(ts) {
 //  ORDERS ADMIN (3.3) — ตรวจสลิป / ยืนยัน / จัดส่ง
 // ══════════════════════════════════════════════════════════
 function adminTenant(){ return /office/.test(location.hostname) ? 'office' : 'phuansuan'; }
+// สร้างข้อมูลแสดงผลสมาชิกทีมจาก LINE id + user doc (pure — เทสได้)
+// u = null เมื่อยังไม่เคย login (ไม่มี user doc) → resolved:false + ชื่อ fallback
+function teamMemberView(uid, u, ownerLineId){
+  u = u || {};
+  var nm = u.displayName || '';
+  return {
+    name: nm || 'ยังไม่เคยเข้าระบบ',
+    photo: u.photoUrl || '',
+    initial: (nm && nm.charAt(0)) || '?',
+    isOwner: !!(ownerLineId && uid === ownerLineId),
+    resolved: !!nm
+  };
+}
+// หา user doc จาก LINE User ID (field lineUserId) — คืน null ถ้าไม่พบ/ผิดพลาด
+async function _lookupUserByLineId(lineId){
+  try {
+    var qs = await aDb().collection('users').where('lineUserId','==',lineId).limit(1).get();
+    return qs.empty ? null : qs.docs[0].data();
+  } catch(e){ return null; }
+}
+function _teamAvatar(v){
+  var url = safeUrl(v.photo);
+  return '<div class="user-av" style="'+(url?('background-image:url('+url+')'):'')+'">'+(url?'':escapeHtml(v.initial))+'</div>';
+}
 async function loadTeam(){
   if (!db) return;
   try {
     const snap = await aDb().get();
     const t = snap.data() || {};
-    document.getElementById('team-owner').textContent = t.ownerLineId || '(ยังไม่กำหนด)';
+    const ownerId = t.ownerLineId || '';
+    const oEl = document.getElementById('team-owner');
+    if (ownerId) {
+      const oV = teamMemberView(ownerId, await _lookupUserByLineId(ownerId), ownerId);
+      oEl.innerHTML = escapeHtml(oV.name) + ' <span style="color:var(--muted);font-size:var(--fs-2xs);font-family:monospace">('+escapeHtml(ownerId.slice(0,14))+'…)</span>';
+    } else { oEl.textContent = '(ยังไม่กำหนด)'; }
     const admins = t.adminLineIds || [];
     const box = document.getElementById('team-list');
     if (!admins.length){ box.innerHTML = '<div class="empty-state">ยังไม่มีแอดมินร่วม</div>'; return; }
-    box.innerHTML = admins.map(function(uid){
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">'
-        + '<span style="font-family:monospace;font-size:var(--fs-sm);word-break:break-all">'+uid+'</span>'
-        + '<button class="btn" style="background:#fee;color:#c00;flex-shrink:0;margin-left:8px" onclick="removeTeamAdmin(\''+uid+'\')">ลบ</button></div>';
+    box.innerHTML = '<div class="empty-state">กำลังโหลดข้อมูลสมาชิก...</div>';
+    // resolve ทุกคนขนาน (ทีมเล็ก — ไม่กี่คน)
+    const views = await Promise.all(admins.map(async function(uid){
+      return { uid: uid, v: teamMemberView(uid, await _lookupUserByLineId(uid), ownerId) };
+    }));
+    box.innerHTML = views.map(function(x){
+      var v = x.v, uid = x.uid;
+      var ownerBadge = v.isOwner ? '<span style="background:#fff4d6;color:#9a6b00;border-radius:6px;padding:1px 7px;font-size:var(--fs-2xs);font-weight:700;margin-left:6px">เจ้าของ</span>' : '';
+      var warn = v.resolved ? '' : '<div style="font-size:var(--fs-2xs);color:#c98a00;margin-top:2px">⚠ ยังไม่เคยเข้าระบบ · สิทธิ์จะมีผลเมื่อ login LINE ครั้งแรก</div>';
+      var info = '<div style="flex:1;min-width:0">'
+        + '<div style="font-weight:700;font-size:var(--fs-sm)">'+escapeHtml(v.name)+ownerBadge+'</div>'
+        + '<div style="font-family:monospace;font-size:var(--fs-2xs);color:var(--muted);word-break:break-all">'+escapeHtml(uid)+'</div>'
+        + warn + '</div>';
+      // เจ้าของลบจากลิสต์แอดมินไม่ได้ (กันตัดสิทธิ์ตัวเองพลาด · โอนเจ้าของเป็นงานแยก)
+      var removeBtn = v.isOwner ? '' : '<button class="btn" style="background:#fee;color:#c00;flex-shrink:0;margin-left:8px" onclick="removeTeamAdmin(\''+uid+'\')">ลบ</button>';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">'
+        + _teamAvatar(v) + info + removeBtn + '</div>';
     }).join('');
   } catch(e){ toast('โหลดทีมไม่สำเร็จ: '+e.message,'error'); }
 }

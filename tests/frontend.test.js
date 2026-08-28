@@ -13,28 +13,32 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const SRC = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const SRC_ADMIN = readFileSync(new URL('../admin.html', import.meta.url), 'utf8');
 
 // สกัด `function NAME(...) { ... }` ด้วยการจับคู่ปีกกา (ใช้ได้กับฟังก์ชันที่ไม่มี { ในสตริง)
-function extractFn(name) {
+function extractFnFrom(src, name, label) {
   const re = new RegExp('function\\s+' + name + '\\s*\\(');
-  const start = SRC.search(re);
-  assert.ok(start >= 0, 'ไม่พบฟังก์ชัน ' + name + ' ใน index.html');
-  const open = SRC.indexOf('{', start);
+  const start = src.search(re);
+  assert.ok(start >= 0, 'ไม่พบฟังก์ชัน ' + name + ' ใน ' + label);
+  const open = src.indexOf('{', start);
   let depth = 0;
-  for (let j = open; j < SRC.length; j++) {
-    if (SRC[j] === '{') depth++;
-    else if (SRC[j] === '}') { depth--; if (depth === 0) return SRC.slice(start, j + 1); }
+  for (let j = open; j < src.length; j++) {
+    if (src[j] === '{') depth++;
+    else if (src[j] === '}') { depth--; if (depth === 0) return src.slice(start, j + 1); }
   }
   throw new Error('brace ไม่สมดุลใน ' + name);
 }
-// โหลดฟังก์ชันเข้า sandbox พร้อม global ที่ mock ให้
-function load(names, globals = {}) {
+const extractFn = (name) => extractFnFrom(SRC, name, 'index.html');
+// โหลดฟังก์ชันจาก source ที่กำหนดเข้า sandbox พร้อม global ที่ mock ให้
+function loadFrom(src, label, names, globals = {}) {
   const ctx = vm.createContext(Object.assign({ URLSearchParams, console }, globals));
-  const code = names.map(extractFn).join('\n') +
+  const code = names.map((n) => extractFnFrom(src, n, label)).join('\n') +
     '\n;globalThis.__x = {' + names.map((n) => n + ':' + n).join(',') + '};';
   vm.runInContext(code, ctx);
   return ctx.__x;
 }
+const load = (names, globals = {}) => loadFrom(SRC, 'index.html', names, globals);
+const loadAdmin = (names, globals = {}) => loadFrom(SRC_ADMIN, 'admin.html', names, globals);
 
 // ── safeUrl (A2) — ด่านกัน stored-XSS ──
 test('frontend/safeUrl: อนุญาต url รูปจริง, block payload XSS', () => {
@@ -104,4 +108,28 @@ test('frontend/courierTrack: รหัสไม่รู้จัก/ว่า�
 test('frontend/courierTrack: มีชื่อขนส่งแต่ไม่มีเลข → url:null', () => {
   const { courierTrack } = load(['courierTrack']);
   assert.equal(courierTrack('FLE', '').url, null);
+});
+
+// ── teamMemberView (admin.html) — LINE id + user doc → ข้อมูลแสดงผล ──
+test('admin/teamMemberView: user doc มี → ชื่อ+avatar+resolved', () => {
+  const { teamMemberView } = loadAdmin(['teamMemberView']);
+  const v = teamMemberView('U1', { displayName: 'สมชาย', photoUrl: 'https://x/y.jpg' }, 'Uowner');
+  assert.equal(v.name, 'สมชาย');
+  assert.equal(v.photo, 'https://x/y.jpg');
+  assert.equal(v.initial, 'ส');
+  assert.equal(v.isOwner, false);
+  assert.equal(v.resolved, true);
+});
+test('admin/teamMemberView: ยังไม่เคย login (u=null) → resolved:false + fallback', () => {
+  const { teamMemberView } = loadAdmin(['teamMemberView']);
+  const v = teamMemberView('U2', null, 'Uowner');
+  assert.equal(v.name, 'ยังไม่เคยเข้าระบบ');
+  assert.equal(v.initial, '?');
+  assert.equal(v.resolved, false);
+  assert.equal(v.photo, '');
+});
+test('admin/teamMemberView: uid === ownerLineId → isOwner:true', () => {
+  const { teamMemberView } = loadAdmin(['teamMemberView']);
+  assert.equal(teamMemberView('Uowner', { displayName: 'เจ้าของ' }, 'Uowner').isOwner, true);
+  assert.equal(teamMemberView('U9', {}, '').isOwner, false, 'ownerLineId ว่าง → ไม่ใช่เจ้าของ');
 });
