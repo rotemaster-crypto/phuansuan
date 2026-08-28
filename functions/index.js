@@ -72,18 +72,59 @@ function _originHost(req) {
     return o ? new URL(o).hostname : "";
   } catch (e) { return ""; }
 }
+
+// ── umbrella: "โฮสต์ร่ม" ที่เชื่อถือ → join แบรนด์ใดก็ได้ (ปิด loop brand-switcher) ──
+//  จากโฮสต์แพลตฟอร์ม (bocean.com / *.web.app ของโปรเจกต์) ผู้ใช้ที่ login แล้วสลับ ?t=<brand>
+//  ต้อง join แบรนด์นั้นได้ (Shopee-style: 1 โฮสต์ร่ม เข้าได้ทุกร้าน). ไม่ใช่ช่องโหว่ B5:
+//  เว็บบุคคลที่สามยังไม่อยู่ใน hosts/roots → ยังถูกบล็อกเหมือนเดิม (กัน membership injection)
+const PLATFORM_HOSTS_DEFAULT = [
+  "phuansuan.web.app", "phuansuan.firebaseapp.com",
+  "bocean.web.app", "bocean.firebaseapp.com",
+  "office-phuansuan.web.app", "office-phuansuan.firebaseapp.com",
+];
+// pure — host ตรงกับ hosts (exact) หรือเป็น apex/subdomain ของ roots ใด ๆ (สำหรับ unit test)
+function _hostMatchesPlatform(host, hosts, roots) {
+  if (!host) return false;
+  host = String(host).toLowerCase();
+  if (Array.isArray(hosts) && hosts.some((h) => String(h || "").toLowerCase() === host)) return true;
+  if (Array.isArray(roots)) {
+    for (const r of roots) {
+      const root = String(r || "").toLowerCase().trim();
+      if (root && (host === root || host.endsWith("." + root))) return true;
+    }
+  }
+  return false;
+}
+async function _isPlatformHost(host) {
+  if (!host) return false;
+  const hosts = PLATFORM_HOSTS_DEFAULT.slice();
+  const pid = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || "";
+  if (pid) hosts.push(pid + ".web.app", pid + ".firebaseapp.com");
+  let roots = [];
+  try {
+    const s = await admin.firestore().doc("platform/domains").get();   // super ตั้งเพิ่มได้
+    const d = (s.exists && s.data()) || {};
+    if (Array.isArray(d.platformHosts)) d.platformHosts.forEach((h) => h && hosts.push(String(h)));
+    if (Array.isArray(d.roots)) roots = d.roots;
+  } catch (e) { /* อ่าน platform/domains ไม่ได้ → ใช้เฉพาะ default/auto hosts */ }
+  return _hostMatchesPlatform(host, hosts, roots);
+}
+
 async function assertTenantOrigin(tid, req) {
   if (process.env.FUNCTIONS_EMULATOR === "true") return;   // ข้ามใน emulator/dev (test)
+  const host = _originHost(req);
+  if (await _isPlatformHost(host)) return;   // โฮสต์ร่ม → join แบรนด์ใดก็ได้ (umbrella switch)
   let domains = [];
   try {
     const s = await troot(tid).get();
     if (s.exists && Array.isArray(s.data().domains)) domains = s.data().domains;
   } catch (e) { return; }   // อ่าน tenant ไม่ได้ (error ชั่วคราว) → ปล่อยผ่าน
-  if (!_originHostAllowed(_originHost(req), domains)) {
+  if (!_originHostAllowed(host, domains)) {
     throw new HttpsError("permission-denied", "เข้าเป็นสมาชิกได้เฉพาะจากเว็บของร้านนี้");
   }
 }
 exports._originHostAllowed = _originHostAllowed;   // สำหรับ unit test
+exports._hostMatchesPlatform = _hostMatchesPlatform;   // สำหรับ unit test
 
 // ── lineAuth ──────────────────────────────────────────────
 exports.lineAuth = onCall(async (req) => {
