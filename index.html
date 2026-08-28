@@ -75,6 +75,8 @@ body{font-family:var(--font-body);background:#f0f2f5;color:#1c1e21;max-width:480
 
 /* ── POST CARD ── */
 .post-card{background:#fff;margin-bottom:8px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+@keyframes phl{0%{box-shadow:0 0 0 3px var(--primary)}70%{box-shadow:0 0 0 3px var(--primary)}100%{box-shadow:0 0 0 0 transparent}}
+.post-highlight{animation:phl 2.6s ease}
 .pc-head{padding:12px 16px 0;display:flex;align-items:flex-start;gap:10px}
 .pc-av{width:42px;height:42px;border-radius:50%;color:#fff;font-size:var(--fs-md);font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .av-blue{background:#1877f2}.av-orange{background:#e65100}.av-teal{background:#00695c}.av-purple{background:#6a1b9a}
@@ -1919,6 +1921,43 @@ async function sharePost(postId) {
   try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว 📋'); }
   catch (e) { try { prompt('คัดลอกลิงก์นี้:', url); } catch (e2) {} }
 }
+// เปิดโพสต์จากลิงก์แชร์ ?post=<id> อัตโนมัติ — เรียกหลังฟีดเรนเดอร์รอบแรก (ทำครั้งเดียว)
+// ถ้าโพสต์อยู่ในฟีดหน้าแรก → เลื่อนไปหา+ไฮไลต์ · ถ้าไม่อยู่ (paginate หลุด/โพสต์เก่า) → ดึง doc ตรงแล้ว
+// prepend การ์ดด้วย renderPost เดิม + wiring reactions/related/stats ให้เหมือนโพสต์ในฟีด (ไม่ทำ markup ซ้ำ)
+var _deepLinkDone = false;
+async function maybeOpenDeepLinkPost(){
+  if (_deepLinkDone) return;
+  var pid;
+  try { pid = new URLSearchParams(location.search).get('post'); } catch(e){ _deepLinkDone = true; return; }
+  if (!pid) { _deepLinkDone = true; return; }
+  _deepLinkDone = true;
+  // ล้าง ?post= ออกจาก URL กันเปิดซ้ำตอน re-render/refresh (คง query อื่น + hash ไว้)
+  try {
+    var u = new URL(location.href); u.searchParams.delete('post');
+    history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+  } catch(e){}
+  var el = document.getElementById('post-' + pid);
+  if (!el) {
+    try {
+      var doc = await tdb().collection('posts').doc(pid).get();
+      if (!doc.exists) { toast('ไม่พบโพสต์นี้ (อาจถูกลบไปแล้ว)'); return; }
+      var data = doc.data();
+      if (data.tenantId && data.tenantId !== tenantId()) { toast('โพสต์นี้อยู่คนละชุมชน'); return; }
+      var container = document.getElementById('feed-container');
+      if (!container) return;
+      container.insertAdjacentHTML('afterbegin', renderPost(pid, data, 0));
+      try { populateRelatedProducts([{ id: pid, data: data }]); } catch(e){}
+      try { hydrateMyReactions([pid]); } catch(e){}
+      try { subscribePostStats([pid]); } catch(e){}
+      el = document.getElementById('post-' + pid);
+    } catch(e){ toast('เปิดโพสต์ไม่สำเร็จ ลองใหม่'); return; }
+  }
+  if (el) {
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e){ try { el.scrollIntoView(); } catch(e2){} }
+    el.classList.add('post-highlight');
+    setTimeout(function(){ if (el) el.classList.remove('post-highlight'); }, 2600);
+  }
+}
 
 // ── Design tokens (control panel: font/ขนาด/ความกว้าง) — override CSS var สด ──
 var FONT_STACKS = {
@@ -3152,6 +3191,7 @@ async function loadFeed(mode, more) {
     var _ids = _feedDocs.map(function(d){ return d.id; });
     hydrateMyReactions(_ids);
     subscribePostStats(_ids);
+    maybeOpenDeepLinkPost();   // เปิดโพสต์จากลิงก์แชร์ ?post= (ทำครั้งเดียว)
 
   } catch (err) {
     console.error('loadFeed error:', err);

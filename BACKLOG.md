@@ -12,9 +12,10 @@
 ## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-28
 **local HEAD = `5ce1630` (🟡 batch) + งาน 2026-08-28 ยังไม่ commit · deploy มือ (login rotemaster พร้อม)**
 
-**✅ เซสชัน 2026-08-28 (ยังไม่ deploy/commit):**
-- 🟡 ลูกค้า **ติดตามพัสดุ** — `courierTrack` ชื่อขนส่ง+ลิงก์ติดตามทางการ (safeUrl) / รหัสไม่รู้จัก→ปุ่มคัดลอกเลข · frontend test 4 เคส
-- 🟡 แอดมิน **guard ขนส่ง** — เตือนเมื่อปิดโหมดทดสอบแต่ไม่มี key (server fail-safe เป็น mock อยู่แล้ว)
+**✅ เซสชัน 2026-08-28:**
+- 🟡 ลูกค้า **ติดตามพัสดุ** — `courierTrack` ชื่อขนส่ง+ลิงก์ติดตามทางการ (safeUrl) / รหัสไม่รู้จัก→ปุ่มคัดลอกเลข · frontend test 4 เคส · **deploy+verify prod แล้ว** (`6b557d8`)
+- 🟡 แอดมิน **guard ขนส่ง** — เตือนเมื่อปิดโหมดทดสอบแต่ไม่มี key (server fail-safe เป็น mock อยู่แล้ว) · deploy prod แล้ว
+- 🟡 ลูกค้า **deep-link `?post=`** — `maybeOpenDeepLinkPost` เปิดโพสต์จากลิงก์แชร์อัตโนมัติ (scroll+ไฮไลต์ / prepend เมื่อ paginate หลุด) · ยังไม่ commit
 - guard 9/9 · frontend 9/9 เขียว
 
 **(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
@@ -176,7 +177,8 @@
 - [x] ~~tracking โชว์เลขดิบไม่มีลิงก์ขนส่ง~~ — ✅ 2026-08-28: `courierTrack(code,number)` map รหัส→ชื่อขนส่ง+ลิงก์ติดตามทางการ (ไปรษณีย์ไทย/Flash/Kerry/J&T/Best/Ninja) ผ่าน `safeUrl` · รหัสไม่รู้จัก/ไม่มี url → ปุ่ม "คัดลอกเลขพัสดุ" (ไม่เดาลิงก์) · pure fn + frontend test 4 เคส
 - [ ] buyer: ~~ไม่มี affirmation หลังส่งสลิป~~ (มี toast แล้ว `index.html:4195`) · **ยังเหลือ:** ไม่มี push ตอน admin confirm-ship (ต้อง FCM) · **S**
 - [x] ~~checkout dead-end~~ — ✅ 2026-08-27: กันตั้งแต่หน้า checkout (`renderCheckoutSummary` ปิดปุ่มยืนยัน + แจ้ง "ร้านยังไม่เปิดรับชำระออนไลน์ ติดต่อร้านโดยตรง" ถ้าไม่มีพร้อมเพย์) + backstop copy สุภาพ (เลิกอ้าง config.js)
-- [x] ~~ปุ่มแชร์โพสต์~~ — ✅ 2026-08-27: `sharePost(postId)` ส่ง URL `?post=id` (deep-link forward-compat) + fallback คัดลอกลิงก์เมื่อ share ล้ม (ไม่กลืน · AbortError=ยกเลิกเฉยๆ) · ปุ่มส่ง `${id}` · **เหลือ:** deep-link handler auto-open โพสต์จาก `?post=` (feature แยก)
+- [x] ~~ปุ่มแชร์โพสต์~~ — ✅ 2026-08-27: `sharePost(postId)` ส่ง URL `?post=id` + fallback คัดลอกลิงก์เมื่อ share ล้ม (ไม่กลืน · AbortError=ยกเลิกเฉยๆ)
+- [x] ~~deep-link handler auto-open โพสต์จาก `?post=`~~ — ✅ 2026-08-28: `maybeOpenDeepLinkPost()` หลังฟีดเรนเดอร์รอบแรก (ทำครั้งเดียว · ล้าง `?post=` ออกจาก URL กันเปิดซ้ำ) · อยู่ในฟีด→scroll+ไฮไลต์ (keyframe `phl`) · ไม่อยู่ (paginate หลุด)→ดึง doc ตรง+prepend ด้วย `renderPost` เดิม+wiring reactions/related/stats (ไม่ทำ markup ซ้ำ) · ไม่พบ/คนละ tenant→toast · guard A2 ผ่าน (reuse safeUrl/escapeHtml)
 
 ---
 
