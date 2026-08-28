@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bocean — ชุมชน · กิจกรรม · ร้านค้า ของแบรนด์คุณ ในแอปเดียว</title>
 <meta name="description" content="Bocean คือแพลตฟอร์มที่ให้แบรนด์สินค้าใดก็ได้ มีระบบนิเวศของตัวเอง — ชุมชน กิจกรรม–ลอยัลตี้ และร้านค้าออนไลน์ ครบในแอปเดียว ไม่ต้องเขียนโค้ด">
+<link rel="icon" href="/Logo_Bocean/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/Logo_Bocean/bocean-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/Logo_Bocean/bocean-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/Logo_Bocean/bocean-180.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Bocean — ชุมชน · กิจกรรม · ร้านค้า ของแบรนด์คุณ ในแอปเดียว">
+<meta property="og:description" content="แพลตฟอร์มให้ทุกแบรนด์มีระบบนิเวศของตัวเอง — ชุมชน กิจกรรม–ลอยัลตี้ ร้านค้า ครบในแอปเดียว">
+<meta property="og:image" content="https://bocean.web.app/Logo_Bocean/bocean-512.png">
+<meta name="twitter:card" content="summary_large_image">
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -35,7 +44,7 @@
   .nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
   .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
   .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:21px;color:var(--ink)}
-  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(140deg,#12a3bf,#0b7a91);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(14,142,168,.32)}
+  .logo{width:38px;height:38px;border-radius:11px;object-fit:contain;box-shadow:0 8px 18px rgba(14,142,168,.32);display:block}
   .logo .ic{width:22px;height:22px;stroke:#fff;stroke-width:2}
   .nav-links{display:flex;align-items:center;gap:28px}
   .nav-links a.lnk{font-size:14.5px;font-weight:500;color:var(--body)}
@@ -213,7 +222,7 @@
 </defs></svg>
 
 <div class="nav"><div class="wrap">
-  <div class="brand"><span class="logo"><svg class="ic"><use href="#i-wave"/></svg></span> Bocean</div>
+  <div class="brand"><img class="logo" src="/Logo_Bocean/bocean-icon.svg" alt="Bocean logo"> Bocean</div>
   <div class="nav-links">
     <a class="lnk" href="#pillars">ระบบ</a>
     <a class="lnk" href="#activity">กิจกรรม</a>
@@ -404,7 +413,7 @@
 
 <footer>
   <div class="wrap">
-    <div class="brand"><span class="logo"><svg class="ic"><use href="#i-wave"/></svg></span> Bocean</div>
+    <div class="brand"><img class="logo" src="/Logo_Bocean/bocean-icon.svg" alt="Bocean logo"> Bocean</div>
     แพลตฟอร์มสร้างชุมชน · กิจกรรม · ร้านค้า สำหรับแบรนด์ · © 2026
   </div>
 </footer>

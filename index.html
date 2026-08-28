@@ -3262,32 +3262,58 @@ async function loadFeed(mode, more) {
 }
 
 function tdb(){ return db.collection('tenants').doc(tenantId()); }
-var _liveDomains = null;   // map host→tid โหลดสดจาก platform/domains (BYOD · super ตั้ง) · fallback config.js
-// path segment แรกเป็น tid ได้ไหม (bocean.com/brandx) — slug + ไม่ใช่คำสงวน/โฟลเดอร์ระบบ
+var _liveDomains = null;    // map host→tid โหลดสดจาก platform/domains (BYOD · super ตั้ง) · fallback config.js
+var _platformRoots = null;  // โดเมนแพลตฟอร์ม เช่น ['bocean.com'] → subdomain <sub>.bocean.com = ร้าน · super ตั้งใน platform/domains.roots
+// path/subdomain segment เป็น tid ได้ไหม — slug + ไม่ใช่คำสงวน/โฟลเดอร์ระบบ
 function isPlausibleTid(seg){
-  var R = { s:1, admin:1, api:1, www:1, app:1, static:1, assets:1, icons:1, bocean:1, office:1, sw:1, index:1 };
+  var R = { s:1, admin:1, api:1, www:1, app:1, static:1, assets:1, icons:1, bocean:1, office:1, sw:1, index:1, mail:1, ftp:1, cdn:1 };
   return /^[a-z0-9][a-z0-9-]{1,30}$/.test(String(seg||'')) && !R[seg] && seg.indexOf('.') === -1;
+}
+// pure: host เป็น <sub>.<platformRoot> ไหม → คืน sub (tid) · apex/ไม่ตรง = '' — domain-agnostic (root มาจาก config/หลังบ้าน ไม่ hardcode)
+function subdomainTid(host, roots){
+  host = String(host||'').toLowerCase();
+  var rs = Array.isArray(roots) ? roots : [];
+  for (var i=0;i<rs.length;i++){
+    var root = String(rs[i]||'').toLowerCase().replace(/^\.+/,'');
+    if (!root || host === root) continue;   // apex = platform landing (ไม่ใช่ร้าน)
+    if (host.slice(-(root.length+1)) === '.'+root){
+      var sub = host.slice(0, host.length - root.length - 1);
+      if (sub.indexOf('.') === -1 && isPlausibleTid(sub)) return sub;   // เฉพาะ label เดียว
+    }
+  }
+  return '';
 }
 function tenantId() {
   const t = APP_CONFIG.tenant || {};
   // 1) ?t= override (explicit)
   try { const qp = new URLSearchParams(location.search).get('t'); if (qp) return qp; } catch(e){}
   const host = (typeof location !== 'undefined' && location.hostname) || '';
-  // 2) hostname → tenant (custom domain / subdomain · live map ก่อน แล้ว config)
+  // 2) hostname → tenant (custom domain · live map ก่อน แล้ว config)
   if (typeof _liveDomains !== 'undefined' && _liveDomains && _liveDomains[host]) return _liveDomains[host];
   if (t.domains && t.domains[host]) return t.domains[host];
-  // 3) path segment แรก = tid (bocean.com/brandx) — เฉพาะโดเมนแพลตฟอร์มที่ host ไม่ผูกร้าน
+  // 3) subdomain <sub>.<platformRoot> = ร้าน (มาตรฐานสากล · brandx.bocean.com) — root จากหลังบ้าน/config
+  try {
+    var sd = subdomainTid(host, (typeof _platformRoots!=='undefined' && _platformRoots) || t.platformRoots || []);
+    if (sd) return sd;
+  } catch(e){}
+  // 4) path segment แรก = tid (bocean.com/brandx) — fallback
   try {
     const seg = ((location.pathname || '/').split('/').filter(Boolean)[0]) || '';
     if (isPlausibleTid(seg)) return seg;
   } catch(e){}
-  // 4) default
+  // 5) default
   return t.id || 'phuansuan';
 }
-// โหลด map โดเมน→tenant สด (ต้องเสร็จก่อน tdb()/loadPlatformDesign เพื่อ resolve ให้ถูกร้าน)
+// โหลด map โดเมน→tenant + platform roots สด (ต้องเสร็จก่อน tdb()/loaders เพื่อ resolve ให้ถูกร้าน)
 async function loadLiveDomains(){
-  try { var s = await db.collection('platform').doc('domains').get(); if (s.exists && s.data() && typeof s.data().map === 'object') _liveDomains = s.data().map || null; }
-  catch(e){}
+  try {
+    var s = await db.collection('platform').doc('domains').get();
+    if (s.exists && s.data()){
+      var d = s.data();
+      if (typeof d.map === 'object') _liveDomains = d.map || null;
+      if (Array.isArray(d.roots)) _platformRoots = d.roots;
+    }
+  } catch(e){}
 }
 function resolveTenant() {
   const t = APP_CONFIG.tenant || {};

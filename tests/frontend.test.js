@@ -105,6 +105,29 @@ test('frontend/tenantId: ?t= ยังชนะ path', () => {
   const { tenantId, isPlausibleTid } = load(['tenantId', 'isPlausibleTid'], { APP_CONFIG, location });
   assert.equal(tenantId(), 'explicit');
 });
+// ── subdomain resolve (brandx.bocean.com) — domain-agnostic ──
+test('frontend/subdomainTid: <sub>.<root> → sub · apex/คำสงวน/หลาย label → ""', () => {
+  const { subdomainTid, isPlausibleTid } = load(['subdomainTid', 'isPlausibleTid']);
+  assert.equal(subdomainTid('brandx.bocean.com', ['bocean.com']), 'brandx');
+  assert.equal(subdomainTid('my-shop.bocean.com', ['bocean.com']), 'my-shop');
+  assert.equal(subdomainTid('bocean.com', ['bocean.com']), '', 'apex = ไม่ใช่ร้าน');
+  assert.equal(subdomainTid('www.bocean.com', ['bocean.com']), '', 'www สงวน');
+  assert.equal(subdomainTid('a.b.bocean.com', ['bocean.com']), '', 'หลาย label ไม่เอา');
+  assert.equal(subdomainTid('brandx.other.com', ['bocean.com']), '', 'คนละ root');
+});
+test('frontend/subdomainTid: domain-agnostic — เปลี่ยน root ได้ทันที', () => {
+  const { subdomainTid, isPlausibleTid } = load(['subdomainTid', 'isPlausibleTid']);
+  assert.equal(subdomainTid('shop1.mystore.app', ['mystore.app']), 'shop1', 'root อื่นก็ทำงาน');
+  assert.equal(subdomainTid('shop1.a.com', ['a.com', 'b.com']), 'shop1', 'หลาย root');
+  assert.equal(subdomainTid('x.bocean.com', []), '', 'ไม่ตั้ง root → inert');
+});
+test('frontend/tenantId: subdomain brandx.bocean.com → brandx (ผ่าน _platformRoots)', () => {
+  const APP_CONFIG = { tenant: { id: 'phuansuan', domains: {} } };
+  const location = { search: '', hostname: 'brandx.bocean.com', pathname: '/' };
+  const _platformRoots = ['bocean.com'];
+  const { tenantId, subdomainTid, isPlausibleTid } = load(['tenantId', 'subdomainTid', 'isPlausibleTid'], { APP_CONFIG, location, _platformRoots });
+  assert.equal(tenantId(), 'brandx');
+});
 test('frontend/isPlausibleTid: slug ผ่าน · คำสงวน/ไฟล์/format ผิด ไม่ผ่าน', () => {
   const { isPlausibleTid } = load(['isPlausibleTid']);
   assert.equal(isPlausibleTid('brandx'), true);

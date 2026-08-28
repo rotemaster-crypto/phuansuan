@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="620" viewBox="0 0 460 620">
+  <!-- Bocean logo — colors: navy #1B3B5C / aqua #22B8D8 / white #FFFFFF. Edit hex values below to recolor. -->
+  <g transform="translate(130,20) scale(0.390625)"><rect width="512" height="512" rx="112" fill="#1B3B5C"/><g fill="none" stroke-linecap="round" stroke-width="30">
+    <path d="M66 330 A190 190 0 0 1 446 330" stroke="#FFFFFF"/>
+    <path d="M128 330 A128 128 0 0 1 384 330" stroke="#FFFFFF"/>
+    <path d="M190 330 A66 66 0 0 1 322 330" stroke="#22B8D8"/>
+  </g>
+  <circle cx="256" cy="330" r="22" fill="#22B8D8"/></g>
+  <text x="230" y="380" text-anchor="middle" font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="108" font-weight="700"><tspan fill="#22B8D8">B</tspan><tspan fill="#1B3B5C">ocean</tspan></text>
+  <text x="230" y="430" text-anchor="middle" font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="400" fill="#5B6b7a">shopping &#183; community &#183; activity</text>
+</svg>

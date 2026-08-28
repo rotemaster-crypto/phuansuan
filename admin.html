@@ -404,6 +404,15 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <div class="screen" id="screen-tenants">
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-building"/></svg>จัดการแบรนด์ (Bocean)</div><div class="page-sub">บริหารทุกแบรนด์บนแพลตฟอร์ม · สลับแบรนด์ที่กำลังดูแล · สร้าง/ระงับ</div></div>
+  <div class="card" style="border:1.5px solid #1877f2;background:#eff6ff">
+    <div class="card-title"><svg class="ic"><use href="#i-globe"/></svg>โดเมนแพลตฟอร์ม (Subdomain Root)</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin:-4px 0 10px">ตั้งโดเมนหลักของแพลตฟอร์ม (เช่น <code>bocean.com</code>) → ทุกร้านได้ <b>subdomain อัตโนมัติ</b> <code>brandx.bocean.com</code> (มาตรฐานสากลแบบ Shopify) · หลายอันคั่นด้วยจุลภาค · <b>ไม่ผูกกับโค้ด</b> — เปลี่ยนชื่อโดเมนได้ทุกเมื่อ · ต้องตั้ง wildcard DNS+SSL (`*.โดเมน`) ที่ฝั่ง infra ด้วย</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="plat-roots" placeholder="bocean.com, bocean.app" style="flex:1;min-width:200px;padding:9px;border:1px solid var(--border);border-radius:8px">
+      <button class="btn btn-primary" onclick="savePlatformRoots()"><svg class="ic"><use href="#i-save"/></svg> บันทึก</button>
+    </div>
+    <div id="plat-roots-status" style="font-size:var(--fs-2xs);color:var(--muted);margin-top:5px"></div>
+  </div>
   <div class="card">
     <div style="font-weight:800;margin-bottom:10px">➕ สร้าง Tenant ใหม่</div>
     <div class="form-grid">
@@ -4126,6 +4135,7 @@ let _tenants = [];
 async function loadTenants(){
   const box = document.getElementById('tenant-list');
   if (!box || !db) return;
+  loadPlatformRoots();
   box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
   try {
     const snap = await db.collection('tenants').get();
@@ -4186,6 +4196,23 @@ async function toggleTenantStatus(tid, status){
     toast(status==='suspended' ? 'ระงับ '+tid+' แล้ว' : 'เปิดใช้ '+tid+' แล้ว','success');
     loadTenants();
   } catch(e){ toast('❌ '+e.message,'error'); }
+}
+// ── โดเมนแพลตฟอร์ม (subdomain root) — platform/domains.roots (super ตั้ง · client อ่าน resolve <sub>.root) ──
+async function loadPlatformRoots(){
+  try {
+    var s = await db.collection('platform').doc('domains').get();
+    var roots = (s.exists && Array.isArray(s.data().roots)) ? s.data().roots : [];
+    var el = document.getElementById('plat-roots'); if (el) el.value = roots.join(', ');
+    var st = document.getElementById('plat-roots-status'); if (st) st.textContent = roots.length ? ('ทำงาน: '+roots.map(function(r){return '*.'+r;}).join(' · ')) : 'ยังไม่ตั้ง — ร้านใช้ ?t= / path ไปก่อน';
+  } catch(e){}
+}
+async function savePlatformRoots(){
+  try {
+    var raw = (document.getElementById('plat-roots').value||'').split(',').map(function(x){ return _normHost(x); }).filter(function(x){ return /^[a-z0-9.-]+\.[a-z]{2,}$/.test(x); });
+    await db.collection('platform').doc('domains').set({ roots: raw, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    toast('✅ บันทึกโดเมนแพลตฟอร์มแล้ว ('+raw.length+')','success');
+    loadPlatformRoots();
+  } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
 }
 // ── โดเมนแบรนด์ (BYOD) — เขียน tenant.domains (origin gate) + platform/domains.map (client resolve live) ──
 function _normHost(v){ return String(v||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,''); }

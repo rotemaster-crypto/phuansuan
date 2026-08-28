@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Bocean logo — colors: navy #1B3B5C / aqua #22B8D8 / white #FFFFFF. Edit hex values below to recolor. -->
+  <g fill="none" stroke-linecap="round" stroke-width="30">
+    <path d="M66 330 A190 190 0 0 1 446 330" stroke="#1B3B5C"/>
+    <path d="M128 330 A128 128 0 0 1 384 330" stroke="#1B3B5C"/>
+    <path d="M190 330 A66 66 0 0 1 322 330" stroke="#22B8D8"/>
+  </g>
+  <circle cx="256" cy="330" r="22" fill="#22B8D8"/>
+</svg>
