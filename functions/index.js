@@ -1935,3 +1935,29 @@ exports.onTierUpgrade = onDocUpd(
     await sendNotif(event.params.tid, event.params.uid, "ยินดีด้วย! คุณเลื่อนระดับเป็น " + (label[a.tier] || a.tier), "tier");
   }
 );
+
+// ── onOrderStatusNotify: แจ้ง buyer เมื่อสถานะออเดอร์เปลี่ยน (§2 reconcile ผ่าน trigger) ──
+//  จุดเดียวจับ "ทุก" ทางที่เปลี่ยน status (setOrderStatus / adminCancelOrder / ลูกค้าส่งสลิป)
+//  → ไม่ต้องกระจาย sendNotif ไปทุก callable · เขียน notification doc + push (ถ้ามี fcmToken)
+const ORDER_NOTIFY = {
+  paid_review: "ได้รับสลิปแล้ว กำลังตรวจสอบการชำระเงิน",
+  confirmed:  "ยืนยันการชำระเงินแล้ว กำลังเตรียมจัดส่ง",
+  shipped:    "ร้านจัดส่งพัสดุแล้ว",
+  completed:  "ออเดอร์สำเร็จแล้ว ขอบคุณที่อุดหนุน",
+  cancelled:  "ออเดอร์ถูกยกเลิก",
+};
+exports.onOrderStatusNotify = onDocUpd(
+  { document: "tenants/{tid}/orders/{orderId}", region: "asia-southeast1" },
+  async (event) => {
+    const before = event.data && event.data.before && event.data.before.data();
+    const after  = event.data && event.data.after  && event.data.after.data();
+    if (!before || !after || before.status === after.status) return;
+    const uid = after.userId; if (!uid) return;
+    const base = ORDER_NOTIFY[after.status];
+    if (!base) return;   // สถานะที่ไม่ต้องแจ้ง (เช่น pending_payment ตอนสร้าง)
+    const oid = String(event.params.orderId || "").slice(-6).toUpperCase();
+    let text = "ออเดอร์ #" + oid + ": " + base;
+    if (after.status === "shipped" && after.trackingNumber) text += " · เลขพัสดุ " + after.trackingNumber;
+    await sendNotif(event.params.tid, uid, text, "order");
+  }
+);

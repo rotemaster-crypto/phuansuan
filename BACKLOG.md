@@ -17,8 +17,9 @@
 - 🟡 แอดมิน **guard ขนส่ง** — เตือนเมื่อปิดโหมดทดสอบแต่ไม่มี key (server fail-safe เป็น mock อยู่แล้ว) · deploy prod แล้ว
 - 🟡 ลูกค้า **deep-link `?post=`** — `maybeOpenDeepLinkPost` เปิดโพสต์จากลิงก์แชร์อัตโนมัติ (scroll+ไฮไลต์ / prepend เมื่อ paginate หลุด) · deploy+push แล้ว (`9cb7da1`)
 - 🟡 แอดมิน **team admin ชื่อ/avatar/เจ้าของ** — resolve LINE id→โปรไฟล์ · pure `teamMemberView` + admin.html test (B13 เริ่ม) · deploy+push แล้ว (`f42a77d`)
-- 🟡 แอดมิน **โอนเจ้าของ** — callable `transferOwnership` (server-authoritative) + e2e 6/6 + UI ปุ่ม · ยังไม่ commit · **ต้อง deploy functions**
-- guard 9/9 · frontend 12/12 · owner e2e 6/6 เขียว
+- 🟡 แอดมิน **โอนเจ้าของ** — callable `transferOwnership` + e2e 6/6 + UI ปุ่ม · deploy functions+push แล้ว (`d04bccf`)
+- 🟡 ลูกค้า **แจ้งเตือนสถานะออเดอร์** — trigger `onOrderStatusNotify` จับทุก status change → notification+push · e2e 5/5 · client รองรับอยู่แล้ว · ยังไม่ commit · **ต้อง deploy functions**
+- guard 9/9 · frontend 12/12 · owner 6/6 · ordernotify 5/5 เขียว
 
 **(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
 
@@ -178,7 +179,7 @@
 - [x] ~~feed ไม่มี pagination~~ — ✅ 2026-08-27: cursor pagination (`orderBy createdAt desc .limit(postsPerPage)` + `startAfter`) + ปุ่ม "โหลดเพิ่ม" · nearby คง geo mode (bounded 100) · pinned/reactions/stats-subscribe คงเดิม · footer "— หมดแล้ว —"
   - leaderboard (top-N `.limit(100).slice(30)`) + my-posts (per-user `.limit(50)`) = **bounded by design** ไม่ใช่ scale issue จริง (ปล่อยไว้)
 - [x] ~~tracking โชว์เลขดิบไม่มีลิงก์ขนส่ง~~ — ✅ 2026-08-28: `courierTrack(code,number)` map รหัส→ชื่อขนส่ง+ลิงก์ติดตามทางการ (ไปรษณีย์ไทย/Flash/Kerry/J&T/Best/Ninja) ผ่าน `safeUrl` · รหัสไม่รู้จัก/ไม่มี url → ปุ่ม "คัดลอกเลขพัสดุ" (ไม่เดาลิงก์) · pure fn + frontend test 4 เคส
-- [ ] buyer: ~~ไม่มี affirmation หลังส่งสลิป~~ (มี toast แล้ว `index.html:4195`) · **ยังเหลือ:** ไม่มี push ตอน admin confirm-ship (ต้อง FCM) · **S**
+- [x] ~~buyer: ไม่มี push ตอน admin confirm-ship~~ — ✅ 2026-08-28: trigger `onOrderStatusNotify` (onDocUpd orders) จับ**ทุก**ทางที่ status เปลี่ยน (setOrderStatus/adminCancelOrder/ส่งสลิป) → `sendNotif` เขียน notification doc + FCM push · confirmed/shipped(+เลขพัสดุ)/completed/cancelled · **e2e 5/5** (`tests/ordernotify.test.js`) · client รองรับครบอยู่แล้ว (UI notifications live `where uid` + `NOTIF_ICON.order='📦'` — ไม่ต้องแก้ client) · **ต้อง deploy functions** · affirmation หลังส่งสลิปมี toast อยู่แล้ว (`index.html:4195`)
 - [x] ~~checkout dead-end~~ — ✅ 2026-08-27: กันตั้งแต่หน้า checkout (`renderCheckoutSummary` ปิดปุ่มยืนยัน + แจ้ง "ร้านยังไม่เปิดรับชำระออนไลน์ ติดต่อร้านโดยตรง" ถ้าไม่มีพร้อมเพย์) + backstop copy สุภาพ (เลิกอ้าง config.js)
 - [x] ~~ปุ่มแชร์โพสต์~~ — ✅ 2026-08-27: `sharePost(postId)` ส่ง URL `?post=id` + fallback คัดลอกลิงก์เมื่อ share ล้ม (ไม่กลืน · AbortError=ยกเลิกเฉยๆ)
 - [x] ~~deep-link handler auto-open โพสต์จาก `?post=`~~ — ✅ 2026-08-28: `maybeOpenDeepLinkPost()` หลังฟีดเรนเดอร์รอบแรก (ทำครั้งเดียว · ล้าง `?post=` ออกจาก URL กันเปิดซ้ำ) · อยู่ในฟีด→scroll+ไฮไลต์ (keyframe `phl`) · ไม่อยู่ (paginate หลุด)→ดึง doc ตรง+prepend ด้วย `renderPost` เดิม+wiring reactions/related/stats (ไม่ทำ markup ซ้ำ) · ไม่พบ/คนละ tenant→toast · guard A2 ผ่าน (reuse safeUrl/escapeHtml)
