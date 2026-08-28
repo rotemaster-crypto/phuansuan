@@ -32,6 +32,12 @@
 
 **🧩 งาน agent-doable ที่เหลือ (เลือกได้เมื่อว่าง):** โลโก้ Bocean C (super-admin zone) + D (default favicon แอปร้าน) · marketplace MVP (browse ข้ามร้านตาม `platformCategory` — เหมาะเมื่อแบรนด์เยอะ) · dashboard revenue sum-agg (เมื่อ data โต) · B16 dedup / empty-catch (opportunistic · value ต่ำ) · mark COD/partial-refund (ไม่พอดีโมเดล promptpay)
 
+**🆕 กำลังทำ (ยังไม่ commit/deploy — Roger เคาะแล้ว build เสร็จ + test เขียว):**
+- **Umbrella brand switcher (แบบ A)** — 1 identity global + เศรษฐกิจแยกต่อแบรนด์ + "แบรนด์ของฉัน" สลับในไอคอนเดียว (แก้ปัญหาลูกค้าตาม 10 แบรนด์ต้องลง 10 PWA) · ดู [[umbrella-brand-switcher]]
+  - ✅ rules root `accounts/{uid}` (+`/brands/{tid}`) own-only · rules test +5 (58/58)
+  - ✅ client: `accounts` upsert + auto-follow ตอน login (`upsertAccount`) · sync ชื่อ/รูป LINE ลง per-brand · section "แบรนด์ของฉัน" ในโปรไฟล์ (`loadMyBrands`/`switchBrand` ผ่าน `?t=`) · pure `buildBrandEntry` + frontend test +2 (31/31) · guard 9/9 · syntax OK
+  - **ค้าง:** ยังไม่ commit/push/deploy (Roger trigger) · verify สดบน prod (login → เข้า 2 แบรนด์ → เช็ค switcher โผล่+สลับ+ข้อมูลแยก) · เฟสถัดไป: แต้ม/tier ใน switcher · CTA "เข้าร่วมแบรนด์นี้" ตอนเป็น guest · แก้ชื่อ global เอง · marketplace browse กลาง
+
 **(pointer เก่า 2026-08-27 · เซสชัน N0-N7) origin/main = `63a67d4`**
 
 **✅ เซสชันนี้ (deploy prod + commit + push ครบ):**

@@ -166,6 +166,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // บัญชี global ข้ามแบรนด์ (umbrella) — identity (ชื่อ/รูปจาก LINE) + รายการแบรนด์ที่ตาม
+    //   เจ้าของเท่านั้น (own-only) · ไม่มีเศรษฐกิจ/สิทธิ์ (แต้ม/tier/สมาชิกยังอยู่ tenants/{t}/ + claims)
+    //   → เป็น "social tier" ตาม CLAUDE.md §1: client เขียนตรง rules validate เจ้าของ · ไม่ต้องผ่าน callable
+    match /accounts/{uid} {
+      allow read, create, update: if isOwner(uid);
+      allow delete: if false;
+      // แบรนด์ที่ผู้ใช้ตาม (auto-follow ตอนเข้าแบรนด์) — bookmark ล้วน ไม่ใช่ membership
+      match /brands/{tid} { allow read, write: if isOwner(uid); }
+    }
+
     // (legacy top-level rules ลบออกแล้ว 2026-08-24 — ทุก path ใช้ tenants/{t}/... เท่านั้น)
     // backup: docs/_archive/firestore.rules_*.bak
 

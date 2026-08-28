@@ -631,6 +631,11 @@ button .ic,a .ic{pointer-events:none}
   <div class="prof-nav">
     <div class="pnav active">โพส</div>
   </div>
+  <div class="crops-card" id="my-brands-card" style="display:none">
+    <div class="sec-title"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-globe"/></svg> แบรนด์ของฉัน</div>
+    <div style="font-size:var(--fs-xs);color:var(--muted);margin:2px 0 10px">แบรนด์ที่คุณเคยเข้า — แตะเพื่อสลับ (แต้ม/ประวัติแยกกันแต่ละแบรนด์)</div>
+    <div id="my-brands"></div>
+  </div>
   <div class="crops-card">
     <div class="sec-title"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-pin"/></svg> ที่อยู่จัดส่ง</div>
     <div style="font-size:var(--fs-xs);color:var(--muted);margin:2px 0 10px">ตั้งไว้ครั้งเดียว — เวลาสั่งของจะเติมให้อัตโนมัติ ไม่ต้องกรอกซ้ำ</div>
@@ -1342,7 +1347,11 @@ async function saveUserToFirestore(user) {
     } else {
       // User เก่า — อัพเดตเวลาเข้าใช้ (A5: ไม่ increment points ที่ client อีกต่อไป —
       // rules ห้ามแล้ว; โบนัสรายวันให้ Cloud Function จัดการ ดูด้านล่าง)
-      await userRef.update({ lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(), tenantId: tenantId() });
+      // umbrella แบบ A: sync ชื่อ/รูปจาก LINE (global) ลงสำเนา per-brand ให้ล่าสุด (ไม่แตะ field เศรษฐกิจ)
+      await userRef.update({
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(), tenantId: tenantId(),
+        displayName: user.displayName, photoUrl: user.photoUrl,
+      });
     }
 
     // A5: โบนัสเข้าระบบรายวัน — server เป็นคนให้ (idempotent ต่อวัน) แทน client เดิมที่ increment เอง
@@ -1354,9 +1363,84 @@ async function saveUserToFirestore(user) {
     const fresh = await userRef.get();
     currentUser = { ...currentUser, ...fresh.data() };
 
+    // umbrella แบบ A: บันทึกบัญชี global + auto-follow แบรนด์นี้ (ไม่ block flow — มี try/catch ในตัว)
+    upsertAccount();
+
   } catch (err) {
     console.error('saveUserToFirestore error:', err);
   }
+}
+
+// ══ Umbrella (แบบ A): 1 identity → หลาย brand context — ดู memory umbrella-brand-switcher ══
+// สร้าง entry แบรนด์สำหรับรายการ "แบรนด์ของฉัน" (pure — ทดสอบใน frontend.test.js)
+function buildBrandEntry(tid, branding, cfg) {
+  branding = branding || {}; cfg = cfg || {};
+  var app = cfg.app || {};
+  var name  = branding.appName  || (cfg.tenant && cfg.tenant.name) || app.name || tid;
+  var emoji = branding.logoEmoji || app.logoEmoji || '🌿';
+  return { tid: tid, brandName: String(name).slice(0, 80), logoEmoji: String(emoji).slice(0, 8) };
+}
+
+// upsert บัญชี global (identity จาก LINE) + auto-follow แบรนด์ปัจจุบัน
+async function upsertAccount() {
+  if (!db || !currentUser || currentUser.isGuest || !currentUser.uid) return;
+  try {
+    var uid = currentUser.uid;
+    var acctRef = db.collection('accounts').doc(uid);
+    await acctRef.set({
+      displayName: currentUser.displayName || '',
+      photoUrl:    currentUser.photoUrl || '',
+      lineUserId:  currentUser.lineUserId || uid,
+      updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    var entry = buildBrandEntry(tenantId(), window._branding, (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {}));
+    var bRef  = acctRef.collection('brands').doc(entry.tid);
+    var bSnap = await bRef.get();
+    var data  = { tid: entry.tid, brandName: entry.brandName, logoEmoji: entry.logoEmoji,
+                  lastSeenAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (!bSnap.exists) data.firstSeenAt = firebase.firestore.FieldValue.serverTimestamp();
+    await bRef.set(data, { merge: true });
+  } catch (e) { console.warn('[umbrella] upsertAccount ข้ามได้:', e && e.message); }
+}
+
+// สลับแบรนด์ (โหลดใหม่ด้วย ?t= — priority สูงสุดใน tenantId trilogy → ได้ข้อมูลแบรนด์นั้น)
+function switchBrand(tid) {
+  if (!/^[a-zA-Z0-9_-]{1,40}$/.test(tid || '')) return;   // กัน JS-injection ใน onclick
+  if (tid === tenantId()) return;
+  var url = new URL(location.href);
+  url.searchParams.set('t', tid);
+  url.searchParams.delete('post'); url.searchParams.delete('product');   // ล้าง deep-link เก่า
+  location.href = url.toString();
+}
+
+// เรนเดอร์ section "แบรนด์ของฉัน" ในโปรไฟล์ (ซ่อนถ้ามีแบรนด์เดียว)
+async function loadMyBrands() {
+  var card = document.getElementById('my-brands-card');
+  var box  = document.getElementById('my-brands');
+  if (!card || !box) return;
+  if (!db || !currentUser || currentUser.isGuest || !currentUser.uid) { card.style.display = 'none'; return; }
+  try {
+    var snap  = await db.collection('accounts').doc(currentUser.uid).collection('brands').get();
+    var items = snap.docs.map(function (d) { return d.data() || {}; })
+      .filter(function (b) { return /^[a-zA-Z0-9_-]{1,40}$/.test(b.tid || ''); });
+    if (items.length <= 1) { card.style.display = 'none'; return; }   // ไม่มีอะไรให้สลับ
+    items.sort(function (a, b) { return (b.lastSeenAt && b.lastSeenAt.seconds || 0) - (a.lastSeenAt && a.lastSeenAt.seconds || 0); });
+    var cur = tenantId();
+    box.innerHTML = items.map(function (b) {
+      var active = b.tid === cur;
+      return '<button ' + (active ? 'disabled ' : 'onclick="switchBrand(\'' + b.tid + '\')" ')
+        + 'style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:' + (active ? '#eef4ff' : '#fff')
+        + ';border:1px solid ' + (active ? 'var(--primary)' : '#e3e6ea') + ';border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:'
+        + (active ? 'default' : 'pointer') + ';font-family:inherit">'
+        + '<span style="font-size:22px;line-height:1">' + escapeHtml(b.logoEmoji || '🌿') + '</span>'
+        + '<span style="flex:1;min-width:0"><span style="display:block;font-weight:700;font-size:var(--fs-base);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+        + (escapeHtml(b.brandName) || escapeHtml(b.tid)) + '</span>'
+        + '<span style="font-size:var(--fs-xs);color:var(--muted)">' + (active ? 'กำลังดูอยู่' : 'แตะเพื่อสลับ') + '</span></span>'
+        + (active ? '<span style="color:var(--primary);font-size:var(--fs-lg)">✓</span>' : '<span style="color:var(--muted);font-size:var(--fs-lg)">›</span>')
+        + '</button>';
+    }).join('');
+    card.style.display = '';
+  } catch (e) { card.style.display = 'none'; }
 }
 
 function updateUIWithUser(user) {
@@ -2278,6 +2362,7 @@ function renderProfileInfo() {
     });
     bEl.innerHTML = html;
   }
+  try { loadMyBrands(); } catch (_) {}   // umbrella: section "แบรนด์ของฉัน"
 }
 
 // ── My Posts (โพสของฉันในโปรไฟล์) ─────────────────────────

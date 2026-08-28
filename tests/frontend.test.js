@@ -270,3 +270,23 @@ test('admin/_normHost: ตัด scheme/path + lowercase', () => {
   assert.equal(_normHost('  SHOP.CO  '), 'shop.co');
   assert.equal(_normHost('http://a.b.co/'), 'a.b.co');
 });
+
+// ── buildBrandEntry (umbrella) — entry แบรนด์สำหรับ switcher "แบรนด์ของฉัน" ──
+test('frontend/buildBrandEntry: ใช้ branding ก่อน · fallback config · default emoji', () => {
+  const { buildBrandEntry } = load(['buildBrandEntry']);
+  const cfg = { tenant: { name: 'ชื่อจาก config' }, app: { name: 'App', logoEmoji: '🛒' } };
+  // branding ชนะ config
+  const e1 = buildBrandEntry('brandx', { appName: 'ร้านเอ', logoEmoji: '🌸' }, cfg);
+  assert.equal(e1.tid, 'brandx'); assert.equal(e1.brandName, 'ร้านเอ'); assert.equal(e1.logoEmoji, '🌸');
+  // ไม่มี branding → tenant.name + app.logoEmoji
+  const e2 = buildBrandEntry('brandy', null, cfg);
+  assert.equal(e2.brandName, 'ชื่อจาก config'); assert.equal(e2.logoEmoji, '🛒');
+  // ไม่มีอะไรเลย → tid เป็นชื่อ + default 🌿
+  const e3 = buildBrandEntry('brandz', {}, {});
+  assert.equal(e3.tid, 'brandz'); assert.equal(e3.brandName, 'brandz'); assert.equal(e3.logoEmoji, '🌿');
+});
+test('frontend/buildBrandEntry: clamp ความยาว brandName กัน doc บวม', () => {
+  const { buildBrandEntry } = load(['buildBrandEntry']);
+  const long = 'ก'.repeat(200);
+  assert.equal(buildBrandEntry('b', { appName: long }, {}).brandName.length, 80);
+});

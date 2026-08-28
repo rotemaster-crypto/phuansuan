@@ -258,3 +258,23 @@ test('A10: guest (ไม่ login) สร้าง tenantRequest = DENIED', asyn
 test('A10: ผู้ใช้ที่ login แล้วสร้าง tenantRequest = OK', async () => {
   await assertSucceeds(setDoc(doc(memberA(), 'tenantRequests/r2'), validReq));
 });
+
+// ── umbrella: accounts/{uid} (identity + แบรนด์ที่ตาม) = เจ้าของเท่านั้น ──
+test('umbrella: เจ้าของเขียนบัญชี global ตัวเอง = OK', async () => {
+  await assertSucceeds(setDoc(doc(memberA(), 'accounts/uA'), { displayName: 'A', photoUrl: '' }));
+});
+test('umbrella: เจ้าของ auto-follow แบรนด์ (brands subcollection) = OK', async () => {
+  await assertSucceeds(setDoc(doc(memberA(), 'accounts/uA/brands/brandA'), { tid: 'brandA', brandName: 'Brand A' }));
+});
+test('umbrella: คนอื่นอ่านบัญชี global ของ uA = DENIED', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'accounts/uA'), { displayName: 'A' });
+  });
+  await assertFails(getDoc(doc(memberB(), 'accounts/uA')));
+});
+test('umbrella: คนอื่นเขียนบัญชี global ของ uA = DENIED', async () => {
+  await assertFails(setDoc(doc(memberB(), 'accounts/uA'), { displayName: 'hijack' }));
+});
+test('umbrella: คนอื่นเขียน brands ของ uA = DENIED', async () => {
+  await assertFails(setDoc(doc(memberB(), 'accounts/uA/brands/brandB'), { tid: 'brandB' }));
+});
