@@ -9,23 +9,30 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-28
-**local HEAD = `5ce1630` (🟡 batch) + งาน 2026-08-28 ยังไม่ commit · deploy มือ (login rotemaster พร้อม)**
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-28 (เซสชันยาว · pushed ครบ)
+**origin/main = local HEAD = `ba4e6fa` · prod live ครบ + push ครบทุก commit · deploy มือ (login rotemaster พร้อม) · working tree clean**
 
-**✅ เซสชัน 2026-08-28:**
-- 🟡 ลูกค้า **ติดตามพัสดุ** — `courierTrack` ชื่อขนส่ง+ลิงก์ติดตามทางการ (safeUrl) / รหัสไม่รู้จัก→ปุ่มคัดลอกเลข · frontend test 4 เคส · **deploy+verify prod แล้ว** (`6b557d8`)
-- 🟡 แอดมิน **guard ขนส่ง** — เตือนเมื่อปิดโหมดทดสอบแต่ไม่มี key (server fail-safe เป็น mock อยู่แล้ว) · deploy prod แล้ว
-- 🟡 ลูกค้า **deep-link `?post=`** — `maybeOpenDeepLinkPost` เปิดโพสต์จากลิงก์แชร์อัตโนมัติ (scroll+ไฮไลต์ / prepend เมื่อ paginate หลุด) · deploy+push แล้ว (`9cb7da1`)
-- 🟡 แอดมิน **team admin ชื่อ/avatar/เจ้าของ** — resolve LINE id→โปรไฟล์ · pure `teamMemberView` + admin.html test (B13 เริ่ม) · deploy+push แล้ว (`f42a77d`)
-- 🟡 แอดมิน **โอนเจ้าของ** — callable `transferOwnership` + e2e 6/6 + UI ปุ่ม · deploy functions+push แล้ว (`d04bccf`)
-- 🟡 ลูกค้า **แจ้งเตือนสถานะออเดอร์** — trigger `onOrderStatusNotify` · e2e 5/5 · deploy functions+push แล้ว (`0c0614f`)
-- 🆕 **streak engine (เช็คอินต่อเนื่อง)** — callable `claimStreak` + rules lock A5 + client + admin config · e2e 6/6 · deploy functions+rules+hosting+push แล้ว (`402d27c`)
-- 🟡 แอดมิน **orders date-range filter** — pure `orderInDateRange` · export เคารพช่วง · deploy hosting+push แล้ว (`ce23af1`)
-- 🟡 แอดมิน **sysoverview count() aggregation** — `_collCount` แก้ read-explosion B6/B7 · deploy hosting+push แล้ว (`9aed934`)
-- 🆕 **หมวดสินค้า 2 ชั้น marketplace-ready** — canonical `platform/categories` (super) + per-brand `settings/categories` + product `platformCategory` tag · customer อ่านสด+fallback · pure helper+test · ยังไม่ commit · **deploy hosting** · [[marketplace-ready-taxonomy]]
-- guard 9/9 · frontend 19/19 · owner 6/6 · ordernotify 5/5 · streak 6/6 · rules 53/53 · ทั้ง 2 ไฟล์ compile ผ่าน
+**✅ เซสชันนี้ (16 commits · deploy+verify prod ครบ):**
+งานย่อย/แก้: ติดตามพัสดุ (`courierTrack`) · guard ขนส่ง · deep-link `?post=` · team admin ชื่อ/avatar/โอนเจ้าของ (`transferOwnership` e2e 6/6) · แจ้งเตือนสถานะออเดอร์ (trigger `onOrderStatusNotify` e2e 5/5) · orders date-range · sysoverview `count()` (B6/B7) · product search (ลูกค้า+admin) · แชร์สินค้า `?product=`
+**Vertical/growth ใหญ่:**
+- 🆕 **streak engine** — `claimStreak` (rules lock A5 + admin config + client) · e2e 6/6 · [[activity-engine]]
+- 🆕 **หมวดสินค้า 2 ชั้น marketplace-ready** — canonical `platform/categories` (super) + per-brand `settings/categories` + product `platformCategory` tag · [[marketplace-ready-taxonomy]]
+- 🆕 **custom domain BYOD + subdomain + path resolve** — `tenantId()` trilogy (?t= > hostname > `<sub>.<root>` > path) · super ตั้ง `platform/domains.roots`/`.map` · domain-agnostic · [[custom-domain-byod]]
+- 🆕 **OG share-preview** — function `ogPreview` `/s/<tid>/p|post/<id>` (hosting rewrite) · verify prod จริง
+- 🆕 **โลโก้ Bocean** บน bocean.html (A+B: icon จริง + favicon + OG) · brand kit `Logo_Bocean/`
+- 📄 **`CLOUDFLARE_SETUP.md`** — checklist จด bocean.com → subdomain → for SaaS
 
-**(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
+**Test รวม:** frontend 29/29 · rules 53/53 · e2e ใหม่: owner 6 · ordernotify 5 · streak 6 · ogpreview 5 · guard 9/9 · compile ผ่านทุกไฟล์
+
+**⏸️ กำลังรอ Roger (แจ้งว่าจะสมัคร Cloudflare + จด bocean.com):**
+- จด `bocean.com` ที่ Cloudflare → ทำตาม `CLOUDFLARE_SETUP.md` (Phase 1–2 ใช้ได้ทันที · subdomain Phase 3 = Worker)
+- **พอโดเมนพร้อม agent ทำต่อได้:** verify เชื่อม Firebase/Worker · ตั้ง `platform/domains.roots` ในหลังบ้าน · authorized domains · **เฟส 5: callable ยิง Cloudflare API (auto custom domain แบรนด์ = for SaaS)**
+
+**🔒 ค้างที่ต้อง Roger เท่านั้น (agent ทำไม่ได้):** CI secret `FIREBASE_SA_PHUANSUAN` · N2b Shippop label (sandbox key) · App Check (console) · Facebook login (console) · wildcard DNS+SSL infra
+
+**🧩 งาน agent-doable ที่เหลือ (เลือกได้เมื่อว่าง):** โลโก้ Bocean C (super-admin zone) + D (default favicon แอปร้าน) · marketplace MVP (browse ข้ามร้านตาม `platformCategory` — เหมาะเมื่อแบรนด์เยอะ) · dashboard revenue sum-agg (เมื่อ data โต) · B16 dedup / empty-catch (opportunistic · value ต่ำ) · mark COD/partial-refund (ไม่พอดีโมเดล promptpay)
+
+**(pointer เก่า 2026-08-27 · เซสชัน N0-N7) origin/main = `63a67d4`**
 
 **✅ เซสชันนี้ (deploy prod + commit + push ครบ):**
 - **N0-N3** trim toggle · แยกตกแต่งร้าน/จัดส่ง · ใบส่งดึง Shippop API (N2b label รอ sandbox) · หมวด 27 แนว Shopee
