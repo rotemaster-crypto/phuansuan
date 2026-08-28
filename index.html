@@ -1439,7 +1439,7 @@ async function refreshBrandChevron() {
       .filter(function (b) { return /^[a-zA-Z0-9_-]{1,40}$/.test(b.tid || ''); });
     items.sort(function (a, b) { return (b.lastSeenAt && b.lastSeenAt.seconds || 0) - (a.lastSeenAt && a.lastSeenAt.seconds || 0); });
     window._myBrands = items;
-    if (items.length >= 2) {   // มีที่ให้สลับจริงเท่านั้นถึงโชว์ affordance
+    if (items.length >= 1) {   // โชว์ ▾ ตั้งแต่แบรนด์แรก (เห็นฟีเจอร์ + ยืนยันบัญชีถูกผูก)
       if (chev) chev.style.display = '';
       if (brand) brand.style.cursor = 'pointer';
     }
@@ -1451,7 +1451,7 @@ function closeBrandSwitcher() { var o = document.getElementById('brandSwitcher')
 // เปิด bottom sheet สลับแบรนด์ (โลโก้+ชื่อ + แต้ม/tier ต่อแบรนด์) — แบบ IG/Google account switcher
 async function openBrandSwitcher() {
   var items = window._myBrands || [];
-  if (items.length < 2) return;   // ไม่มีอะไรให้สลับ → หัวไม่ทำงาน
+  if (items.length < 1) return;   // ยังไม่เคยเข้าแบรนด์ใด → หัวไม่ทำงาน
   var list = document.getElementById('brand-switch-list');
   var overlay = document.getElementById('brandSwitcher');
   if (!list || !overlay) return;
@@ -1470,6 +1470,8 @@ async function openBrandSwitcher() {
       + (active ? '<span style="color:var(--primary);font-size:var(--fs-lg);font-weight:700">✓</span>' : '<span style="color:#c5c9ce;font-size:var(--fs-lg)">›</span>')
       + '</button>';
   }).join('');
+  // แบรนด์เดียว: ใบ้ให้เข้าแบรนด์อื่นด้วยบัญชีเดียวกัน (อยู่ใน sheet ไม่รกโปรไฟล์)
+  if (items.length === 1) list.innerHTML += '<div style="font-size:var(--fs-xs);color:var(--muted);text-align:center;padding:14px 20px 4px">เข้าแบรนด์อื่นด้วยบัญชีเดียวกัน แล้วจะมาอยู่ที่นี่ให้สลับได้</div>';
   overlay.classList.add('open');
   // เติมแต้ม/tier ต่อแบรนด์ (อ่าน user doc ตัวเองในแต่ละ tenant — rules อนุญาต isOwner)
   items.forEach(async function (b) {

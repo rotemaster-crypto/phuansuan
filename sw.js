@@ -6,7 +6,7 @@
  *   • ข้ามพวก Firebase/gstatic/LINE/analytics → ปล่อยผ่าน network เสมอ
  *  bump CACHE_VERSION เมื่อแก้ shell เพื่อล้าง cache เก่า
  * ========================================================== */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE  = `bocean-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `bocean-runtime-${CACHE_VERSION}`;
 
