@@ -9,8 +9,15 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-27 (เซสชัน N0-N7 · pushed)
-**origin/main = `63a67d4` · prod live ครบ + push แล้ว · deploy มือ (hosting+functions+rules+storage · login rotemaster พร้อม)**
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-28
+**local HEAD = `5ce1630` (🟡 batch) + งาน 2026-08-28 ยังไม่ commit · deploy มือ (login rotemaster พร้อม)**
+
+**✅ เซสชัน 2026-08-28 (ยังไม่ deploy/commit):**
+- 🟡 ลูกค้า **ติดตามพัสดุ** — `courierTrack` ชื่อขนส่ง+ลิงก์ติดตามทางการ (safeUrl) / รหัสไม่รู้จัก→ปุ่มคัดลอกเลข · frontend test 4 เคส
+- 🟡 แอดมิน **guard ขนส่ง** — เตือนเมื่อปิดโหมดทดสอบแต่ไม่มี key (server fail-safe เป็น mock อยู่แล้ว)
+- guard 9/9 · frontend 9/9 เขียว
+
+**(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
 
 **✅ เซสชันนี้ (deploy prod + commit + push ครบ):**
 - **N0-N3** trim toggle · แยกตกแต่งร้าน/จัดส่ง · ใบส่งดึง Shippop API (N2b label รอ sandbox) · หมวด 27 แนว Shopee
@@ -156,7 +163,7 @@
 
 ### Admin — อื่นๆ
 - [x] ~~products bulk/sort~~ — ✅ 2026-08-27: sort dropdown (ล่าสุด/ชื่อ ก-ฮ/ราคา/สต็อกน้อย→มาก/ขายดี · pure `sortProducts` เทสผ่าน) + bulk select (checkbox + bar: เปิดขาย/ปิดขาย/ลบ · Firestore batch atomic) · ยังเหลือ: category hardcode (`catEmojiA`) · `PC_TIERS` hardcode · search แค่ชื่อ
-- [ ] courier: ไม่มี guard กันปิด mock (ไปโหมดจริง) ทั้งที่ `hasKey=false` · **S**
+- [x] ~~courier: ไม่มี guard กันปิด mock (ไปโหมดจริง) ทั้งที่ `hasKey=false`~~ — ✅ 2026-08-28: `saveCourier` เตือน (confirm) เมื่อปิดโหมดทดสอบแต่ยังไม่มี key · หมายเหตุ: เซิร์ฟเวอร์ fail-safe เป็น mock อยู่แล้วถ้าไม่มี key (`functions/index.js:1102`) → guard นี้เป็น UX กัน admin เข้าใจผิด
 - [x] ~~team admin race~~ — ✅ 2026-08-27: `addTeamAdmin`/`removeTeamAdmin` ใช้ `arrayUnion`/`arrayRemove` (atomic) · rules ล็อกถูก
 - [x] ~~badges race~~ — ✅ 2026-08-27: `addBadge`/`deleteBadge`/`seedDefaultBadges` ใช้ `runTransaction` (`_badgeTxn` helper) แทน read-modify-write → atomic กัน lost update (badges เป็น array of object ใช้ arrayUnion/Remove ไม่สะดวก → transaction)
 - [ ] team admin: โชว์ UID ดิบ ไม่มีชื่อ/avatar/เจ้าของ/โอนเจ้าของ · **S–M**
@@ -166,7 +173,8 @@
 - [x] ~~feed drop โพสต์เงียบ~~ — ✅ 2026-08-27: filter feed หลัก + groups เป็น `!tenantId || tenantId===tenantId()` (เก็บโพสต์ legacy ที่ไม่มี field · path scope แล้ว) → feed ไม่โชว์ < 10
 - [x] ~~feed ไม่มี pagination~~ — ✅ 2026-08-27: cursor pagination (`orderBy createdAt desc .limit(postsPerPage)` + `startAfter`) + ปุ่ม "โหลดเพิ่ม" · nearby คง geo mode (bounded 100) · pinned/reactions/stats-subscribe คงเดิม · footer "— หมดแล้ว —"
   - leaderboard (top-N `.limit(100).slice(30)`) + my-posts (per-user `.limit(50)`) = **bounded by design** ไม่ใช่ scale issue จริง (ปล่อยไว้)
-- [ ] buyer เห็นสถานะออเดอร์เฉพาะเปิด modal เอง — ไม่มี affirmation หลังส่งสลิป / ไม่มี push ตอน admin confirm-ship / tracking โชว์เลขดิบไม่มีลิงก์ขนส่ง · **S**
+- [x] ~~tracking โชว์เลขดิบไม่มีลิงก์ขนส่ง~~ — ✅ 2026-08-28: `courierTrack(code,number)` map รหัส→ชื่อขนส่ง+ลิงก์ติดตามทางการ (ไปรษณีย์ไทย/Flash/Kerry/J&T/Best/Ninja) ผ่าน `safeUrl` · รหัสไม่รู้จัก/ไม่มี url → ปุ่ม "คัดลอกเลขพัสดุ" (ไม่เดาลิงก์) · pure fn + frontend test 4 เคส
+- [ ] buyer: ~~ไม่มี affirmation หลังส่งสลิป~~ (มี toast แล้ว `index.html:4195`) · **ยังเหลือ:** ไม่มี push ตอน admin confirm-ship (ต้อง FCM) · **S**
 - [x] ~~checkout dead-end~~ — ✅ 2026-08-27: กันตั้งแต่หน้า checkout (`renderCheckoutSummary` ปิดปุ่มยืนยัน + แจ้ง "ร้านยังไม่เปิดรับชำระออนไลน์ ติดต่อร้านโดยตรง" ถ้าไม่มีพร้อมเพย์) + backstop copy สุภาพ (เลิกอ้าง config.js)
 - [x] ~~ปุ่มแชร์โพสต์~~ — ✅ 2026-08-27: `sharePost(postId)` ส่ง URL `?post=id` (deep-link forward-compat) + fallback คัดลอกลิงก์เมื่อ share ล้ม (ไม่กลืน · AbortError=ยกเลิกเฉยๆ) · ปุ่มส่ง `${id}` · **เหลือ:** deep-link handler auto-open โพสต์จาก `?post=` (feature แยก)
 

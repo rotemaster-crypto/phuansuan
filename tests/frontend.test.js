@@ -76,3 +76,32 @@ test('frontend/tenantId: default เมื่อไม่แมตช์', () =>
   const { tenantId } = load(['tenantId'], { APP_CONFIG, location });
   assert.equal(tenantId(), 'phuansuan');
 });
+
+// ── courierTrack — รหัสขนส่ง → ชื่อ + ลิงก์ติดตาม ──
+test('frontend/courierTrack: รหัสรู้จัก → ชื่อ + ลิงก์ต่อเลขพัสดุ', () => {
+  const { courierTrack } = load(['courierTrack']);
+  const flash = courierTrack('FLE', 'TH123');
+  assert.equal(flash.name, 'Flash Express');
+  assert.equal(flash.url, 'https://www.flashexpress.com/fle/tracking?se=TH123');
+  // case-insensitive + ชื่อไทยเป็น key ได้
+  assert.equal(courierTrack('thaipost', 'EA1').name, 'ไปรษณีย์ไทย');
+  assert.ok(courierTrack('thaipost', 'EA1').url.endsWith('trackNumber=EA1'));
+});
+test('frontend/courierTrack: เลขพัสดุถูก encode (กัน url แตก)', () => {
+  const { courierTrack } = load(['courierTrack']);
+  assert.equal(courierTrack('KEX', 'A B&C').url, 'https://th.kerryexpress.com/th/track/?track=A%20B%26C');
+});
+test('frontend/courierTrack: รหัสไม่รู้จัก/ว่าง หรือขนส่งไม่มี url → url:null (ไม่เดาลิงก์)', () => {
+  const { courierTrack } = load(['courierTrack']);
+  const empty = courierTrack('', 'X1');
+  assert.equal(empty.name, ''); assert.equal(empty.url, null);
+  const weird = courierTrack('WEIRD', 'X1');
+  assert.equal(weird.name, ''); assert.equal(weird.url, null);
+  const spx = courierTrack('SPX', 'X1');
+  assert.equal(spx.name, 'SPX Express');
+  assert.equal(spx.url, null, 'SPX ยังไม่ยืนยัน url → null');
+});
+test('frontend/courierTrack: มีชื่อขนส่งแต่ไม่มีเลข → url:null', () => {
+  const { courierTrack } = load(['courierTrack']);
+  assert.equal(courierTrack('FLE', '').url, null);
+});

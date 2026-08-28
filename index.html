@@ -382,6 +382,7 @@ button .ic,a .ic{pointer-events:none}
 .ord-date{font-size:var(--fs-xs);color:var(--muted)}
 .ord-total{font-size:var(--fs-md);font-weight:800;color:var(--primary)}
 .ord-track{font-size:var(--fs-xs);color:#7b61ff;margin-top:5px;font-weight:600}
+.ord-trackbtn{display:inline-block;margin-top:6px;background:#f2effc;color:#7b61ff;border:1px solid #ddd3f7;border-radius:8px;padding:7px 12px;font-size:var(--fs-xs);font-weight:700;cursor:pointer;text-decoration:none}
 .ord-pay{width:100%;margin-top:9px;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:var(--fs-base);font-weight:700;cursor:pointer}
 .ord-link{background:var(--bg);border:1px solid var(--border);border-radius:18px;padding:8px 13px;font-size:var(--fs-sm);font-weight:600;color:var(--text);cursor:pointer;flex-shrink:0}
 
@@ -4206,6 +4207,35 @@ const ORDER_STATUS = {
   completed:{t:'สำเร็จ',c:'#2e7d32'},
   cancelled:{t:'ยกเลิก',c:'#e41e3f'}
 };
+// map รหัส/ชื่อขนส่ง → ชื่อแสดง + ลิงก์ติดตามพัสดุ (เว็บติดตามทางการของขนส่งจริง)
+// รหัสไม่รู้จัก/ว่าง → url:null → ฝั่ง UI โชว์เลขดิบ + ปุ่มคัดลอกแทน (ไม่แต่งลิงก์เดา)
+function courierTrack(code, number){
+  var k = String(code||'').trim().toUpperCase();
+  var num = String(number||'').trim();
+  var M = {
+    THAIPOST:{n:'ไปรษณีย์ไทย',u:'https://track.thailandpost.co.th/?trackNumber='},
+    THP:{n:'ไปรษณีย์ไทย',u:'https://track.thailandpost.co.th/?trackNumber='},
+    EMS:{n:'ไปรษณีย์ไทย',u:'https://track.thailandpost.co.th/?trackNumber='},
+    FLASH:{n:'Flash Express',u:'https://www.flashexpress.com/fle/tracking?se='},
+    FLE:{n:'Flash Express',u:'https://www.flashexpress.com/fle/tracking?se='},
+    KERRY:{n:'Kerry Express',u:'https://th.kerryexpress.com/th/track/?track='},
+    KEX:{n:'Kerry Express',u:'https://th.kerryexpress.com/th/track/?track='},
+    JT:{n:'J&T Express',u:'https://www.jtexpress.co.th/index/query/gzquery.html?bills='},
+    BEST:{n:'Best Express',u:'https://www.best-inc.co.th/track?bills='},
+    NINJA:{n:'Ninja Van',u:'https://www.ninjavan.co/th-th/tracking?id='},
+    NJV:{n:'Ninja Van',u:'https://www.ninjavan.co/th-th/tracking?id='},
+    SPX:{n:'SPX Express',u:''}   // ยังไม่ยืนยัน URL ติดตามทางการ → ชื่ออย่างเดียว
+  };
+  var e = M[k] || null;
+  return {
+    name: e ? e.n : '',
+    url: (e && e.u && num) ? (e.u + encodeURIComponent(num)) : null
+  };
+}
+async function copyTracking(n){
+  try { await navigator.clipboard.writeText(n); toast('คัดลอกเลขพัสดุแล้ว 📋'); }
+  catch(e){ try { prompt('คัดลอกเลขพัสดุนี้:', n); } catch(e2){} }
+}
 async function openMyOrders(){
   const m = document.getElementById('ordersModal'); if(m) m.classList.add('open');
   const box = document.getElementById('orders-list');
@@ -4224,7 +4254,17 @@ async function openMyOrders(){
       const more = (o.items && o.items.length>1) ? (' +'+(o.items.length-1)+' รายการ') : '';
       const dt = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate().toLocaleDateString('th-TH') : '';
       let extra = '';
-      if (o.status==='shipped' && o.trackingNumber) extra = '<div class="ord-track">📮 พัสดุ: '+escapeHtml(o.trackingNumber)+'</div>';
+      if (o.status==='shipped' && (o.trackingNumber||o.shippopCode)) {
+        var _tn = o.trackingNumber || o.shippopCode;
+        var _ct = courierTrack(o.courier, _tn);
+        var _cname = _ct.name ? (escapeHtml(_ct.name)+' · ') : '';
+        var _turl = _ct.url ? safeUrl(_ct.url) : '';
+        var _tnAlnum = String(_tn).replace(/[^A-Za-z0-9_-]/g,'');   // ใส่ใน onclick ได้ปลอดภัย (เลขพัสดุเป็น alnum)
+        var _btn = _turl
+          ? '<a class="ord-trackbtn" href="'+_turl+'" target="_blank" rel="noopener noreferrer">ติดตามพัสดุ →</a>'
+          : '<button class="ord-trackbtn" onclick="copyTracking(\''+_tnAlnum+'\')">📋 คัดลอกเลขพัสดุ</button>';
+        extra = '<div class="ord-track">📮 '+_cname+'เลขพัสดุ: '+escapeHtml(_tn)+'</div>'+_btn;
+      }
       var sh = o.shipping || {};
       var canEditAddr = ['pending_payment','paid_review','confirmed'].indexOf(o.status) > -1;
       var addrLine = (sh.name||sh.addressLine) ? ('<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:4px">📍 '+escapeHtml([sh.name, sh.addressLine, sh.province].filter(Boolean).join(' '))+'</div>') : '';

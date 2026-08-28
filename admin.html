@@ -2195,10 +2195,18 @@ async function loadCourier(){
 }
 async function saveCourier(){
   try {
+    var wantMock = document.getElementById('cr-mock').checked;
+    // guard: ปิดโหมดทดสอบ (จะไปโหมดจริง) ทั้งที่ยังไม่ตั้ง API key → เตือน
+    // (เซิร์ฟเวอร์ fail-safe เป็น mock อยู่แล้วถ้าไม่มี key — createShipment · แต่กัน admin เข้าใจผิด)
+    if (!wantMock) {
+      var cur = await aDb().collection('settings').doc('courier').get();
+      var hasKey = cur.exists && cur.data().hasKey === true;
+      if (!hasKey && !confirm('ยังไม่ได้ตั้ง API key ของขนส่ง — โหมดจริงจะยังทำงานไม่ได้ (ระบบจะใช้โหมดทดสอบต่อจนกว่าจะตั้ง key)\n\nบันทึกต่อไหม?')) return;
+    }
     var enabled = Array.prototype.slice.call(document.querySelectorAll('.cr-cbx')).filter(function(x){return x.checked;}).map(function(x){return x.value;});
     await aDb().collection('settings').doc('courier').set({
       active: document.getElementById('cr-active').checked,
-      mock: document.getElementById('cr-mock').checked,
+      mock: wantMock,
       provider: document.getElementById('cr-provider').value,
       enabledCouriers: enabled,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
