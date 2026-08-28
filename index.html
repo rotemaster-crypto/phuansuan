@@ -3752,6 +3752,7 @@ async function loadShop(){
     renderCats();
     renderProducts();
     renderFeatured();
+    maybeOpenDeepLinkProduct();   // เปิดสินค้าจากลิงก์แชร์ ?product= (ทำครั้งเดียว)
   } catch(e){
     if (grid) grid.innerHTML = '<div class="shop-empty">โหลดสินค้าไม่สำเร็จ: '+escapeHtml(e.message)+'</div>';
   }
@@ -3839,6 +3840,7 @@ function openProduct(id){
       '<div class="pd-name">'+escapeHtml(p.name)+'</div>'+
       '<div class="pd-pricerow"><span class="pd-price">'+(p.price?baht(p.price):'—')+'</span>'+oldp+disc+'</div>'+
       sold+
+      '<button onclick="shareProduct(\''+p.id+'\')" style="margin-top:8px;background:#f2effc;color:#7b61ff;border:1px solid #ddd3f7;border-radius:9px;padding:8px 14px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit"><svg class="ic"><use href="#i-share"/></svg> แชร์สินค้านี้</button>'+
       '<div class="pd-sec"><div class="pd-sec-h">หมวดหมู่</div><div class="pd-chips"><span class="pd-chip">'+escapeHtml(catName(p.category))+'</span></div></div>'+
       desc + dis + crp +
     '</div>'+
@@ -3854,6 +3856,32 @@ function pdSwap(el){
   el.style.borderColor = 'var(--primary)';
 }
 function closeProduct(){ var m = document.getElementById('prodDetailModal'); if (m) m.classList.remove('open'); }
+// แชร์สินค้า → ลิงก์ ?product=id (คง ?t= ถ้าเข้าผ่าน query) · fallback คัดลอกลิงก์
+async function shareProduct(id){
+  var p = shopProducts.find(function(x){ return x.id===id; });
+  var base = (location && location.origin) || 'https://phuansuan.web.app';
+  var qs = '?product=' + encodeURIComponent(id);
+  try { var tq = new URLSearchParams(location.search).get('t'); if (tq) qs += '&t=' + encodeURIComponent(tq); } catch(e){}
+  var url = base + '/' + qs;
+  var text = p ? ('ดูสินค้า: ' + p.name) : 'ดูสินค้านี้';
+  try { if (navigator.share) { await navigator.share({ title: (p&&p.name)||'สินค้า', text: text, url: url }); return; } }
+  catch(e){ if (e && e.name === 'AbortError') return; }   // ผู้ใช้ยกเลิก = จบ · error อื่น → fallback
+  try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์สินค้าแล้ว 📋'); }
+  catch(e){ try { prompt('คัดลอกลิงก์นี้:', url); } catch(e2){} }
+}
+// เปิดสินค้าจากลิงก์แชร์ ?product=id อัตโนมัติ (ทำครั้งเดียว · เรียกท้าย loadShop เมื่อสินค้าโหลดครบ)
+var _deepLinkProductDone = false;
+function maybeOpenDeepLinkProduct(){
+  if (_deepLinkProductDone) return;
+  var pid; try { pid = new URLSearchParams(location.search).get('product'); } catch(e){ _deepLinkProductDone = true; return; }
+  if (!pid){ _deepLinkProductDone = true; return; }
+  _deepLinkProductDone = true;
+  try { var u = new URL(location.href); u.searchParams.delete('product'); history.replaceState(null, '', u.pathname + (u.search||'') + u.hash); } catch(e){}
+  var p = shopProducts.find(function(x){ return x.id===pid; });
+  if (!p){ toast('ไม่พบสินค้านี้ (อาจถูกลบ หรืออยู่ร้านอื่น)'); return; }
+  try { if (typeof switchScreen==='function') switchScreen('shop'); } catch(e){}   // พาไปหน้าร้านก่อนเปิด
+  openProduct(pid);
+}
 function renderFeatured(){
   var wrap = document.getElementById('feat-wrap'), row = document.getElementById('feat-row');
   if (!wrap || !row) return;

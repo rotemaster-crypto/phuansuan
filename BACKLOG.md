@@ -189,6 +189,7 @@
 - [x] ~~checkout dead-end~~ — ✅ 2026-08-27: กันตั้งแต่หน้า checkout (`renderCheckoutSummary` ปิดปุ่มยืนยัน + แจ้ง "ร้านยังไม่เปิดรับชำระออนไลน์ ติดต่อร้านโดยตรง" ถ้าไม่มีพร้อมเพย์) + backstop copy สุภาพ (เลิกอ้าง config.js)
 - [x] ~~ปุ่มแชร์โพสต์~~ — ✅ 2026-08-27: `sharePost(postId)` ส่ง URL `?post=id` + fallback คัดลอกลิงก์เมื่อ share ล้ม (ไม่กลืน · AbortError=ยกเลิกเฉยๆ)
 - [x] ~~deep-link handler auto-open โพสต์จาก `?post=`~~ — ✅ 2026-08-28: `maybeOpenDeepLinkPost()` หลังฟีดเรนเดอร์รอบแรก (ทำครั้งเดียว · ล้าง `?post=` ออกจาก URL กันเปิดซ้ำ) · อยู่ในฟีด→scroll+ไฮไลต์ (keyframe `phl`) · ไม่อยู่ (paginate หลุด)→ดึง doc ตรง+prepend ด้วย `renderPost` เดิม+wiring reactions/related/stats (ไม่ทำ markup ซ้ำ) · ไม่พบ/คนละ tenant→toast · guard A2 ผ่าน (reuse safeUrl/escapeHtml)
+- [x] ~~แชร์สินค้า + deep-link `?product=`~~ — ✅ 2026-08-28: ปุ่ม "แชร์สินค้านี้" ใน product modal → `shareProduct(id)` ส่งลิงก์ `?product=id` (คง `?t=` ถ้ามี · navigator.share + fallback คัดลอก) · `maybeOpenDeepLinkProduct()` ท้าย loadShop (ทำครั้งเดียว · ล้าง param · พาไปหน้าร้าน+เปิด modal) · ไม่พบ→toast · mirror งาน `?post=`
 
 ---
 
