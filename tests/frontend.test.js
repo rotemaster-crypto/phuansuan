@@ -164,3 +164,32 @@ test('admin/orderInDateRange: ไม่มี createdAt → ตกช่วง�
   assert.equal(orderInDateRange({}, '2026-06-01', ''), false);
   assert.equal(orderInDateRange({}, '', ''), true);
 });
+
+// ── effectiveCats / platformCatOf (หมวด 2 ชั้น marketplace-ready) ──
+test('categories/effectiveCats: fallback brand→platform→config + normalize', () => {
+  const { effectiveCats } = loadAdmin(['effectiveCats']);
+  const cfg = [{ id: 'fashion', name: 'แฟชั่น', emoji: '👕' }];
+  const plat = [{ id: 'p1', name: 'หมวดกลาง', emoji: '🎯' }];
+  const brand = [{ id: 'b1', name: 'หมวดร้าน', emoji: '🛍️', platformCat: 'p1', order: 0 }];
+  // brand ชนะเมื่อมี
+  const eb = effectiveCats(brand, plat, cfg);
+  assert.equal(eb.length, 1); assert.equal(eb[0].id, 'b1'); assert.equal(eb[0].platformCat, 'p1');
+  // ไม่มี brand → platform (platformCat=id)
+  const ep = effectiveCats(null, plat, cfg);
+  assert.equal(ep[0].id, 'p1'); assert.equal(ep[0].platformCat, 'p1', 'fallback: canonical=ตัวเอง');
+  // ไม่มีทั้งคู่ → config (platformCat=id, emoji default คงของ config)
+  const ec = effectiveCats([], [], cfg);
+  assert.equal(ec[0].id, 'fashion'); assert.equal(ec[0].platformCat, 'fashion');
+});
+test('categories/effectiveCats: เรียงตาม order + ตัด item ไม่มี id', () => {
+  const { effectiveCats } = loadAdmin(['effectiveCats']);
+  const out = effectiveCats([{ id: 'b', name: 'B', order: 2 }, { id: 'a', name: 'A', order: 1 }, { name: 'ไม่มี id' }], null, []);
+  assert.equal(out.length, 2, 'ตัดตัวไม่มี id');
+  assert.equal(out[0].id, 'a'); assert.equal(out[1].id, 'b');
+});
+test('categories/platformCatOf: brand id → canonical · ไม่พบ → คืน id เดิม', () => {
+  const { effectiveCats, platformCatOf } = loadAdmin(['effectiveCats', 'platformCatOf', 'catInfo']);
+  const cats = effectiveCats([{ id: 'b1', name: 'X', platformCat: 'fashion' }], null, []);
+  assert.equal(platformCatOf('b1', cats), 'fashion');
+  assert.equal(platformCatOf('unknown', cats), 'unknown', 'ไม่พบ → คืน id เดิม (treated as canonical)');
+});

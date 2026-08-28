@@ -258,6 +258,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="sb-item sys-only" onclick="showScreen('shipbill',this)"><svg class="ic sb-ic"><use href="#i-truck"/></svg> ค่าส่ง & บิลแบรนด์</div>
     <div class="sb-item sys-only" onclick="showScreen('verifyqueue',this)"><svg class="ic sb-ic"><use href="#i-check"/></svg> ตรวจยืนยันตัวตน <span class="sb-badge" id="badge-verify" style="display:none">0</span></div>
     <div class="sb-item sys-only" onclick="showScreen('systemdesign',this)"><svg class="ic sb-ic"><use href="#i-palette"/></svg> ดีไซน์ระบบ</div>
+    <div class="sb-item sys-only" onclick="showScreen('syscategories',this)"><svg class="ic sb-ic"><use href="#i-grid"/></svg> หมวดสินค้าระบบ</div>
 
     <!-- ═══ เข้าจัดการร้านแบรนด์ (super เลือกแบรนด์ / brand-admin = แบรนด์ตัวเอง) ═══ -->
     <div class="sb-brandbar">
@@ -383,6 +384,20 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
     <div class="save-row">
       <button class="btn btn-ghost" onclick="resetSystemDesign()"><svg class="ic"><use href="#i-reset"/></svg> คืนค่ามาตรฐาน (Shopee)</button>
       <button class="btn btn-primary" onclick="saveSystemDesign()"><svg class="ic"><use href="#i-save"/></svg> บันทึก (ทุกแบรนด์เห็นสด)</button>
+    </div>
+  </div>
+</div>
+
+<!-- SYSTEM CATEGORIES (super-admin · canonical taxonomy = marketplace backbone) -->
+<div class="screen" id="screen-syscategories">
+  <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-grid"/></svg>หมวดสินค้าระบบ (Canonical)</div><div class="page-sub">หมวดกลางมาตรฐานทั้งแพลตฟอร์ม — เป็น "กระดูกสันหลัง" ให้ทุกแบรนด์ใช้ + <b>รองรับ marketplace</b> (ดึงสินค้าข้ามร้านมาจัดหมวดเดียวกัน) · แบรนด์เลือก/ตั้งชื่อหมวดของตัวเองแล้ว map เข้าหมวดกลางนี้</div></div>
+  <div class="card">
+    <div class="card-title"><svg class="ic"><use href="#i-grid"/></svg>หมวดกลาง</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin:-4px 0 12px">id ของหมวดกลางไม่เปลี่ยนตอนแก้ชื่อ (สินค้าที่ tag ไว้ไม่หลุด) · ลบหมวดที่แบรนด์ยัง map อยู่ควรระวัง</div>
+    <div id="syscat-rows"><div class="empty-state">กำลังโหลด...</div></div>
+    <div class="save-row" style="margin-top:10px">
+      <button class="btn btn-ghost" onclick="addSysCatRow()"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มหมวดกลาง</button>
+      <button class="btn btn-primary" onclick="saveSysCategories()"><svg class="ic"><use href="#i-save"/></svg> บันทึก (ทุกแบรนด์เห็นสด)</button>
     </div>
   </div>
 </div>
@@ -934,6 +949,15 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 </style>
 <div class="screen" id="screen-products">
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-package"/></svg>จัดการสินค้า</div><div class="page-sub">เพิ่ม ลบ แก้ไขสินค้าในแอป</div></div>
+  <div class="card">
+    <div class="card-title"><svg class="ic"><use href="#i-grid"/></svg>หมวดสินค้าของร้าน</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin:-4px 0 12px">ตั้งหมวดของร้านเอง (ชื่อ/อิโมจิ) · จับคู่แต่ละหมวดเข้า <b>หมวดกลาง</b> เพื่อให้สินค้าถูกจัดหมวดตรงกันทั้งแพลตฟอร์ม (รองรับ marketplace ในอนาคต) · หมวดที่ยังไม่ตั้ง = ใช้หมวดกลางมาตรฐาน</div>
+    <div id="brandcat-rows"><div class="empty-state">กำลังโหลด...</div></div>
+    <div class="save-row" style="margin-top:10px">
+      <button class="btn btn-ghost" onclick="addBrandCatRow()"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มหมวด</button>
+      <button class="btn btn-primary" onclick="saveBrandCategories()"><svg class="ic"><use href="#i-save"/></svg> บันทึกหมวดร้าน</button>
+    </div>
+  </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-plus"/></svg>เพิ่มสินค้าใหม่</div>
 
     <div style="background:var(--bg,#f6f7f9);border:1px dashed var(--border);border-radius:10px;padding:12px;margin-bottom:14px">
@@ -1463,7 +1487,7 @@ function showScreen(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, shipping: loadShippingScreen, verify: loadVerification, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill, verifyqueue: loadVerifyQueue, systemdesign: loadSystemDesign };
+  const loaders = { sysoverview: loadSysOverview, users: loadUsers, posts: loadPosts, appearance: loadAppearance, icons: loadIcons, content: loadContent, features: loadFeatures, points: loadPoints, badges: loadBadges, groups: loadGroups, shopdecor: loadShopDecor, shipping: loadShippingScreen, verify: loadVerification, products: loadProducts, luckydraw: loadLuckyDraws, campaigns: loadCampaigns, predictions: loadPredictions, earn: loadEarnCampaigns, orders: loadOrders, bocean: loadBoceanRequests, tenants: loadTenants, team: loadTeam, shipbill: loadShipBill, verifyqueue: loadVerifyQueue, systemdesign: loadSystemDesign, syscategories: loadSysCategories };
   if (loaders[name]) loaders[name]();
 }
 function toast(msg, type='') {
@@ -2084,6 +2108,43 @@ async function saveSystemDesign(){
   }catch(e){ toast('❌ '+(e.code||e.message),'error'); }
 }
 
+// ── หมวดสินค้าระบบ (canonical · platform/categories · super-admin) ───────────
+var _sysCatEdit = [];   // state ตอนแก้ (คง id เดิม · แถวใหม่ gen id)
+function renderSysCatRows(){
+  var box = document.getElementById('syscat-rows'); if (!box) return;
+  box.innerHTML = _sysCatEdit.map(function(c){
+    return '<div class="scat-row" data-id="'+escapeHtml(c.id)+'" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">'+
+      '<input class="sc-emoji" value="'+escapeHtml(c.emoji||'')+'" maxlength="4" style="width:48px;text-align:center;padding:7px;border:1px solid var(--border);border-radius:8px">'+
+      '<input class="sc-name" value="'+escapeHtml(c.name||'')+'" placeholder="ชื่อหมวดกลาง" style="flex:1;padding:7px;border:1px solid var(--border);border-radius:8px">'+
+      '<span style="font-size:var(--fs-2xs);color:var(--muted);font-family:monospace">'+escapeHtml(c.id)+'</span>'+
+      '<button class="btn btn-ghost" style="font-size:var(--fs-xs);color:#c00" onclick="removeSysCatRow(this)">ลบ</button>'+
+    '</div>';
+  }).join('') || '<div class="empty-state">ยังไม่มีหมวดกลาง</div>';
+}
+function loadSysCategories(){
+  var cfg = (window.APP_CONFIG && APP_CONFIG.productCategories) || [];
+  db.collection('platform').doc('categories').get().then(function(s){
+    _sysCatEdit = effectiveCats(null, (s.exists&&s.data().list)||null, cfg);
+    renderSysCatRows();
+  }).catch(function(){ _sysCatEdit = effectiveCats(null, null, cfg); renderSysCatRows(); });
+}
+function addSysCatRow(){
+  _sysCatEdit.push({ id:'p_'+Math.random().toString(36).slice(2,8)+_sysCatEdit.length, name:'', emoji:'🏷️', platformCat:'', order:_sysCatEdit.length });
+  renderSysCatRows();
+}
+function removeSysCatRow(btn){ var r=btn.closest('.scat-row'); if(!r)return; var id=r.getAttribute('data-id'); _sysCatEdit=_sysCatEdit.filter(function(c){return c.id!==id;}); renderSysCatRows(); }
+async function saveSysCategories(){
+  try {
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#syscat-rows .scat-row'));
+    var list = rows.map(function(r,i){ return { id:r.getAttribute('data-id'), emoji:(r.querySelector('.sc-emoji').value||'').trim()||'🏷️', name:(r.querySelector('.sc-name').value||'').trim(), order:i }; })
+      .filter(function(c){ return c.name; });
+    if (!list.length){ toast('❌ ต้องมีอย่างน้อย 1 หมวดกลาง','error'); return; }
+    await db.collection('platform').doc('categories').set({ list:list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    toast('✅ บันทึกหมวดสินค้าระบบแล้ว — ทุกแบรนด์เห็นสด','success');
+    _sysCatEdit = effectiveCats(null, list, []); renderSysCatRows();
+  } catch(e){ toast('❌ '+(e.code||e.message),'error'); }
+}
+
 // ── N5 stage ④: super-admin ตรวจยืนยันตัวตน ──────────────────
 async function loadVerifyQueue(){
   var box = document.getElementById('verifyqueue-list'); if (!box) return;
@@ -2415,6 +2476,7 @@ async function saveProdB(){
       name: name,
       image: g.image, images: g.images,
       category: document.getElementById('prodb-cat').value,
+      platformCategory: platformCatOf(document.getElementById('prodb-cat').value, _brandCats),   // canonical (marketplace)
       price: parsePrice(document.getElementById('prodb-price').value),
       cost: parsePrice(document.getElementById('prodb-cost').value),
       oldPrice: parsePrice(document.getElementById('prodb-oldprice').value),
@@ -2468,11 +2530,60 @@ let _prodSort = 'recent', _prodSelected = {};
 async function loadProducts() {
   const box = document.getElementById('products-list'); if (box) box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
   try {
+    await loadCategoryConfigs();          // หมวด 2 ชั้น (platform + brand) ก่อน render
+    populateCategorySelects();
+    renderBrandCatManager();
     const snap = await aDb().collection('products').get();
     _products = snap.docs.map(function(d){ return Object.assign({ _id:d.id }, d.data()); });
     _products.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0); });
     renderProducts();
   } catch(e) { if (box) box.innerHTML = '<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
+}
+// ── ตัวจัดการหมวดของแบรนด์ (settings/categories) — เลือก/ปรับ display + map เข้า canonical ──
+function renderBrandCatManager(){
+  var box = document.getElementById('brandcat-rows'); if (!box) return;
+  var pcOpts = function(sel){ return _platformCats.map(function(p){ return '<option value="'+p.id+'"'+(p.id===sel?' selected':'')+'>'+(p.emoji||'')+' '+escapeHtml(p.name)+'</option>'; }).join(''); };
+  box.innerHTML = _brandCats.map(function(c){
+    var used = _products.filter(function(p){ return p.category===c.id; }).length;
+    return '<div class="bcat-row" data-id="'+escapeHtml(c.id)+'" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">'+
+      '<input class="bc-emoji" value="'+escapeHtml(c.emoji||'')+'" maxlength="4" style="width:48px;text-align:center;padding:7px;border:1px solid var(--border);border-radius:8px">'+
+      '<input class="bc-name" value="'+escapeHtml(c.name||'')+'" placeholder="ชื่อหมวด" style="flex:1;min-width:120px;padding:7px;border:1px solid var(--border);border-radius:8px">'+
+      '<select class="bc-pcat" title="จับคู่หมวดกลาง (marketplace)" style="padding:7px;border:1px solid var(--border);border-radius:8px">'+pcOpts(c.platformCat)+'</select>'+
+      '<button class="btn btn-ghost" style="font-size:var(--fs-xs);color:#c00" onclick="removeBrandCat(this,'+used+')">ลบ</button>'+
+      (used?'<span style="font-size:var(--fs-2xs);color:var(--muted)">('+used+' สินค้า)</span>':'')+
+    '</div>';
+  }).join('') || '<div class="empty-state">ยังไม่มีหมวด — กด "เพิ่มหมวด"</div>';
+}
+function addBrandCatRow(){
+  // เพิ่มหมวดใหม่เข้า state (id สร้างครั้งเดียว ไม่เปลี่ยนตอน rename) แล้ว render
+  var pid = (_platformCats[0] && _platformCats[0].id) || 'other';
+  _brandCats.push({ id: 'c_'+Math.random().toString(36).slice(2,8)+_brandCats.length, name:'', emoji:'🏷️', platformCat: pid, order: _brandCats.length });
+  renderBrandCatManager();
+}
+function removeBrandCat(btn, used){
+  if (used>0){ toast('❌ ลบไม่ได้ — ยังมี '+used+' สินค้าใช้หมวดนี้ (ย้ายสินค้าก่อน)','error'); return; }
+  var row = btn.closest('.bcat-row'); if(!row) return;
+  var id = row.getAttribute('data-id');
+  _brandCats = _brandCats.filter(function(c){ return c.id !== id; });
+  renderBrandCatManager();
+}
+async function saveBrandCategories(){
+  try {
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#brandcat-rows .bcat-row'));
+    var list = rows.map(function(r, i){
+      return {
+        id: r.getAttribute('data-id'),
+        emoji: (r.querySelector('.bc-emoji').value||'').trim() || '🏷️',
+        name: (r.querySelector('.bc-name').value||'').trim(),
+        platformCat: r.querySelector('.bc-pcat').value,
+        order: i
+      };
+    }).filter(function(c){ return c.name; });   // ตัดแถวที่ไม่มีชื่อ
+    if (!list.length){ toast('❌ ต้องมีอย่างน้อย 1 หมวด (มีชื่อ)','error'); return; }
+    await aDb().collection('settings').doc('categories').set({ list: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    toast('✅ บันทึกหมวดของร้านแล้ว','success');
+    await loadCategoryConfigs(); populateCategorySelects(); renderBrandCatManager(); renderProducts();
+  } catch(e){ toast('❌ '+e.message,'error'); }
 }
 function stockChip(p){
   if (p.stock === null || p.stock === undefined) return '<span class="prod-stk" style="color:var(--muted)">สต็อก: ไม่จำกัด</span>';
@@ -2566,17 +2677,38 @@ function renderProducts() {
     '</div>';
   }).join('');
 }
-// N3: อ่าน emoji หมวดจาก APP_CONFIG.productCategories (single-source กับ index/config) + fallback หมวดเกษตรเดิม
+// ── หมวดสินค้า 2 ชั้น (marketplace-ready) — canonical(platform) + display ต่อแบรนด์ ──
+//   _platformCats = canonical (platform/categories · super คุม) · _brandCats = effective ต่อร้าน
+//   สินค้าเก็บ platformCategory (canonical) เพิ่ม → marketplace ดึงข้ามร้านได้โดยไม่ต้อง migrate
+var _platformCats = [], _brandCats = [];
+// pure: รวม effective ตาม fallback (brand→platform→config) · fallback สองชั้น platformCat=id — เทสได้
+function effectiveCats(brandList, platformList, configList){
+  var pick = (Array.isArray(brandList)&&brandList.length) ? brandList
+           : (Array.isArray(platformList)&&platformList.length) ? platformList
+           : (Array.isArray(configList)?configList:[]);
+  return pick.map(function(c,i){ return { id:c.id, name:c.name||c.id, emoji:c.emoji||'📦', platformCat:c.platformCat||c.id, order:(typeof c.order==='number')?c.order:i }; })
+    .filter(function(c){ return c.id; }).sort(function(a,b){ return a.order-b.order; });
+}
+function catInfo(id, cats){ for (var i=0;i<(cats||[]).length;i++){ if(cats[i].id===id) return cats[i]; } return null; }
+function platformCatOf(id, cats){ var c = catInfo(id, cats); return (c && c.platformCat) || id; }
+// โหลด config หมวด: platform (canonical) + brand → เซ็ต _platformCats/_brandCats
+async function loadCategoryConfigs(){
+  var cfg = (window.APP_CONFIG && APP_CONFIG.productCategories) || [];
+  try { var ps = await db.collection('platform').doc('categories').get(); _platformCats = effectiveCats(null, (ps.exists&&ps.data().list)||null, cfg); }
+  catch(e){ _platformCats = effectiveCats(null, null, cfg); }
+  try { var bs = await aDb().collection('settings').doc('categories').get(); _brandCats = effectiveCats((bs.exists&&bs.data().list)||null, _platformCats, cfg); }
+  catch(e){ _brandCats = effectiveCats(null, _platformCats, cfg); }
+}
+// emoji หมวด (ใช้ effective ต่อร้าน) + fallback หมวดเกษตรเดิม
 function catEmojiA(c){
-  var cats = (window.APP_CONFIG && APP_CONFIG.productCategories) || [];
-  var f = cats.filter(function(x){ return x.id===c; })[0];
+  var f = catInfo(c, _brandCats);
   return f ? f.emoji : ({pesticide:'🧴',fertilizer:'💊',hormone:'💧',organic:'🌱',equipment:'🔧'}[c]||'📦');
 }
-// N3: เติม <option> หมวดสินค้าให้ select ทั้งหมดจาก config (ครั้งเดียวตอนเปิดแอป)
+// เติม <option> หมวดสินค้าให้ select ทั้งหมด (ใช้ effective ต่อร้าน · fallback config)
 function populateCategorySelects(){
-  var cats = (window.APP_CONFIG && APP_CONFIG.productCategories) || [];
+  var cats = _brandCats.length ? _brandCats : ((window.APP_CONFIG && APP_CONFIG.productCategories) || []);
   if (!cats.length) return;
-  var opts = cats.map(function(c){ return '<option value="'+c.id+'">'+c.emoji+' '+c.name+'</option>'; }).join('');
+  var opts = cats.map(function(c){ return '<option value="'+c.id+'">'+(c.emoji||'')+' '+escapeHtml(c.name)+'</option>'; }).join('');
   ['new-prod-cat','prodb-cat','csv-defcat'].forEach(function(id){
     var sel = document.getElementById(id); if (!sel) return;
     var cur = sel.value; sel.innerHTML = opts; if (cur) sel.value = cur;
@@ -3653,7 +3785,7 @@ async function csvImport(){
       });
       items.push({
         name: name, price: parsePrice(csvVal(r,'price')), stock: parseStock(csvVal(r,'stock')), oldPrice: parsePrice(csvVal(r,'oldPrice')), cost: parsePrice(csvVal(r,'cost')),
-        category: csvVal(r,'category') || defCat, url: csvVal(r,'url'), image: imgs[0] || cover, images: imgs,
+        category: csvVal(r,'category') || defCat, platformCategory: platformCatOf(csvVal(r,'category') || defCat, _brandCats), url: csvVal(r,'url'), image: imgs[0] || cover, images: imgs,
         active: true, affiliate: false, featured: false,
         diseases: csvSplit(csvVal(r,'diseases')), crops: csvSplit(csvVal(r,'crops')),
         description: csvVal(r,'description'), badge: csvVal(r,'badge'),
@@ -3731,6 +3863,7 @@ async function addProduct() {
       cost: parsePrice(document.getElementById('new-prod-cost').value),
       stock: parseStock(document.getElementById('new-prod-stock').value),
       category: document.getElementById('new-prod-cat').value,
+      platformCategory: platformCatOf(document.getElementById('new-prod-cat').value, _brandCats),   // canonical (marketplace)
       url: document.getElementById('new-prod-url').value,
       affiliate: document.getElementById('new-prod-affiliate').checked,
       active: document.getElementById('new-prod-active').checked,

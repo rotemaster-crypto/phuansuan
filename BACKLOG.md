@@ -21,8 +21,9 @@
 - 🟡 ลูกค้า **แจ้งเตือนสถานะออเดอร์** — trigger `onOrderStatusNotify` · e2e 5/5 · deploy functions+push แล้ว (`0c0614f`)
 - 🆕 **streak engine (เช็คอินต่อเนื่อง)** — callable `claimStreak` + rules lock A5 + client + admin config · e2e 6/6 · deploy functions+rules+hosting+push แล้ว (`402d27c`)
 - 🟡 แอดมิน **orders date-range filter** — pure `orderInDateRange` · export เคารพช่วง · deploy hosting+push แล้ว (`ce23af1`)
-- 🟡 แอดมิน **sysoverview count() aggregation** — `_collCount` (count+fallback) แก้ read-explosion B6/B7 · ยังไม่ commit · **deploy hosting**
-- guard 9/9 · frontend 16/16 · owner 6/6 · ordernotify 5/5 · streak 6/6 · rules 53/53 เขียว
+- 🟡 แอดมิน **sysoverview count() aggregation** — `_collCount` แก้ read-explosion B6/B7 · deploy hosting+push แล้ว (`9aed934`)
+- 🆕 **หมวดสินค้า 2 ชั้น marketplace-ready** — canonical `platform/categories` (super) + per-brand `settings/categories` + product `platformCategory` tag · customer อ่านสด+fallback · pure helper+test · ยังไม่ commit · **deploy hosting** · [[marketplace-ready-taxonomy]]
+- guard 9/9 · frontend 19/19 · owner 6/6 · ordernotify 5/5 · streak 6/6 · rules 53/53 · ทั้ง 2 ไฟล์ compile ผ่าน
 
 **(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
 
@@ -99,7 +100,7 @@
 - [x] ~~ปลดล็อกหมวดเกษตร → Shopee ครบ~~ — ✅ 2026-08-27: `config.js` ขยายเป็น 27 หมวดแนว Shopee (แฟชั่น/ความงาม/มือถือ/บ้าน/อาหาร/สัตว์เลี้ยง...) **คงหมวดเกษตรเดิม 5 หมวด** → สินค้า phuansuan ไม่กำพร้า · customer shop โชว์เฉพาะหมวดที่มีสินค้า
 - [x] single-source: admin โหลด `config.js` · `catEmojiA` + select ทั้ง 3 → `populateCategorySelects()` อ่านจาก config (เลิก hardcode) · index derive อยู่แล้ว · guard+frontend เขียว · id ไม่ซ้ำ
 - **PC_TIERS** (`admin.html:2404`) = ส่วนลดตาม tier สมาชิก ไม่เกี่ยวหมวด — ไม่แตะ
-- **ค้าง (future):** หมวดต่อแบรนด์จริง (settings per-tenant) แทน global default
+- [x] ~~หมวดต่อแบรนด์จริง (settings per-tenant)~~ — ✅ 2026-08-28: **taxonomy 2 ชั้น marketplace-ready** ([[marketplace-ready-taxonomy]]) · canonical `platform/categories` (super คุม · จอ "หมวดสินค้าระบบ") + per-brand `settings/categories` (แบรนด์ตั้งเอง+map เข้า canonical · การ์ดในหน้าสินค้า) · สินค้าเก็บ `platformCategory` (canonical) เพิ่ม → marketplace ดึงข้ามร้านได้โดยไม่ต้อง migrate · customer อ่านสด + fallback (brand→platform→config) · pure `effectiveCats`/`platformCatOf` + frontend test 3 · id นิ่ง + กันลบหมวดที่มีสินค้า · rules ไม่ต้องแก้ (platform/settings มีอยู่แล้ว) · deploy hosting
 
 ### N4 — ไอคอนที่ไม่ minimal ทำให้ระบบดูแย่ · **M–L**
 - **ทิศทาง (Roger อนุมัติจาก preview 2026-08-27):** SVG line minimal · เก็บ emoji content (tier 🥇🥈🥉💎 / แบรนด์ 🌿🌱 / เนื้อโพสต์) · **reaction ทำสไตล์ FB/IG**

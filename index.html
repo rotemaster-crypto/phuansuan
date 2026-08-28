@@ -1125,6 +1125,7 @@ window.addEventListener('load', async () => {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
     loadPlatformDesign();   // ดีไซน์ระบบ (platform-wide) — apply สด + live ทุกแบรนด์
+    loadBrandCategories();  // หมวดสินค้า 2 ชั้น (platform + brand) — โหลดก่อน render ร้าน
 
     // ── ผู้ใช้เด้งกลับจาก Google/Facebook (signInWithRedirect) ──
     try {
@@ -2764,9 +2765,9 @@ function openShopForm(){
   if (!requireLogin()) return;   // guest → prompt login ก่อน
   var sel = document.getElementById('cs-category');
   if (sel && !sel.options.length){
-    var cats = (APP_CONFIG.productCategories || []);
+    var cats = PLATFORM_CATS.length ? PLATFORM_CATS : (APP_CONFIG.productCategories || []);   // เปิดร้านใหม่ = หมวดกลาง (canonical)
     sel.innerHTML = '<option value="">— เลือกหมวด —</option>' +
-      cats.map(function(c){ return '<option value="'+c.id+'">'+c.emoji+' '+c.name+'</option>'; }).join('');
+      cats.map(function(c){ return '<option value="'+c.id+'">'+(c.emoji||'')+' '+escapeHtml(c.name)+'</option>'; }).join('');
   }
   document.getElementById('openShopModal').classList.add('open');
 }
@@ -3662,12 +3663,31 @@ function parsePrice(v){
   return isNaN(n) ? 0 : n;
 }
 function baht(n){ return '฿' + Math.round(n).toLocaleString(); }
+// ── หมวดสินค้า 2 ชั้น (marketplace-ready) — canonical(platform) + display ต่อแบรนด์ ──
+//   PLATFORM_CATS = หมวดกลาง (ใช้ตอนเปิดร้านใหม่) · BRAND_CATS = effective ของร้านนี้ (โชว์สินค้า/ฟิลเตอร์)
+var PLATFORM_CATS = [], BRAND_CATS = [];
+// pure: รวม effective ตาม fallback (brand→platform→config) · fallback สองชั้น platformCat=id
+function effectiveCats(brandList, platformList, configList){
+  var pick = (Array.isArray(brandList)&&brandList.length) ? brandList
+           : (Array.isArray(platformList)&&platformList.length) ? platformList
+           : (Array.isArray(configList)?configList:[]);
+  return pick.map(function(c,i){ return { id:c.id, name:c.name||c.id, emoji:c.emoji||'📦', platformCat:c.platformCat||c.id, order:(typeof c.order==='number')?c.order:i }; })
+    .filter(function(c){ return c.id; }).sort(function(a,b){ return a.order-b.order; });
+}
+function catInfoOf(id, cats){ for (var i=0;i<(cats||[]).length;i++){ if(cats[i].id===id) return cats[i]; } return null; }
+async function loadBrandCategories(){
+  var cfg = (APP_CONFIG.productCategories) || [];
+  try { var ps = await db.collection('platform').doc('categories').get(); PLATFORM_CATS = effectiveCats(null, (ps.exists&&ps.data().list)||null, cfg); }
+  catch(e){ PLATFORM_CATS = effectiveCats(null, null, cfg); }
+  try { var bs = await tdb().collection('settings').doc('categories').get(); BRAND_CATS = effectiveCats((bs.exists&&bs.data().list)||null, PLATFORM_CATS, cfg); }
+  catch(e){ BRAND_CATS = effectiveCats(null, PLATFORM_CATS, cfg); }
+}
 function catName(id){
-  const c = (APP_CONFIG.productCategories||[]).find(x=>x.id===id);
+  const c = catInfoOf(id, BRAND_CATS) || (APP_CONFIG.productCategories||[]).find(x=>x.id===id);
   return c ? (c.emoji+' '+c.name) : (id||'');
 }
 function catEmoji(id){
-  const c = (APP_CONFIG.productCategories||[]).find(x=>x.id===id);
+  const c = catInfoOf(id, BRAND_CATS) || (APP_CONFIG.productCategories||[]).find(x=>x.id===id);
   return c ? c.emoji : '📦';
 }
 
@@ -3729,7 +3749,8 @@ async function loadShop(){
 function renderCats(){
   const bar = document.getElementById('cat-bar');
   if (!bar) return;
-  const cats = (APP_CONFIG.productCategories||[]).filter(c => shopProducts.some(p=>p.category===c.id));
+  const _catSrc = BRAND_CATS.length ? BRAND_CATS : (APP_CONFIG.productCategories||[]);
+  const cats = _catSrc.filter(c => shopProducts.some(p=>p.category===c.id));
   let html = '<div class="cat-chip '+(activeCat==='all'?'active':'')+'" onclick="filterCat(\'all\',this)">ทั้งหมด</div>';
   html += cats.map(c => '<div class="cat-chip '+(activeCat===c.id?'active':'')+'" onclick="filterCat(\''+c.id+'\',this)">'+c.emoji+' '+escapeHtml(c.name)+'</div>').join('');
   bar.innerHTML = html;
