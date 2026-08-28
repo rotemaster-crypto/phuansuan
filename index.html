@@ -1362,13 +1362,12 @@ async function saveUserToFirestore(user) {
     // ดึงข้อมูลล่าสุด (รวมแต้มที่เพิ่งได้จาก callable)
     const fresh = await userRef.get();
     currentUser = { ...currentUser, ...fresh.data() };
-
-    // umbrella แบบ A: บันทึกบัญชี global + auto-follow แบรนด์นี้ (ไม่ block flow — มี try/catch ในตัว)
-    upsertAccount();
-
   } catch (err) {
     console.error('saveUserToFirestore error:', err);
   }
+  // umbrella แบบ A: บันทึกบัญชี global + auto-follow แบรนด์นี้ — ทำ "เสมอ" แม้ write per-brand ล้ม
+  //   (เข้าแบรนด์ที่ยังไม่เป็นสมาชิก: create user doc ถูก rules ปฏิเสธ → throw → ต้องไม่ข้าม upsertAccount)
+  upsertAccount();
 }
 
 // ══ Umbrella (แบบ A): 1 identity → หลาย brand context — ดู memory umbrella-brand-switcher ══
@@ -1423,10 +1422,10 @@ async function loadMyBrands() {
     var snap  = await db.collection('accounts').doc(currentUser.uid).collection('brands').get();
     var items = snap.docs.map(function (d) { return d.data() || {}; })
       .filter(function (b) { return /^[a-zA-Z0-9_-]{1,40}$/.test(b.tid || ''); });
-    if (items.length <= 1) { card.style.display = 'none'; return; }   // ไม่มีอะไรให้สลับ
+    if (items.length === 0) { card.style.display = 'none'; return; }   // ยังไม่เคยเข้าแบรนด์ใด
     items.sort(function (a, b) { return (b.lastSeenAt && b.lastSeenAt.seconds || 0) - (a.lastSeenAt && a.lastSeenAt.seconds || 0); });
     var cur = tenantId();
-    box.innerHTML = items.map(function (b) {
+    var rows = items.map(function (b) {
       var active = b.tid === cur;
       return '<button ' + (active ? 'disabled ' : 'onclick="switchBrand(\'' + b.tid + '\')" ')
         + 'style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:' + (active ? '#eef4ff' : '#fff')
@@ -1439,6 +1438,9 @@ async function loadMyBrands() {
         + (active ? '<span style="color:var(--primary);font-size:var(--fs-lg)">✓</span>' : '<span style="color:var(--muted);font-size:var(--fs-lg)">›</span>')
         + '</button>';
     }).join('');
+    // แบรนด์เดียว: ยังโชว์การ์ด (ให้เห็นฟีเจอร์ + ยืนยันบัญชีถูกผูก) + ใบ้ให้เข้าแบรนด์อื่น
+    if (items.length === 1) rows += '<div style="font-size:var(--fs-xs);color:var(--muted);text-align:center;padding:4px 2px 2px">เข้าแบรนด์อื่นด้วยบัญชีนี้ แล้วจะมาอยู่ตรงนี้ให้สลับได้</div>';
+    box.innerHTML = rows;
     card.style.display = '';
   } catch (e) { card.style.display = 'none'; }
 }
