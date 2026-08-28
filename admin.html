@@ -1099,6 +1099,16 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 
 <div class="screen" id="screen-campaigns">
   <div class="page-header"><div class="page-title"><svg class="ic" style="margin-right:6px"><use href="#i-target"/></svg>ภารกิจ & แคมเปญ</div><div class="page-sub">ตั้งภารกิจให้ลูกค้าทำแล้วรับรางวัล (แต้ม/คูปอง) · ระบบตรวจความคืบหน้าให้อัตโนมัติ</div></div>
+  <div class="card" style="border:1.5px solid #ea580c;background:#fff7ed">
+    <div class="card-title"><svg class="ic"><use href="#i-flame"/></svg>เช็คอินต่อเนื่อง (Streak)</div>
+    <div style="font-size:var(--fs-sm);color:var(--muted);margin:-4px 0 12px">ลูกค้าเช็คอินทุกวันเพื่อสะสมวันติดต่อกัน · ถึงเป้าหมาย (วัน) รับแต้มอัตโนมัติ (ให้แต้มฝั่งเซิร์ฟเวอร์ · ขาดวัน = เริ่มนับใหม่)</div>
+    <div class="form-grid">
+      <div class="fg"><label>เปิดระบบเช็คอิน</label><label class="toggle"><input type="checkbox" id="streak-enabled"><span class="toggle-slider"></span></label></div>
+      <div class="fg" style="grid-column:1/-1"><label>รางวัลตามจำนวนวัน (บรรทัดละ 1 เป้า · รูปแบบ <b>จำนวนวัน:แต้ม</b> เช่น <code>7:100</code>)</label>
+        <textarea id="streak-milestones" rows="4" placeholder="3:30&#10;7:100&#10;30:500" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:var(--fs-sm)"></textarea></div>
+    </div>
+    <div class="save-row"><button class="btn btn-primary" onclick="saveStreakConfig()"><svg class="ic"><use href="#i-check"/></svg> บันทึกเช็คอิน</button> <span id="streak-status" style="font-size:12.5px;color:var(--muted);margin-left:8px"></span></div>
+  </div>
   <div class="card"><div class="card-title"><svg class="ic"><use href="#i-plus"/></svg>สร้างภารกิจใหม่</div>
     <div class="form-grid">
       <div class="fg" style="grid-column:1/-1"><label>ชื่อภารกิจ</label><input id="ms-name" placeholder="เช่น โพสต์ครบ 5 โพสต์รับ 100 แต้ม"></div>
@@ -2880,8 +2890,38 @@ async function openMissionStats(id){
       '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:10px">นับจาก claimCount บน mission (server เพิ่มตอนจ่ายจริง · idempotent)</div>';
   } catch(e){ body.innerHTML = '<div class="empty-state">โหลดไม่สำเร็จ: '+escapeHtml((e&&e.message)||e)+'</div>'; }
 }
+// ── config เช็คอินต่อเนื่อง (settings/streak) — parse/serialize "days:points" ต่อบรรทัด ──
+function parseStreakMilestones(text){
+  return String(text||'').split('\n').map(function(ln){
+    var p = ln.split(':'); var days = parseInt((p[0]||'').trim(),10); var pts = parseInt((p[1]||'').trim(),10);
+    return { days: days, rewardPoints: pts };
+  }).filter(function(m){ return m.days>0 && m.rewardPoints>=0 && !isNaN(m.days) && !isNaN(m.rewardPoints); })
+    .sort(function(a,b){ return a.days-b.days; });
+}
+async function loadStreakConfig(){
+  try {
+    var d = await aDb().collection('settings').doc('streak').get();
+    var c = d.exists ? d.data() : {};
+    var en = document.getElementById('streak-enabled'); if (en) en.checked = c.enabled === true;
+    var ta = document.getElementById('streak-milestones');
+    if (ta) ta.value = (Array.isArray(c.milestones)?c.milestones:[]).map(function(m){ return (m.days||0)+':'+(m.rewardPoints||0); }).join('\n');
+  } catch(e){}
+}
+async function saveStreakConfig(){
+  try {
+    var milestones = parseStreakMilestones(document.getElementById('streak-milestones').value);
+    await aDb().collection('settings').doc('streak').set({
+      enabled: document.getElementById('streak-enabled').checked,
+      milestones: milestones,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    var st = document.getElementById('streak-status'); if (st) st.textContent = '✓ บันทึกแล้ว ('+milestones.length+' เป้าหมาย)';
+    toast('✅ บันทึกการตั้งค่าเช็คอินแล้ว','success');
+  } catch(e){ toast('❌ '+e.message,'error'); }
+}
 async function loadCampaigns(){
   msRewardUI();
+  loadStreakConfig();
   var box = document.getElementById('missions-list'); if (box) box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
   try {
     var snap = await aDb().collection('missions').get();

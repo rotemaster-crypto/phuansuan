@@ -678,6 +678,8 @@ button .ic,a .ic{pointer-events:none}
     </div>
     <!-- ── แคมเปญแต้ม (วิธีได้แต้ม) ── -->
     <div id="earn-section" style="margin-bottom:20px"></div>
+    <!-- ── เช็คอินต่อเนื่อง (streak) ── -->
+    <div id="streak-section" style="margin-bottom:20px"></div>
     <!-- ── ทายผล ── -->
     <div id="predictions-section" style="margin-bottom:20px"></div>
     <!-- ── ภารกิจ ── -->
@@ -2528,6 +2530,53 @@ async function loadEarnCampaignsUser(){
 }
 // ── ภารกิจ (Phase 4) ──
 var MS_TYPE_TXT = { posts:'โพสต์', purchases:'สั่งซื้อ', points:'สะสมแต้ม' };
+// ── เช็คอินต่อเนื่อง (streak engine) — เรียก callable claimStreak (server-authoritative) ──
+function bkkDayKeyClient(){ return new Date(Date.now() + 7*3600*1000).toISOString().slice(0,10); }
+async function loadStreak(){
+  var box = document.getElementById('streak-section'); if (!box) return;
+  if (!currentUser || !db){ box.innerHTML=''; return; }
+  try {
+    var cfgSnap = await tdb().collection('settings').doc('streak').get();
+    var cfg = cfgSnap.exists ? cfgSnap.data() : null;
+    if (!cfg || cfg.enabled !== true){ box.innerHTML=''; return; }   // ร้านไม่เปิด → ซ่อน
+    var streak = Math.max(0, Math.floor(Number(currentUser.streakCount)||0));
+    var doneToday = currentUser.streakLastDay === bkkDayKeyClient();
+    var mss = (Array.isArray(cfg.milestones)?cfg.milestones:[]).map(function(m){ return { days:Math.floor(Number(m.days)||0), pts:Math.max(0,Math.floor(Number(m.rewardPoints)||0)) }; }).filter(function(m){ return m.days>0; }).sort(function(a,b){ return a.days-b.days; });
+    // milestone ถัดไป (ยังไม่ถึง) เพื่อโชว์เป้าหมาย
+    var next = mss.find(function(m){ return m.days > streak; });
+    var milestoneTxt = mss.length ? ('รางวัล: '+mss.map(function(m){ return m.days+' วัน = '+m.pts+' แต้ม'; }).join(' · ')) : '';
+    var btn = doneToday
+      ? '<button disabled style="flex:none;border:none;border-radius:9px;padding:9px 16px;font-weight:700;font-size:var(--fs-sm);background:var(--border);color:var(--muted)">✓ เช็คอินแล้ววันนี้</button>'
+      : '<button onclick="claimStreakUser()" style="flex:none;border:none;border-radius:9px;padding:9px 16px;font-weight:800;font-size:var(--fs-sm);background:var(--primary);color:#fff;cursor:pointer">เช็คอินวันนี้ 🔥</button>';
+    box.innerHTML = '<div style="font-size:var(--fs-lg);font-weight:800;color:var(--text);margin-bottom:10px">🔥 เช็คอินต่อเนื่อง</div>'+
+      '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">'+
+        '<div style="text-align:center;flex:none"><div style="font-size:var(--fs-3xl);font-weight:900;color:var(--primary);line-height:1">'+streak+'</div><div style="font-size:var(--fs-2xs);color:var(--muted)">วันติดต่อกัน</div></div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:var(--fs-sm);color:var(--text);font-weight:600">'+(doneToday?'เยี่ยม! กลับมาเช็คอินพรุ่งนี้ต่อนะ':(next?('อีก '+(next.days-streak)+' วัน รับ '+next.pts+' แต้ม'):'เช็คอินทุกวันเพื่อสะสม'))+'</div>'+
+          (milestoneTxt?'<div style="font-size:var(--fs-2xs);color:var(--muted);margin-top:3px">'+escapeHtml(milestoneTxt)+'</div>':'')+
+        '</div>'+
+        btn+
+      '</div>';
+  } catch(e){ box.innerHTML=''; }
+}
+async function claimStreakUser(){
+  try {
+    var fn = firebase.app().functions('asia-southeast1').httpsCallable('claimStreak');
+    var res = await fn({ tid: (typeof tenantId==='function'?tenantId():'phuansuan') });
+    var d = (res && res.data) || {};
+    if (currentUser){ currentUser.streakCount = d.streak; currentUser.streakLastDay = bkkDayKeyClient(); }
+    if (d.alreadyToday) toast('เช็คอินวันนี้ไปแล้ว 🔥 '+d.streak+' วันติดต่อกัน');
+    else {
+      var msg = '🔥 เช็คอินสำเร็จ! '+d.streak+' วันติดต่อกัน';
+      if (d.granted>0){
+        msg += '\n🎉 รับ '+d.granted+' แต้ม!';
+        if (currentUser){ currentUser.points = (currentUser.points||0)+d.granted; var pv=document.getElementById('pts-val-display'); if(pv) pv.textContent=((currentUser.points)||0).toLocaleString()+' แต้ม'; }
+      }
+      toast(msg);
+    }
+    loadStreak();
+  } catch(e){ toast('❌ '+((e&&e.message)||'เช็คอินไม่สำเร็จ')); }
+}
 async function loadMissions(){
   var box = document.getElementById('missions-section'); if (!box) return;
   if (!currentUser || !db){ box.innerHTML=''; return; }
@@ -2920,7 +2969,7 @@ function switchScreen(name){
   if(name === 'profile'){ renderProfileInfo(); renderMyAddress(); renderProfileOrders(); loadMyPosts(); }
   if(name === 'community'){
     const f = (APP_CONFIG && APP_CONFIG.features) || {};
-    loadEarnCampaignsUser(); loadPredictionsUser(); loadMissions(); loadLuckyDrawsUser(); loadMyCoupons();
+    loadEarnCampaignsUser(); loadStreak(); loadPredictionsUser(); loadMissions(); loadLuckyDrawsUser(); loadMyCoupons();
     if (f.communityGroups !== false) loadCommunityGroups();
     if (f.leaderboard !== false) loadLeaderboard();
   }

@@ -100,6 +100,12 @@ test('member A แก้ postCount ตัวเอง = DENIED (A5)', async () =
 test('member A แก้ lastBonusDay ตัวเอง = DENIED (A5: กัน reset โบนัสรายวัน)', async () => {
   await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { lastBonusDay: '2000-01-01' }));
 });
+test('member A แก้ streakCount ตัวเอง = DENIED (A5: กันปั๊ม streak)', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { streakCount: 999 }));
+});
+test('member A แก้ streakLastDay ตัวเอง = DENIED (A5: กันโกงเช็คอินต่อเนื่อง)', async () => {
+  await assertFails(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { streakLastDay: '2000-01-01' }));
+});
 test('member A แก้ field ปลอดภัย (displayName) = ALLOWED', async () => {
   await assertSucceeds(updateDoc(doc(memberA(), 'tenants/brandA/users/uA'), { displayName: 'ชื่อใหม่' }));
 });

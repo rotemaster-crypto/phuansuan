@@ -133,3 +133,18 @@ test('admin/teamMemberView: uid === ownerLineId → isOwner:true', () => {
   assert.equal(teamMemberView('Uowner', { displayName: 'เจ้าของ' }, 'Uowner').isOwner, true);
   assert.equal(teamMemberView('U9', {}, '').isOwner, false, 'ownerLineId ว่าง → ไม่ใช่เจ้าของ');
 });
+
+// ── parseStreakMilestones (admin.html) — "days:points" ต่อบรรทัด → milestones เรียง ──
+test('admin/parseStreakMilestones: parse + เรียงตามวัน + กรองบรรทัดเสีย', () => {
+  const { parseStreakMilestones } = loadAdmin(['parseStreakMilestones']);
+  const out = parseStreakMilestones('7:100\n3:30\nขยะ\n:50\n30:500');
+  assert.equal(out.length, 3, 'ตัดบรรทัดเสีย เหลือ 3');
+  assert.equal(out[0].days, 3); assert.equal(out[1].days, 7); assert.equal(out[2].days, 30);   // เรียงน้อย→มาก
+  assert.equal(out[0].rewardPoints, 30);
+  assert.equal(out[2].rewardPoints, 500);
+});
+test('admin/parseStreakMilestones: ว่าง → []; days<=0 ถูกตัด', () => {
+  const { parseStreakMilestones } = loadAdmin(['parseStreakMilestones']);
+  assert.equal(parseStreakMilestones('').length, 0);
+  assert.equal(parseStreakMilestones('0:100\n-3:50').length, 0, 'days<=0 ตัดทิ้ง');
+});

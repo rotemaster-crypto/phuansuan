@@ -18,8 +18,9 @@
 - 🟡 ลูกค้า **deep-link `?post=`** — `maybeOpenDeepLinkPost` เปิดโพสต์จากลิงก์แชร์อัตโนมัติ (scroll+ไฮไลต์ / prepend เมื่อ paginate หลุด) · deploy+push แล้ว (`9cb7da1`)
 - 🟡 แอดมิน **team admin ชื่อ/avatar/เจ้าของ** — resolve LINE id→โปรไฟล์ · pure `teamMemberView` + admin.html test (B13 เริ่ม) · deploy+push แล้ว (`f42a77d`)
 - 🟡 แอดมิน **โอนเจ้าของ** — callable `transferOwnership` + e2e 6/6 + UI ปุ่ม · deploy functions+push แล้ว (`d04bccf`)
-- 🟡 ลูกค้า **แจ้งเตือนสถานะออเดอร์** — trigger `onOrderStatusNotify` จับทุก status change → notification+push · e2e 5/5 · client รองรับอยู่แล้ว · ยังไม่ commit · **ต้อง deploy functions**
-- guard 9/9 · frontend 12/12 · owner 6/6 · ordernotify 5/5 เขียว
+- 🟡 ลูกค้า **แจ้งเตือนสถานะออเดอร์** — trigger `onOrderStatusNotify` · e2e 5/5 · deploy functions+push แล้ว (`0c0614f`)
+- 🆕 **streak engine (เช็คอินต่อเนื่อง)** — callable `claimStreak` server-authoritative + rules lock A5 + client card + admin config · e2e 6/6 · rules 53/53 · frontend 14/14 · ยังไม่ commit · **ต้อง deploy functions+rules+hosting**
+- guard 9/9 · frontend 14/14 · owner 6/6 · ordernotify 5/5 · streak 6/6 · rules 53/53 เขียว
 
 **(pointer เดิม 2026-08-27 · เซสชัน N0-N7 · pushed) origin/main = `63a67d4`**
 
@@ -197,7 +198,7 @@
 ---
 
 ## 📋 ฟีเจอร์/ธุรกิจ (ตัดสินใจ/เลื่อน)
-- [ ] "ชาเลนจ์"/streak (ทำต่อเนื่อง N วัน) เป็น engine แยกจาก missions — ยังไม่มี · **M** (ของอยากได้เพิ่ม)
+- [x] ~~"ชาเลนจ์"/streak (ทำต่อเนื่อง N วัน) เป็น engine แยกจาก missions~~ — ✅ 2026-08-28: **streak engine ครบทุกชั้น** — callable `claimStreak` (server-authoritative · idempotent/วัน BKK · ต่อเนื่อง+1/ขาด reset · milestone ให้แต้ม + updateTier) · rules lock A5 (`streakCount`/`streakLastDay` server-only) · client card "เช็คอินต่อเนื่อง" (index) · admin config `settings/streak` (enabled+milestones "days:points") · **e2e 6/6 (`tests/streak.test.js`) + rules 2 เคส (53/53) + frontend 2 เคส (`parseStreakMilestones`)** · deploy: functions+rules+hosting
 - [ ] verify: เครื่องมือคิดราคาฝั่งแอดมิน ต้อง login กดลองสด (ยัง test สดไม่ได้)
 - [x] ~~brand-admin cross-tenant + single-point-of-failure~~ — ✅ 2026-08-27: พบว่า `adminTenant()` hardcode phuansuan → `lineAuth({tid:phuansuan})` เรียก resolveTid ก่อน → **phuansuan suspend = admin ทุกแบรนด์ login ไม่ได้** (เจอจริง!) · แก้: lineAuth แยกการตรวจ admin (isAdmin/tadmin ไม่ขึ้นกับ tenant status) ออกจาก membership claim → super/brand-admin login ได้แม้ login-tenant suspended · customer ยัง fail-closed · e2e 110/110 · brand-admin ถูก scope เป็นแบรนด์ตัวเอง (currentTenant จาก claim) ทำงานถูกอยู่แล้ว
 - [ ] login หลายช่องทาง: customer มี LINE+Google+Facebook (infra ครบ · เปิดผ่าน `APP_CONFIG.auth.providers`) — ต้อง enable provider ใน Firebase console + OAuth app · admin ยัง LINE-only

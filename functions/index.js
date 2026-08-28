@@ -901,6 +901,55 @@ exports.claimMission = onCall(async (req) => {
 });
 
 // ============================================================
+//  claimStreak — เช็คอินต่อเนื่องรายวัน (streak engine) · server-authoritative
+//   streakCount/streakLastDay = server-only (rules A5) · idempotent ต่อวัน (เขตเวลาไทย)
+//   ต่อเนื่อง (เมื่อวานเช็คอิน) → +1 · ขาดวัน → reset เป็น 1 · ถึง milestone (days) → ให้แต้ม
+//   config ต่อร้าน: settings/streak = { enabled, milestones:[{days,rewardPoints}] }
+// ============================================================
+exports.claimStreak = onCall(async (req) => {
+  const uid = req.auth && req.auth.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+  const tid = await resolveTid(req.data && req.data.tid);
+  const cfgSnap = await troot(tid).collection("settings").doc("streak").get();
+  const cfg = cfgSnap.exists ? cfgSnap.data() : {};
+  if (cfg.enabled !== true) throw new HttpsError("failed-precondition", "ร้านนี้ยังไม่เปิดระบบเช็คอินต่อเนื่อง");
+  const milestones = Array.isArray(cfg.milestones) ? cfg.milestones : [];
+  const today = bkkDayKey();
+  const yesterday = new Date(Date.now() + 7 * 3600 * 1000 - 86400000).toISOString().slice(0, 10);
+  const uRef = troot(tid).collection("users").doc(uid);
+
+  const result = await admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(uRef);
+    if (!snap.exists) throw new HttpsError("failed-precondition", "ยังไม่มีบัญชีผู้ใช้");
+    const u = snap.data();
+    const cur = Math.max(1, Math.floor(Number(u.streakCount) || 1));
+    if (u.streakLastDay === today) {   // เช็คอินวันนี้ไปแล้ว — idempotent (ไม่ให้ซ้ำ)
+      return { ok: true, alreadyToday: true, streak: cur, granted: 0 };
+    }
+    const prev = Math.max(0, Math.floor(Number(u.streakCount) || 0));
+    const streak = (u.streakLastDay === yesterday) ? prev + 1 : 1;   // ต่อเนื่อง หรือ เริ่มนับใหม่
+    const update = { streakCount: streak, streakLastDay: today };
+    let granted = 0;
+    for (const m of milestones) {
+      const days = Math.floor(Number(m.days) || 0);
+      const pts = Math.max(0, Math.floor(Number(m.rewardPoints) || 0));
+      if (days === streak && pts > 0) granted += pts;   // ให้เมื่อ streak "แตะ" days พอดี
+    }
+    if (granted > 0) update.points = FieldValue.increment(granted);
+    tx.update(uRef, update);
+    return { ok: true, alreadyToday: false, streak: streak, granted: granted };
+  });
+
+  if (result.granted > 0) {
+    try { await updateTier(uRef, tid); } catch (e) { console.warn("claimStreak updateTier:", e && e.message); }
+  }
+  if (!result.alreadyToday) {   // analytics counter (best-effort · เฉพาะเช็คอินจริง)
+    await troot(tid).collection("settings").doc("streak").update({ claimCount: FieldValue.increment(1) }).catch((e) => console.warn("claimStreak counter:", e && e.message));
+  }
+  return result;
+});
+
+// ============================================================
 //  ทายผล (Prediction) — submitPrediction + settlePrediction
 //  ผู้ใช้ส่งคำทาย (ครั้งเดียว, ก่อนปิดรับ, หักค่าเข้าร่วมถ้ามี)
 //  แอดมินเฉลย → จ่ายรางวัลให้ผู้ชนะทุกคนอัตโนมัติ (idempotent)

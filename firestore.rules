@@ -81,11 +81,11 @@ service cloud.firestore {
           && request.resource.data.get('tier', 'bronze') == 'bronze'
           && request.resource.data.get('points', 0) == 0;   // A5: แต้มเริ่มต้อง 0 — โบนัสให้ผ่าน Cloud Function
         // A5: เจ้าของแก้ได้เฉพาะ field ที่ไม่ใช่ economy/identity —
-        //     points/tier/postCount/helpCount/banned/lastBonusDay เขียนได้เฉพาะ Cloud Function (กันปั๊มแต้ม)
+        //     points/tier/postCount/helpCount/banned/lastBonusDay/streak* เขียนได้เฉพาะ Cloud Function (กันปั๊มแต้ม)
         allow update: if canManage(t)
           || (isOwner(uid) && memberOf(t)
               && !request.resource.data.diff(resource.data).affectedKeys()
-                    .hasAny(['points', 'tier', 'banned', 'postCount', 'helpCount', 'lastBonusDay']));
+                    .hasAny(['points', 'tier', 'banned', 'postCount', 'helpCount', 'lastBonusDay', 'streakCount', 'streakLastDay']));
         allow delete: if canManage(t);
         match /diagnoses/{diagId} { allow read, delete: if isOwner(uid); allow write: if false; }
         match /aiUsage/{day}     { allow read: if isOwner(uid); allow write: if false; }
