@@ -214,5 +214,7 @@
 ---
 
 ## เจอใหม่ระหว่างทาง (เพิ่มที่นี่)
+- [x] ~~OG share-preview (ลิงก์แชร์ขึ้นการ์ด)~~ — ✅ 2026-08-28: function `ogPreview` (onRequest) เสิร์ฟ OG meta ที่ path `/s/<tid>/p|post/<id>` (hosting rewrite main+office) — crawler อ่านการ์ด (title/desc/image/site_name) · browser JS/meta-refresh เด้งเข้า `?product=/?post=` (deep-link เดิม) · escape กัน XSS · `x-forwarded-host` (Cloud Run behind hosting) · shareProduct/sharePost เปลี่ยนลิงก์เป็น `/s/...` · **e2e 5/5** (`tests/ogpreview.test.js`) · **verify prod จริง** (การ์ดสินค้าครบ) · deploy functions+hosting
+- [ ] **domain แบรนด์ที่ไม่จดเอง (subdomain/path)** — เลือกแบบ: `brandx.bocean.com` (subdomain · โปรสุด · ต้อง wildcard DNS+SSL = infra Roger) / `bocean.com/brandx` (path · Firebase ทำได้ · rewrite+อ่าน path) / `?t=` (มีแล้ว) · ฝั่ง client resolve ทำง่าย (tenantId อ่าน hostname/path) — รอ Roger เคาะแบบ + infra
 - [x] ~~custom domain แบรนด์ (BYOD self-service)~~ — ✅ 2026-08-28: super-admin กรอกโดเมนในหน้า "จัดการแบรนด์" → เขียน `tenant.domains[]` (origin gate B5) + `platform/domains.map` (host→tid) · client `loadLiveDomains()` + `tenantId()` resolve live map ก่อน fallback config.js · pure `_normHost` + frontend test (tenantId live + _normHost) · rules ไม่ต้องแก้ (tenant/platform write=super) · [[custom-domain-byod]]
   - **ยังต้อง Roger (console):** connect Firebase Hosting custom domain + เพิ่ม authorized domains · **future:** ขายบริการจดโดเมน (registrar reseller API + auto Hosting provision) = ค่าคอม (แยกเฟส · foundation รองรับแล้ว)

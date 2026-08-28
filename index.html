@@ -1920,7 +1920,9 @@ function openPostModalForGroup(gid) {
 // ── Share ────────────────────────────────────────────────
 async function sharePost(postId) {
   var base = (location && location.origin) || 'https://phuansuan.web.app';
-  var url = postId ? (base + '/?post=' + encodeURIComponent(postId)) : base;   // ลิงก์ถึงโพสต์นั้น (รองรับ deep-link ภายหลัง)
+  var tid = (typeof tenantId==='function') ? tenantId() : 'phuansuan';
+  // ลิงก์ /s/<tid>/post/<id> → ogPreview ตอบ OG card + เด้งเข้า SPA (deep-link ?post= เปิดโพสต์)
+  var url = postId ? (base + '/s/' + encodeURIComponent(tid) + '/post/' + encodeURIComponent(postId)) : base;
   var text = 'มาดูโพสต์นี้ในชุมชนเพื่อนสวน 🌿';
   try {
     if (navigator.share) { await navigator.share({ title: 'เพื่อนสวน', text: text, url: url }); return; }
@@ -3860,9 +3862,9 @@ function closeProduct(){ var m = document.getElementById('prodDetailModal'); if 
 async function shareProduct(id){
   var p = shopProducts.find(function(x){ return x.id===id; });
   var base = (location && location.origin) || 'https://phuansuan.web.app';
-  var qs = '?product=' + encodeURIComponent(id);
-  try { var tq = new URLSearchParams(location.search).get('t'); if (tq) qs += '&t=' + encodeURIComponent(tq); } catch(e){}
-  var url = base + '/' + qs;
+  var tid = (typeof tenantId==='function') ? tenantId() : 'phuansuan';
+  // ลิงก์ /s/<tid>/p/<id> → Cloud Function ogPreview ตอบ OG card (crawler) + เด้งเข้า SPA (browser)
+  var url = base + '/s/' + encodeURIComponent(tid) + '/p/' + encodeURIComponent(id);
   var text = p ? ('ดูสินค้า: ' + p.name) : 'ดูสินค้านี้';
   try { if (navigator.share) { await navigator.share({ title: (p&&p.name)||'สินค้า', text: text, url: url }); return; } }
   catch(e){ if (e && e.name === 'AbortError') return; }   // ผู้ใช้ยกเลิก = จบ · error อื่น → fallback

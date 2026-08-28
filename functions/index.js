@@ -5,7 +5,7 @@
 //  ทุก trigger/helper ทำงานใต้ tenants/{tid}/...
 // ============================================================
 
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, HttpsError, onRequest } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const { FieldValue } = require("firebase-admin/firestore");
@@ -2010,3 +2010,78 @@ exports.onOrderStatusNotify = onDocUpd(
     await sendNotif(event.params.tid, uid, text, "order");
   }
 );
+
+// ============================================================
+//  ogPreview — เสิร์ฟ Open Graph meta ให้ลิงก์แชร์ (crawler อ่านการ์ด · browser เด้งเข้า SPA)
+//   path: /s/<tid>/<type>/<id>  (type = p | post) · เสิร์ฟ HTML เดียวให้ทุกคน (ไม่ sniff UA)
+//   crawler ไม่รัน JS → อ่าน og:* · browser → JS/meta refresh เด้งเข้า ?product=/?post= (deep-link เดิม)
+// ============================================================
+function ogEscape(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function ogHttpsOnly(u) { u = String(u || ""); return /^https:\/\/[^\s"'<>]+$/.test(u) ? u : ""; }
+function buildOgHtml(o) {
+  const title = ogEscape(o.title || "");
+  const desc = ogEscape(o.desc || "");
+  const img = ogHttpsOnly(o.image || "");
+  const url = ogEscape(o.url || "");
+  const site = ogEscape(o.siteName || "");
+  const redir = String(o.redirectUrl || "");   // สร้างฝั่ง server จาก host+tid+id (ควบคุมได้ · ปลอดภัย)
+  const imgTag = img
+    ? '<meta property="og:image" content="' + ogEscape(img) + '"><meta name="twitter:card" content="summary_large_image">'
+    : '<meta name="twitter:card" content="summary">';
+  return "<!doctype html><html lang=\"th\"><head><meta charset=\"utf-8\">" +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    "<title>" + title + "</title>" +
+    '<meta property="og:type" content="website">' +
+    '<meta property="og:title" content="' + title + '">' +
+    (desc ? '<meta property="og:description" content="' + desc + '"><meta name="description" content="' + desc + '">' : "") +
+    (site ? '<meta property="og:site_name" content="' + site + '">' : "") +
+    '<meta property="og:url" content="' + url + '">' +
+    imgTag +
+    '<meta http-equiv="refresh" content="0;url=' + ogEscape(redir) + '">' +
+    "<script>location.replace(" + JSON.stringify(redir) + ")</script>" +
+    "</head><body>กำลังพาไปที่ " + title + "… <a href=\"" + ogEscape(redir) + "\">คลิกถ้าไม่เปลี่ยนหน้า</a></body></html>";
+}
+exports.ogPreview = onRequest({ region: "asia-southeast1" }, async (req, res) => {
+  // behind Firebase Hosting rewrite → Cloud Run: original host อยู่ใน x-forwarded-host (req.get host = Cloud Run)
+  const host = req.get("x-forwarded-host") || req.get("host") || "phuansuan.web.app";
+  const appRoot = "https://" + host + "/";
+  const bail = () => { res.set("Cache-Control", "no-store"); res.redirect(302, appRoot); };
+  try {
+    const segs = String(req.path || "").split("/").filter(Boolean);
+    const si = segs.indexOf("s");
+    const tid = si >= 0 ? segs[si + 1] : "";
+    const type = si >= 0 ? segs[si + 2] : "";
+    const id = si >= 0 ? segs[si + 3] : "";
+    if (!tid || !id || (type !== "p" && type !== "post")) return bail();
+    const tr = admin.firestore().collection("tenants").doc(tid);
+    const appSnap = await tr.collection("settings").doc("app").get();
+    const brand = (appSnap.exists && appSnap.data().appName) || "ร้านค้า";
+    const o = { siteName: brand, url: "https://" + host + req.path };
+    if (type === "p") {
+      const ps = await tr.collection("products").doc(id).get();
+      if (!ps.exists) return bail();
+      const p = ps.data();
+      o.title = (p.name || "สินค้า") + (p.price ? (" · ฿" + Math.round(Number(p.price) || 0).toLocaleString("en-US")) : "");
+      o.desc = String(p.description || "").replace(/\s+/g, " ").trim().slice(0, 160);
+      o.image = p.image || (Array.isArray(p.images) && p.images[0]) || "";
+      o.redirectUrl = appRoot + "?t=" + encodeURIComponent(tid) + "&product=" + encodeURIComponent(id);
+    } else {
+      const xs = await tr.collection("posts").doc(id).get();
+      if (!xs.exists) return bail();
+      const x = xs.data();
+      o.title = (x.authorName || "สมาชิก") + " โพสต์ในชุมชน " + brand;
+      o.desc = String(x.text || "").replace(/\s+/g, " ").trim().slice(0, 160);
+      o.image = x.imageUrl || x.authorPhoto || "";
+      o.redirectUrl = appRoot + "?t=" + encodeURIComponent(tid) + "&post=" + encodeURIComponent(id);
+    }
+    res.set("Cache-Control", "public, max-age=300, s-maxage=600");
+    res.status(200).send(buildOgHtml(o));
+  } catch (e) {
+    console.error("ogPreview:", e && e.message);
+    try { res.redirect(302, appRoot); } catch (_) {}
+  }
+});
