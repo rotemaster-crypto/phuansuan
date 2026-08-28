@@ -9,8 +9,26 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-28 (เซสชันยาว · pushed ครบ)
-**origin/main = local HEAD = `ba4e6fa` · prod live ครบ + push ครบทุก commit · deploy มือ (login rotemaster พร้อม) · working tree clean**
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-28 (เซสชัน umbrella+profile · pushed ครบ)
+**origin/main = local HEAD = `9805f07` · prod live ครบ + push ครบทุก commit · deploy มือ (login rotemaster พร้อม) · working tree clean**
+
+**✅ เซสชันนี้ (8 commits · deploy+verify prod ครบ) — [[umbrella-brand-switcher]]:**
+- 🆕 **Umbrella brand switcher ครบวงจร** — `accounts/{uid}` global identity + auto-follow ตอน login · `▾` บนหัวแอป → bottom sheet "สลับแบรนด์" (แต้ม/tier ต่อแบรนด์ · แบบ IG/Google) โชว์ตั้งแต่ 1 แบรนด์ · rules `accounts/*` own-only · pure `buildBrandEntry`/`tierBadge`
+- 🆕 **ปิด loop join** — `claimTenant` เชื่อ "โฮสต์ร่ม" (`_hostMatchesPlatform` + `PLATFORM_HOSTS_DEFAULT` + `platform/domains.platformHosts/roots`) → Google/FB join แบรนด์ที่สลับไปได้ (LINE ผ่าน lineAuth อยู่แล้ว) · unit `tests/origin.test.js` 3/3 · deploy `functions:claimTenant`
+- 🆕 **Profile polish** — avatar วงกลมกลางจอ 104px (เอา cover ออก) · stat tiles มีไอคอน · list-row menu "ทั่วไป" · ที่อยู่จัดส่ง → modal (แตะเปิด)
+- 🆕 **แก้ชื่อโปรไฟล์ระดับ global** (Option A) — เขียน `accounts/{uid}` เป็น source of truth · `saveUserToFirestore` อ่าน global ตอน login กัน LINE ทับ · bio/จังหวัด คง per-brand
+- 📊 **Bocean System Atlas** — infographic ภาพรวมระบบ (artifact HTML): https://claude.ai/code/artifact/cd260c2f-f52f-4a7e-a763-fdcdaeeee7ec
+
+**Test รวม:** frontend 33/33 · rules 58/58 · origin unit 3/3 · e2e smoke tenant+shop 15/15 · guard 9/9 · compile ผ่าน
+
+**⏭️ รอบหน้า (agent-doable — Roger บอก "ยังไม่ทำ marketplace"):**
+- **verify สด login LINE จริง:** เข้า 2 แบรนด์ (`?t=phuansuan`→`?t=ecofora` บัญชีเดียว) → `▾` โผล่ → สลับ → เช็คแต้ม/ประวัติแยก + แก้ชื่อ global ติดข้ามแบรนด์
+- super ตั้ง `platform/domains.platformHosts` เพิ่มถ้ามี hosting host นอก default (bocean/office/phuansuan `.web.app` cover แล้ว)
+- แก้ **รูปโปรไฟล์** global (ตอนนี้แก้ได้แค่ชื่อ · รูปยังมาจาก LINE) · logo Bocean C(super)/D(favicon) · dashboard revenue sum-agg · marketplace MVP (เลื่อนตามที่ Roger บอก)
+
+---
+
+**(pointer เก่า 2026-08-28 · เซสชัน umbrella แรก+Cloudflare) origin/main = `ba4e6fa`**
 
 **✅ เซสชันนี้ (16 commits · deploy+verify prod ครบ):**
 งานย่อย/แก้: ติดตามพัสดุ (`courierTrack`) · guard ขนส่ง · deep-link `?post=` · team admin ชื่อ/avatar/โอนเจ้าของ (`transferOwnership` e2e 6/6) · แจ้งเตือนสถานะออเดอร์ (trigger `onOrderStatusNotify` e2e 5/5) · orders date-range · sysoverview `count()` (B6/B7) · product search (ลูกค้า+admin) · แชร์สินค้า `?product=`
