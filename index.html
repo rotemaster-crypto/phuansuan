@@ -174,10 +174,24 @@ body{font-family:var(--font-body);background:#f0f2f5;color:#1c1e21;max-width:480
 .pb-blue{background:#e7f3ff;color:#1877f2}
 .pb-gold{background:#fff8e1;color:#e65100}
 .pb-green{background:#e8f5e9;color:#1b5e20}
-.prof-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-.ps{background:var(--bg);border-radius:10px;padding:10px 4px;text-align:center}
+.prof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.ps{background:#f7f9fb;border:1px solid #eef1f4;border-radius:12px;padding:12px 6px;text-align:center}
+.ps-ic{display:flex;justify-content:center;margin-bottom:5px}
+.ps-ic .ic{width:18px;height:18px;color:var(--primary)}
 .ps-n{font-size:var(--fs-lg);font-weight:800;color:var(--text)}
 .ps-l{font-size:var(--fs-2xs);color:var(--muted);margin-top:2px}
+/* list-row menu (โปรไฟล์) — icon วงกลม + label + sub + chevron */
+.plist{background:#fff}
+.plist-title{font-size:var(--fs-sm);font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;padding:14px 16px 6px}
+.plist-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:none;border-bottom:1px solid #f2f4f6;padding:13px 16px;cursor:pointer;font-family:inherit}
+.plist-row:last-child{border-bottom:none}
+.plist-row:active{background:var(--bg)}
+.plist-ic{width:36px;height:36px;border-radius:10px;background:#eaf2ff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.plist-ic .ic{width:18px;height:18px;color:var(--primary)}
+.plist-main{flex:1;min-width:0}
+.plist-label{display:block;font-size:var(--fs-base);font-weight:600;color:var(--text)}
+.plist-sub{display:block;font-size:var(--fs-xs);color:var(--muted);margin-top:1px}
+.plist-arrow{color:#c5c9ce;font-size:var(--fs-lg)}
 .prof-nav{display:flex;border-bottom:1px solid var(--border);background:#fff;margin-top:0}
 .pnav{flex:1;padding:13px 0;text-align:center;font-size:var(--fs-base);font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
 .pnav.active{color:var(--primary);border-bottom-color:var(--primary)}
@@ -577,6 +591,32 @@ button .ic,a .ic{pointer-events:none}
   </div>
 </div>
 
+<!-- ══ ADDRESS MODAL — ฟอร์มที่อยู่จัดส่ง (เปิดจาก list-row โปรไฟล์) ══ -->
+<div class="overlay" id="addressModal" onclick="if(event.target===this)closeAddressModal()">
+  <div class="modal" style="max-height:92vh;overflow-y:auto">
+    <div class="modal-top">
+      <button class="modal-close" onclick="closeAddressModal()">✕</button>
+      <div class="modal-title">ที่อยู่จัดส่ง</div>
+      <span style="width:34px"></span>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:var(--fs-xs);color:var(--muted);margin:0 0 12px">ตั้งไว้ครั้งเดียว — เวลาสั่งของจะเติมให้อัตโนมัติ ไม่ต้องกรอกซ้ำ</div>
+      <div class="co-form">
+        <div class="co-field"><label class="co-label">ชื่อผู้รับ</label><input class="co-input" id="pf-name" maxlength="80" placeholder="ชื่อ-นามสกุล"></div>
+        <div class="co-field"><label class="co-label">เบอร์โทร</label><input class="co-input" id="pf-phone" inputmode="numeric" maxlength="10" placeholder="08xxxxxxxx"></div>
+        <div class="co-field"><label class="co-label">ที่อยู่ (บ้านเลขที่ / หมู่ / ถนน)</label><input class="co-input" id="pf-addr" maxlength="200" placeholder="เช่น 99 หมู่ 4 ถ.สุขใจ"></div>
+        <div class="co-field"><label class="co-label">จังหวัด</label><select class="co-select" id="pf-province"><option value="">— เลือกจังหวัด —</option></select></div>
+        <div class="co-row2">
+          <div class="co-field"><label class="co-label">อำเภอ/เขต</label><input class="co-input" id="pf-district" maxlength="60" placeholder="อำเภอ"></div>
+          <div class="co-field"><label class="co-label">ตำบล/แขวง</label><input class="co-input" id="pf-subdistrict" maxlength="60" placeholder="ตำบล"></div>
+        </div>
+        <div class="co-field"><label class="co-label">รหัสไปรษณีย์</label><input class="co-input" id="pf-postcode" inputmode="numeric" maxlength="5" placeholder="xxxxx"></div>
+      </div>
+      <button class="submit-btn" style="margin-top:14px" onclick="saveMyAddress()"><svg class="ic"><use href="#i-save"/></svg> บันทึกที่อยู่</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ FEED SCREEN ══ -->
 <div class="screen" id="screen-feed">
   <div class="feed-tabs" id="feed-tabs">
@@ -633,40 +673,20 @@ button .ic,a .ic{pointer-events:none}
     <div class="prof-bio" id="prof-bio" style="display:none"></div>
     <div class="prof-badges" id="prof-badges"></div>
     <div class="prof-stats">
-      <div class="ps"><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
-      <div class="ps"><div class="ps-n" id="stat-helped">0</div><div class="ps-l">ช่วยคน</div></div>
-      <div class="ps"><div class="ps-n" id="stat-points">0</div><div class="ps-l">แต้ม</div></div>
+      <div class="ps"><div class="ps-ic"><svg class="ic"><use href="#i-edit"/></svg></div><div class="ps-n" id="stat-posts">0</div><div class="ps-l">โพส</div></div>
+      <div class="ps"><div class="ps-ic"><svg class="ic"><use href="#i-users"/></svg></div><div class="ps-n" id="stat-helped">0</div><div class="ps-l">ช่วยคน</div></div>
+      <div class="ps"><div class="ps-ic"><svg class="ic"><use href="#i-star"/></svg></div><div class="ps-n" id="stat-points">0</div><div class="ps-l">แต้ม</div></div>
     </div>
   </div>
   <div class="prof-nav">
     <div class="pnav active">โพส</div>
   </div>
-  <div class="crops-card">
-    <div class="sec-title"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-pin"/></svg> ที่อยู่จัดส่ง</div>
-    <div style="font-size:var(--fs-xs);color:var(--muted);margin:2px 0 10px">ตั้งไว้ครั้งเดียว — เวลาสั่งของจะเติมให้อัตโนมัติ ไม่ต้องกรอกซ้ำ</div>
-    <div class="co-form">
-      <div class="co-field"><label class="co-label">ชื่อผู้รับ</label><input class="co-input" id="pf-name" maxlength="80" placeholder="ชื่อ-นามสกุล"></div>
-      <div class="co-field"><label class="co-label">เบอร์โทร</label><input class="co-input" id="pf-phone" inputmode="numeric" maxlength="10" placeholder="08xxxxxxxx"></div>
-      <div class="co-field"><label class="co-label">ที่อยู่ (บ้านเลขที่ / หมู่ / ถนน)</label><input class="co-input" id="pf-addr" maxlength="200" placeholder="เช่น 99 หมู่ 4 ถ.สุขใจ"></div>
-      <div class="co-field"><label class="co-label">จังหวัด</label><select class="co-select" id="pf-province"><option value="">— เลือกจังหวัด —</option></select></div>
-      <div class="co-row2">
-        <div class="co-field"><label class="co-label">อำเภอ/เขต</label><input class="co-input" id="pf-district" maxlength="60" placeholder="อำเภอ"></div>
-        <div class="co-field"><label class="co-label">ตำบล/แขวง</label><input class="co-input" id="pf-subdistrict" maxlength="60" placeholder="ตำบล"></div>
-      </div>
-      <div class="co-field"><label class="co-label">รหัสไปรษณีย์</label><input class="co-input" id="pf-postcode" inputmode="numeric" maxlength="5" placeholder="xxxxx"></div>
-    </div>
-    <button class="submit-btn" style="margin-top:10px" onclick="saveMyAddress()"><svg class="ic"><use href="#i-save"/></svg> บันทึกที่อยู่</button>
-  </div>
-  <div class="crops-card">
-    <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center"><span><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-package"/></svg> ประวัติการสั่งซื้อ</span>
-      <button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:inherit">ดูทั้งหมด →</button>
-    </div>
-    <div id="pf-orders" style="margin-top:8px"><div style="font-size:var(--fs-sm);color:var(--muted)">กำลังโหลด...</div></div>
-  </div>
-  <div class="seller-entry" onclick="openShopForm()">
-    <svg class="ic"><use href="#i-cart"/></svg>
-    <span>เปิดร้านของคุณเอง — เริ่มขายฟรี</span>
-    <span class="se-arrow">›</span>
+  <div class="plist">
+    <div class="plist-title">ทั่วไป</div>
+    <button class="plist-row" onclick="openMyOrders()"><span class="plist-ic"><svg class="ic"><use href="#i-package"/></svg></span><span class="plist-main"><span class="plist-label">ประวัติการสั่งซื้อ</span><span class="plist-sub">ดูออเดอร์ทั้งหมด</span></span><span class="plist-arrow">›</span></button>
+    <button class="plist-row" onclick="openAddressModal()"><span class="plist-ic"><svg class="ic"><use href="#i-pin"/></svg></span><span class="plist-main"><span class="plist-label">ที่อยู่จัดส่ง</span><span class="plist-sub" id="pf-addr-sub">ตั้งไว้ครั้งเดียว เติมให้อัตโนมัติ</span></span><span class="plist-arrow">›</span></button>
+    <button class="plist-row" onclick="openShopForm()"><span class="plist-ic"><svg class="ic"><use href="#i-cart"/></svg></span><span class="plist-main"><span class="plist-label">เปิดร้านของฉัน</span><span class="plist-sub">เริ่มขายฟรี</span></span><span class="plist-arrow">›</span></button>
+    <button class="plist-row" onclick="openNotifs()"><span class="plist-ic"><svg class="ic"><use href="#i-bell"/></svg></span><span class="plist-main"><span class="plist-label">การแจ้งเตือน</span></span><span class="plist-arrow">›</span></button>
   </div>
   <div class="crops-card">
     <div class="sec-title">โพสของฉัน</div>
@@ -2411,6 +2431,7 @@ function renderProfileInfo() {
     });
     bEl.innerHTML = html;
   }
+  updateAddressSub();   // สรุปที่อยู่ใต้แถวเมนู "ที่อยู่จัดส่ง"
 }
 
 // ── My Posts (โพสของฉันในโปรไฟล์) ─────────────────────────
@@ -2433,7 +2454,19 @@ async function loadMyPosts() {
   }
 }
 
-// ── ที่อยู่จัดส่ง (ตั้งในโปรไฟล์ → checkout ดึงไปใช้) ──────
+// ── ที่อยู่จัดส่ง (เปิดจาก list-row โปรไฟล์ → modal · checkout ดึงไปใช้) ──────
+function updateAddressSub(){
+  const el = document.getElementById('pf-addr-sub'); if (!el) return;
+  const a = (currentUser && currentUser.shippingAddress) || null;
+  el.textContent = (a && a.name && a.province) ? (a.name + ' · ' + a.province) : 'ตั้งไว้ครั้งเดียว เติมให้อัตโนมัติ';
+}
+function openAddressModal(){
+  if (!currentUser || currentUser.isGuest){ toast('กรุณาเข้าสู่ระบบก่อนครับ'); return; }
+  try { renderMyAddress(); } catch(_){}
+  const o = document.getElementById('addressModal'); if (o) o.classList.add('open');
+}
+function closeAddressModal(){ const o = document.getElementById('addressModal'); if (o) o.classList.remove('open'); }
+
 function renderMyAddress(){
   if (!currentUser) return;
   const sel = document.getElementById('pf-province');
@@ -2461,6 +2494,7 @@ async function saveMyAddress(){
     await tdb().collection('users').doc(currentUser.uid).update({ shippingAddress: shipping });
     currentUser.shippingAddress = shipping;
     renderProfileInfo();
+    closeAddressModal();
     toast('✅ บันทึกที่อยู่แล้ว — สั่งของครั้งหน้าเติมให้อัตโนมัติ');
   } catch(e){ toast('บันทึกไม่สำเร็จ: '+e.message); }
 }
@@ -3106,7 +3140,7 @@ function switchScreen(name){
   document.getElementById('screen-'+name).classList.add('active');
   const nav=document.getElementById('nav-'+name);
   if(nav) nav.classList.add('active');
-  if(name === 'profile'){ renderProfileInfo(); renderMyAddress(); renderProfileOrders(); loadMyPosts(); }
+  if(name === 'profile'){ renderProfileInfo(); loadMyPosts(); }
   if(name === 'community'){
     const f = (APP_CONFIG && APP_CONFIG.features) || {};
     loadEarnCampaignsUser(); loadStreak(); loadPredictionsUser(); loadMissions(); loadLuckyDrawsUser(); loadMyCoupons();
