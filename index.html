@@ -1124,6 +1124,7 @@ window.addEventListener('load', async () => {
     // Init Firebase
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
+    await loadLiveDomains();   // resolve โดเมน→tenant สด (ต้องก่อน tdb()/loaders เพื่อได้ร้านถูกตัว)
     loadPlatformDesign();   // ดีไซน์ระบบ (platform-wide) — apply สด + live ทุกแบรนด์
     loadBrandCategories();  // หมวดสินค้า 2 ชั้น (platform + brand) — โหลดก่อน render ร้าน
 
@@ -3256,11 +3257,18 @@ async function loadFeed(mode, more) {
 }
 
 function tdb(){ return db.collection('tenants').doc(tenantId()); }
+var _liveDomains = null;   // map host→tid โหลดสดจาก platform/domains (BYOD · super ตั้ง) · fallback config.js
 function tenantId() {
   const t = APP_CONFIG.tenant || {};
   try { const qp = new URLSearchParams(location.search).get('t'); if (qp) return qp; } catch(e){}
   const host = (typeof location !== 'undefined' && location.hostname) || '';
-  return (t.domains && t.domains[host]) || t.id || 'phuansuan';
+  if (typeof _liveDomains !== 'undefined' && _liveDomains && _liveDomains[host]) return _liveDomains[host];   // โดเมนที่ super ผูกไว้ (live)
+  return (t.domains && t.domains[host]) || t.id || 'phuansuan';        // fallback: config.js static
+}
+// โหลด map โดเมน→tenant สด (ต้องเสร็จก่อน tdb()/loadPlatformDesign เพื่อ resolve ให้ถูกร้าน)
+async function loadLiveDomains(){
+  try { var s = await db.collection('platform').doc('domains').get(); if (s.exists && s.data() && typeof s.data().map === 'object') _liveDomains = s.data().map || null; }
+  catch(e){}
 }
 function resolveTenant() {
   const t = APP_CONFIG.tenant || {};

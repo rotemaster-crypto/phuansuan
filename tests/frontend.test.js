@@ -80,6 +80,13 @@ test('frontend/tenantId: default เมื่อไม่แมตช์', () =>
   const { tenantId } = load(['tenantId'], { APP_CONFIG, location });
   assert.equal(tenantId(), 'phuansuan');
 });
+test('frontend/tenantId: live domain map (BYOD) ชนะ config.js static', () => {
+  const APP_CONFIG = { tenant: { id: 'phuansuan', domains: { 'shop.co': 'oldbrand' } } };
+  const location = { search: '', hostname: 'shop.co' };
+  const _liveDomains = { 'shop.co': 'newbrand' };   // super ผูกโดเมนสด
+  const { tenantId } = load(['tenantId'], { APP_CONFIG, location, _liveDomains });
+  assert.equal(tenantId(), 'newbrand', 'live map ต้องมาก่อน static config');
+});
 
 // ── courierTrack — รหัสขนส่ง → ชื่อ + ลิงก์ติดตาม ──
 test('frontend/courierTrack: รหัสรู้จัก → ชื่อ + ลิงก์ต่อเลขพัสดุ', () => {
@@ -192,4 +199,12 @@ test('categories/platformCatOf: brand id → canonical · ไม่พบ → �
   const cats = effectiveCats([{ id: 'b1', name: 'X', platformCat: 'fashion' }], null, []);
   assert.equal(platformCatOf('b1', cats), 'fashion');
   assert.equal(platformCatOf('unknown', cats), 'unknown', 'ไม่พบ → คืน id เดิม (treated as canonical)');
+});
+
+// ── _normHost (admin) — normalize โดเมนก่อนเก็บ ──
+test('admin/_normHost: ตัด scheme/path + lowercase', () => {
+  const { _normHost } = loadAdmin(['_normHost']);
+  assert.equal(_normHost('https://Shop.Example.com/path?x=1'), 'shop.example.com');
+  assert.equal(_normHost('  SHOP.CO  '), 'shop.co');
+  assert.equal(_normHost('http://a.b.co/'), 'a.b.co');
 });

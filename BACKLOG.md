@@ -212,4 +212,5 @@
 ---
 
 ## เจอใหม่ระหว่างทาง (เพิ่มที่นี่)
-- (ว่าง — เพิ่มเมื่อเจอ)
+- [x] ~~custom domain แบรนด์ (BYOD self-service)~~ — ✅ 2026-08-28: super-admin กรอกโดเมนในหน้า "จัดการแบรนด์" → เขียน `tenant.domains[]` (origin gate B5) + `platform/domains.map` (host→tid) · client `loadLiveDomains()` + `tenantId()` resolve live map ก่อน fallback config.js · pure `_normHost` + frontend test (tenantId live + _normHost) · rules ไม่ต้องแก้ (tenant/platform write=super) · [[custom-domain-byod]]
+  - **ยังต้อง Roger (console):** connect Firebase Hosting custom domain + เพิ่ม authorized domains · **future:** ขายบริการจดโดเมน (registrar reseller API + auto Hosting provision) = ค่าคอม (แยกเฟส · foundation รองรับแล้ว)

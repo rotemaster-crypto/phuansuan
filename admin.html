@@ -4155,7 +4155,12 @@ function tenantCardHtml(t){
     '<div class="oa-top"><span class="oa-id">'+escapeHtml(t.name||t.id)+' <span style="color:var(--muted);font-weight:400">('+escapeHtml(t.id)+')</span></span>'+
       '<span class="oa-badge" style="background:'+stColor+'">'+stText+'</span></div>'+
     '<div class="oa-box" style="margin-top:8px">'+
-      row('แพ็กเกจ', t.plan)+ row('โดเมน', (t.domains||[]).join(', '))+ row('Owner LINE', t.ownerLineId)+
+      row('แพ็กเกจ', t.plan)+ row('Owner LINE', t.ownerLineId)+
+      '<div class="oa-line"><b>โดเมน:</b> '+
+        ((t.domains||[]).map(function(h){ return '<span style="display:inline-flex;align-items:center;gap:4px;background:#eef2f7;border-radius:6px;padding:2px 7px;margin:2px;font-size:var(--fs-xs)">'+escapeHtml(h)+'<span style="cursor:pointer;color:#c00;font-weight:800" onclick="removeTenantDomain(\''+t.id+'\',\''+escapeHtml(h)+'\')">×</span></span>'; }).join('') || '<span style="color:var(--muted);font-size:var(--fs-xs)">— ยังไม่มี —</span>')+
+      '</div>'+
+      '<div style="display:flex;gap:6px;margin-top:5px"><input id="tdom-'+escapeHtml(t.id)+'" placeholder="shop.example.com" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:var(--fs-xs)"><button class="oa-btn" onclick="addTenantDomain(\''+t.id+'\')"><svg class="ic"><use href="#i-plus"/></svg> เพิ่มโดเมน</button></div>'+
+      '<div style="font-size:var(--fs-2xs);color:var(--muted);margin-top:3px">⚠ หลังเพิ่ม ต้อง connect ใน Firebase Hosting + เพิ่ม authorized domains (console) ให้ครบ</div>'+
       '<div class="oa-line"><b>ลิงก์ใช้งาน:</b> <a href="'+liveUrl+'" target="_blank" rel="noopener" style="color:var(--primary);word-break:break-all">'+escapeHtml(liveUrl)+'</a> <button class="oa-btn" style="padding:2px 8px;font-size:var(--fs-xs);margin-left:6px" onclick="copyTenantLink(\''+t.id+'\')"><svg class="ic"><use href="#i-copy"/></svg> คัดลอก</button></div>'+
     '</div>'+
     '<div class="oa-actions">'+acts+'</div>'+
@@ -4178,6 +4183,27 @@ async function toggleTenantStatus(tid, status){
     toast(status==='suspended' ? 'ระงับ '+tid+' แล้ว' : 'เปิดใช้ '+tid+' แล้ว','success');
     loadTenants();
   } catch(e){ toast('❌ '+e.message,'error'); }
+}
+// ── โดเมนแบรนด์ (BYOD) — เขียน tenant.domains (origin gate) + platform/domains.map (client resolve live) ──
+function _normHost(v){ return String(v||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,''); }
+async function addTenantDomain(tid){
+  var el = document.getElementById('tdom-'+tid); if(!el) return;
+  var host = _normHost(el.value);
+  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(host)){ toast('❌ รูปแบบโดเมนไม่ถูกต้อง (เช่น shop.example.com)','error'); return; }
+  try {
+    await db.collection('tenants').doc(tid).update({ domains: firebase.firestore.FieldValue.arrayUnion(host), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection('platform').doc('domains').set({ map: { [host]: tid } }, { merge:true });
+    toast('✅ เพิ่มโดเมนแล้ว — อย่าลืม connect Firebase Hosting + authorized domains (console)','success');
+    el.value=''; loadTenants();
+  } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
+}
+async function removeTenantDomain(tid, host){
+  if (!confirm('เอาโดเมน '+host+' ออกจากแบรนด์นี้?')) return;
+  try {
+    await db.collection('tenants').doc(tid).update({ domains: firebase.firestore.FieldValue.arrayRemove(host), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection('platform').doc('domains').set({ map: { [host]: firebase.firestore.FieldValue.delete() } }, { merge:true });
+    toast('เอาโดเมนออกแล้ว','success'); loadTenants();
+  } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
 }
 
 // ══ ค่าส่ง & บิลแบรนด์ (super-admin) — รวมต้นทุน Shippop ต่อแบรนด์/เดือน ══
