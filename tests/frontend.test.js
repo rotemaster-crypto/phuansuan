@@ -290,3 +290,17 @@ test('frontend/buildBrandEntry: clamp ความยาว brandName กัน 
   const long = 'ก'.repeat(200);
   assert.equal(buildBrandEntry('b', { appName: long }, {}).brandName.length, 80);
 });
+
+// ── tierBadge (umbrella switcher) — แต้ม → เหรียญ/ระดับ ตาม threshold ──
+test('frontend/tierBadge: เลือก tier สูงสุดที่ถึง threshold', () => {
+  const { tierBadge } = load(['tierBadge']);
+  const tiers = { bronze:{min:0,emoji:'🥉',label:'Bronze'}, silver:{min:100,emoji:'🥈',label:'Silver'}, gold:{min:500,emoji:'🥇',label:'Gold'} };
+  assert.equal(tierBadge(0, tiers).label, 'Bronze');
+  assert.equal(tierBadge(120, tiers).label, 'Silver');
+  assert.equal(tierBadge(560, tiers).label, 'Gold'); assert.equal(tierBadge(560, tiers).emoji, '🥇');
+});
+test('frontend/tierBadge: ไม่มี tiers / points ว่าง → badge ว่าง', () => {
+  const { tierBadge } = load(['tierBadge']);
+  assert.equal(tierBadge(0, {}).label, ''); assert.equal(tierBadge(0, {}).emoji, '');
+  assert.equal(tierBadge(null, null).label, '');
+});

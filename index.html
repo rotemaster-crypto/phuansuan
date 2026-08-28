@@ -559,12 +559,22 @@ button .ic,a .ic{pointer-events:none}
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="tb-brand">
+  <div class="tb-brand" id="tb-brand" onclick="openBrandSwitcher()">
     <div class="tb-logo" id="app-logo">เพื่อนสวน</div>
     <span class="vbadge" id="verified-badge" title="ร้านนี้ยืนยันตัวตนกับ Bocean แล้ว"><svg class="vbadge-ic"><use href="#s-verified"/></svg></span>
+    <span id="brand-chev" style="display:none;color:#8a9199;font-size:var(--fs-sm);margin-left:1px;line-height:1">▾</span>
   </div>
   <button class="tb-btn" onclick="openNotifs()"><svg class="ic" style="width:20px;height:20px"><use href="#i-bell"/></svg><span class="tb-badge" id="notif-badge" style="display:none">0</span></button>
   <button class="tb-btn commerce-entry" onclick="openCart()"><svg class="ic" style="width:20px;height:20px"><use href="#i-cart"/></svg><span class="tb-badge cart-badge" id="cart-badge" style="display:none">0</span></button>
+</div>
+
+<!-- ══ BRAND SWITCHER (umbrella) — bottom sheet แบบ IG/Google account switcher ══ -->
+<div class="overlay" id="brandSwitcher" onclick="if(event.target===this)closeBrandSwitcher()">
+  <div class="modal" style="max-height:80vh">
+    <div style="width:38px;height:4px;background:#d5d9dd;border-radius:99px;margin:10px auto 4px"></div>
+    <div style="font-size:var(--fs-md);font-weight:800;text-align:center;padding:6px 0 10px;color:var(--text)">สลับแบรนด์</div>
+    <div id="brand-switch-list" style="padding-bottom:16px"></div>
+  </div>
 </div>
 
 <!-- ══ FEED SCREEN ══ -->
@@ -630,10 +640,6 @@ button .ic,a .ic{pointer-events:none}
   </div>
   <div class="prof-nav">
     <div class="pnav active">โพส</div>
-  </div>
-  <div class="crops-card" id="my-brands-card" style="display:none;padding-top:12px;padding-bottom:10px">
-    <div class="sec-title" style="margin-bottom:8px"><svg class="ic" style="width:16px;height:16px;vertical-align:-2px"><use href="#i-globe"/></svg> แบรนด์ของฉัน</div>
-    <div id="my-brands"></div>
   </div>
   <div class="crops-card">
     <div class="sec-title"><svg class="ic" style="width:17px;height:17px;vertical-align:-2px"><use href="#i-pin"/></svg> ที่อยู่จัดส่ง</div>
@@ -1411,36 +1417,76 @@ function switchBrand(tid) {
   location.href = url.toString();
 }
 
-// เรนเดอร์ section "แบรนด์ของฉัน" ในโปรไฟล์ (ซ่อนถ้ามีแบรนด์เดียว)
-async function loadMyBrands() {
-  var card = document.getElementById('my-brands-card');
-  var box  = document.getElementById('my-brands');
-  if (!card || !box) return;
-  if (!db || !currentUser || currentUser.isGuest || !currentUser.uid) { card.style.display = 'none'; return; }
+// tier จากแต้ม (pure) — เทียบ threshold ใน settings tiers → {emoji,label} · ทดสอบใน frontend.test.js
+function tierBadge(points, tiers) {
+  points = points || 0; tiers = tiers || {};
+  var best = null;
+  Object.keys(tiers).forEach(function (k) { if (points >= (tiers[k].min || 0)) best = tiers[k]; });
+  return best ? { emoji: best.emoji || '🏅', label: best.label || '' } : { emoji: '', label: '' };
+}
+
+// อ่านรายการแบรนด์ที่ตาม → เก็บใน window._myBrands + โชว์ ▾ บนหัวเมื่อมี ≥2 แบรนด์ (ให้กดสลับได้)
+async function refreshBrandChevron() {
+  var chev = document.getElementById('brand-chev');
+  var brand = document.getElementById('tb-brand');
+  window._myBrands = [];
+  if (chev) chev.style.display = 'none';
+  if (brand) brand.style.cursor = 'default';
+  if (!db || !currentUser || currentUser.isGuest || !currentUser.uid) return;
   try {
-    var snap  = await db.collection('accounts').doc(currentUser.uid).collection('brands').get();
+    var snap = await db.collection('accounts').doc(currentUser.uid).collection('brands').get();
     var items = snap.docs.map(function (d) { return d.data() || {}; })
       .filter(function (b) { return /^[a-zA-Z0-9_-]{1,40}$/.test(b.tid || ''); });
-    if (items.length === 0) { card.style.display = 'none'; return; }   // ยังไม่เคยเข้าแบรนด์ใด
     items.sort(function (a, b) { return (b.lastSeenAt && b.lastSeenAt.seconds || 0) - (a.lastSeenAt && a.lastSeenAt.seconds || 0); });
-    var cur = tenantId();
-    // chip แนวนอนแบบ Shopee — โลโก้+ชื่อพอ · เลื่อนแนวนอน · ตัวปัจจุบันไฮไลต์
-    box.innerHTML = '<div style="display:flex;gap:8px;overflow-x:auto;padding:1px 0;scrollbar-width:none">'
-      + items.map(function (b) {
-          var active = b.tid === cur;
-          return '<button ' + (active ? 'disabled ' : 'onclick="switchBrand(\'' + b.tid + '\')" ')
-            + 'style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto;'
-            + 'padding:6px 12px;border-radius:999px;font-family:inherit;font-size:var(--fs-sm);'
-            + 'cursor:' + (active ? 'default' : 'pointer') + ';font-weight:' + (active ? '700' : '500') + ';'
-            + 'background:' + (active ? 'var(--primary)' : '#fff') + ';color:' + (active ? '#fff' : 'var(--text)')
-            + ';border:1px solid ' + (active ? 'var(--primary)' : '#e3e6ea') + '">'
-            + '<span style="font-size:15px;line-height:1">' + escapeHtml(b.logoEmoji || '🌿') + '</span>'
-            + '<span>' + (escapeHtml(b.brandName) || escapeHtml(b.tid)) + '</span>'
-            + '</button>';
-        }).join('')
-      + '</div>';
-    card.style.display = '';
-  } catch (e) { card.style.display = 'none'; }
+    window._myBrands = items;
+    if (items.length >= 2) {   // มีที่ให้สลับจริงเท่านั้นถึงโชว์ affordance
+      if (chev) chev.style.display = '';
+      if (brand) brand.style.cursor = 'pointer';
+    }
+  } catch (e) { /* เงียบได้ — แค่ไม่โชว์ ▾ */ }
+}
+
+function closeBrandSwitcher() { var o = document.getElementById('brandSwitcher'); if (o) o.classList.remove('open'); }
+
+// เปิด bottom sheet สลับแบรนด์ (โลโก้+ชื่อ + แต้ม/tier ต่อแบรนด์) — แบบ IG/Google account switcher
+async function openBrandSwitcher() {
+  var items = window._myBrands || [];
+  if (items.length < 2) return;   // ไม่มีอะไรให้สลับ → หัวไม่ทำงาน
+  var list = document.getElementById('brand-switch-list');
+  var overlay = document.getElementById('brandSwitcher');
+  if (!list || !overlay) return;
+  var cur = tenantId();
+  var tiers = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.tiers) || {};
+  list.innerHTML = items.map(function (b) {
+    var active = b.tid === cur;
+    return '<button ' + (active ? 'disabled ' : 'onclick="switchBrand(\'' + b.tid + '\')" ')
+      + 'style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:none;border-bottom:1px solid #f0f2f5;'
+      + 'background:' + (active ? '#f2f7ff' : '#fff') + ';padding:12px 20px;cursor:' + (active ? 'default' : 'pointer') + ';font-family:inherit">'
+      + '<span style="font-size:26px;line-height:1">' + escapeHtml(b.logoEmoji || '🌿') + '</span>'
+      + '<span style="flex:1;min-width:0">'
+      +   '<span style="display:block;font-size:var(--fs-base);font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (escapeHtml(b.brandName) || escapeHtml(b.tid)) + '</span>'
+      +   '<span id="bsub-' + b.tid + '" style="display:block;font-size:var(--fs-xs);color:var(--muted)">…</span>'
+      + '</span>'
+      + (active ? '<span style="color:var(--primary);font-size:var(--fs-lg);font-weight:700">✓</span>' : '<span style="color:#c5c9ce;font-size:var(--fs-lg)">›</span>')
+      + '</button>';
+  }).join('');
+  overlay.classList.add('open');
+  // เติมแต้ม/tier ต่อแบรนด์ (อ่าน user doc ตัวเองในแต่ละ tenant — rules อนุญาต isOwner)
+  items.forEach(async function (b) {
+    var sub = document.getElementById('bsub-' + b.tid);
+    if (!sub) return;
+    try {
+      var pts;
+      if (b.tid === cur && currentUser) pts = currentUser.points || 0;
+      else {
+        var d = await db.collection('tenants').doc(b.tid).collection('users').doc(currentUser.uid).get();
+        pts = d.exists ? (d.data().points || 0) : null;
+      }
+      if (pts === null) { sub.textContent = 'แตะเพื่อเข้าร้าน'; return; }
+      var t = tierBadge(pts, tiers);
+      sub.textContent = pts.toLocaleString() + ' แต้ม' + (t.label ? ' · ' + t.emoji + ' ' + t.label : '');
+    } catch (e) { sub.textContent = 'แตะเพื่อเข้าร้าน'; }
+  });
 }
 
 function updateUIWithUser(user) {
@@ -1450,6 +1496,7 @@ function updateUIWithUser(user) {
   renderProfileInfo();
   try { ensureAdminPanel(); initFeatureFlags(); } catch (e) {}
   try { startNotifs(); } catch (e) {}
+  try { refreshBrandChevron(); } catch (e) {}   // umbrella: โชว์ ▾ สลับแบรนด์บนหัวเมื่อมี ≥2 แบรนด์
 
   const initials = user.displayName ? user.displayName.charAt(0) : 'ฉ';
 
@@ -2362,7 +2409,6 @@ function renderProfileInfo() {
     });
     bEl.innerHTML = html;
   }
-  try { loadMyBrands(); } catch (_) {}   // umbrella: section "แบรนด์ของฉัน"
 }
 
 // ── My Posts (โพสของฉันในโปรไฟล์) ─────────────────────────
