@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin — เพื่อนสวน</title>
+<title>Bocean Admin</title>
+<link rel="icon" href="/Logo_Bocean/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/Logo_Bocean/bocean-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/Logo_Bocean/bocean-180.png">
 <script src="config.js"></script>
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -241,9 +244,9 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafafa}
 <div id="app">
 <div class="sidebar">
   <div class="sb-logo">
-    <img id="sb-logo-img" class="sb-logo-icon" src="" onerror="this.style.display='none';document.getElementById('sb-logo-emoji').style.display='block'" style="display:none">
-    <span id="sb-logo-emoji" style="font-size:var(--fs-3xl)">🌿</span>
-    <div><div class="sb-logo-text" id="sb-app-name">เพื่อนสวน</div><div class="sb-logo-sub">Admin Dashboard</div></div>
+    <img id="sb-logo-img" class="sb-logo-icon" src="/Logo_Bocean/bocean-icon.svg" onerror="this.style.display='none';document.getElementById('sb-logo-emoji').style.display='block'" style="display:block">
+    <span id="sb-logo-emoji" style="font-size:var(--fs-3xl);display:none">🌿</span>
+    <div><div class="sb-logo-text" id="sb-app-name">Bocean</div><div class="sb-logo-sub" id="sb-logo-sub">ระบบจัดการ</div></div>
   </div>
   <div class="sb-admin">
     <div class="sb-admin-av" id="admin-av">A</div>
@@ -1384,6 +1387,7 @@ function applyRole() {
     if (roleEl) roleEl.textContent = '🔑 Super Admin · Bocean';
     if (sw) sw.style.display = 'block';
     if (st) st.style.display = 'none';
+    setSysBranding();   // โซนระบบ = โลโก้ Bocean
     populateBrandSwitcher();
   } else {
     // brand-admin: อยู่ในแบรนด์ตัวเองเสมอ ไม่มีโซนระบบ ไม่มี switcher
@@ -1406,6 +1410,7 @@ function enterBrand(tid){
   var ex = document.getElementById('brand-exit'); if (ex) ex.style.display = IS_SUPER ? 'block' : 'none';
   var h = document.getElementById('brandbar-h'); if (h && IS_SUPER) h.textContent = '🏪 กำลังจัดการร้าน';
   toast('เข้าจัดการร้าน ' + tid + ' แล้ว','success');
+  loadSidebarBranding();   // sidebar logo → แบรนด์ที่เข้าจัดการ
   updateBrandLabels();
   refreshBrandExtras();
   applyAdminFeatureFlags();
@@ -1415,6 +1420,7 @@ function enterBrand(tid){
 // super ออกจากโหมดจัดการแบรนด์ กลับสู่ระบบ
 function exitBrand(){
   document.body.classList.remove('in-brand');
+  setSysBranding();   // กลับโซนระบบ → โลโก้ Bocean
   var ex = document.getElementById('brand-exit'); if (ex) ex.style.display = 'none';
   var h = document.getElementById('brandbar-h'); if (h) h.textContent = '🏪 หลังร้านแบรนด์';
   var sw = document.getElementById('brand-switcher'); if (sw) sw.value = '';
@@ -1513,13 +1519,28 @@ async function _collCount(ref) {
 }
 
 // ── Sidebar Branding ──────────────────────────────────────
+// โซนระบบ Bocean (super ยังไม่เข้าจัดการแบรนด์) → โลโก้/ชื่อ Bocean บน sidebar
+function setSysBranding() {
+  var img = document.getElementById('sb-logo-img'), em = document.getElementById('sb-logo-emoji');
+  if (img) { img.src = '/Logo_Bocean/bocean-icon.svg'; img.style.display = 'block'; }
+  if (em) em.style.display = 'none';
+  var nm = document.getElementById('sb-app-name'); if (nm) nm.textContent = 'Bocean';
+  var sub = document.getElementById('sb-logo-sub'); if (sub) sub.textContent = 'ระบบจัดการ';
+}
 async function loadSidebarBranding() {
   try {
     const doc = await aDb().collection('settings').doc('app').get();
     if (!doc.exists) return;
     const d = doc.data();
-    if (d.appName) document.getElementById('sb-app-name').textContent = d.appName;
-    if (d.logoUrl) { document.getElementById('sb-logo-img').src = d.logoUrl; document.getElementById('sb-logo-img').style.display = 'block'; }
+    // โซนระบบ (super ยังไม่เข้าแบรนด์) → คง Bocean ไว้ · ไม่เอา branding แบรนด์มาทับโลโก้ (แต่ยัง apply theme)
+    var sysZone = IS_SUPER && !document.body.classList.contains('in-brand');
+    if (!sysZone) {
+      var img = document.getElementById('sb-logo-img'), em = document.getElementById('sb-logo-emoji');
+      if (d.logoUrl) { if (img) { img.src = d.logoUrl; img.style.display = 'block'; } if (em) em.style.display = 'none'; }
+      else if (em) { em.textContent = d.logoEmoji || '🌿'; em.style.display = 'block'; if (img) img.style.display = 'none'; }
+      if (d.appName) document.getElementById('sb-app-name').textContent = d.appName;
+      var sub = document.getElementById('sb-logo-sub'); if (sub) sub.textContent = 'หลังร้าน';
+    }
     if (window.applyTheme) applyTheme(d.theme);
     if (d.primary) { document.documentElement.style.setProperty('--primary', d.primary); document.documentElement.style.setProperty('--on-primary', __onColor(d.primary)); }
   } catch(e) {}

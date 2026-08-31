@@ -11,8 +11,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="เพื่อนสวน">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<!-- favicon เริ่มต้น = โลโก้แพลตฟอร์ม Bocean (ก่อน JS โหลด/แบรนด์ยังไม่มีไอคอนเอง) · syncManifest จะทับเป็นไอคอนแบรนด์เมื่อแบรนด์โหลด -->
+<link rel="apple-touch-icon" href="/Logo_Bocean/bocean-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/Logo_Bocean/bocean-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/Logo_Bocean/bocean-16.png">
+<link rel="icon" id="tab-favicon" type="image/png" sizes="192x192" href="/Logo_Bocean/bocean-192.png">
 <script src="/config.js"></script>
 <script src="/firebase-config.js"></script>
 <script src="/themes.js"></script>
@@ -4904,6 +4907,7 @@ function relSectionHtml(list){
       var link = document.querySelector('link[rel="manifest"]'); if (link) link.href = _lastBlob;
       var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = bg;
       var at = document.querySelector('link[rel="apple-touch-icon"]'); if (at) at.href = apple;
+      var fav = document.getElementById('tab-favicon'); if (fav) fav.href = i192;   // tab favicon = ไอคอนแบรนด์ (fallback Bocean ก่อนโหลด)
       var atitle = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (atitle) atitle.content = name;
     } catch(e){ console.warn('[PWA] syncManifest skipped', e); }
   }

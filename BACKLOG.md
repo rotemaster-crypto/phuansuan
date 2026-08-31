@@ -12,13 +12,15 @@
 ## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน avatar-global · deploy+push ครบ)
 **origin/main = local HEAD · prod live ครบ + push ครบทุก commit · deploy มือ (login rotemaster พร้อม) · working tree clean**
 
-**✅ เซสชันนี้ (avatar global · deploy storage+hosting ครบ) — [[umbrella-brand-switcher]]:**
+**✅ เซสชันนี้ (avatar global + logo Bocean C/D · deploy ครบ) — [[umbrella-brand-switcher]]:**
 - 🆕 **รูปโปรไฟล์ระดับ global (Option A)** — camera badge บน avatar โปรไฟล์ → `uploadAvatar` (reuse `compressImage`) → Storage `avatars/{uid}/` (rule: write เจ้าของเท่านั้น) → เขียน `accounts/{uid}.photoUrl`+`avatarSet:true` (source of truth) + denorm per-brand · `saveUserToFirestore` อ่านรูป global กลับตอน login กัน LINE ทับ · flag `avatarSet` แยก "ตั้งเอง"(ล็อก) จาก "รูป LINE"(ยัง sync) · `applyAvatarEverywhere` refresh 4 จุด · A2 ผ่าน safeUrl
-- **Test:** guard 9/9 · frontend 33/33 · inline scripts parse 3/3 · rules ไม่ต้องแก้ (accounts own-write อยู่แล้ว)
+- 🆕 **logo Bocean C (super-admin zone)** — admin.html: favicon Bocean + title "Bocean Admin" + sidebar โซนระบบ = โลโก้/ชื่อ Bocean (`setSysBranding`) · เข้าจัดการแบรนด์ → `loadSidebarBranding` zone-aware โชว์ logo แบรนด์ · ออก → กลับ Bocean · (เดิม super console โชว์ branding phuansuan ผิด)
+- 🆕 **logo Bocean D (default favicon แอปร้าน)** — index.html: tab favicon/apple เริ่มต้น = Bocean (`/Logo_Bocean/bocean-*`) · `syncManifest` ทับ `#tab-favicon` เป็นไอคอนแบรนด์เมื่อโหลด (เดิม tab favicon static ไม่เคยเป็นต่อแบรนด์ → แก้ให้ per-brand + fallback Bocean)
+- **Test:** guard 9/9 · frontend 33/33 · inline scripts parse (index 3 / admin 1) · rules ไม่ต้องแก้
 
 **⏭️ รอบหน้า:**
-- **verify สด:** login LINE → โปรไฟล์ → กด camera → อัปรูป → เช็ครูปติดข้ามแบรนด์ (`?t=phuansuan`→`?t=ecofora`) + LINE ไม่ทับ
-- logo Bocean C(super)/D(favicon) · dashboard revenue sum-agg · marketplace MVP (เลื่อนตามที่ Roger บอก)
+- **verify สด:** (1) avatar — login LINE → กด camera → อัปรูป → เช็คติดข้ามแบรนด์ + LINE ไม่ทับ · (2) super login → sidebar = Bocean → เข้าแบรนด์ → logo แบรนด์ → ออก → Bocean · (3) เปิดแอปร้าน → tab icon = แบรนด์
+- dashboard revenue sum-agg · marketplace MVP (เลื่อนตามที่ Roger บอก)
 
 ---
 
@@ -36,7 +38,7 @@
 **⏭️ รอบหน้า (agent-doable — Roger บอก "ยังไม่ทำ marketplace"):**
 - **verify สด login LINE จริง:** เข้า 2 แบรนด์ (`?t=phuansuan`→`?t=ecofora` บัญชีเดียว) → `▾` โผล่ → สลับ → เช็คแต้ม/ประวัติแยก + แก้ชื่อ global ติดข้ามแบรนด์
 - super ตั้ง `platform/domains.platformHosts` เพิ่มถ้ามี hosting host นอก default (bocean/office/phuansuan `.web.app` cover แล้ว)
-- ✅ ~~แก้ **รูปโปรไฟล์** global~~ (2026-08-31 · ดู pointer บนสุด) · logo Bocean C(super)/D(favicon) · dashboard revenue sum-agg · marketplace MVP (เลื่อนตามที่ Roger บอก)
+- ✅ ~~แก้ **รูปโปรไฟล์** global~~ + ✅ ~~logo Bocean C(super)/D(favicon)~~ (2026-08-31 · ดู pointer บนสุด) · dashboard revenue sum-agg · marketplace MVP (เลื่อนตามที่ Roger บอก)
 
 ---
 
