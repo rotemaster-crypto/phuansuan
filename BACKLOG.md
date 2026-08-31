@@ -9,7 +9,12 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign feed+cart+shop · deploy+verify ครบ)
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign feed+cart+shop+modals · deploy+verify ครบ)
+**✅ เซสชันนี้ (product/checkout/payment desktop — เข้าชุด cart/shop):**
+- 🆕 **Product detail desktop 2-คอลัมน์** — รูปซ้าย (sticky) · ข้อมูล+ใส่ตะกร้าขวา · `openProduct` ห่อ `.pd-left`/`.pd-right` (mobile stack เดิม) · dialog กลางจอ @900px
+- 🆕 **Checkout desktop 2-คอลัมน์ (KIXY)** — ฟอร์มที่อยู่ซ้าย · คูปอง+สรุป+ปุ่มยืนยันขวา · grid scope `#checkoutModal` (ไม่กระทบ modal อื่นที่ใช้ `.cart-sheet`) · **verify prod จริง**
+- 🆕 **Payment modal** → dialog กลางจอแคบ (PromptPay) · A2 ครบ · guard 9/9 · syntax 3/3
+
 **✅ เซสชันนี้ (shop desktop redesign — Dribbble ref e-commerce) — เฉพาะ desktop shop:**
 - 🆕 **Desktop shop = full-width e-commerce (single-brand · ไม่ทำ marketplace)** — `body.on-shop` widen 1240px @1000px · hero banner ใหญ่มุมมน · **แถวหมวดวงกลม "หมวดยอดนิยม"** (`#shop-cat-circles` · populate ใน renderCats · คลิก=filterCat) · search เด่น · chips หมวด · featured card · **product grid 5 คอลัมน์** (auto-fill minmax 210px) · การ์ด e-commerce เดิม · ซ่อน cart-fab ลอย (ใช้ตะกร้า topbar) · **verify prod (DOM: onShop/6 วงกลม/1240px/5 คอลัมน์/9 การ์ด)**
 - map เข้าเนื้อหาจริง: **ไม่สร้าง** brand stores/cross-brand/ดาวรีวิว (marketplace เลื่อน) · mobile shop คงเดิม · `filterCat` refactor → renderCats() sync chips+circles · A2 safeUrl/escapeHtml ครบ

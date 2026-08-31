@@ -421,6 +421,25 @@ body{font-family:var(--font-body);background:#f0f2f5;color:#1c1e21;max-width:480
   body.on-shop .prod-name{font-size:var(--fs-base)}
   body.on-shop .cart-fab{display:none}   /* desktop: ใช้ตะกร้าบน topbar แทน bar ลอย */
 }
+/* ── desktop: modals เป็น dialog กลางจอ + product/checkout 2-คอลัมน์ (เข้าชุด cart/shop) ── */
+.pd-left,.pd-right{min-width:0}
+@media(min-width:900px){
+  #prodDetailModal,#checkoutModal,#paymentModal{align-items:center}
+  /* product detail: รูปซ้าย · ข้อมูลขวา */
+  #prodDetailModal .cart-sheet{max-width:860px;border-radius:18px;max-height:88vh}
+  #prodDetailModal #pd-body{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);align-items:start}
+  #prodDetailModal .pd-left{position:sticky;top:0;border-right:1px solid var(--border)}
+  #prodDetailModal .pd-img{height:400px}
+  /* checkout: ฟอร์มซ้าย · คูปอง+สรุป+ปุ่มขวา */
+  #checkoutModal .cart-sheet{max-width:880px;border-radius:18px;max-height:90vh;display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"hd hd" "form coupon" "form summary" "form actions"}
+  #checkoutModal .cart-hd{grid-area:hd}
+  #checkoutModal .co-form{grid-area:form;border-right:1px solid var(--border);min-height:0}
+  #checkoutModal .co-coupon{grid-area:coupon}
+  #checkoutModal .co-summary{grid-area:summary;border-top:none}
+  #checkoutModal .co-actions{grid-area:actions;border-top:none}
+  /* payment: dialog กลางจอ แคบ */
+  #paymentModal .cart-sheet{max-width:420px;border-radius:18px}
+}
 .cart-fab{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px;font-size:var(--fs-md);font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:space-between;z-index:250;box-shadow:0 4px 14px rgba(24,119,242,.4)}
 .cart-fab.show{display:flex}
 .tb-btn .cart-badge{background:#fa3e3e}
@@ -4349,7 +4368,8 @@ function openProduct(id){
   var mainImg = (imgs.length && safeUrl(imgs[0])) ? '<img id="pd-main-img" src="'+safeUrl(imgs[0])+'" alt="">' : catEmoji(p.category);
   var thumbs = imgs.length>1 ? '<div style="display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:#fff;scrollbar-width:none">'+
       imgs.map(function(u,i){ var _tu=safeUrl(u); return _tu ? '<img src="'+_tu+'" onclick="pdSwap(this)" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:2px solid '+(i===0?'var(--primary)':'#e4e6eb')+';cursor:pointer;flex-shrink:0" alt="">' : ''; }).join('')+'</div>' : '';
-  var html = '<div class="pd-img">'+mainImg+'</div>'+ thumbs +
+  var html = '<div class="pd-left"><div class="pd-img">'+mainImg+'</div>'+ thumbs +'</div>'+
+    '<div class="pd-right">'+
     '<div class="pd-info">'+
       '<div class="pd-name">'+escapeHtml(p.name)+'</div>'+
       '<div class="pd-pricerow"><span class="pd-price">'+(p.price?baht(p.price):'—')+'</span>'+oldp+disc+'</div>'+
@@ -4360,7 +4380,8 @@ function openProduct(id){
     '</div>'+
     (p.stock === 0 ? '<button class="pd-add" disabled style="opacity:.5;cursor:not-allowed">สินค้าหมด</button>' : ((p.affiliate && safeUrl(p.url)) ? '<a class="pd-add" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="'+safeUrl(p.url)+'" target="_blank" rel="noopener" onclick="closeProduct()"><svg class="ic"><use href="#i-share"/></svg> ดูสินค้า</a>' : '<button class="pd-add" onclick="addToCart(\''+p.id+'\');closeProduct()"><svg class="ic"><use href="#i-cart"/></svg> ใส่ตะกร้า</button>'))+
     (p.stock!=null && p.stock>0 && p.stock<=5 ? '<div style="text-align:center;font-size:var(--fs-xs);color:#d97706;margin-top:6px">เหลือ '+p.stock+' ชิ้น</div>' : '')+
-    '<div style="height:14px"></div>';
+    '<div style="height:14px"></div>'+
+    '</div>';
   var body = document.getElementById('pd-body'); if (body) body.innerHTML = html;
   var m = document.getElementById('prodDetailModal'); if (m) m.classList.add('open');
 }
