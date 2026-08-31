@@ -420,6 +420,26 @@ body{font-family:var(--font-body);background:#f0f2f5;color:#1c1e21;max-width:480
   body.on-shop .prod-grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;padding:0}
   body.on-shop .prod-name{font-size:var(--fs-base)}
   body.on-shop .cart-fab{display:none}   /* desktop: ใช้ตะกร้าบน topbar แทน bar ลอย */
+  body.on-shop .line-oa-fab{right:24px;left:auto}   /* กัน FAB แชท ทับ product grid */
+}
+/* ── desktop: profile + community ให้เข้าชุด (full-width 2-คอลัมน์) ── */
+@media(min-width:1000px){
+  /* PROFILE: การ์ดโปรไฟล์ซ้าย (sticky) · เมนู+โพสต์ขวา */
+  body.on-profile{max-width:1000px;box-shadow:none;background:transparent}
+  body.on-profile .line-oa-fab{right:24px;left:auto}
+  body.on-profile #screen-profile{display:grid;grid-template-columns:340px minmax(0,1fr);grid-template-areas:"body nav" "body list" "body posts" "body .";gap:16px;padding:18px 18px 90px;align-items:start}
+  body.on-profile .prof-body{grid-area:body;position:sticky;top:72px;border-radius:18px;border:1px solid var(--border);border-bottom:1px solid var(--border)}
+  body.on-profile .prof-nav{grid-area:nav;border-radius:14px;border:1px solid var(--border);background:#fff}
+  body.on-profile .plist{grid-area:list;border-radius:14px;border:1px solid var(--border);overflow:hidden}
+  body.on-profile .crops-card{grid-area:posts;border-radius:14px;border:1px solid var(--border)}
+  /* COMMUNITY: masonry 2 คอลัมน์ */
+  body.on-community{max-width:1080px;box-shadow:none;background:transparent}
+  body.on-community .line-oa-fab{right:24px;left:auto}
+  body.on-community #screen-community > div{column-count:2;column-gap:18px;padding:20px 18px 90px}
+  body.on-community #screen-community > div > *{break-inside:avoid;margin-bottom:18px}
+  body.on-community #screen-community > div > *:empty{margin:0}
+  body.on-community #screen-community > div > div:nth-child(1),
+  body.on-community #screen-community > div > div:nth-child(2){column-span:all}
 }
 /* ── desktop: modals เป็น dialog กลางจอ + product/checkout 2-คอลัมน์ (เข้าชุด cart/shop) ── */
 .pd-left,.pd-right{min-width:0}
@@ -3436,6 +3456,8 @@ function switchScreen(name){
   if(nav) nav.classList.add('active');
   document.body.classList.toggle('on-feed', name === 'feed');   // เดสก์ท็อป 3-คอลัมน์เฉพาะหน้า feed
   document.body.classList.toggle('on-shop', name === 'shop');   // เดสก์ท็อป full-width e-commerce เฉพาะหน้า shop
+  document.body.classList.toggle('on-profile', name === 'profile');   // เดสก์ท็อป 2-คอลัมน์
+  document.body.classList.toggle('on-community', name === 'community');   // เดสก์ท็อป 2-คอลัมน์ masonry
   if(name === 'feed'){ if(typeof loadFeedGroupsRow==='function') loadFeedGroupsRow(); if(typeof renderFeedWidgets==='function') renderFeedWidgets(); }
   if(name === 'profile'){ renderProfileInfo(); loadMyPosts(); }
   if(name === 'community'){

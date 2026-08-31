@@ -9,7 +9,14 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign + seller-entry · deploy+verify ครบ)
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign ครบทุกหน้า · deploy+verify ครบ)
+**✅ เซสชันนี้ (audit + ปรับ profile/community desktop ให้เข้าชุด):**
+- 🐛 **แก้ FAB เขียว "แชทกับเรา" ทับ product grid** ในหน้า shop (ย้ายไปขอบขวา `body.on-shop/on-profile/on-community .line-oa-fab{right:24px}`)
+- 🆕 **Profile desktop 2-คอลัมน์** — การ์ดโปรไฟล์ซ้าย (sticky) + เมนู/โพสต์ขวา · `body.on-profile` grid @1000px
+- 🆕 **Community/กิจกรรม desktop 2-คอลัมน์ masonry** — title span เต็ม + sections flow 2 คอลัมน์ (`column-count:2` + `break-inside:avoid` · ไม่ double-box เพราะ content มี card เอง) · `body.on-community` @1000px
+- **verify prod จริง** ทั้ง 2 หน้า · guard 9/9 · syntax 3/3
+- **ครบชุด desktop:** feed(3-col) · shop(e-commerce) · product/cart/checkout/payment(2-col) · profile(2-col) · community(masonry) — mobile คงเดิมทุกหน้า
+
 **✅ เซสชันนี้ (ปุ่ม "จัดการร้าน" / Seller Centre แบบ Shopee):**
 - 🆕 **ปุ่ม "จัดการร้าน" ในหน้า shop** (pill ฟ้า subtle · `.seller-link` · ไอคอน sliders) ข้างปุ่ม "ออเดอร์" ใน shop-head → `openSellerCentre()` ไป `/admin.html` (คง `?t=`)
 - โชว์**เฉพาะ manager** (`currentUser.isManager` จาก `refreshManagerFlag` = claims admin/tadmin/towner ของแบรนด์นี้) · ลูกค้าทั่วไป/guest = ซ่อน · เรียก refreshManagerFlag ใน loadShop (shop=landing ไม่ใช่ feed) · `updateSellerEntry` toggle
