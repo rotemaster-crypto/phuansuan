@@ -9,7 +9,12 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign feed+cart+shop+modals · deploy+verify ครบ)
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign + seller-entry · deploy+verify ครบ)
+**✅ เซสชันนี้ (ปุ่ม "จัดการร้าน" / Seller Centre แบบ Shopee):**
+- 🆕 **ปุ่ม "จัดการร้าน" ในหน้า shop** (pill ฟ้า subtle · `.seller-link` · ไอคอน sliders) ข้างปุ่ม "ออเดอร์" ใน shop-head → `openSellerCentre()` ไป `/admin.html` (คง `?t=`)
+- โชว์**เฉพาะ manager** (`currentUser.isManager` จาก `refreshManagerFlag` = claims admin/tadmin/towner ของแบรนด์นี้) · ลูกค้าทั่วไป/guest = ซ่อน · เรียก refreshManagerFlag ใน loadShop (shop=landing ไม่ใช่ feed) · `updateSellerEntry` toggle
+- **verify prod จริง** (LINE user ที่เป็น manager → ปุ่มโชว์ · วัด rect อยู่ในคอนเทนเนอร์ ไม่ overflow) · guard 9/9 · frontend 33/33 · syntax 3/3
+
 **✅ เซสชันนี้ (product/checkout/payment desktop — เข้าชุด cart/shop):**
 - 🆕 **Product detail desktop 2-คอลัมน์** — รูปซ้าย (sticky) · ข้อมูล+ใส่ตะกร้าขวา · `openProduct` ห่อ `.pd-left`/`.pd-right` (mobile stack เดิม) · dialog กลางจอ @900px
 - 🆕 **Checkout desktop 2-คอลัมน์ (KIXY)** — ฟอร์มที่อยู่ซ้าย · คูปอง+สรุป+ปุ่มยืนยันขวา · grid scope `#checkoutModal` (ไม่กระทบ modal อื่นที่ใช้ `.cart-sheet`) · **verify prod จริง**

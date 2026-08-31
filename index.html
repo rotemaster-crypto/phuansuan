@@ -538,6 +538,9 @@ button .ic,a .ic{pointer-events:none}
 .ord-trackbtn{display:inline-block;margin-top:6px;background:#f2effc;color:#7b61ff;border:1px solid #ddd3f7;border-radius:8px;padding:7px 12px;font-size:var(--fs-xs);font-weight:700;cursor:pointer;text-decoration:none}
 .ord-pay{width:100%;margin-top:9px;background:var(--primary);color:#fff;border:none;border-radius:9px;padding:10px;font-size:var(--fs-base);font-weight:700;cursor:pointer}
 .ord-link{background:var(--bg);border:1px solid var(--border);border-radius:18px;padding:8px 13px;font-size:var(--fs-sm);font-weight:600;color:var(--text);cursor:pointer;flex-shrink:0}
+.seller-link{display:inline-flex;align-items:center;gap:5px;background:#e7f3ff;border:1px solid #bcdcff;border-radius:18px;padding:8px 13px;font-size:var(--fs-sm);font-weight:700;color:var(--primary);cursor:pointer;flex-shrink:0;font-family:inherit;white-space:nowrap}
+.seller-link .ic{width:15px;height:15px}
+.seller-link:hover{background:#d7ebff}
 
 /* ── COMMERCE 3.4a (related products in feed) ── */
 .rel-wrap{margin:4px 12px 10px;background:#f7faff;border:1px solid #e3eeff;border-radius:12px;padding:10px}
@@ -1100,7 +1103,10 @@ button .ic,a .ic{pointer-events:none}
       <div class="shop-title">ร้านค้า</div>
       <div class="shop-sub" id="shop-sub">สินค้าจากร้าน</div>
     </div>
-    <button class="ord-link" onclick="openMyOrders()"><svg class="ic"><use href="#i-package"/></svg> ออเดอร์</button>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <button class="seller-link" id="shop-seller-entry" style="display:none" onclick="openSellerCentre()"><svg class="ic"><use href="#i-sliders"/></svg> จัดการร้าน</button>
+      <button class="ord-link" onclick="openMyOrders()"><svg class="ic"><use href="#i-package"/></svg> ออเดอร์</button>
+    </div>
   </div>
   <div class="shop-search-wrap" style="padding:10px 12px 0;background:#fff">
     <input id="shop-search" oninput="renderProducts()" placeholder="🔍 ค้นหาสินค้าในร้าน" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:var(--fs-base);font-family:inherit;box-sizing:border-box">
@@ -3408,7 +3414,17 @@ async function refreshManagerFlag(){
     var mem = (c.tenants && c.tenants[tid] === true) || mgr;
     if (currentUser){ currentUser.isManager = !!mgr; currentUser.isMember = !!mem; }
     applyFeedMode();
-  } catch(e){ if (currentUser){ currentUser.isManager = false; } applyFeedMode(); }
+    updateSellerEntry();
+  } catch(e){ if (currentUser){ currentUser.isManager = false; } applyFeedMode(); updateSellerEntry(); }
+}
+// ปุ่ม "จัดการร้าน" (Seller Centre แบบ Shopee) — โชว์เฉพาะ admin/เจ้าของ/แอดมินร่วมของแบรนด์นี้
+function updateSellerEntry(){
+  var b = document.getElementById('shop-seller-entry');
+  if (b) b.style.display = (currentUser && currentUser.isManager) ? 'inline-flex' : 'none';
+}
+function openSellerCentre(){
+  var t = ''; try { t = new URLSearchParams(location.search).get('t') || ''; } catch(e){}
+  window.location.href = '/admin.html' + (t ? ('?t=' + encodeURIComponent(t)) : '');
 }
 
 // ── UI Functions ─────────────────────────────────────────
@@ -4237,6 +4253,7 @@ function saveCart(){
 async function loadShop(){
   // shop เป็น landing screen → เซ็ต on-shop ให้ desktop e-commerce layout ทำงานตั้งแต่แรก
   try { document.body.classList.toggle('on-shop', document.getElementById('screen-shop')?.classList.contains('active')); } catch(e){}
+  try { refreshManagerFlag(); } catch(e){}   // คำนวณสิทธิ์ → โชว์ปุ่ม "จัดการร้าน" ให้เจ้าของ/แอดมิน
   const grid = document.getElementById('prod-grid');
   const sub  = document.getElementById('shop-sub');
   var _dec = APP_CONFIG.shopDecor || {};
