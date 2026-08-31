@@ -389,6 +389,38 @@ body{font-family:var(--font-body);background:#f0f2f5;color:#1c1e21;max-width:480
 .prod-add{border:1.5px solid var(--primary);background:transparent;color:var(--primary);width:34px;height:34px;border-radius:50%;font-size:var(--fs-lg);cursor:pointer;flex-shrink:0;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
 .prod-add:active{background:var(--primary);color:#fff}
 .shop-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:var(--fs-base);padding:40px 10px}
+/* ── หมวดวงกลม (desktop e-commerce) ── */
+.shop-circles{display:none}
+.shop-circles-hd{font-size:var(--fs-lg);font-weight:800;color:var(--text);margin-bottom:14px}
+.shop-circles-row{display:flex;gap:18px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.shop-circles-row::-webkit-scrollbar{display:none}
+.shop-circle{display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;flex-shrink:0;width:92px}
+.sc-ring{width:84px;height:84px;border-radius:50%;background:var(--bg);border:2px solid transparent;display:flex;align-items:center;justify-content:center;transition:border-color .15s,transform .15s}
+.shop-circle:hover .sc-ring{transform:translateY(-2px)}
+.shop-circle.active .sc-ring{border-color:var(--primary);background:#e7f3ff}
+.sc-inner{font-size:38px;line-height:1}
+.sc-name{font-size:var(--fs-sm);font-weight:600;color:var(--text);text-align:center;max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── desktop full-width e-commerce (เฉพาะหน้า shop · single-brand) ── */
+@media(min-width:1000px){
+  body.on-shop{max-width:1240px;box-shadow:none;background:transparent}
+  body.on-shop #screen-shop{display:flex;flex-direction:column;gap:16px;padding:18px 18px 96px}
+  body.on-shop #shop-banner{border-radius:20px;min-height:300px!important;padding:34px}
+  body.on-shop #shop-banner .sb-title{font-size:var(--fs-3xl)}
+  body.on-shop #shop-banner .sb-tag{font-size:var(--fs-lg);margin-top:6px}
+  body.on-shop #shop-promo{border-radius:12px;border:none}
+  body.on-shop .shop-circles{display:block;background:#fff;border-radius:18px;border:1px solid var(--border);padding:20px 22px}
+  body.on-shop .shop-head{background:transparent;border-bottom:none;padding:2px 2px 0}
+  body.on-shop .shop-title{font-size:var(--fs-2xl)}
+  body.on-shop .shop-search-wrap{background:transparent!important;padding:0!important}
+  body.on-shop #shop-search{padding:15px 20px!important;border-radius:14px!important;font-size:var(--fs-md)!important;border:1px solid var(--border);background:#fff}
+  body.on-shop .cat-bar{position:static;top:auto;border-bottom:none;background:transparent;padding:0;flex-wrap:wrap;overflow:visible}
+  body.on-shop .feat-wrap{border-radius:18px;border:1px solid var(--border)!important;padding:18px 0 12px}
+  body.on-shop .feat-hd{font-size:var(--fs-lg);padding:0 20px 12px}
+  body.on-shop .feat-row{padding:0 20px 6px}
+  body.on-shop .prod-grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;padding:0}
+  body.on-shop .prod-name{font-size:var(--fs-base)}
+  body.on-shop .cart-fab{display:none}   /* desktop: ใช้ตะกร้าบน topbar แทน bar ลอย */
+}
 .cart-fab{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px;font-size:var(--fs-md);font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:space-between;z-index:250;box-shadow:0 4px 14px rgba(24,119,242,.4)}
 .cart-fab.show{display:flex}
 .tb-btn .cart-badge{background:#fa3e3e}
@@ -1043,6 +1075,7 @@ button .ic,a .ic{pointer-events:none}
 <div class="screen active" id="screen-shop">
   <div id="shop-banner" style="display:none"><div class="sb-inner"><div class="sb-title" id="shop-banner-title"></div><div class="sb-tag" id="shop-banner-tag"></div></div></div>
   <div id="shop-promo" style="display:none"><span class="pp-ico">📣</span><span class="pp-txt" id="shop-promo-txt"></span></div>
+  <div class="shop-circles" id="shop-cat-circles"></div>
   <div class="shop-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
     <div>
       <div class="shop-title">ร้านค้า</div>
@@ -1050,7 +1083,7 @@ button .ic,a .ic{pointer-events:none}
     </div>
     <button class="ord-link" onclick="openMyOrders()"><svg class="ic"><use href="#i-package"/></svg> ออเดอร์</button>
   </div>
-  <div style="padding:10px 12px 0;background:#fff">
+  <div class="shop-search-wrap" style="padding:10px 12px 0;background:#fff">
     <input id="shop-search" oninput="renderProducts()" placeholder="🔍 ค้นหาสินค้าในร้าน" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:var(--fs-base);font-family:inherit;box-sizing:border-box">
   </div>
   <div class="cat-bar" id="cat-bar"></div>
@@ -3367,6 +3400,7 @@ function switchScreen(name){
   const nav=document.getElementById('nav-'+name);
   if(nav) nav.classList.add('active');
   document.body.classList.toggle('on-feed', name === 'feed');   // เดสก์ท็อป 3-คอลัมน์เฉพาะหน้า feed
+  document.body.classList.toggle('on-shop', name === 'shop');   // เดสก์ท็อป full-width e-commerce เฉพาะหน้า shop
   if(name === 'feed'){ if(typeof loadFeedGroupsRow==='function') loadFeedGroupsRow(); if(typeof renderFeedWidgets==='function') renderFeedWidgets(); }
   if(name === 'profile'){ renderProfileInfo(); loadMyPosts(); }
   if(name === 'community'){
@@ -4182,6 +4216,8 @@ function saveCart(){
 }
 
 async function loadShop(){
+  // shop เป็น landing screen → เซ็ต on-shop ให้ desktop e-commerce layout ทำงานตั้งแต่แรก
+  try { document.body.classList.toggle('on-shop', document.getElementById('screen-shop')?.classList.contains('active')); } catch(e){}
   const grid = document.getElementById('prod-grid');
   const sub  = document.getElementById('shop-sub');
   var _dec = APP_CONFIG.shopDecor || {};
@@ -4232,14 +4268,23 @@ function renderCats(){
   if (!bar) return;
   const _catSrc = BRAND_CATS.length ? BRAND_CATS : (APP_CONFIG.productCategories||[]);
   const cats = _catSrc.filter(c => shopProducts.some(p=>p.category===c.id));
-  let html = '<div class="cat-chip '+(activeCat==='all'?'active':'')+'" onclick="filterCat(\'all\',this)">ทั้งหมด</div>';
-  html += cats.map(c => '<div class="cat-chip '+(activeCat===c.id?'active':'')+'" onclick="filterCat(\''+c.id+'\',this)">'+c.emoji+' '+escapeHtml(c.name)+'</div>').join('');
+  let html = '<div class="cat-chip '+(activeCat==='all'?'active':'')+'" onclick="filterCat(\'all\')">ทั้งหมด</div>';
+  html += cats.map(c => '<div class="cat-chip '+(activeCat===c.id?'active':'')+'" onclick="filterCat(\''+c.id+'\')">'+c.emoji+' '+escapeHtml(c.name)+'</div>').join('');
   bar.innerHTML = html;
+  // แถวหมวดวงกลม (desktop e-commerce — "หมวดยอดนิยม")
+  const circ = document.getElementById('shop-cat-circles');
+  if (circ){
+    if (cats.length){
+      circ.innerHTML = '<div class="shop-circles-hd">หมวดยอดนิยม</div><div class="shop-circles-row">'
+        + '<div class="shop-circle '+(activeCat==='all'?'active':'')+'" onclick="filterCat(\'all\')"><div class="sc-ring"><div class="sc-inner">🛍️</div></div><div class="sc-name">ทั้งหมด</div></div>'
+        + cats.map(c => '<div class="shop-circle '+(activeCat===c.id?'active':'')+'" onclick="filterCat(\''+c.id+'\')"><div class="sc-ring"><div class="sc-inner">'+(c.emoji||'📦')+'</div></div><div class="sc-name">'+escapeHtml(c.name)+'</div></div>').join('')
+        + '</div>';
+    } else circ.innerHTML = '';
+  }
 }
 function filterCat(id, el){
   activeCat = id;
-  document.querySelectorAll('#cat-bar .cat-chip').forEach(c=>c.classList.remove('active'));
-  if (el) el.classList.add('active');
+  renderCats();        // rebuild chips + circles พร้อม active state (sync สองที่)
   renderProducts();
 }
 function discPct(p){

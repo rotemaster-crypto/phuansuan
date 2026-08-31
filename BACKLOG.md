@@ -9,7 +9,12 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign feed+cart · deploy+verify ครบ)
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign feed+cart+shop · deploy+verify ครบ)
+**✅ เซสชันนี้ (shop desktop redesign — Dribbble ref e-commerce) — เฉพาะ desktop shop:**
+- 🆕 **Desktop shop = full-width e-commerce (single-brand · ไม่ทำ marketplace)** — `body.on-shop` widen 1240px @1000px · hero banner ใหญ่มุมมน · **แถวหมวดวงกลม "หมวดยอดนิยม"** (`#shop-cat-circles` · populate ใน renderCats · คลิก=filterCat) · search เด่น · chips หมวด · featured card · **product grid 5 คอลัมน์** (auto-fill minmax 210px) · การ์ด e-commerce เดิม · ซ่อน cart-fab ลอย (ใช้ตะกร้า topbar) · **verify prod (DOM: onShop/6 วงกลม/1240px/5 คอลัมน์/9 การ์ด)**
+- map เข้าเนื้อหาจริง: **ไม่สร้าง** brand stores/cross-brand/ดาวรีวิว (marketplace เลื่อน) · mobile shop คงเดิม · `filterCat` refactor → renderCats() sync chips+circles · A2 safeUrl/escapeHtml ครบ
+- **Test:** guard 9/9 · frontend 33/33 · syntax 3/3
+
 **✅ เซสชันนี้ (cart redesign — Dribbble refs) — เฉพาะตะกร้า:**
 - 🆕 **Desktop cart = 2-คอลัมน์ (KIXY)** — รายการสินค้าซ้าย (รูปมุมมน + ชื่อ + line total + meta หมวด·ราคา/ชิ้น + qty pill −/+ + ปุ่มลบ) · SUMMARY card ขวา (ยอดสินค้า/ส่วนลด/ค่าส่ง/ยอดสุทธิ เส้นประ + ปุ่มสั่งซื้อ + เลือกซื้อต่อ) · dialog กลางจอ @900px · scope `.cart-sheet-shop`/`#cart-sum` (ไม่กระทบ checkout/payment/orders ที่ใช้ `.cart-sheet`/`.sum-row` ร่วม) · **verify prod จริง (ลบ→ยอด+FAB+badge อัปเดต)**
 - 🆕 **Mobile cart = Shopping-cart-app** — bottom sheet คอลัมน์เดียว: header ตะกร้า + N ชิ้น·รายการ · item rows ใหม่ (รูปมุมมน+meta+qty pill+ลบ) · summary + Checkout ปุ่มเต็ม + เลือกซื้อต่อ
