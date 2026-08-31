@@ -9,7 +9,16 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน avatar-global · deploy+push ครบ)
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน feed-redesign · deploy+verify ครบ)
+**✅ เซสชันนี้ (feed redesign — Dribbble refs) — เฉพาะหน้า feed:**
+- 🆕 **Desktop feed = 3-คอลัมน์ (Square)** — nav rail ซ้าย (user card + เมนู line-icon + ปุ่มสร้างโพสต์) + center (composer + posts) + widget ขวา (แต้ม-tier/ปราชญ์ leaderboard/กลุ่มของฉัน) · gate `body.on-feed` @1000px (เฉพาะหน้า feed · หน้าอื่นคงคอลัมน์เดียว) · action row ไอคอน+label · **verify prod จริง**
+- 🆕 **Mobile feed = SocialYo** — แถว ring-avatar = **กลุ่มชุมชนของฉัน** (`loadFeedGroupsRow` · discover ถ้ายังไม่เข้ากลุ่ม) · แท็บ pill · การ์ดมุมมนลอย + รูป radius · action row line-icon+count (♡/💬/↗/✓ช่วยได้) · **bottom nav + FAB กลาง(+)** = สร้างโพสต์
+- คงฟังก์ชันเดิมครบ: react picker/ช่วยได้/คอมเมนต์/แชร์/pagination · แก้ `updatePostStats`→`#cmtc-` (กันทำลายไอคอน) · `setReactBtn` reset→i-heart · เพิ่ม `i-heart`/`i-repost` · A2 safeUrl/escapeHtml ครบ
+- **ไม่สร้าง** Stories/Pages/Events/DM (ตามที่ Roger สั่ง) · **Test:** guard 9/9 · frontend 33/33 · syntax 3/3 · verify DOM prod (ring populate/pill/card 16px/FAB/widgets)
+
+---
+
+## 📍 (pointer เก่า) — อัปเดต 2026-08-31 (เซสชัน avatar-global · deploy+push ครบ)
 **origin/main = local HEAD · prod live ครบ + push ครบทุก commit · deploy มือ (login rotemaster พร้อม) · working tree clean**
 
 **✅ เซสชันนี้ (avatar global + logo Bocean C/D · deploy ครบ) — [[umbrella-brand-switcher]]:**
