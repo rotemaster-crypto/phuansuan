@@ -9,8 +9,20 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-28 (เซสชัน umbrella+profile · pushed ครบ)
-**origin/main = local HEAD = `9805f07` · prod live ครบ + push ครบทุก commit · deploy มือ (login rotemaster พร้อม) · working tree clean**
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน avatar-global · deploy+push ครบ)
+**origin/main = local HEAD · prod live ครบ + push ครบทุก commit · deploy มือ (login rotemaster พร้อม) · working tree clean**
+
+**✅ เซสชันนี้ (avatar global · deploy storage+hosting ครบ) — [[umbrella-brand-switcher]]:**
+- 🆕 **รูปโปรไฟล์ระดับ global (Option A)** — camera badge บน avatar โปรไฟล์ → `uploadAvatar` (reuse `compressImage`) → Storage `avatars/{uid}/` (rule: write เจ้าของเท่านั้น) → เขียน `accounts/{uid}.photoUrl`+`avatarSet:true` (source of truth) + denorm per-brand · `saveUserToFirestore` อ่านรูป global กลับตอน login กัน LINE ทับ · flag `avatarSet` แยก "ตั้งเอง"(ล็อก) จาก "รูป LINE"(ยัง sync) · `applyAvatarEverywhere` refresh 4 จุด · A2 ผ่าน safeUrl
+- **Test:** guard 9/9 · frontend 33/33 · inline scripts parse 3/3 · rules ไม่ต้องแก้ (accounts own-write อยู่แล้ว)
+
+**⏭️ รอบหน้า:**
+- **verify สด:** login LINE → โปรไฟล์ → กด camera → อัปรูป → เช็ครูปติดข้ามแบรนด์ (`?t=phuansuan`→`?t=ecofora`) + LINE ไม่ทับ
+- logo Bocean C(super)/D(favicon) · dashboard revenue sum-agg · marketplace MVP (เลื่อนตามที่ Roger บอก)
+
+---
+
+**(pointer เก่า 2026-08-28 · เซสชัน umbrella+profile) origin/main = `9805f07`**
 
 **✅ เซสชันนี้ (8 commits · deploy+verify prod ครบ) — [[umbrella-brand-switcher]]:**
 - 🆕 **Umbrella brand switcher ครบวงจร** — `accounts/{uid}` global identity + auto-follow ตอน login · `▾` บนหัวแอป → bottom sheet "สลับแบรนด์" (แต้ม/tier ต่อแบรนด์ · แบบ IG/Google) โชว์ตั้งแต่ 1 แบรนด์ · rules `accounts/*` own-only · pure `buildBrandEntry`/`tierBadge`
@@ -24,7 +36,7 @@
 **⏭️ รอบหน้า (agent-doable — Roger บอก "ยังไม่ทำ marketplace"):**
 - **verify สด login LINE จริง:** เข้า 2 แบรนด์ (`?t=phuansuan`→`?t=ecofora` บัญชีเดียว) → `▾` โผล่ → สลับ → เช็คแต้ม/ประวัติแยก + แก้ชื่อ global ติดข้ามแบรนด์
 - super ตั้ง `platform/domains.platformHosts` เพิ่มถ้ามี hosting host นอก default (bocean/office/phuansuan `.web.app` cover แล้ว)
-- แก้ **รูปโปรไฟล์** global (ตอนนี้แก้ได้แค่ชื่อ · รูปยังมาจาก LINE) · logo Bocean C(super)/D(favicon) · dashboard revenue sum-agg · marketplace MVP (เลื่อนตามที่ Roger บอก)
+- ✅ ~~แก้ **รูปโปรไฟล์** global~~ (2026-08-31 · ดู pointer บนสุด) · logo Bocean C(super)/D(favicon) · dashboard revenue sum-agg · marketplace MVP (เลื่อนตามที่ Roger บอก)
 
 ---
 

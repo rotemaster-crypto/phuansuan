@@ -29,6 +29,13 @@ service firebase.storage {
       allow write: if signedIn() && isImage() && underLimit(5);
     }
 
+    // รูปโปรไฟล์ global (umbrella identity) — เจ้าของเขียนเองเท่านั้น (defense-in-depth
+    //   ไม่ใช่ any-signed-in) · public read (avatar โชว์ทุกที่) · เฉพาะรูป ไม่เกิน 5MB
+    match /avatars/{uid}/{fileName} {
+      allow read:  if true;
+      allow write: if signedIn() && request.auth.uid == uid && isImage() && underLimit(5);
+    }
+
     // ไอคอน/โลโก้แอป — admin เท่านั้น ไม่เกิน 2MB
     match /app-icons/{fileName} {
       allow read: if true;

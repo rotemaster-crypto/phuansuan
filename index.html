@@ -159,7 +159,11 @@ body{font-family:var(--font-body);background:#f0f2f5;color:#1c1e21;max-width:480
 
 /* ── PROFILE ── */
 .prof-body{background:#fff;border-bottom:8px solid var(--bg);padding:22px 16px 18px;text-align:center}
-.prof-av{width:104px;height:104px;border-radius:50%;background:#e7f3ff;border:3px solid #fff;box-shadow:0 0 0 1px #eef1f4,0 4px 12px rgba(0,0,0,0.06);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-4xl);font-weight:800;color:var(--primary);overflow:hidden;background-size:cover;background-position:center}
+.prof-av-wrap{position:relative;width:104px;margin:0 auto 12px}
+.prof-av{width:104px;height:104px;border-radius:50%;background:#e7f3ff;border:3px solid #fff;box-shadow:0 0 0 1px #eef1f4,0 4px 12px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;font-size:var(--fs-4xl);font-weight:800;color:var(--primary);overflow:hidden;background-size:cover;background-position:center}
+.prof-av-cam{position:absolute;right:0;bottom:2px;width:34px;height:34px;border-radius:50%;background:var(--primary);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.prof-av-cam .ic{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2}
+.prof-av-cam:disabled{opacity:.6;cursor:default}
 .prof-btns{display:flex;gap:8px;justify-content:center;margin-top:14px}
 .prof-btn-p{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:var(--fs-base);font-weight:800;cursor:pointer;font-family:inherit}
 .prof-btn-s{background:var(--bg);color:var(--text);border:none;border-radius:8px;padding:8px 14px;font-size:var(--fs-base);font-weight:800;cursor:pointer;font-family:inherit}
@@ -653,7 +657,11 @@ button .ic,a .ic{pointer-events:none}
 <!-- ══ PROFILE SCREEN ══ -->
 <div class="screen" id="screen-profile">
   <div class="prof-body">
-    <div class="prof-av" id="prof-avatar">ฉ</div>
+    <div class="prof-av-wrap">
+      <div class="prof-av" id="prof-avatar">ฉ</div>
+      <button class="prof-av-cam" onclick="document.getElementById('avatar-input').click()" aria-label="เปลี่ยนรูปโปรไฟล์"><svg class="ic"><use href="#i-camera"/></svg></button>
+      <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+    </div>
     <div class="prof-name" id="prof-name"></div>
     <div class="prof-sub" id="prof-sub"></div>
     <div class="prof-bio" id="prof-bio" style="display:none"></div>
@@ -1346,6 +1354,11 @@ async function saveUserToFirestore(user) {
     if (_acct.exists && _acct.data().displayName) {
       user.displayName = _acct.data().displayName;
       if (currentUser) currentUser.displayName = _acct.data().displayName;
+    }
+    // รูปโปรไฟล์ = identity global เช่นกัน (Option A) — ถ้าเคยตั้งรูปเอง ใช้รูป global กัน LINE ทับ
+    if (_acct.exists && _acct.data().avatarSet && _acct.data().photoUrl) {
+      user.photoUrl = _acct.data().photoUrl;
+      if (currentUser) currentUser.photoUrl = _acct.data().photoUrl;
     }
   } catch (_) {}
   try {
@@ -3867,6 +3880,43 @@ async function uploadCoverPhoto(input) {
     if (cv && safeUrl(url)) cv.style.backgroundImage = 'url(' + safeUrl(url) + ')';
   } catch (e) { toast('อัพโหลดไม่สำเร็จ: ' + e.message); }
   if (btn) { btn.textContent = 'แก้ไขรูปหน้าปก'; btn.disabled = false; }
+}
+
+// อัปเดต avatar ทุกจุดในหน้า (ใช้หลังเปลี่ยนรูป · ผ่าน safeUrl กัน A2)
+function applyAvatarEverywhere(photoUrl) {
+  var initials = (currentUser && currentUser.displayName) ? currentUser.displayName.charAt(0) : 'ฉ';
+  var u = safeUrl(photoUrl);
+  var sel = ['#cp-me-avatar', '#prof-avatar', '.modal-av', '.cmt-me'];
+  document.querySelectorAll(sel.join(',')).forEach(function (el) {
+    if (u) { el.style.backgroundImage = 'url("' + u + '")'; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = 'center'; el.textContent = ''; }
+    else { el.style.backgroundImage = ''; el.textContent = initials; }
+  });
+}
+
+// Upload Avatar — รูปโปรไฟล์ระดับ global (umbrella identity, Option A) — ตั้งครั้งเดียวติดทุกแบรนด์
+async function uploadAvatar(input) {
+  const file = input.files[0];
+  input.value = '';   // reset เพื่อเลือกไฟล์เดิมซ้ำได้
+  if (!file) return;
+  if (!currentUser || currentUser.isGuest || !db) { toast('เข้าสู่ระบบก่อนเปลี่ยนรูปโปรไฟล์'); return; }
+  const cam = document.querySelector('.prof-av-cam');
+  if (cam) cam.disabled = true;
+  try {
+    const compressed = await compressImage(file, 512, 0.85);
+    const ref = firebase.storage().ref('avatars/' + currentUser.uid + '/' + Date.now() + '.jpg');
+    const snap = await ref.put(compressed, { contentType: 'image/jpeg' });
+    const url = await snap.ref.getDownloadURL();
+    // source of truth = accounts/{uid} (global) · avatarSet=true → LINE ไม่ทับตอน login ถัดไป
+    await db.collection('accounts').doc(currentUser.uid).set({
+      photoUrl: url, avatarSet: true, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    // denormalize ลงสำเนา per-brand (โพส/คอมเมนต์อ่าน authorPhoto จาก user doc)
+    try { await tdb().collection('users').doc(currentUser.uid).update({ photoUrl: url }); } catch (_) {}
+    currentUser.photoUrl = url;
+    applyAvatarEverywhere(url);
+    toast('✅ เปลี่ยนรูปโปรไฟล์แล้ว');
+  } catch (e) { toast('อัพโหลดไม่สำเร็จ: ' + (e && e.message || e)); }
+  if (cam) cam.disabled = false;
 }
 
 // ── Time Formatter ────────────────────────────────────────
