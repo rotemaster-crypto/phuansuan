@@ -9,7 +9,13 @@
 
 ---
 
-## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน feed-redesign · deploy+verify ครบ)
+## 📍 สถานะปัจจุบัน (resume pointer) — อัปเดต 2026-08-31 (เซสชัน UI-redesign feed+cart · deploy+verify ครบ)
+**✅ เซสชันนี้ (cart redesign — Dribbble refs) — เฉพาะตะกร้า:**
+- 🆕 **Desktop cart = 2-คอลัมน์ (KIXY)** — รายการสินค้าซ้าย (รูปมุมมน + ชื่อ + line total + meta หมวด·ราคา/ชิ้น + qty pill −/+ + ปุ่มลบ) · SUMMARY card ขวา (ยอดสินค้า/ส่วนลด/ค่าส่ง/ยอดสุทธิ เส้นประ + ปุ่มสั่งซื้อ + เลือกซื้อต่อ) · dialog กลางจอ @900px · scope `.cart-sheet-shop`/`#cart-sum` (ไม่กระทบ checkout/payment/orders ที่ใช้ `.cart-sheet`/`.sum-row` ร่วม) · **verify prod จริง (ลบ→ยอด+FAB+badge อัปเดต)**
+- 🆕 **Mobile cart = Shopping-cart-app** — bottom sheet คอลัมน์เดียว: header ตะกร้า + N ชิ้น·รายการ · item rows ใหม่ (รูปมุมมน+meta+qty pill+ลบ) · summary + Checkout ปุ่มเต็ม + เลือกซื้อต่อ
+- คงฟังก์ชันเดิม: `changeQty`/`goCheckout`/coupon/shipping/promptpay · ลบ = `changeQty(id,-999999)` (reuse) · **ไม่ใส่** PayPal/variant/checkbox (default: checkout ทั้งตะกร้า) · A2 safeUrl/escapeHtml ครบ
+- **Test:** guard 9/9 · frontend 33/33 · syntax 3/3
+
 **✅ เซสชันนี้ (feed redesign — Dribbble refs) — เฉพาะหน้า feed:**
 - 🆕 **Desktop feed = 3-คอลัมน์ (Square)** — nav rail ซ้าย (user card + เมนู line-icon + ปุ่มสร้างโพสต์) + center (composer + posts) + widget ขวา (แต้ม-tier/ปราชญ์ leaderboard/กลุ่มของฉัน) · gate `body.on-feed` @1000px (เฉพาะหน้า feed · หน้าอื่นคงคอลัมน์เดียว) · action row ไอคอน+label · **verify prod จริง**
 - 🆕 **Mobile feed = SocialYo** — แถว ring-avatar = **กลุ่มชุมชนของฉัน** (`loadFeedGroupsRow` · discover ถ้ายังไม่เข้ากลุ่ม) · แท็บ pill · การ์ดมุมมนลอย + รูป radius · action row line-icon+count (♡/💬/↗/✓ช่วยได้) · **bottom nav + FAB กลาง(+)** = สร้างโพสต์
