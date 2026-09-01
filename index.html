@@ -2479,61 +2479,6 @@ function applyBranding(b) {
   window._branding = b;
 }
 
-function renderAdminBranding() {
-  var box = document.getElementById('admin-branding');
-  if (!box || !isAdmin()) return;
-  var b = window._branding || {};
-  var C = APP_CONFIG;
-  function esc(v){ return String(v || '').replace(/"/g, '&quot;'); }
-  function row(label, id, val) {
-    return '<div style="margin:8px 0"><div style="font-size:var(--fs-sm);color:#555;margin-bottom:3px">' + label + '</div>'
-      + '<input id="' + id + '" type="text" value="' + esc(val) + '" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:var(--fs-base);box-sizing:border-box"></div>';
-  }
-  box.innerHTML = '<div style="font-size:var(--fs-md);font-weight:800;margin:16px 0 6px;border-top:1px solid #eee;padding-top:14px">🎨 แบรนด์</div>'
-    + row('ชื่อแอป', 'br-name', b.appName || C.app.name)
-    + row('คำโปรย', 'br-sub', b.subtitle || '')
-    + row('อีโมจิโลโก้', 'br-emoji', b.logoEmoji || C.app.logoEmoji)
-    + row('หัวข้อ Leaderboard', 'br-lb', b.leaderboardTitle || 'ปราชญ์ชาวสวน')
-    + '<div style="display:flex;gap:18px;align-items:flex-end;margin:10px 0">'
-    +   '<div><div style="font-size:var(--fs-sm);color:#555;margin-bottom:3px">สีหลัก</div><input id="br-primary" type="color" value="' + esc(b.primaryColor || C.app.primaryColor || '#1877f2') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
-    +   '<div><div style="font-size:var(--fs-sm);color:#555;margin-bottom:3px">สีเสริม</div><input id="br-accent" type="color" value="' + esc(b.accentColor || C.app.accentColor || '#42b883') + '" style="width:48px;height:34px;padding:0;border:1px solid #ccc;border-radius:6px"></div>'
-    + '</div>'
-    + '<div style="font-size:var(--fs-base);font-weight:700;margin:14px 0 4px;color:#333">ชื่อระดับ (Tier)</div>'
-    + row('ระดับ 1 (เริ่มต้น)', 'br-tier-bronze', (b.tierLabels && b.tierLabels.bronze) || C.tiers.bronze.label)
-    + row('ระดับ 2', 'br-tier-silver', (b.tierLabels && b.tierLabels.silver) || C.tiers.silver.label)
-    + row('ระดับ 3', 'br-tier-gold', (b.tierLabels && b.tierLabels.gold) || C.tiers.gold.label)
-    + row('ระดับ 4 (สูงสุด)', 'br-tier-platinum', (b.tierLabels && b.tierLabels.platinum) || C.tiers.platinum.label)
-    + '<div style="font-size:var(--fs-base);font-weight:700;margin:14px 0 4px;color:#333">ป้ายแท็บล่าง</div>'
-    + row('แท็บ 1 (Community)', 'br-nav-feed', (b.navLabels && b.navLabels.feed) || 'ชุมชน')
-    + row('แท็บ 2 (Activity)', 'br-nav-community', (b.navLabels && b.navLabels.community) || 'กิจกรรม')
-    + row('แท็บ 3 (Market)', 'br-nav-shop', (b.navLabels && b.navLabels.shop) || 'ร้านค้า')
-    + row('แท็บ 4 (Profile)', 'br-nav-profile', (b.navLabels && b.navLabels.profile) || 'โปรไฟล์')
-    + '<button onclick="saveBranding()" style="width:100%;margin-top:6px;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:var(--fs-md);font-weight:700;cursor:pointer">บันทึกแบรนด์</button>';
-}
-
-async function saveBranding() {
-  if (!isAdmin() || !db) return;
-  function v(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; }
-  var b = {
-    appName: v('br-name'), subtitle: v('br-sub'), logoEmoji: v('br-emoji'),
-    leaderboardTitle: v('br-lb'), primaryColor: v('br-primary'), accentColor: v('br-accent'),
-    tierLabels: { bronze: v('br-tier-bronze'), silver: v('br-tier-silver'), gold: v('br-tier-gold'), platinum: v('br-tier-platinum') },
-    navLabels: { feed: v('br-nav-feed'), community: v('br-nav-community'), profile: v('br-nav-profile'), shop: v('br-nav-shop') },
-  };
-  applyBranding(b);
-  try {
-    // เขียนลงคลัง canonical settings/app (คลังเดียวกับ admin) — flat + ฟิลด์เสริม
-    await tdb().collection('settings').doc('app').set({
-      appName: b.appName, subtitle: b.subtitle, logoEmoji: b.logoEmoji,
-      leaderboardTitle: b.leaderboardTitle,
-      primary: b.primaryColor, accent: b.accentColor,
-      tierLabels: b.tierLabels, navLabels: b.navLabels,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    toast('บันทึกแบรนด์แล้ว ✓');
-  } catch (e) { toast('บันทึกไม่ได้: ' + e.message); }
-}
-
 // ── Reactions (หลายอีโมจิ) ───────────────────────────────
 const REACTIONS = [
   { key:'like', emoji:'👍', svg:'rx-like', label:'ถูกใจ' },
@@ -2803,32 +2748,6 @@ async function saveMyAddress(){
   } catch(e){ toast('บันทึกไม่สำเร็จ: '+e.message); }
 }
 // ── ประวัติการสั่งซื้อ (มินิในโปรไฟล์ · กด "ดูทั้งหมด" เปิด modal เต็ม) ──
-async function renderProfileOrders(){
-  const box = document.getElementById('pf-orders');
-  if (!box) return;
-  if (!currentUser || !db){ box.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--muted)">เข้าสู่ระบบเพื่อดูประวัติ</div>'; return; }
-  try {
-    const snap = await tdb().collection('orders').where('userId','==',currentUser.uid).get();
-    const tid = (typeof tenantId==='function')?tenantId():null;
-    let docs = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }).filter(function(o){ return !tid || o.tenantId===tid; });
-    docs.sort(function(a,b){ return ((b.createdAt&&b.createdAt.seconds)||0) - ((a.createdAt&&a.createdAt.seconds)||0); });
-    if (!docs.length){ box.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--muted)">ยังไม่มีประวัติการสั่งซื้อ</div>'; return; }
-    box.innerHTML = docs.slice(0,3).map(function(o){
-      const s = (typeof ORDER_STATUS!=='undefined' && ORDER_STATUS[o.status]) || {t:o.status, c:'#888'};
-      const n = (o.items||[]).reduce(function(x,i){ return x+i.qty; }, 0);
-      const first = (o.items && o.items[0]) ? escapeHtml(o.items[0].name) : '';
-      const more = (o.items && o.items.length>1) ? (' +'+(o.items.length-1)) : '';
-      const dt = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate().toLocaleDateString('th-TH') : '';
-      return '<div onclick="openMyOrders()" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer">'+
-        '<div style="min-width:0"><div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+first+more+'</div>'+
-        '<div style="font-size:var(--fs-2xs);color:var(--muted)">'+dt+' · '+n+' ชิ้น</div></div>'+
-        '<div style="text-align:right;flex:none"><div style="font-size:var(--fs-sm);font-weight:800;color:var(--shop-price,var(--primary))">'+baht(o.total||0)+'</div>'+
-        '<span style="font-size:var(--fs-2xs);color:#fff;background:'+s.c+';padding:1px 7px;border-radius:8px">'+s.t+'</span></div>'+
-      '</div>';
-    }).join('') + (docs.length>3 ? '<div style="text-align:center;padding-top:8px"><button onclick="openMyOrders()" style="background:none;border:none;color:var(--primary);font-size:var(--fs-sm);font-weight:700;cursor:pointer">ดูทั้งหมด '+docs.length+' ออเดอร์ →</button></div>' : '');
-  } catch(e){ box.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--muted)">โหลดประวัติไม่สำเร็จ</div>'; }
-}
-
 // ── สุ่มจับรางวัล (Activity Engine) — user ────────────────
 async function loadLuckyDrawsUser(){
   var box = document.getElementById('luckydraw-section');
@@ -3139,17 +3058,6 @@ function maybeShowOnboarding(force) {
   if (!currentUser || !db) return;
   if (!force && currentUser.onboarded === true) return;
   document.getElementById('onboardModal').classList.add('open');
-}
-
-function toggleObCrop(el) {
-  const id = el.dataset.crop;
-  if (obSelectedCrops.includes(id)) {
-    obSelectedCrops = obSelectedCrops.filter(c => c !== id);
-    el.classList.remove('sel');
-  } else {
-    obSelectedCrops.push(id);
-    el.classList.add('sel');
-  }
 }
 
 function requestGps() {
@@ -4133,24 +4041,6 @@ async function togglePin(id, current) {
 }
 
 // Upload Cover Photo
-async function uploadCoverPhoto(input) {
-  const file = input.files[0];
-  if (!file || !currentUser || !db) return;
-  const btn = document.querySelector('.prof-cover-btn');
-  if (btn) { btn.textContent = '⏳ ...'; btn.disabled = true; }
-  try {
-    const compressed = await compressImage(file, 1280, 0.85);
-    const ref = firebase.storage().ref('covers/' + currentUser.uid + '_cover.jpg');
-    const snap = await ref.put(compressed, { contentType: 'image/jpeg' });
-    const url = await snap.ref.getDownloadURL();
-    await tdb().collection('users').doc(currentUser.uid).update({ coverUrl: url });
-    currentUser.coverUrl = url;
-    const cv = document.getElementById('prof-cover');
-    if (cv && safeUrl(url)) cv.style.backgroundImage = 'url(' + safeUrl(url) + ')';
-  } catch (e) { toast('อัพโหลดไม่สำเร็จ: ' + e.message); }
-  if (btn) { btn.textContent = 'แก้ไขรูปหน้าปก'; btn.disabled = false; }
-}
-
 // อัปเดต avatar ทุกจุดในหน้า (ใช้หลังเปลี่ยนรูป · ผ่าน safeUrl กัน A2)
 function applyAvatarEverywhere(photoUrl) {
   var initials = (currentUser && currentUser.displayName) ? currentUser.displayName.charAt(0) : 'ฉ';

@@ -1898,10 +1898,6 @@ function pickTheme(id){
   if (window.applyTheme) window.applyTheme(id);
   renderThemeOpts();
 }
-function syncColor(key) {
-  const hex = document.getElementById(`cfg-${key}-hex`).value;
-  if (/^#[0-9a-f]{6}$/i.test(hex)) { document.getElementById(`cfg-${key}`).value = hex; updateColorPreview(); }
-}
 function updateColorPreview() {
   const color = document.getElementById('cfg-primary')?.value || '#1877f2';
   document.getElementById('color-preview').style.background = color;
