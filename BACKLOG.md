@@ -283,7 +283,7 @@
 - [ ] B15 monolith split (index.html ~4,300 / admin ~3,600) — **ต้องขยาย frontend test harness ก่อน** ห้ามรีบรื้อ
 - [ ] App Check — ปิด SSRF TOCTOU-rebind + B5 curl (closure เต็มของ closed-tenant) · ทำก่อน launch
 - [~] B16 dedup refactor (admin.html) — ✅ 2026-09-01: `_crudToggleActive`/`_crudDelete` ยุบ toggle/delete ×4 activity engine → wrapper บรรทัดเดียว (คงชื่อ fn เดิม onclick ไม่ต้องแก้) · `setSetting(name,fields)` แทน boilerplate `.set({...,updatedAt},{merge})` 13 จุด (app/feedMode/privacy/terms/icons/content/store/courier/commerce/shop/points/categories/streak) · **ไม่แตะ**: features (updatedAt สร้างใน object), promo (`set(doc)` prebuilt), badges (tx), platform/seedTenant (คนละ ref) · **ยังเหลือ:** `getSetting` read-side (ลดไม่คุ้ม+ต้องแก้ downstream `.exists`/`.data()` — เสี่ยง เลยข้าม) · guard 9/9 · frontend 33/33 · inline parse 1/1 · **ยังไม่ deploy/commit**
-- [ ] แปลง empty-catch ที่เหลือฝั่ง client เป็น error state (opportunistic)
+- [~] แปลง empty-catch → error state (opportunistic) — ✅ 2026-09-01 (admin.html): helper `_loadFail(e,label)` — loader หลักของหน้า settings 12 ตัว (appearance/shopdecor/icons/content/features/store/courier/shipping/points/streak/promo/platformRoots + brand switcher) → console.error + toast เตือน "โหลด...ไม่สำเร็จ" (กันแอดมินกดบันทึกทับค่า default ที่โหลดไม่ขึ้น) · sub-loader/boot/best-effort 6 ตัว → log เงียบ · **คงเดิม** (ตั้งใจ): count-in-loop, `_collCount` fallback, brand-name, claim cleanup, print, localStorage · **ยังเหลือ:** empty-catch ฝั่ง index.html (ลูกค้า)
 
 ---
 

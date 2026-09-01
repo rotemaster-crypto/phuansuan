@@ -1446,7 +1446,7 @@ async function populateBrandSwitcher(){
       return '<option value="'+escapeHtml(t.id)+'"'+(inBrand && t.id===currentTenant?' selected':'')+'>'+escapeHtml(t.name||t.id)+(t.status==='suspended'?' (ระงับ)':'')+'</option>';
     }).join('');
     sw.innerHTML = opts;
-  } catch(e){}
+  } catch(e){ _loadFail(e, 'รายชื่อแบรนด์'); }
 }
 function onBrandSwitch(tid){
   if (!tid){ return; }
@@ -1543,7 +1543,7 @@ async function loadSidebarBranding() {
     }
     if (window.applyTheme) applyTheme(d.theme);
     if (d.primary) { document.documentElement.style.setProperty('--primary', d.primary); document.documentElement.style.setProperty('--on-primary', __onColor(d.primary)); }
-  } catch(e) {}
+  } catch(e) { _loadFail(e); }
 }
 
 // ── Dashboard ─────────────────────────────────────────────
@@ -1808,7 +1808,7 @@ async function loadAppearance() {
     loadTerms();
     loadAppPrivacy();
     loadFeedMode();
-  } catch(e) {}
+  } catch(e) { _loadFail(e, 'ข้อมูลแบรนด์'); }
 }
 async function saveAppearance() {
   try {
@@ -1839,7 +1839,7 @@ async function loadFeedMode() {
     var d = doc.data() || {};
     var pub = document.getElementById('fm-feedPublic'); if (pub) pub.checked = (d.feedPublic !== false);
     var pm = document.getElementById('fm-postMode'); if (pm) pm.value = (d.postMode === 'broadcast') ? 'broadcast' : 'public';
-  } catch(e) {}
+  } catch(e) { _loadFail(e); }
 }
 async function saveAppPrivacy() {
   try {
@@ -1854,7 +1854,7 @@ async function loadAppPrivacy() {
     if (!doc.exists) return;
     var url = (doc.data() || {}).privacyUrl || "";
     var el = document.getElementById("app-privacyurl"); if (el) el.value = url;
-  } catch(e) {}
+  } catch(e) { _loadFail(e); }
 }
 async function saveTerms() {
   try {
@@ -1874,7 +1874,7 @@ async function loadTerms() {
     var set = function(id, val){ if (val && document.getElementById(id)) document.getElementById(id).value = val; };
     set('term-item', t.item); set('term-place', t.itemPlace); set('term-people', t.people);
     set('term-expert', t.expert); set('term-problem', t.problem);
-  } catch(e) {}
+  } catch(e) { _loadFail(e); }
 }
 window.__selectedTheme = window.__selectedTheme || 'classic';
 function renderThemeOpts(){
@@ -1923,7 +1923,7 @@ async function loadIcons() {
         if (el) { const _u=safeUrl(d[key]); if(_u) el.innerHTML = `<img src="${_u}" style="width:100%;height:100%;object-fit:contain">`; }
       }
     });
-  } catch(e) {}
+  } catch(e) { _loadFail(e, 'ไอคอน'); }
 }
 
 async function uploadShopBanner(input){
@@ -1989,7 +1989,7 @@ async function loadContent() {
     if (d.nearbyRadius) { document.getElementById('cfg-nearby').value = d.nearbyRadius; document.getElementById('val-nearby').textContent = d.nearbyRadius; }
     if (d.alertRadius)  { document.getElementById('cfg-alert-r').value = d.alertRadius;  document.getElementById('val-alert-r').textContent = d.alertRadius;  }
     if (d.postsPerPage) { document.getElementById('cfg-perpage').value = d.postsPerPage;  document.getElementById('val-perpage').textContent = d.postsPerPage;  }
-  } catch(e) {}
+  } catch(e) { _loadFail(e, 'เนื้อหา'); }
 }
 async function saveContent() {
   try {
@@ -2022,7 +2022,7 @@ async function loadFeatures() {
       const el = document.getElementById(id); if (!el) return;
       el.checked = FEAT_DEFAULT_OFF[key] ? (d[key] === true) : (d[key] !== false);
     });
-  } catch(e) {}
+  } catch(e) { _loadFail(e, 'ฟีเจอร์'); }
 }
 async function saveFeatures() {
   const tid = currentTenant;
@@ -2050,7 +2050,7 @@ async function applyAdminFeatureFlags() {
   try {
     const d = await aDb().collection('settings').doc('features').get();
     on = d.exists && d.data().pricingTool === true;
-  } catch(e) {}
+  } catch(e) { _loadFail(e); }
   window.__pricingOn = on;
   const item = document.getElementById('sb-item-pricing');
   if (item) item.style.display = on ? '' : 'none';   // '' = ปล่อยให้ CSS brand-zone คุม (โผล่เฉพาะตอนอยู่ในแบรนด์)
@@ -2092,7 +2092,7 @@ async function loadShopDecor() {
     sv("shop-title-in", d.shopTitle || "");
     sv("shop-sub-in", d.shopSub || "");
     sc("shop-catbar-on", d.catBarOn !== false);
-  } catch(e) {}
+  } catch(e) { _loadFail(e, 'ตกแต่งร้าน'); }
 }
 // N1: หน้า "จัดส่ง" แยกออกมา — โหลดผู้ส่ง+ค่าส่ง+ขนส่งพร้อมกัน
 function loadShippingScreen(){ loadStore(); loadShipping(); loadCourier(); }
@@ -2270,7 +2270,7 @@ async function loadStore(){
     const sv=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v||''; };
     sv('st-name', d.name); sv('st-phone', d.phone); sv('st-addr', d.addressLine);
     sv('st-sub', d.subdistrict); sv('st-district', d.district); sv('st-province', d.province); sv('st-postcode', d.postcode);
-  } catch(e){}
+  } catch(e){ _loadFail(e, 'ข้อมูลร้าน'); }
 }
 async function saveStore(){
   try {
@@ -2305,7 +2305,7 @@ async function loadCourier(){
     var st = document.getElementById('cr-keystatus');
     if (st) st.textContent = d.hasKey ? '· 🔒 ตั้งค่า key แล้ว' : '· ยังไม่ได้ตั้ง key (โหมดทดสอบ)';
     var kf = document.getElementById('cr-apikey'); if (kf) kf.value = '';
-  } catch(e){}
+  } catch(e){ _loadFail(e, 'การตั้งค่าขนส่ง'); }
 }
 async function saveCourier(){
   try {
@@ -2371,7 +2371,7 @@ async function loadShipping(){
     sv('ship-wper', d.weightPerKg!=null ? d.weightPerKg : '');
     sc('ship-freeover', d.freeOver === true);
     sv('ship-freemin', d.freeOverMin!=null ? d.freeOverMin : '');
-  } catch(e){}
+  } catch(e){ _loadFail(e, 'ค่าจัดส่ง'); }
   shipModeUI();
 }
 async function saveShipping(){
@@ -2431,7 +2431,7 @@ async function loadPoints() {
     const d = doc.data();
     const map = { perPost:'pts-post', perPostWithImg:'pts-post-img', perComment:'pts-comment', perHelp:'pts-help', perLike:'pts-like', perPurchase:'pts-purchase', perAlert:'pts-alert', perVerified:'pts-verified', dailyLoginBonus:'pts-daily', tierSilver:'tier-silver', tierGold:'tier-gold', tierPlatinum:'tier-platinum', discSilver:'disc-silver', discGold:'disc-gold', discPlatinum:'disc-platinum' };
     Object.entries(map).forEach(([key, id]) => { if (d[key] !== undefined && document.getElementById(id)) document.getElementById(id).value = d[key]; });
-  } catch(e) {}
+  } catch(e) { _loadFail(e, 'ตั้งค่าแต้ม'); }
 }
 async function savePoints() {
   try {
@@ -3072,7 +3072,7 @@ async function loadStreakConfig(){
     var en = document.getElementById('streak-enabled'); if (en) en.checked = c.enabled === true;
     var ta = document.getElementById('streak-milestones');
     if (ta) ta.value = (Array.isArray(c.milestones)?c.milestones:[]).map(function(m){ return (m.days||0)+':'+(m.rewardPoints||0); }).join('\n');
-  } catch(e){}
+  } catch(e){ _loadFail(e, 'ตั้งค่าเช็คอิน'); }
 }
 async function saveStreakConfig(){
   try {
@@ -3262,7 +3262,7 @@ async function loadPromo(){
     document.getElementById('promo-end').value = toLocal(d.endAt);
     var st = document.getElementById('promo-status');
     if (st) st.textContent = d.active===true ? ('เปิดอยู่ · คูณ x'+(d.multiplier||1)) : (s.exists?'ปิดอยู่':'ยังไม่ได้ตั้ง');
-  } catch(e){}
+  } catch(e){ _loadFail(e, 'โปรโมชัน'); }
 }
 async function loadEarnCampaigns(){
   earnTriggerUI();
@@ -4061,6 +4061,9 @@ function setSetting(name, fields){
     { merge: true }
   );
 }
+// §3: loader ล้มเหลว = อย่าเงียบ. มี label → เตือน admin (กันกดบันทึกทับค่า default ที่โหลดไม่ขึ้น) ·
+// ไม่มี label → log อย่างเดียว (sub-loader/boot ที่ toast จะรก)
+function _loadFail(e, label){ console.error('[load]'+(label?' '+label:'')+' failed', e); if (label) toast('⚠️ โหลด'+label+'ไม่สำเร็จ ลองใหม่','error'); }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 // A2: กัน stored-XSS จาก URL รูป (photoUrl/icon) ที่ผู้ใช้อื่น/แอดมินอื่นเขียนได้ —
 // อนุญาตเฉพาะ http/https และห้ามอักขระที่ break ออกจาก CSS url()/attribute (คืน '' ถ้าไม่ปลอดภัย)
@@ -4210,7 +4213,7 @@ async function loadPlatformRoots(){
     var roots = (s.exists && Array.isArray(s.data().roots)) ? s.data().roots : [];
     var el = document.getElementById('plat-roots'); if (el) el.value = roots.join(', ');
     var st = document.getElementById('plat-roots-status'); if (st) st.textContent = roots.length ? ('ทำงาน: '+roots.map(function(r){return '*.'+r;}).join(' · ')) : 'ยังไม่ตั้ง — ร้านใช้ ?t= / path ไปก่อน';
-  } catch(e){}
+  } catch(e){ _loadFail(e, 'โดเมนแพลตฟอร์ม'); }
 }
 async function savePlatformRoots(){
   try {
@@ -4696,7 +4699,7 @@ async function printDeliveryNote(id){
     if (stDoc.exists){ var st = stDoc.data();
       data.sender = { name: st.name||shopName, phone: st.phone||'', addr: [st.addressLine, st.subdistrict, st.district, st.province, st.postcode].filter(Boolean).join(' ') };
     }
-  } catch(e){}
+  } catch(e){ _loadFail(e); }
   var json = JSON.stringify(data).replace(/</g, '\\u003c');
   var w = window.open('', '_blank');
   if (!w){ toast('❌ เบราว์เซอร์บล็อกป๊อปอัป (อนุญาต popup ก่อนครับ)','error'); return; }
