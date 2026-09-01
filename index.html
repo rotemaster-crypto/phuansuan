@@ -3278,41 +3278,31 @@ async function submitCreateShop(){
     toast('เปิดร้านไม่สำเร็จ: ' + ((e && e.message) || 'ลองใหม่'), 'error');
   }
 }
+// จัดการปุ่ม provider (Google/Facebook) + divider + browser-hint ตาม APP_CONFIG.auth.providers
+// + สภาพ in-LINE — ใช้ร่วม showLoginPrompt (gate) กับ showLoginScreen (full) เดิม copy-paste 2 ชุด
+function _applyProviderButtons(ids){
+  var prov = ((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.auth && APP_CONFIG.auth.providers) || { line: true });
+  var inLine = (typeof _isLineInApp === 'function') ? _isLineInApp() : false;
+  var showG = !!(prov.google && !inLine);
+  var showF = !!(prov.facebook && !inLine);
+  var gBtn = document.getElementById(ids.g);
+  var fBtn = document.getElementById(ids.f);
+  var orD  = document.getElementById(ids.or);
+  var hint = document.getElementById(ids.hint);
+  if (gBtn) gBtn.style.display = showG ? 'flex' : 'none';
+  if (fBtn) fBtn.style.display = showF ? 'flex' : 'none';
+  if (orD)  orD.style.display  = (showG || showF) ? 'flex' : 'none';
+  if (hint) hint.style.display = (inLine && (prov.google || prov.facebook)) ? 'block' : 'none';
+}
 function showLoginPrompt(){
   var m = document.getElementById('loginPrompt'); if (m) m.classList.add('open');
-  try {
-    var prov = ((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.auth && APP_CONFIG.auth.providers) || { line: true });
-    var inLine = (typeof _isLineInApp === 'function') ? _isLineInApp() : false;
-    var showG = !!(prov.google && !inLine);
-    var showF = !!(prov.facebook && !inLine);
-    var gBtn = document.getElementById('btn-google-gate');
-    var fBtn = document.getElementById('btn-facebook-gate');
-    var orD  = document.getElementById('gate-or-divider');
-    var hint = document.getElementById('gate-browser-hint');
-    if (gBtn) gBtn.style.display = showG ? 'flex' : 'none';
-    if (fBtn) fBtn.style.display = showF ? 'flex' : 'none';
-    if (orD)  orD.style.display  = (showG || showF) ? 'flex' : 'none';
-    if (hint) hint.style.display = (inLine && (prov.google || prov.facebook)) ? 'block' : 'none';
-  } catch (e) {}
+  try { _applyProviderButtons({ g:'btn-google-gate', f:'btn-facebook-gate', or:'gate-or-divider', hint:'gate-browser-hint' }); } catch (e) {}
 }
 function closeLoginPrompt(){ var m = document.getElementById('loginPrompt'); if (m) m.classList.remove('open'); }
 function showLoginScreen() {
   const el = document.getElementById('login-screen');
   if (el) el.classList.add('show');
-  try {
-    const prov = ((typeof APP_CONFIG !== 'undefined' && APP_CONFIG.auth && APP_CONFIG.auth.providers) || { line: true });
-    const inLine = _isLineInApp();
-    const showG = !!(prov.google && !inLine);
-    const showF = !!(prov.facebook && !inLine);
-    const gBtn = document.getElementById('btn-google-login');
-    const fBtn = document.getElementById('btn-facebook-login');
-    const orD  = document.getElementById('login-or-divider');
-    const hint = document.getElementById('login-browser-hint');
-    if (gBtn) gBtn.style.display = showG ? 'flex' : 'none';
-    if (fBtn) fBtn.style.display = showF ? 'flex' : 'none';
-    if (orD)  orD.style.display  = (showG || showF) ? 'flex' : 'none';
-    if (hint) hint.style.display = (inLine && (prov.google || prov.facebook)) ? 'block' : 'none';
-  } catch (e) {}
+  try { _applyProviderButtons({ g:'btn-google-login', f:'btn-facebook-login', or:'login-or-divider', hint:'login-browser-hint' }); } catch (e) {}
 }
 
 function hideLoginScreen() {
