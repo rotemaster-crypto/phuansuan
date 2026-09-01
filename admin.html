@@ -1812,15 +1812,14 @@ async function loadAppearance() {
 }
 async function saveAppearance() {
   try {
-    await aDb().collection('settings').doc('app').set({
+    await setSetting('app', {
       appName: document.getElementById('cfg-appname').value,
       subtitle: document.getElementById('cfg-subtitle').value,
       logoEmoji: document.getElementById('cfg-logo').value,
       shopName: document.getElementById('cfg-shopname').value,
       lineOaId: document.getElementById('cfg-lineoa').value,
-      phone: document.getElementById('cfg-phone').value,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });   // สี/ธีม/ฟอนต์ = มาตรฐานระบบ (super-admin) ไม่เก็บต่อแบรนด์แล้ว
+      phone: document.getElementById('cfg-phone').value
+    });   // สี/ธีม/ฟอนต์ = มาตรฐานระบบ (super-admin) ไม่เก็บต่อแบรนด์แล้ว
     toast('✅ บันทึกแล้ว','success');
     loadSidebarBranding();
   } catch(e) { toast('❌ '+e.message,'error'); }
@@ -1829,7 +1828,7 @@ async function saveFeedMode() {
   try {
     var pub = document.getElementById('fm-feedPublic').checked;
     var mode = document.getElementById('fm-postMode').value;
-    await aDb().collection('settings').doc('app').set({ feedPublic: pub, postMode: mode, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await setSetting('app', { feedPublic: pub, postMode: mode });
     toast('✅ บันทึกโหมดฟีดแล้ว','success');
   } catch(e) { toast('❌ '+e.message,'error'); }
 }
@@ -1845,7 +1844,7 @@ async function loadFeedMode() {
 async function saveAppPrivacy() {
   try {
     var url = document.getElementById("app-privacyurl").value.trim();
-    await aDb().collection("settings").doc("app").set({ privacyUrl: url, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await setSetting("app", { privacyUrl: url });
     toast("✅ บันทึก URL นโยบายแล้ว","success");
   } catch(e) { toast("❌ "+e.message,"error"); }
 }
@@ -1863,7 +1862,7 @@ async function saveTerms() {
     var terms = {};
     [['item','term-item'],['itemPlace','term-place'],['people','term-people'],['expert','term-expert'],['problem','term-problem']]
       .forEach(function(p){ if (g(p[1])) terms[p[0]] = g(p[1]); });
-    await aDb().collection('settings').doc('app').set({ terms: terms, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await setSetting('app', { terms: terms });
     toast('✅ บันทึกคำศัพท์แล้ว','success');
   } catch(e) { toast('❌ '+e.message,'error'); }
 }
@@ -1958,7 +1957,7 @@ async function uploadIcon(key, input) {
     });
     await task;
     const url = await ref.getDownloadURL();
-    await aDb().collection('settings').doc('icons').set({ [key]: url, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await setSetting('icons', { [key]: url });
 
     // Update preview
     const previewMap = { logo:'prev-logo', nav_home:'prev-nav-home', nav_community:'prev-nav-community', nav_video:'prev-nav-video', nav_profile:'prev-nav-profile', nav_menu:'prev-nav-menu', default_cover:'prev-cover', login_bg:'prev-login-bg' };
@@ -1994,7 +1993,7 @@ async function loadContent() {
 }
 async function saveContent() {
   try {
-    await aDb().collection('settings').doc('content').set({
+    await setSetting('content', {
       bannerText: document.getElementById('cfg-banner-text').value,
       bannerShow: document.getElementById('cfg-banner-show').checked,
       postPlaceholder: document.getElementById('cfg-post-placeholder').value,
@@ -2003,9 +2002,8 @@ async function saveContent() {
       loginLine2: document.getElementById('cfg-login-line2').value,
       nearbyRadius: parseInt(document.getElementById('cfg-nearby').value),
       alertRadius: parseInt(document.getElementById('cfg-alert-r').value),
-      postsPerPage: parseInt(document.getElementById('cfg-perpage').value),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+      postsPerPage: parseInt(document.getElementById('cfg-perpage').value)
+    });
     toast('✅ บันทึกแล้ว','success');
   } catch(e) { toast('❌ '+e.message,'error'); }
 }
@@ -2277,11 +2275,10 @@ async function loadStore(){
 async function saveStore(){
   try {
     const gv = id => (document.getElementById(id).value||'').trim();
-    await aDb().collection('settings').doc('store').set({
+    await setSetting('store', {
       name: gv('st-name'), phone: gv('st-phone'), addressLine: gv('st-addr'),
-      subdistrict: gv('st-sub'), district: gv('st-district'), province: gv('st-province'), postcode: gv('st-postcode'),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+      subdistrict: gv('st-sub'), district: gv('st-district'), province: gv('st-province'), postcode: gv('st-postcode')
+    });
     toast('✅ บันทึกข้อมูลร้านแล้ว','success');
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
@@ -2321,13 +2318,12 @@ async function saveCourier(){
       if (!hasKey && !confirm('ยังไม่ได้ตั้ง API key ของขนส่ง — โหมดจริงจะยังทำงานไม่ได้ (ระบบจะใช้โหมดทดสอบต่อจนกว่าจะตั้ง key)\n\nบันทึกต่อไหม?')) return;
     }
     var enabled = Array.prototype.slice.call(document.querySelectorAll('.cr-cbx')).filter(function(x){return x.checked;}).map(function(x){return x.value;});
-    await aDb().collection('settings').doc('courier').set({
+    await setSetting('courier', {
       active: document.getElementById('cr-active').checked,
       mock: wantMock,
       provider: document.getElementById('cr-provider').value,
-      enabledCouriers: enabled,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+      enabledCouriers: enabled
+    });
     toast('✅ บันทึกการตั้งค่าขนส่งแล้ว','success');
     loadOrders();   // ปุ่มสร้างเลขพัสดุในออเดอร์อาจเปลี่ยน
   } catch(e){ toast('❌ '+e.message,'error'); }
@@ -2381,15 +2377,14 @@ async function loadShipping(){
 async function saveShipping(){
   try {
     const gn = id => Math.max(0, Math.floor(Number(document.getElementById(id).value)||0));
-    await aDb().collection('settings').doc('commerce').set({
+    await setSetting('commerce', {
       shipMode: document.getElementById('ship-mode').value,
       flatFee: gn('ship-flat'),
       weightBase: gn('ship-wbase'),
       weightPerKg: gn('ship-wper'),
       freeOver: document.getElementById('ship-freeover').checked,
-      freeOverMin: gn('ship-freemin'),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+      freeOverMin: gn('ship-freemin')
+    });
     toast('✅ บันทึกค่าจัดส่งแล้ว','success');
   } catch(e){ toast('❌ '+e.message,'error'); }
 }
@@ -2398,7 +2393,7 @@ async function saveShopDecor() {
     const gv = id => document.getElementById(id).value;
     const gc = id => document.getElementById(id).checked;
     const gn = (id,fb) => (+document.getElementById(id).value || fb);
-    await aDb().collection('settings').doc('shop').set({
+    await setSetting('shop', {
       bannerOn: gc('shop-banner-on'),
       bannerTitle: gv('shop-banner-title-in'),
       bannerTagline: gv('shop-banner-tag-in'),
@@ -2424,9 +2419,8 @@ async function saveShopDecor() {
       showSold: gc('shop-show-sold'),
       shopTitle: gv('shop-title-in'),
       shopSub: gv('shop-sub-in'),
-      catBarOn: gc('shop-catbar-on'),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+      catBarOn: gc('shop-catbar-on')
+    });
     toast('✅ บันทึกแล้ว','success');
   } catch(e) { toast('❌ '+e.message,'error'); }
 }
@@ -2441,7 +2435,7 @@ async function loadPoints() {
 }
 async function savePoints() {
   try {
-    await aDb().collection('settings').doc('points').set({
+    await setSetting('points', {
       perPost: +document.getElementById('pts-post').value,
       perPostWithImg: +document.getElementById('pts-post-img').value,
       perComment: +document.getElementById('pts-comment').value,
@@ -2456,9 +2450,8 @@ async function savePoints() {
       tierPlatinum: +document.getElementById('tier-platinum').value,
       discSilver: +document.getElementById('disc-silver').value,
       discGold: +document.getElementById('disc-gold').value,
-      discPlatinum: +document.getElementById('disc-platinum').value,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+      discPlatinum: +document.getElementById('disc-platinum').value
+    });
     toast('✅ บันทึกแล้ว','success');
   } catch(e) { toast('❌ '+e.message,'error'); }
 }
@@ -2610,7 +2603,7 @@ async function saveBrandCategories(){
       };
     }).filter(function(c){ return c.name; });   // ตัดแถวที่ไม่มีชื่อ
     if (!list.length){ toast('❌ ต้องมีอย่างน้อย 1 หมวด (มีชื่อ)','error'); return; }
-    await aDb().collection('settings').doc('categories').set({ list: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    await setSetting('categories', { list: list });
     toast('✅ บันทึกหมวดของร้านแล้ว','success');
     await loadCategoryConfigs(); populateCategorySelects(); renderBrandCatManager(); renderProducts();
   } catch(e){ toast('❌ '+e.message,'error'); }
@@ -2968,15 +2961,8 @@ async function loadLuckyDraws(){
     }).join('');
   } catch(e){ document.getElementById('luckydraw-table').innerHTML = '<tr><td colspan="6" class="empty-state">Error: '+escapeHtml(e.message)+'</td></tr>'; }
 }
-async function toggleLuckyDraw(id, cur){
-  try { await aDb().collection('luckyDraws').doc(id).update({ active: !cur }); loadLuckyDraws(); }
-  catch(e){ toast('❌ '+e.message,'error'); }
-}
-async function deleteLuckyDraw(id){
-  if (!confirm('ลบกล่องสุ่มนี้? (คูปองที่แจกไปแล้วยังอยู่)')) return;
-  try { await aDb().collection('luckyDraws').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadLuckyDraws(); }
-  catch(e){ toast('❌ '+e.message,'error'); }
-}
+async function toggleLuckyDraw(id, cur){ return _crudToggleActive('luckyDraws', id, cur, loadLuckyDraws); }
+async function deleteLuckyDraw(id){ return _crudDelete('luckyDraws', id, 'ลบกล่องสุ่มนี้? (คูปองที่แจกไปแล้วยังอยู่)', loadLuckyDraws); }
 /* ===== ภารกิจ & แคมเปญ (Phase 4) — admin ===== */
 var MS_TYPE_LABEL = { posts:'โพสต์', purchases:'สั่งซื้อ', points:'สะสมแต้ม' };
 function msRewardUI(){
@@ -3091,11 +3077,10 @@ async function loadStreakConfig(){
 async function saveStreakConfig(){
   try {
     var milestones = parseStreakMilestones(document.getElementById('streak-milestones').value);
-    await aDb().collection('settings').doc('streak').set({
+    await setSetting('streak', {
       enabled: document.getElementById('streak-enabled').checked,
-      milestones: milestones,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+      milestones: milestones
+    });
     var st = document.getElementById('streak-status'); if (st) st.textContent = '✓ บันทึกแล้ว ('+milestones.length+' เป้าหมาย)';
     toast('✅ บันทึกการตั้งค่าเช็คอินแล้ว','success');
   } catch(e){ toast('❌ '+e.message,'error'); }
@@ -3128,15 +3113,8 @@ async function loadCampaigns(){
     }).join('');
   } catch(e){ if(box) box.innerHTML='<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
 }
-async function toggleMission(id, cur){
-  try { await aDb().collection('missions').doc(id).update({ active: !cur }); loadCampaigns(); }
-  catch(e){ toast('❌ '+e.message,'error'); }
-}
-async function deleteMission(id){
-  if (!confirm('ลบภารกิจนี้? (รางวัลที่รับไปแล้วยังอยู่)')) return;
-  try { await aDb().collection('missions').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadCampaigns(); }
-  catch(e){ toast('❌ '+e.message,'error'); }
-}
+async function toggleMission(id, cur){ return _crudToggleActive('missions', id, cur, loadCampaigns); }
+async function deleteMission(id){ return _crudDelete('missions', id, 'ลบภารกิจนี้? (รางวัลที่รับไปแล้วยังอยู่)', loadCampaigns); }
 /* ===== แคมเปญแต้ม (Campaign builder) — admin ===== */
 function earnTriggerUI(){
   var t = document.getElementById('ec-trigger').value;
@@ -3313,15 +3291,8 @@ async function loadEarnCampaigns(){
     }).join('');
   } catch(e){ if(box) box.innerHTML='<div class="empty-state">Error: '+escapeHtml(e.message)+'</div>'; }
 }
-async function toggleEarnCampaign(id, cur){
-  try { await aDb().collection('earnCampaigns').doc(id).update({ active: !cur }); loadEarnCampaigns(); }
-  catch(e){ toast('❌ '+e.message,'error'); }
-}
-async function deleteEarnCampaign(id){
-  if (!confirm('ลบแคมเปญนี้? (แต้มที่ให้ไปแล้วยังอยู่)')) return;
-  try { await aDb().collection('earnCampaigns').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadEarnCampaigns(); }
-  catch(e){ toast('❌ '+e.message,'error'); }
-}
+async function toggleEarnCampaign(id, cur){ return _crudToggleActive('earnCampaigns', id, cur, loadEarnCampaigns); }
+async function deleteEarnCampaign(id){ return _crudDelete('earnCampaigns', id, 'ลบแคมเปญนี้? (แต้มที่ให้ไปแล้วยังอยู่)', loadEarnCampaigns); }
 /* ===== ทายผล (Prediction) — admin ===== */
 function pdModeUI(){
   var isChoice = document.getElementById('pd-mode').value === 'choice';
@@ -3535,11 +3506,7 @@ async function settlePredictionAdmin(id, rerun){
     await _doSettlePrediction(id, correct);
   } catch(e){ toast('❌ '+((e&&e.message)||e),'error'); }
 }
-async function deletePrediction(id){
-  if (!confirm('ลบกิจกรรมทายผลนี้? (รางวัลที่จ่ายไปแล้วยังอยู่)')) return;
-  try { await aDb().collection('predictions').doc(id).delete(); toast('🗑️ ลบแล้ว','success'); loadPredictions(); }
-  catch(e){ toast('❌ '+e.message,'error'); }
-}
+async function deletePrediction(id){ return _crudDelete('predictions', id, 'ลบกิจกรรมทายผลนี้? (รางวัลที่จ่ายไปแล้วยังอยู่)', loadPredictions); }
 /* ===== Community Groups ===== */
 async function loadGroups() {
   const tb = document.getElementById('groups-table');
@@ -4076,6 +4043,24 @@ function aDb(){
   return db.collection('tenants').doc(t);
 }
 function setCurrentTenant(tid){ currentTenant = tid; if (typeof updateBrandLabels==='function') updateBrandLabels(); }
+// B16 dedup: รวม CRUD ที่ซ้ำเป๊ะ (toggle active / delete) ของ activity engines + settings write
+// behavior เท่าเดิมทุกจุด — ต่างแค่ collection / ข้อความ confirm / ฟังก์ชัน reload
+async function _crudToggleActive(coll, id, cur, reload){
+  try { await aDb().collection(coll).doc(id).update({ active: !cur }); reload(); }
+  catch(e){ toast('❌ '+e.message,'error'); }
+}
+async function _crudDelete(coll, id, confirmMsg, reload){
+  if (!confirm(confirmMsg)) return;
+  try { await aDb().collection(coll).doc(id).delete(); toast('🗑️ ลบแล้ว','success'); reload(); }
+  catch(e){ toast('❌ '+e.message,'error'); }
+}
+// settings write มาตรฐาน: merge + updatedAt (แทน boilerplate ~10 จุด)
+function setSetting(name, fields){
+  return aDb().collection('settings').doc(name).set(
+    Object.assign({}, fields, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }),
+    { merge: true }
+  );
+}
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 // A2: กัน stored-XSS จาก URL รูป (photoUrl/icon) ที่ผู้ใช้อื่น/แอดมินอื่นเขียนได้ —
 // อนุญาตเฉพาะ http/https และห้ามอักขระที่ break ออกจาก CSS url()/attribute (คืน '' ถ้าไม่ปลอดภัย)

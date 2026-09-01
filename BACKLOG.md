@@ -282,7 +282,7 @@
 - [ ] B1 claims defense-in-depth (rules get() member-doc) — perf cost, ทำถ้าต้องการชั้นกันสอง
 - [ ] B15 monolith split (index.html ~4,300 / admin ~3,600) — **ต้องขยาย frontend test harness ก่อน** ห้ามรีบรื้อ
 - [ ] App Check — ปิด SSRF TOCTOU-rebind + B5 curl (closure เต็มของ closed-tenant) · ทำก่อน launch
-- [ ] B16 dedup refactor (crudActions/getSetting helper ใน admin.html) — opportunistic ตอนแตะ
+- [~] B16 dedup refactor (admin.html) — ✅ 2026-09-01: `_crudToggleActive`/`_crudDelete` ยุบ toggle/delete ×4 activity engine → wrapper บรรทัดเดียว (คงชื่อ fn เดิม onclick ไม่ต้องแก้) · `setSetting(name,fields)` แทน boilerplate `.set({...,updatedAt},{merge})` 13 จุด (app/feedMode/privacy/terms/icons/content/store/courier/commerce/shop/points/categories/streak) · **ไม่แตะ**: features (updatedAt สร้างใน object), promo (`set(doc)` prebuilt), badges (tx), platform/seedTenant (คนละ ref) · **ยังเหลือ:** `getSetting` read-side (ลดไม่คุ้ม+ต้องแก้ downstream `.exists`/`.data()` — เสี่ยง เลยข้าม) · guard 9/9 · frontend 33/33 · inline parse 1/1 · **ยังไม่ deploy/commit**
 - [ ] แปลง empty-catch ที่เหลือฝั่ง client เป็น error state (opportunistic)
 
 ---
